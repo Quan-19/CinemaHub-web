@@ -57,7 +57,7 @@ const HomePage = () => {
 
         {/* Hero Content */}
         <div className="absolute inset-0 flex items-end sm:items-center">
-          <div className="mx-auto w-full max-w-7xl px-4 pb-20 sm:px-6 sm:pb-0 lg:px-8">
+          <div className="mx-auto w-full px-3 pb-20 sm:px-6 sm:pb-0 lg:px-10 2xl:px-14">
             <div className="max-w-xl">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -182,7 +182,7 @@ const HomePage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 sm:pb-16 lg:px-8">
+      <div className="mx-auto w-full px-3 pb-14 sm:px-6 sm:pb-16 lg:px-10 2xl:px-14">
 
         {/* Now Showing Section */}
         <section className="mt-10">
