@@ -146,7 +146,7 @@ function MoviesPage() {
 
   return (
     <div className="text-white">
-      <section className="cinema-surface relative overflow-visible px-4 py-8 sm:px-6 lg:px-8">
+      <section className="cinema-surface relative overflow-visible px-4 py-8 sm:px-6 lg:px-8 rounded-b-2xl rounded-t-none">
         <div className="absolute inset-x-10 top-10 h-40 rounded-full bg-cinema-primary/10 blur-3xl" />
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>

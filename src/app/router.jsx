@@ -7,6 +7,7 @@ import CinemaPage from "../pages/CinemaPage.jsx";
 import PromotionsPage from "../pages/PromotionsPage.jsx";
 import AuthPage from "../pages/AuthPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
+import ProfilePage from "../pages/ProfilePage.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -36,6 +37,10 @@ export const router = createBrowserRouter([
       {
         path: "auth",
         element: <AuthPage />,
+      },
+      {
+        path: "profile",
+        element: <ProfilePage />,
       },
       {
         path: "*",

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -32,9 +32,22 @@ function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+    if (userMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [userMenuOpen]);
 
   const handleLogout = async () => {
     setUserMenuOpen(false);
@@ -52,7 +65,7 @@ function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 mb-4 border-b border-zinc-800/80 bg-cinema-bg/90 backdrop-blur sm:mb-6">
+    <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-cinema-bg/90 backdrop-blur px-3 sm:px-4">
       <div className="flex h-16 items-center justify-between gap-3">
         <Link to="/" className="flex items-center gap-2">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-cinema-primary to-cinema-primary-dark">
@@ -137,7 +150,7 @@ function Navbar() {
 
           {/* Avatar / Đăng nhập */}
           {user ? (
-            <div className="relative hidden sm:block">
+            <div className="relative hidden sm:block" ref={userMenuRef}>
               <button
                 onClick={() => setUserMenuOpen((o) => !o)}
                 className="flex items-center gap-1 rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
@@ -159,14 +172,20 @@ function Navbar() {
               </button>
               {userMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-zinc-700 bg-cinema-surface py-2 shadow-xl">
-                  <div className="border-b border-zinc-700 px-4 pb-2">
+                  <button
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      navigate("/profile");
+                    }}
+                    className="w-full text-left border-b border-zinc-700 px-4 py-3 hover:bg-white/5 transition-colors"
+                  >
                     <p className="truncate text-sm font-medium text-white">
                       {user.displayName ?? "Người dùng"}
                     </p>
                     <p className="truncate text-xs text-zinc-400">
                       {user.email}
                     </p>
-                  </div>
+                  </button>
                   <button
                     onClick={handleLogout}
                     className="flex w-full items-center gap-2 px-4 py-2 text-sm text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"

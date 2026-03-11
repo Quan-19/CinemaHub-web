@@ -1,10 +1,17 @@
-import { Outlet } from 'react-router-dom'
-import Navbar from '../components/Navbar.jsx'
-import Footer from '../components/Footer.jsx'
+import { Outlet, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import Navbar from "../components/Navbar.jsx";
+import Footer from "../components/Footer.jsx";
 
 function MainLayout() {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname, location.search]);
+
   return (
-    <div className="mx-auto w-full max-w-[1920px] px-3 sm:px-6 lg:px-10 2xl:px-14">
+    <div className="w-full">
       <Navbar />
 
       <main className="pb-6 sm:pb-8">
@@ -13,7 +20,7 @@ function MainLayout() {
 
       <Footer />
     </div>
-  )
+  );
 }
 
-export default MainLayout
+export default MainLayout;
