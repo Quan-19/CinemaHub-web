@@ -16,7 +16,7 @@ import { useAuth } from "../context/AuthContext";
 const navLinks = [
   { label: "Trang chủ", path: "/" },
   { label: "Phim", path: "/movies" },
-  { label: "Rạp chiếu", path: "/showtimes" },
+  { label: "Rạp chiếu", path: "/cinemas" },
   { label: "Khuyến mãi", path: "/promotions" },
 ];
 

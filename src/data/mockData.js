@@ -123,3 +123,69 @@ export const PROMOTIONS = [
       'https://images.unsplash.com/photo-1513106580091-1d82408b8cd6?auto=format&fit=crop&w=1000&q=80',
   },
 ];
+
+export const CINEMAS = [
+  {
+    id: 'cgv-vincom-ba-trieu',
+    brand: 'CGV',
+    name: 'CGV Vincom Bà Triệu',
+    address: 'Tầng 6, Vincom Center Bà Triệu, 191 Bà Triệu, Hai Bà Trưng, Hà Nội',
+    showtimes: ['09:00', '11:30', '14:00', '16:30', '19:00', '21:30'],
+  },
+  {
+    id: 'cgv-aeon-mall-long-bien',
+    brand: 'CGV',
+    name: 'CGV Aeon Mall Long Biên',
+    address: 'Tầng 4, Aeon Mall Long Biên, 27 Cổ Linh, Long Biên, Hà Nội',
+    showtimes: ['10:00', '12:30', '15:00', '17:30', '20:00', '22:00'],
+  },
+  {
+    id: 'lotte-dao-tan',
+    brand: 'Lotte',
+    name: 'Lotte Cinema Đào Tấn',
+    address: 'Tầng 5, Lotte Center, 54 Liễu Giai, Ba Đình, Hà Nội',
+    showtimes: ['09:30', '12:00', '14:30', '17:00', '19:30', '22:00'],
+  },
+  {
+    id: 'bhd-star-pham-ngoc-thach',
+    brand: 'BHD',
+    name: 'BHD Star Phạm Ngọc Thạch',
+    address: 'Tầng 3, Pearl Plaza, 561 Điện Biên Phủ, Bình Thạnh, TP.HCM',
+    showtimes: ['08:30', '11:00', '13:30', '16:00', '18:30', '21:00'],
+  },
+  {
+    id: 'galaxy-nguyen-du',
+    brand: 'Galaxy',
+    name: 'Galaxy Cinema Nguyễn Du',
+    address: '116 Nguyễn Du, Quận 1, TP.HCM',
+    showtimes: ['10:00', '12:30', '15:00', '17:30', '20:00', '22:30'],
+  },
+  {
+    id: 'cgv-crescent-mall',
+    brand: 'CGV',
+    name: 'CGV Crescent Mall',
+    address: 'Tầng 5, Crescent Mall, 101 Tôn Dật Tiên, Quận 7, TP.HCM',
+    showtimes: ['09:00', '11:30', '14:00', '16:30', '19:00', '21:30'],
+  },
+  {
+    id: 'lotte-pham-van-dong',
+    brand: 'Lotte',
+    name: 'Lotte Cinema Phạm Văn Đồng',
+    address: 'Tầng 3, Lotte Mart, 229 Phạm Văn Đồng, Bắc Từ Liêm, Hà Nội',
+    showtimes: ['10:30', '13:00', '15:30', '18:00', '20:30', '23:00'],
+  },
+  {
+    id: 'bhd-star-cantavil',
+    brand: 'BHD',
+    name: 'BHD Star Cantavil',
+    address: 'Tầng 3, Cantavil Premier, 3 Đường Số 17, Phú Mỹ Hưng, Quận 7, TP.HCM',
+    showtimes: ['08:00', '10:30', '13:00', '15:30', '18:00', '20:30'],
+  },
+  {
+    id: 'galaxy-kim-ma',
+    brand: 'Galaxy',
+    name: 'Galaxy Cinema Kim Mã',
+    address: 'Tầng 4, Vincom Center Kim Mã, 182 Kim Mã, Ba Đình, Hà Nội',
+    showtimes: ['09:30', '12:00', '14:30', '17:00', '19:30', '22:00'],
+  }
+];

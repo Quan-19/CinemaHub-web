@@ -2,17 +2,11 @@ import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout.jsx";
 import HomePage from "../pages/HomePage.jsx";
 import MoviesPage from "../pages/MoviesPage.jsx";
-import ShowtimesPage from "../pages/ShowtimesPage.jsx";
+import MovieDetailPage from "../pages/MovieDetailPage.jsx";
+import CinemaPage from "../pages/CinemaPage.jsx";
+import PromotionsPage from "../pages/PromotionsPage.jsx";
 import AuthPage from "../pages/AuthPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
-import { createBrowserRouter } from 'react-router-dom'
-import MainLayout from '../layouts/MainLayout.jsx'
-import HomePage from '../pages/HomePage.jsx'
-import MoviesPage from '../pages/MoviesPage.jsx'
-import MovieDetailPage from '../pages/MovieDetailPage.jsx'
-import ShowtimesPage from '../pages/ShowtimesPage.jsx'
-import PromotionsPage from '../pages/PromotionsPage.jsx'
-import NotFoundPage from '../pages/NotFoundPage.jsx'
 
 export const router = createBrowserRouter([
   {
@@ -28,28 +22,23 @@ export const router = createBrowserRouter([
         element: <MoviesPage />,
       },
       {
-        path: 'movies/:id',
+        path: "movies/:id",
         element: <MovieDetailPage />,
       },
       {
-        path: "showtimes",
-        element: <ShowtimesPage />,
+        path: "cinemas",
+        element: <CinemaPage />,
+      },
+      {
+        path: "promotions",
+        element: <PromotionsPage />,
       },
       {
         path: "auth",
         element: <AuthPage />,
       },
-    ],
-  },
-  {
-    path: "*",
-    element: <NotFoundPage />,
       {
-        path: 'promotions',
-        element: <PromotionsPage />,
-      },
-      {
-        path: '*',
+        path: "*",
         element: <NotFoundPage />,
       },
     ],
