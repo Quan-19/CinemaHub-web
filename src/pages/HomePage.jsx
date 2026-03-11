@@ -1,6 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Star, Clock, Play, Ticket, Tag, ArrowRight, Flame, CalendarDays } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  Clock,
+  Play,
+  Ticket,
+  Tag,
+  ArrowRight,
+  Flame,
+  CalendarDays,
+} from "lucide-react";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "motion/react";
 import { MOVIES, PROMOTIONS } from "../data/mockData";
 import { MovieCard } from "../components/MovieCard";
@@ -15,7 +27,10 @@ const HomePage = () => {
   const current = featured[heroIndex];
 
   useEffect(() => {
-    const t = setInterval(() => setHeroIndex((i) => (i + 1) % featured.length), 5000);
+    const t = setInterval(
+      () => setHeroIndex((i) => (i + 1) % featured.length),
+      5000
+    );
     return () => clearInterval(t);
   }, [featured.length]);
 
@@ -85,13 +100,17 @@ const HomePage = () => {
                   <h1 className="mb-2 text-3xl leading-tight font-extrabold text-white sm:text-5xl">
                     {current.title}
                   </h1>
-                  <p className="text-zinc-400 text-sm mb-1">{current.originalTitle}</p>
+                  <p className="text-zinc-400 text-sm mb-1">
+                    {current.originalTitle}
+                  </p>
 
                   <div className="mb-4 flex flex-wrap items-center gap-3 sm:gap-4">
                     <span className="flex items-center gap-1 text-yellow-400">
                       <Star className="w-4 h-4 fill-current" />
                       <span className="font-bold">{current.score}</span>
-                      <span className="text-zinc-400 text-xs">({current.votes.toLocaleString()})</span>
+                      <span className="text-zinc-400 text-xs">
+                        ({current.votes.toLocaleString()})
+                      </span>
                     </span>
                     <span className="flex items-center gap-1 text-zinc-400 text-sm">
                       <Clock className="w-4 h-4" />
@@ -99,13 +118,13 @@ const HomePage = () => {
                     </span>
                     <span
                       className={`rounded px-2 py-0.5 text-xs font-bold text-white ${
-                        current.rating === 'T18'
-                          ? 'bg-red-500'
-                          : current.rating === 'T16'
-                            ? 'bg-orange-500'
-                            : current.rating === 'T13'
-                              ? 'bg-amber-500'
-                              : 'bg-green-500'
+                        current.rating === "T18"
+                          ? "bg-red-500"
+                          : current.rating === "T16"
+                          ? "bg-orange-500"
+                          : current.rating === "T13"
+                          ? "bg-amber-500"
+                          : "bg-green-500"
                       }`}
                     >
                       {current.rating}
@@ -140,7 +159,9 @@ const HomePage = () => {
 
         {/* Slider controls */}
         <button
-          onClick={() => setHeroIndex((i) => (i - 1 + featured.length) % featured.length)}
+          onClick={() =>
+            setHeroIndex((i) => (i - 1 + featured.length) % featured.length)
+          }
           className="absolute left-3 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white transition-colors hover:bg-black/60 sm:flex"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -159,7 +180,9 @@ const HomePage = () => {
               key={i}
               onClick={() => setHeroIndex(i)}
               className={`rounded-full transition-all ${
-                i === heroIndex ? "w-8 h-2 bg-red-500" : "w-2 h-2 bg-white/30 hover:bg-white/60"
+                i === heroIndex
+                  ? "w-8 h-2 bg-red-500"
+                  : "w-2 h-2 bg-white/30 hover:bg-white/60"
               }`}
             />
           ))}
@@ -172,10 +195,16 @@ const HomePage = () => {
               key={m.id}
               onClick={() => setHeroIndex(i)}
               className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${
-                i === heroIndex ? "border-red-500 opacity-100" : "border-transparent opacity-50 hover:opacity-75"
+                i === heroIndex
+                  ? "border-red-500 opacity-100"
+                  : "border-transparent opacity-50 hover:opacity-75"
               }`}
             >
-              <img src={m.poster} alt={m.title} className="w-full h-full object-cover" />
+              <img
+                src={m.poster}
+                alt={m.title}
+                className="w-full h-full object-cover"
+              />
             </button>
           ))}
         </div>
@@ -183,7 +212,6 @@ const HomePage = () => {
 
       {/* Main Content */}
       <div className="mx-auto w-full px-3 pb-14 sm:px-6 sm:pb-16 lg:px-10 2xl:px-14">
-
         {/* Now Showing Section */}
         <section className="mt-10">
           <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
@@ -201,7 +229,10 @@ const HomePage = () => {
               Xem tất cả <ArrowRight className="w-4 h-4" />
             </button>
           </div>
-          <div className="scrollbar-hide flex gap-4 overflow-x-auto pb-4" style={{ scrollbarWidth: 'none' }}>
+          <div
+            className="scrollbar-hide flex gap-4 overflow-x-auto pb-4"
+            style={{ scrollbarWidth: "none" }}
+          >
             {nowShowing.map((movie) => (
               <MovieCard key={movie.id} movie={movie} size="md" />
             ))}
@@ -213,10 +244,10 @@ const HomePage = () => {
           <div className="cinema-surface bg-gradient-to-br from-[#1a0808] to-cinema-surface p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="text-lg font-bold text-white">
-                  Đặt vé nhanh
-                </h3>
-                <p className="text-zinc-400 text-sm mt-0.5">Chọn phim, rạp và ghế ngay chỉ trong 3 bước</p>
+                <h3 className="text-lg font-bold text-white">Đặt vé nhanh</h3>
+                <p className="text-zinc-400 text-sm mt-0.5">
+                  Chọn phim, rạp và ghế ngay chỉ trong 3 bước
+                </p>
               </div>
               <div className="flex flex-wrap items-center gap-3 sm:justify-end">
                 {["Chọn phim", "Chọn suất", "Chọn ghế"].map((step, i) => (
@@ -227,7 +258,9 @@ const HomePage = () => {
                       </div>
                       <span className="text-zinc-300 text-sm">{step}</span>
                     </div>
-                    {i < 2 && <ChevronRight className="w-4 h-4 text-zinc-600" />}
+                    {i < 2 && (
+                      <ChevronRight className="w-4 h-4 text-zinc-600" />
+                    )}
                   </div>
                 ))}
                 <button
@@ -275,20 +308,29 @@ const HomePage = () => {
                     <span className="bg-yellow-500/20 text-yellow-400 text-xs px-2 py-0.5 rounded-full border border-yellow-500/30">
                       Sắp chiếu
                     </span>
-                    <span className="text-zinc-500 text-xs">{movie.releaseDate}</span>
+                    <span className="text-zinc-500 text-xs">
+                      {movie.releaseDate}
+                    </span>
                   </div>
                   <h3 className="mb-1 text-sm font-semibold text-white transition-colors group-hover:text-red-400">
                     {movie.title}
                   </h3>
-                  <p className="text-zinc-500 text-xs mb-2">{movie.originalTitle}</p>
+                  <p className="text-zinc-500 text-xs mb-2">
+                    {movie.originalTitle}
+                  </p>
                   <div className="flex flex-wrap gap-1 mb-2">
                     {movie.genre.slice(0, 2).map((g) => (
-                      <span key={g} className="text-xs px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">
+                      <span
+                        key={g}
+                        className="text-xs px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400"
+                      >
                         {g}
                       </span>
                     ))}
                   </div>
-                  <p className="text-zinc-400 text-xs line-clamp-2">{movie.description}</p>
+                  <p className="text-zinc-400 text-xs line-clamp-2">
+                    {movie.description}
+                  </p>
                 </div>
               </div>
             ))}
@@ -327,7 +369,9 @@ const HomePage = () => {
                   <h3 className="mb-1 text-sm font-semibold text-white transition-colors group-hover:text-red-400">
                     {promo.title}
                   </h3>
-                  <p className="text-zinc-400 text-xs mb-3 line-clamp-2">{promo.description}</p>
+                  <p className="text-zinc-400 text-xs mb-3 line-clamp-2">
+                    {promo.description}
+                  </p>
                   <div className="flex items-center justify-between">
                     <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1 flex items-center gap-2">
                       <Tag className="w-3 h-3 text-red-500" />
@@ -335,7 +379,9 @@ const HomePage = () => {
                         {promo.code}
                       </span>
                     </div>
-                    <span className="text-zinc-500 text-xs">HSD: {promo.expiry}</span>
+                    <span className="text-zinc-500 text-xs">
+                      HSD: {promo.expiry}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -359,25 +405,37 @@ const HomePage = () => {
             />
             <div
               className="absolute inset-0"
-              style={{ background: "linear-gradient(135deg, rgba(229,9,20,0.3) 0%, rgba(10,10,15,0.9) 100%)" }}
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(229,9,20,0.3) 0%, rgba(10,10,15,0.9) 100%)",
+              }}
             />
             <div className="relative z-10 p-6 text-center sm:p-8 md:p-12">
               <h2 className="mb-3 text-2xl font-extrabold text-white sm:text-3xl">
                 Tải ứng dụng CinemaHub
               </h2>
               <p className="text-zinc-300 mb-6 max-w-md mx-auto text-sm">
-                Đặt vé, theo dõi phim yêu thích và nhận ưu đãi độc quyền mọi lúc mọi nơi
+                Đặt vé, theo dõi phim yêu thích và nhận ưu đãi độc quyền mọi lúc
+                mọi nơi
               </p>
               <div className="flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
                 <button className="flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-zinc-100">
-                  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11"/>
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-5 h-5"
+                    fill="currentColor"
+                  >
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11" />
                   </svg>
                   App Store
                 </button>
                 <button className="flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-zinc-100">
-                  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
-                    <path d="M3.18 23.76c.39.22.83.24 1.24.03L16.54 12 3.42.21C3.01 0 2.57.02 2.18.24 1.79.46 1.5.89 1.5 1.39v21.22c0 .5.29.93.68 1.15zm9.42-11.76L4.91 19.69 14.89 12zm2.2-1.39L5.16 4.59 14.8 12zM17.22 10.6l-2.12 1.4 2.12 1.4 2.68-1.4z"/>
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-5 h-5"
+                    fill="currentColor"
+                  >
+                    <path d="M3.18 23.76c.39.22.83.24 1.24.03L16.54 12 3.42.21C3.01 0 2.57.02 2.18.24 1.79.46 1.5.89 1.5 1.39v21.22c0 .5.29.93.68 1.15zm9.42-11.76L4.91 19.69 14.89 12zm2.2-1.39L5.16 4.59 14.8 12zM17.22 10.6l-2.12 1.4 2.12 1.4 2.68-1.4z" />
                   </svg>
                   Google Play
                 </button>
