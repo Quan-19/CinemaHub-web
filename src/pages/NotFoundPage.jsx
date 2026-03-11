@@ -4,9 +4,9 @@ function NotFoundPage() {
   return (
     <section className="page-shell">
       <h1>404</h1>
-      <p>Khong tim thay trang.</p>
+      <p>Không tìm thấy trang.</p>
       <Link className="nav-link" to="/">
-        Quay ve home
+        Quay về trang chủ
       </Link>
     </section>
   )
