@@ -50,7 +50,7 @@ function Navbar() {
             <Film className="h-4 w-4 text-white" />
           </span>
           <span className="text-2xl font-bold leading-none text-white">
-            Cine<span className="text-cinema-primary">Star</span>
+            Cinema<span className="text-cinema-primary">Hub</span>
           </span>
         </Link>
 

@@ -363,7 +363,7 @@ const HomePage = () => {
             />
             <div className="relative z-10 p-6 text-center sm:p-8 md:p-12">
               <h2 className="mb-3 text-2xl font-extrabold text-white sm:text-3xl">
-                Tải ứng dụng CineStar
+                Tải ứng dụng CinemaHub
               </h2>
               <p className="text-zinc-300 mb-6 max-w-md mx-auto text-sm">
                 Đặt vé, theo dõi phim yêu thích và nhận ưu đãi độc quyền mọi lúc mọi nơi
