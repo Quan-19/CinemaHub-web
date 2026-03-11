@@ -168,7 +168,7 @@ function MoviesPage() {
                 <Film className="h-4 w-4" />
               </div>
               <div>
-                <p className="font-semibold text-white">Rạp CineStar</p>
+                <p className="font-semibold text-white">Rạp CinemeHub</p>
                 <p className="text-[11px] text-zinc-400">
                   Đầy đủ suất chiếu hôm nay
                 </p>

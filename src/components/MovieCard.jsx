@@ -1,6 +1,9 @@
-import { Clock, Star } from "lucide-react";
+import { Clock, Star, Ticket } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export const MovieCard = ({ movie, size = "md" }) => {
+  const isNowShowing = movie.status === "now-showing";
+
   const widthClass =
     size === "md"
       ? "w-[78vw] min-w-[240px] sm:w-[230px] sm:min-w-[230px]"
@@ -12,13 +15,25 @@ export const MovieCard = ({ movie, size = "md" }) => {
     <article
       className={`${widthClass} cinema-surface overflow-hidden transition hover:border-zinc-700`}
     >
-      <div className="group relative aspect-[3/4]">
+      <Link to={`/movies/${movie.id}`} className="group relative block aspect-[3/4]">
         <img
           src={movie.poster}
           alt={movie.title}
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
+
+        <div className="absolute left-3 top-3">
+          <span
+            className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+              isNowShowing
+                ? "bg-cinema-primary/90 text-white"
+                : "bg-yellow-500/85 text-zinc-950"
+            }`}
+          >
+            {isNowShowing ? "Đang chiếu" : "Sắp chiếu"}
+          </span>
+        </div>
 
         <div className="absolute inset-x-0 bottom-0 px-3 pb-3 pt-6 text-white">
           <h3 className="text-sm font-semibold leading-tight">{movie.title}</h3>
@@ -34,7 +49,20 @@ export const MovieCard = ({ movie, size = "md" }) => {
             </span>
           </div>
         </div>
-      </div>
+
+        <div className="absolute inset-x-3 bottom-3 translate-y-2 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+          <span
+            className={`inline-flex w-full items-center justify-center gap-1 rounded-lg px-2 py-2 text-xs font-semibold ${
+              isNowShowing
+                ? "bg-cinema-primary text-white"
+                : "bg-zinc-800/95 text-zinc-300"
+            }`}
+          >
+            {isNowShowing ? <Ticket className="h-3.5 w-3.5" /> : null}
+            {isNowShowing ? "Xem thông tin & đặt vé" : "Xem thông tin"}
+          </span>
+        </div>
+      </Link>
     </article>
   );
 };
