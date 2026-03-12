@@ -45,6 +45,14 @@ const PAYMENT_METHODS = [
   },
 ];
 
+const PROMO_PERCENT_BY_CODE = {
+  WED30: 0.3,
+  CGV10YEARS: 0.1,
+  COUPLE2026: 0.25,
+  CINE10: 0.1,
+  SPRING2026: 0.2,
+};
+
 const RATING_COLOR = {
   P: "#22c55e",
   T13: "#3b82f6",
@@ -147,6 +155,7 @@ export const BookingConfirmationPage = () => {
   );
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+  const [promoPercent, setPromoPercent] = useState(0);
   const [promoError, setPromoError] = useState("");
   const [step, setStep] = useState(isFromTicketPage ? "success" : "summary");
   const [bookingCode] = useState(
@@ -201,13 +210,17 @@ export const BookingConfirmationPage = () => {
     : ticketTotal + comboTotal - discount;
 
   const handleApplyPromo = () => {
-    const codes = ["WED30", "CGV10YEARS", "COUPLE2026", "CINE10", "SPRING2026"];
-    if (codes.includes(promoCode.toUpperCase())) {
+    const normalizedCode = promoCode.trim().toUpperCase();
+    const percent = PROMO_PERCENT_BY_CODE[normalizedCode];
+
+    if (percent) {
       setPromoApplied(true);
+      setPromoPercent(percent);
       setPromoError("");
     } else {
       setPromoError("Mã khuyến mãi không hợp lệ hoặc đã hết hạn");
       setPromoApplied(false);
+      setPromoPercent(0);
     }
   };
 
