@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Film, Lock, Mail, Phone, User } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -51,18 +51,27 @@ function PasswordInput({ value, onChange, placeholder, id }) {
   );
 }
 
-function LoginForm({ onSuccess }) {
-  const { loginWithEmail, loginWithGoogle } = useAuth();
+function LoginForm({ onSuccess, notice }) {
+  const { loginWithEmail, loginWithGoogle, resendEmailVerification } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState(notice ?? "");
+  const [pendingVerification, setPendingVerification] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+
+  useEffect(() => {
+    setInfo(notice ?? "");
+  }, [notice]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setInfo("");
+    setPendingVerification(false);
     if (!email || !password) {
       setError("Vui lòng điền đầy đủ thông tin.");
       return;
@@ -74,6 +83,9 @@ function LoginForm({ onSuccess }) {
       navigate("/");
     } catch (err) {
       setError(getErrorMessage(err.code));
+      if (err.code === "auth/email-not-verified") {
+        setPendingVerification(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -81,6 +93,8 @@ function LoginForm({ onSuccess }) {
 
   const handleGoogle = async () => {
     setError("");
+    setInfo("");
+    setPendingVerification(false);
     setLoading(true);
     try {
       await loginWithGoogle();
@@ -92,6 +106,26 @@ function LoginForm({ onSuccess }) {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setError("");
+    setInfo("");
+    setResendLoading(true);
+    try {
+      const result = await resendEmailVerification(email, password, remember);
+      if (result?.alreadyVerified) {
+        setPendingVerification(false);
+        setInfo("Email này đã được xác minh. Bạn có thể đăng nhập ngay.");
+        return;
+      }
+      setPendingVerification(true);
+      setInfo("Đã gửi lại email xác minh. Vui lòng kiểm tra hộp thư (và mục Spam).");
+    } catch (err) {
+      setError(getErrorMessage(err.code));
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -150,6 +184,23 @@ function LoginForm({ onSuccess }) {
         </p>
       )}
 
+      {info && (
+        <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+          {info}
+        </p>
+      )}
+
+      {pendingVerification && (
+        <button
+          type="button"
+          onClick={handleResendVerification}
+          disabled={loading || resendLoading}
+          className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-60"
+        >
+          {resendLoading ? "Đang gửi lại..." : "Gửi lại email xác minh"}
+        </button>
+      )}
+
       <button
         type="submit"
         disabled={loading}
@@ -179,7 +230,6 @@ function LoginForm({ onSuccess }) {
 
 function RegisterForm({ onSuccess }) {
   const { registerWithEmail } = useAuth();
-  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -211,8 +261,7 @@ function RegisterForm({ onSuccess }) {
     setLoading(true);
     try {
       await registerWithEmail(email, password, name, phone);
-      onSuccess();
-      navigate("/");
+      onSuccess(email);
     } catch (err) {
       setError(getErrorMessage(err.code));
     } finally {
@@ -343,6 +392,10 @@ function getErrorMessage(code) {
     "auth/invalid-credential": "Email hoặc mật khẩu không đúng.",
     "auth/email-already-in-use": "Email này đã được sử dụng.",
     "auth/weak-password": "Mật khẩu quá yếu, cần ít nhất 6 ký tự.",
+    "auth/email-not-verified":
+      "Tài khoản chưa xác minh email. Vui lòng xác minh trước khi đăng nhập.",
+    "auth/missing-email-for-verification":
+      "Vui lòng nhập email và mật khẩu để gửi lại xác minh.",
     "auth/too-many-requests": "Quá nhiều lần thử. Vui lòng thử lại sau.",
     "auth/network-request-failed": "Lỗi kết nối mạng.",
   };
@@ -351,6 +404,7 @@ function getErrorMessage(code) {
 
 function AuthPage() {
   const [tab, setTab] = useState("login");
+  const [loginNotice, setLoginNotice] = useState("");
 
   return (
     <div className="relative mx-auto flex min-h-[70vh] max-w-5xl items-center justify-center px-3 py-10 sm:px-6 lg:px-10">
@@ -389,10 +443,21 @@ function AuthPage() {
 
         {tab === "login" ? (
           <LoginForm
-            onSuccess={() => setTab("login") /* close handled by redirect */}
+            notice={loginNotice}
+            onSuccess={() => {
+              setLoginNotice("");
+              setTab("login");
+            }}
           />
         ) : (
-          <RegisterForm onSuccess={() => setTab("login")} />
+          <RegisterForm
+            onSuccess={(registeredEmail) => {
+              setLoginNotice(
+                `Đăng ký thành công. Chúng tôi đã gửi email xác minh tới ${registeredEmail}.`
+              );
+              setTab("login");
+            }}
+          />
         )}
       </div>
     </div>

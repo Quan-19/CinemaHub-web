@@ -6,6 +6,8 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  sendEmailVerification,
+  reload,
   browserLocalPersistence,
   browserSessionPersistence,
   setPersistence,
@@ -25,6 +27,12 @@ const RANDOM_AVATARS = [
 ];
 
 const AuthContext = createContext(null);
+
+function createAuthError(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
 
 async function upsertUserDocument(user, extra = {}) {
   if (!user?.uid) return;
@@ -68,6 +76,14 @@ export function AuthProvider({ children }) {
       : browserSessionPersistence;
     await setPersistence(auth, persistence);
     const credential = await signInWithEmailAndPassword(auth, email, password);
+    await reload(credential.user);
+    if (!credential.user.emailVerified) {
+      await signOut(auth);
+      throw createAuthError(
+        "auth/email-not-verified",
+        "Email chưa được xác minh."
+      );
+    }
     await upsertUserDocument(credential.user);
     return credential;
   };
@@ -84,15 +100,41 @@ export function AuthProvider({ children }) {
       displayName,
       photoURL: randomAvatar,
     });
+    await sendEmailVerification(credential.user);
     await upsertUserDocument(credential.user, {
       displayName,
       photoURL: randomAvatar,
       phone: phone ?? "",
       provider: "password",
+      emailVerified: false,
     });
-    // Cập nhật user local để Navbar nhận ngay
-    setUser({ ...credential.user, displayName, photoURL: randomAvatar });
+    await signOut(auth);
     return credential;
+  };
+
+  const resendEmailVerification = async (email, password, remember = false) => {
+    if (!email || !password) {
+      throw createAuthError(
+        "auth/missing-email-for-verification",
+        "Vui lòng nhập email và mật khẩu để gửi lại xác minh."
+      );
+    }
+
+    const persistence = remember
+      ? browserLocalPersistence
+      : browserSessionPersistence;
+    await setPersistence(auth, persistence);
+    const credential = await signInWithEmailAndPassword(auth, email, password);
+    await reload(credential.user);
+
+    if (credential.user.emailVerified) {
+      await upsertUserDocument(credential.user, { emailVerified: true });
+      return { alreadyVerified: true };
+    }
+
+    await sendEmailVerification(credential.user);
+    await signOut(auth);
+    return { verificationSent: true, email: credential.user.email ?? email };
   };
 
   const loginWithGoogle = async () => {
@@ -110,6 +152,7 @@ export function AuthProvider({ children }) {
         loading,
         loginWithEmail,
         registerWithEmail,
+        resendEmailVerification,
         loginWithGoogle,
         logout,
       }}
