@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
@@ -66,37 +66,37 @@ const SEAT_TYPE_COLOR = {
   couple: "#e50914",
 };
 
-// Confetti component
-const Confetti = () => {
-  const pieces = Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    color: ["#e50914", "#f59e0b", "#22c55e", "#3b82f6", "#8b5cf6"][i % 5],
-    delay: Math.random() * 0.8,
-    size: 4 + Math.random() * 6,
-    duration: 1.5 + Math.random() * 1.5,
-  }));
+// Confetti pieces generated once at module level to avoid impure function calls during render
+const CONFETTI_PIECES = Array.from({ length: 30 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  color: ["#e50914", "#f59e0b", "#22c55e", "#3b82f6", "#8b5cf6"][i % 5],
+  delay: Math.random() * 0.8,
+  size: 4 + Math.random() * 6,
+  duration: 1.5 + Math.random() * 1.5,
+  borderRadius: Math.random() > 0.5 ? "50%" : 2,
+}));
 
-  return (
-    <div className="fixed inset-0 pointer-events-none z-30 overflow-hidden">
-      {pieces.map((p) => (
-        <motion.div
-          key={p.id}
-          initial={{ y: -20, x: `${p.x}vw`, opacity: 1, rotate: 0 }}
-          animate={{ y: "110vh", opacity: 0, rotate: 720 }}
-          transition={{ duration: p.duration, delay: p.delay, ease: "easeIn" }}
-          style={{
-            position: "absolute",
-            width: p.size,
-            height: p.size,
-            background: p.color,
-            borderRadius: Math.random() > 0.5 ? "50%" : 2,
-          }}
-        />
-      ))}
-    </div>
-  );
-};
+// Confetti component
+const Confetti = () => (
+  <div className="fixed inset-0 pointer-events-none z-30 overflow-hidden">
+    {CONFETTI_PIECES.map((p) => (
+      <motion.div
+        key={p.id}
+        initial={{ y: -20, x: `${p.x}vw`, opacity: 1, rotate: 0 }}
+        animate={{ y: "110vh", opacity: 0, rotate: 720 }}
+        transition={{ duration: p.duration, delay: p.delay, ease: "easeIn" }}
+        style={{
+          position: "absolute",
+          width: p.size,
+          height: p.size,
+          background: p.color,
+          borderRadius: p.borderRadius,
+        }}
+      />
+    ))}
+  </div>
+);
 
 export const BookingConfirmationPage = () => {
   const navigate = useNavigate();
@@ -203,7 +203,7 @@ export const BookingConfirmationPage = () => {
   const discount = isFromTicketPage
     ? 0
     : promoApplied
-    ? Math.round(ticketTotal * 0.1)
+    ? Math.round(ticketTotal * promoPercent)
     : 0;
   const grandTotal = isFromTicketPage
     ? ticketFromState?.grandTotal || 0
