@@ -124,68 +124,103 @@ export const PROMOTIONS = [
   },
 ];
 
+function makeShowtimes(times, basePrice = 85000) {
+  const types = ['2D', '3D', 'IMAX', '2D', '3D', '4DX'];
+  const rooms = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
+  return times.map((time, i) => ({
+    id: `st-${i + 1}`,
+    time,
+    type: types[i % types.length],
+    price: basePrice + (i % 3) * 15000,
+    roomId: rooms[i % rooms.length],
+    availableSeats: Math.floor(Math.random() * 80) + 10,
+  }));
+}
+
 export const CINEMAS = [
   {
     id: 'cgv-vincom-ba-trieu',
     brand: 'CGV',
     name: 'CGV Vincom Bà Triệu',
     address: 'Tầng 6, Vincom Center Bà Triệu, 191 Bà Triệu, Hai Bà Trưng, Hà Nội',
-    showtimes: ['09:00', '11:30', '14:00', '16:30', '19:00', '21:30'],
+    showtimes: makeShowtimes(['09:00', '11:30', '14:00', '16:30', '19:00', '21:30']),
   },
   {
     id: 'cgv-aeon-mall-long-bien',
     brand: 'CGV',
     name: 'CGV Aeon Mall Long Biên',
     address: 'Tầng 4, Aeon Mall Long Biên, 27 Cổ Linh, Long Biên, Hà Nội',
-    showtimes: ['10:00', '12:30', '15:00', '17:30', '20:00', '22:00'],
+    showtimes: makeShowtimes(['10:00', '12:30', '15:00', '17:30', '20:00', '22:00']),
   },
   {
     id: 'lotte-dao-tan',
     brand: 'Lotte',
     name: 'Lotte Cinema Đào Tấn',
     address: 'Tầng 5, Lotte Center, 54 Liễu Giai, Ba Đình, Hà Nội',
-    showtimes: ['09:30', '12:00', '14:30', '17:00', '19:30', '22:00'],
+    showtimes: makeShowtimes(['09:30', '12:00', '14:30', '17:00', '19:30', '22:00']),
   },
   {
     id: 'bhd-star-pham-ngoc-thach',
     brand: 'BHD',
     name: 'BHD Star Phạm Ngọc Thạch',
     address: 'Tầng 3, Pearl Plaza, 561 Điện Biên Phủ, Bình Thạnh, TP.HCM',
-    showtimes: ['08:30', '11:00', '13:30', '16:00', '18:30', '21:00'],
+    showtimes: makeShowtimes(['08:30', '11:00', '13:30', '16:00', '18:30', '21:00']),
   },
   {
     id: 'galaxy-nguyen-du',
     brand: 'Galaxy',
     name: 'Galaxy Cinema Nguyễn Du',
     address: '116 Nguyễn Du, Quận 1, TP.HCM',
-    showtimes: ['10:00', '12:30', '15:00', '17:30', '20:00', '22:30'],
+    showtimes: makeShowtimes(['10:00', '12:30', '15:00', '17:30', '20:00', '22:30']),
   },
   {
     id: 'cgv-crescent-mall',
     brand: 'CGV',
     name: 'CGV Crescent Mall',
     address: 'Tầng 5, Crescent Mall, 101 Tôn Dật Tiên, Quận 7, TP.HCM',
-    showtimes: ['09:00', '11:30', '14:00', '16:30', '19:00', '21:30'],
+    showtimes: makeShowtimes(['09:00', '11:30', '14:00', '16:30', '19:00', '21:30']),
   },
   {
     id: 'lotte-pham-van-dong',
     brand: 'Lotte',
     name: 'Lotte Cinema Phạm Văn Đồng',
     address: 'Tầng 3, Lotte Mart, 229 Phạm Văn Đồng, Bắc Từ Liêm, Hà Nội',
-    showtimes: ['10:30', '13:00', '15:30', '18:00', '20:30', '23:00'],
+    showtimes: makeShowtimes(['10:30', '13:00', '15:30', '18:00', '20:30', '23:00']),
   },
   {
     id: 'bhd-star-cantavil',
     brand: 'BHD',
     name: 'BHD Star Cantavil',
     address: 'Tầng 3, Cantavil Premier, 3 Đường Số 17, Phú Mỹ Hưng, Quận 7, TP.HCM',
-    showtimes: ['08:00', '10:30', '13:00', '15:30', '18:00', '20:30'],
+    showtimes: makeShowtimes(['08:00', '10:30', '13:00', '15:30', '18:00', '20:30']),
   },
   {
     id: 'galaxy-kim-ma',
     brand: 'Galaxy',
     name: 'Galaxy Cinema Kim Mã',
     address: 'Tầng 4, Vincom Center Kim Mã, 182 Kim Mã, Ba Đình, Hà Nội',
-    showtimes: ['09:30', '12:00', '14:30', '17:00', '19:30', '22:00'],
-  }
+    showtimes: makeShowtimes(['09:30', '12:00', '14:30', '17:00', '19:30', '22:00']),
+  },
 ];
+
+export const COMBOS = [
+  { id: 'combo1', name: 'Combo 1 (1 bắp lớn + 1 nước lớn)', price: 89000 },
+  { id: 'combo2', name: 'Combo 2 (2 bắp vừa + 2 nước vừa)', price: 149000 },
+  { id: 'combo3', name: 'Combo 3 (1 bắp lớn + 2 nước lớn)', price: 119000 },
+  { id: 'snack1', name: 'Nachos + Nước (1 phần)', price: 69000 },
+];
+
+export const DATES = (() => {
+  const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+  const today = new Date(2026, 2, 12); // March 12, 2026
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    return {
+      day: i === 0 ? 'Hôm nay' : days[d.getDay()],
+      date: d.getDate(),
+      month: d.getMonth() + 1,
+      value: d.toLocaleDateString('vi-VN'),
+    };
+  });
+})();

@@ -8,6 +8,10 @@ import PromotionsPage from "../pages/PromotionsPage.jsx";
 import AuthPage from "../pages/AuthPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
 import ProfilePage from "../pages/ProfilePage.jsx";
+import CinemaSelectionPage from "../pages/CinemaSelectionPage.jsx";
+import SeatSelectionPage from "../pages/SeatSelectionPage.jsx";
+import BookingConfirmationPage from "../pages/BookingConfirmationPage.jsx";
+import TicketPage from "../pages/TicketPage.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +29,22 @@ export const router = createBrowserRouter([
       {
         path: "movies/:id",
         element: <MovieDetailPage />,
+      },
+      {
+        path: "booking/confirm",
+        element: <BookingConfirmationPage />,
+      },
+      {
+        path: "booking/:movieId",
+        element: <CinemaSelectionPage />,
+      },
+      {
+        path: "seats/:movieId/:cinemaId/:showtimeId",
+        element: <SeatSelectionPage />,
+      },
+      {
+        path: "ticket/:bookingCode",
+        element: <TicketPage />,
       },
       {
         path: "cinemas",

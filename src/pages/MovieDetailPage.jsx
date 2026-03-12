@@ -53,7 +53,7 @@ export const MovieDetailPage = () => {
   }
 
   const handleBooking = () => {
-    navigate("/cinemas");
+    navigate(`/booking/${movie.id}`);
   };
 
   const handleShare = async () => {
