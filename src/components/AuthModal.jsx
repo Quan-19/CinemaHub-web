@@ -183,17 +183,32 @@ function RegisterForm({ onSuccess }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const handlePhoneChange = (e) => {
+    const digits = e.target.value.replace(/\D/g, "");
+    if (digits.length > 10) {
+      setPhoneError("Số điện thoại không được vượt quá 10 số.");
+      return;
+    }
+    setPhoneError("");
+    setPhone(digits);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (!name || !email || !phone || !password || !confirm) {
       setError("Vui lòng điền đầy đủ thông tin.");
+      return;
+    }
+    if (phone.length > 10) {
+      setPhoneError("Số điện thoại không được vượt quá 10 số.");
       return;
     }
     if (password !== confirm) {
@@ -269,11 +284,16 @@ function RegisterForm({ onSuccess }) {
           <input
             type="tel"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={handlePhoneChange}
+            inputMode="numeric"
+            maxLength={10}
             placeholder="0901234567"
             className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500 focus:border-cinema-primary focus:outline-none"
           />
         </div>
+        {phoneError && (
+          <p className="mt-1.5 text-sm text-red-400">{phoneError}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
