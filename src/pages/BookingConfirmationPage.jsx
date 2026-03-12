@@ -17,6 +17,14 @@ const PAYMENT_METHODS = [
   { id: "zalopay", label: "ZaloPay", icon: "🟢", desc: "Thanh toán qua ZaloPay" },
 ];
 
+const PROMO_PERCENT_BY_CODE = {
+  WED30: 0.3,
+  CGV10YEARS: 0.1,
+  COUPLE2026: 0.25,
+  CINE10: 0.1,
+  SPRING2026: 0.2,
+};
+
 const RATING_COLOR = {
   P: "#22c55e", T13: "#3b82f6", T16: "#f59e0b", T18: "#ef4444",
 };
@@ -104,6 +112,7 @@ export const BookingConfirmationPage = () => {
   const [paymentMethod, setPaymentMethod] = useState(ticketFromState?.paymentMethod || "momo");
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+  const [promoPercent, setPromoPercent] = useState(0);
   const [promoError, setPromoError] = useState("");
   const [step, setStep] = useState(isFromTicketPage ? "success" : "summary");
   const [bookingCode] = useState(() => ticketFromState?.bookingCode || `CS${Date.now().toString().slice(-8)}`);
@@ -134,17 +143,22 @@ export const BookingConfirmationPage = () => {
       }, 0);
 
   const comboTotal = isFromTicketPage ? 0 : COMBOS.reduce((sum, combo) => sum + (comboCounts[combo.id] || 0) * combo.price, 0);
-  const discount = isFromTicketPage ? 0 : (promoApplied ? Math.round(ticketTotal * 0.1) : 0);
-  const grandTotal = isFromTicketPage ? (ticketFromState?.grandTotal || 0) : ticketTotal + comboTotal - discount;
+  const subtotal = ticketTotal + comboTotal;
+  const discount = isFromTicketPage ? 0 : (promoApplied ? Math.round(ticketTotal * promoPercent) : 0);
+  const grandTotal = isFromTicketPage ? (ticketFromState?.grandTotal || 0) : Math.max(0, subtotal - discount);
 
   const handleApplyPromo = () => {
-    const codes = ["WED30", "CGV10YEARS", "COUPLE2026", "CINE10", "SPRING2026"];
-    if (codes.includes(promoCode.toUpperCase())) {
+    const normalizedCode = promoCode.trim().toUpperCase();
+    const percent = PROMO_PERCENT_BY_CODE[normalizedCode];
+
+    if (percent) {
       setPromoApplied(true);
+      setPromoPercent(percent);
       setPromoError("");
     } else {
       setPromoError("Mã khuyến mãi không hợp lệ hoặc đã hết hạn");
       setPromoApplied(false);
+      setPromoPercent(0);
     }
   };
 
@@ -628,7 +642,12 @@ export const BookingConfirmationPage = () => {
               <div className="flex gap-2">
                 <input
                   value={promoCode}
-                  onChange={(e) => { setPromoCode(e.target.value); setPromoError(""); setPromoApplied(false); }}
+                  onChange={(e) => {
+                    setPromoCode(e.target.value);
+                    setPromoError("");
+                    setPromoApplied(false);
+                    setPromoPercent(0);
+                  }}
                   placeholder="Nhập mã khuyến mãi"
                   className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-red-500 transition-colors"
                 />

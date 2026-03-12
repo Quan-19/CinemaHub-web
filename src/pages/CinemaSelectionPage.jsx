@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, MapPin, Users, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { MOVIES, CINEMAS, DATES } from "../data/mockData";
 import { useBooking } from "../context/BookingContext";
@@ -18,14 +18,48 @@ const TYPE_LABELS = {
   "4DX": { label: "4DX", color: "#7c3aed" },
 };
 
+const REGION_OPTIONS = [
+  { id: "hanoi", label: "Hà Nội", desc: "Cụm rạp tại Hà Nội" },
+  { id: "hcm", label: "TP.HCM", desc: "Cụm rạp tại TP.HCM" },
+];
+
+const getRegionIdFromAddress = (address = "") => {
+  const normalized = address.toLowerCase();
+  if (normalized.includes("hà nội")) return "hanoi";
+  if (normalized.includes("tp.hcm")) return "hcm";
+  return "";
+};
+
 export const CinemaSelectionPage = () => {
   const { movieId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setSelectedMovie, setSelectedCinema, setSelectedShowtime, setSelectedDate } = useBooking();
+  const preferredCinemaId = searchParams.get("cinemaId");
+  const hasPreferredCinema = Boolean(preferredCinemaId && CINEMAS.some((c) => c.id === preferredCinemaId));
+  const preferredCinema = hasPreferredCinema ? CINEMAS.find((cinema) => cinema.id === preferredCinemaId) : null;
 
   const movie = MOVIES.find((m) => m.id === movieId);
   const [selectedDateIdx, setSelectedDateIdx] = useState(0);
-  const [expandedCinema, setExpandedCinema] = useState(CINEMAS[0].id);
+  const [selectedRegion, setSelectedRegion] = useState(preferredCinema ? getRegionIdFromAddress(preferredCinema.address) : "");
+  const [expandedCinema, setExpandedCinema] = useState(hasPreferredCinema ? preferredCinemaId : null);
+
+  const regionCinemas = useMemo(
+    () => CINEMAS.filter((cinema) => getRegionIdFromAddress(cinema.address) === selectedRegion),
+    [selectedRegion]
+  );
+
+  const orderedCinemas = useMemo(() => {
+    if (!hasPreferredCinema || !preferredCinema) return regionCinemas;
+    if (!regionCinemas.some((cinema) => cinema.id === preferredCinema.id)) return regionCinemas;
+    return [preferredCinema, ...regionCinemas.filter((cinema) => cinema.id !== preferredCinema.id)];
+  }, [hasPreferredCinema, preferredCinema, regionCinemas]);
+
+  useEffect(() => {
+    if (hasPreferredCinema && selectedRegion && regionCinemas.some((cinema) => cinema.id === preferredCinemaId)) {
+      setExpandedCinema(preferredCinemaId);
+    }
+  }, [hasPreferredCinema, preferredCinemaId, regionCinemas, selectedRegion]);
 
   if (!movie) {
     return (
@@ -43,6 +77,15 @@ export const CinemaSelectionPage = () => {
     setSelectedShowtime(showtime);
     setSelectedDate(DATES[selectedDateIdx].value);
     navigate(`/seats/${movieId}/${cinemaId}/${showtimeId}`);
+  };
+
+  const handleSelectRegion = (regionId) => {
+    setSelectedRegion(regionId);
+    const cinemasInRegion = CINEMAS.filter((cinema) => getRegionIdFromAddress(cinema.address) === regionId);
+    const defaultExpanded = hasPreferredCinema && cinemasInRegion.some((cinema) => cinema.id === preferredCinemaId)
+      ? preferredCinemaId
+      : cinemasInRegion[0]?.id || null;
+    setExpandedCinema(defaultExpanded);
   };
 
   return (
@@ -147,99 +190,144 @@ export const CinemaSelectionPage = () => {
           </div>
         </div>
 
-        {/* Cinema list */}
-        <h2 className="text-white mb-3" style={{ fontWeight: 600 }}>Chọn rạp chiếu</h2>
-        <div className="space-y-3">
-          {CINEMAS.map((cinema) => (
-            <div
-              key={cinema.id}
-              className="rounded-xl border border-zinc-800 overflow-hidden"
-              style={{ background: "#12121f" }}
-            >
-              {/* Cinema header */}
-              <button
-                className="w-full flex items-center justify-between p-4 hover:bg-zinc-800/30 transition-colors"
-                onClick={() => setExpandedCinema(expandedCinema === cinema.id ? null : cinema.id)}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs shrink-0"
-                    style={{ background: BRAND_COLORS[cinema.brand] || "#e50914", fontWeight: 700 }}
-                  >
-                    {cinema.brand}
-                  </div>
-                  <div className="text-left">
-                    <p className="text-white text-sm" style={{ fontWeight: 600 }}>{cinema.name}</p>
-                    <p className="text-zinc-500 text-xs flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      {cinema.address}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-zinc-500 text-xs hidden sm:block">
-                    {cinema.showtimes.length} suất chiếu
+        {/* Region + Cinema list */}
+        <h2 className="text-white mb-3" style={{ fontWeight: 600 }}>Chọn khu vực</h2>
+        {!selectedRegion ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            {REGION_OPTIONS.map((region) => {
+              const count = CINEMAS.filter((cinema) => getRegionIdFromAddress(cinema.address) === region.id).length;
+              return (
+                <button
+                  key={region.id}
+                  onClick={() => handleSelectRegion(region.id)}
+                  className="text-left rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 hover:border-red-500 transition-colors"
+                >
+                  <p className="text-white text-sm" style={{ fontWeight: 700 }}>{region.label}</p>
+                  <p className="text-zinc-400 text-xs mt-0.5">{region.desc}</p>
+                  <span className="inline-flex mt-2 rounded-full px-2 py-0.5 text-[10px]"
+                    style={{ background: "rgba(229,9,20,0.15)", color: "#f87171" }}>
+                    {count} cụm rạp
                   </span>
-                  {expandedCinema === cinema.id ? (
-                    <ChevronUp className="w-4 h-4 text-zinc-400" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-zinc-400" />
-                  )}
-                </div>
-              </button>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={() => {
+                setSelectedRegion("");
+                setExpandedCinema(null);
+              }}
+              className="mb-3 inline-flex items-center gap-1.5 text-zinc-400 hover:text-white text-xs transition-colors"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" /> Đổi khu vực
+            </button>
 
-              {/* Showtimes */}
-              {expandedCinema === cinema.id && (
-                <div className="px-4 pb-4 border-t border-zinc-800">
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    {cinema.showtimes.map((st) => {
-                      const typeInfo = TYPE_LABELS[st.type];
-                      const isFull = st.availableSeats === 0;
-                      const isLow = st.availableSeats > 0 && st.availableSeats <= 20;
-                      return (
-                        <button
-                          key={st.id}
-                          disabled={isFull}
-                          onClick={() => handleSelectShowtime(cinema.id, st.id)}
-                          className={`group flex flex-col items-start p-3 rounded-xl border min-w-[110px] transition-all ${
-                            isFull
-                              ? "border-zinc-800 opacity-40 cursor-not-allowed"
-                              : "border-zinc-700 hover:border-red-500 hover:bg-red-500/5 cursor-pointer"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-white text-sm" style={{ fontWeight: 700 }}>
-                              {st.time}
-                            </span>
-                            <span
-                              className="px-1.5 py-0.5 rounded text-xs text-white"
-                              style={{ background: typeInfo?.color || "#52525b", fontWeight: 600 }}
-                            >
-                              {st.type}
-                            </span>
-                          </div>
-                          <span className="text-zinc-400 text-xs">
-                            {st.price.toLocaleString()}đ
+            <h2 className="text-white mb-3" style={{ fontWeight: 600 }}>Chọn rạp chiếu</h2>
+            {hasPreferredCinema && orderedCinemas.some((cinema) => cinema.id === preferredCinemaId) && (
+              <p className="text-zinc-400 text-xs mb-3">Đã ưu tiên rạp bạn vừa chọn từ trang rạp chiếu.</p>
+            )}
+
+            <div className="space-y-3">
+              {orderedCinemas.map((cinema) => (
+                <div
+                  key={cinema.id}
+                  className="rounded-xl border border-zinc-800 overflow-hidden"
+                  style={{ background: "#12121f" }}
+                >
+                  {/* Cinema header */}
+                  <button
+                    className="w-full flex items-center justify-between p-4 hover:bg-zinc-800/30 transition-colors"
+                    onClick={() => setExpandedCinema(expandedCinema === cinema.id ? null : cinema.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs shrink-0"
+                        style={{ background: BRAND_COLORS[cinema.brand] || "#e50914", fontWeight: 700 }}
+                      >
+                        {cinema.brand}
+                      </div>
+                      <div className="text-left">
+                        <p className="text-white text-sm" style={{ fontWeight: 600 }}>{cinema.name}</p>
+                        <p className="text-zinc-500 text-xs flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {cinema.address}
+                        </p>
+                        {preferredCinemaId === cinema.id && (
+                          <span className="inline-flex mt-1 rounded-full px-2 py-0.5 text-[10px]"
+                            style={{ background: "rgba(229,9,20,0.15)", color: "#f87171" }}>
+                            Rạp đã chọn
                           </span>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Users className="w-3 h-3 text-zinc-500" />
-                            <span
-                              className={`text-xs ${
-                                isFull ? "text-zinc-600" : isLow ? "text-orange-400" : "text-zinc-500"
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-zinc-500 text-xs hidden sm:block">
+                        {cinema.showtimes.length} suất chiếu
+                      </span>
+                      {expandedCinema === cinema.id ? (
+                        <ChevronUp className="w-4 h-4 text-zinc-400" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-zinc-400" />
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Showtimes */}
+                  {expandedCinema === cinema.id && (
+                    <div className="px-4 pb-4 border-t border-zinc-800">
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {cinema.showtimes.map((st) => {
+                          const typeInfo = TYPE_LABELS[st.type];
+                          const isFull = st.availableSeats === 0;
+                          const isLow = st.availableSeats > 0 && st.availableSeats <= 20;
+                          return (
+                            <button
+                              key={st.id}
+                              disabled={isFull}
+                              onClick={() => handleSelectShowtime(cinema.id, st.id)}
+                              className={`group flex flex-col items-start p-3 rounded-xl border min-w-[110px] transition-all ${
+                                isFull
+                                  ? "border-zinc-800 opacity-40 cursor-not-allowed"
+                                  : "border-zinc-700 hover:border-red-500 hover:bg-red-500/5 cursor-pointer"
                               }`}
                             >
-                              {isFull ? "Hết vé" : isLow ? `Còn ${st.availableSeats} ghế` : `${st.availableSeats} ghế trống`}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-white text-sm" style={{ fontWeight: 700 }}>
+                                  {st.time}
+                                </span>
+                                <span
+                                  className="px-1.5 py-0.5 rounded text-xs text-white"
+                                  style={{ background: typeInfo?.color || "#52525b", fontWeight: 600 }}
+                                >
+                                  {st.type}
+                                </span>
+                              </div>
+                              <span className="text-zinc-400 text-xs">
+                                {st.price.toLocaleString()}đ
+                              </span>
+                              <div className="flex items-center gap-1 mt-1">
+                                <Users className="w-3 h-3 text-zinc-500" />
+                                <span
+                                  className={`text-xs ${
+                                    isFull ? "text-zinc-600" : isLow ? "text-orange-400" : "text-zinc-500"
+                                  }`}
+                                >
+                                  {isFull ? "Hết vé" : isLow ? `Còn ${st.availableSeats} ghế` : `${st.availableSeats} ghế trống`}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
       </div>
     </div>
   );
