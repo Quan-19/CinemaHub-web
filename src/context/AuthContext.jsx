@@ -71,28 +71,44 @@ export function AuthProvider({ children }) {
   }, []);
 
   const loginWithEmail = async (email, password, remember) => {
-    const persistence = remember
-      ? browserLocalPersistence
-      : browserSessionPersistence;
-    await setPersistence(auth, persistence);
-    const credential = await signInWithEmailAndPassword(auth, email, password);
-    await reload(credential.user);
-    if (!credential.user.emailVerified) {
-      await signOut(auth);
-      throw createAuthError(
-        "auth/email-not-verified",
-        "Email chưa được xác minh."
-      );
-    }
-    await upsertUserDocument(credential.user);
-    return credential;
-  };
 
+  const persistence = remember
+    ? browserLocalPersistence
+    : browserSessionPersistence;
+
+  await setPersistence(auth, persistence);
+
+  const credential = await signInWithEmailAndPassword(auth, email, password);
+
+  await reload(credential.user);
+
+  if (!credential.user.emailVerified) {
+    await signOut(auth);
+    throw createAuthError(
+      "auth/email-not-verified",
+      "Email chưa được xác minh."
+    );
+  }
+
+  // sync MySQL
+  const token = await credential.user.getIdToken();
+
+  await fetch("http://localhost:5000/api/auth/sync-user", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  await upsertUserDocument(credential.user);
+
+  return credential;
+};
   const registerWithEmail = async (email, password, displayName, phone) => {
     const credential = await createUserWithEmailAndPassword(
       auth,
       email,
-      password
+      password,
     );
     const randomAvatar =
       RANDOM_AVATARS[Math.floor(Math.random() * RANDOM_AVATARS.length)];
@@ -116,7 +132,7 @@ export function AuthProvider({ children }) {
     if (!email || !password) {
       throw createAuthError(
         "auth/missing-email-for-verification",
-        "Vui lòng nhập email và mật khẩu để gửi lại xác minh."
+        "Vui lòng nhập email và mật khẩu để gửi lại xác minh.",
       );
     }
 
@@ -138,10 +154,23 @@ export function AuthProvider({ children }) {
   };
 
   const loginWithGoogle = async () => {
-    const credential = await signInWithPopup(auth, googleProvider);
-    await upsertUserDocument(credential.user);
-    return credential;
-  };
+
+  const credential = await signInWithPopup(auth, googleProvider);
+
+  const token = await credential.user.getIdToken();
+
+  await fetch("http://localhost:5000/api/auth/sync-user", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  await upsertUserDocument(credential.user);
+
+  return credential;
+
+};
 
   const logout = () => signOut(auth);
 
