@@ -71,60 +71,101 @@ export function AuthProvider({ children }) {
   }, []);
 
   const loginWithEmail = async (email, password, remember) => {
+    const persistence = remember
+      ? browserLocalPersistence
+      : browserSessionPersistence;
 
-  const persistence = remember
-    ? browserLocalPersistence
-    : browserSessionPersistence;
+    await setPersistence(auth, persistence);
 
-  await setPersistence(auth, persistence);
+    const credential = await signInWithEmailAndPassword(auth, email, password);
 
-  const credential = await signInWithEmailAndPassword(auth, email, password);
+    await reload(credential.user);
 
-  await reload(credential.user);
+    if (!credential.user.emailVerified) {
+      await signOut(auth);
+      throw createAuthError(
+        "auth/email-not-verified",
+        "Email chưa được xác minh.",
+      );
+    }
 
-  if (!credential.user.emailVerified) {
-    await signOut(auth);
-    throw createAuthError(
-      "auth/email-not-verified",
-      "Email chưa được xác minh."
-    );
-  }
+    // sync MySQL
+    const token = await credential.user.getIdToken();
 
-  // sync MySQL
-  const token = await credential.user.getIdToken();
+    await fetch("http://localhost:5000/api/auth/sync-user", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: credential.user.displayName,
+        avatar: credential.user.photoURL,
+      }),
+    });
 
-  await fetch("http://localhost:5000/api/auth/sync-user", {
-    method: "POST",
+    await upsertUserDocument(credential.user);
+
+    return credential;
+  };
+  const updateUserProfile = async (phone, dob) => {
+
+  const currentUser = auth.currentUser;
+
+  if (!currentUser) return;
+
+  const token = await currentUser.getIdToken();
+
+  await fetch("http://localhost:5000/api/users/update-profile", {
+    method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({
+      email: currentUser.email,
+      phone: phone,
+      dob: dob,
+    }),
   });
 
-  await upsertUserDocument(credential.user);
-
-  return credential;
 };
-  const registerWithEmail = async (email, password, displayName, phone) => {
+  const registerWithEmail = async (email, password, displayName, phone,dob) => {
     const credential = await createUserWithEmailAndPassword(
       auth,
       email,
       password,
     );
+
     const randomAvatar =
       RANDOM_AVATARS[Math.floor(Math.random() * RANDOM_AVATARS.length)];
+
     await updateProfile(credential.user, {
       displayName,
       photoURL: randomAvatar,
     });
+
     await sendEmailVerification(credential.user);
-    await upsertUserDocument(credential.user, {
-      displayName,
-      photoURL: randomAvatar,
-      phone: phone ?? "",
-      provider: "password",
-      emailVerified: false,
+
+    // sync MySQL
+    const token = await credential.user.getIdToken();
+
+    await fetch("http://localhost:5000/api/auth/sync-user", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: displayName,
+        phone: phone,
+        avatar: randomAvatar,
+        dob: dob,
+      }),
     });
+
     await signOut(auth);
+
     return credential;
   };
 
@@ -154,23 +195,26 @@ export function AuthProvider({ children }) {
   };
 
   const loginWithGoogle = async () => {
+    const credential = await signInWithPopup(auth, googleProvider);
 
-  const credential = await signInWithPopup(auth, googleProvider);
+    const token = await credential.user.getIdToken();
 
-  const token = await credential.user.getIdToken();
+    await fetch("http://localhost:5000/api/auth/sync-user", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: credential.user.displayName,
+        avatar: credential.user.photoURL,
+      }),
+    });
 
-  await fetch("http://localhost:5000/api/auth/sync-user", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+    await upsertUserDocument(credential.user);
 
-  await upsertUserDocument(credential.user);
-
-  return credential;
-
-};
+    return credential;
+  };
 
   const logout = () => signOut(auth);
 
