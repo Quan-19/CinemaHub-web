@@ -12,8 +12,39 @@ import CinemaSelectionPage from "../pages/CinemaSelectionPage.jsx";
 import SeatSelectionPage from "../pages/SeatSelectionPage.jsx";
 import BookingConfirmationPage from "../pages/BookingConfirmationPage.jsx";
 import TicketPage from "../pages/TicketPage.jsx";
+import StaffLayout from "../layouts/StaffLayout.jsx";
+import StaffDashboardPage from "../pages/staff/StaffDashboardPage.jsx";
+import StaffMoviesPage from "../pages/staff/StaffMoviesPage.jsx";
+import StaffPromotionsPage from "../pages/staff/StaffPromotionsPage.jsx";
+import StaffPlaceholderPage from "../pages/staff/StaffPlaceholderPage.jsx";
 
 export const router = createBrowserRouter([
+  {
+    path: "/staff",
+    element: <StaffLayout />,
+    children: [
+      {
+        index: true,
+        element: <StaffDashboardPage />,
+      },
+      {
+        path: "movies",
+        element: <StaffMoviesPage />,
+      },
+      {
+        path: "showtimes",
+        element: <StaffPlaceholderPage title="Suất chiếu" />,
+      },
+      {
+        path: "rooms",
+        element: <StaffPlaceholderPage title="Phòng chiếu" />,
+      },
+      {
+        path: "promotions",
+        element: <StaffPromotionsPage />,
+      },
+    ],
+  },
   {
     path: "/",
     element: <MainLayout />,
