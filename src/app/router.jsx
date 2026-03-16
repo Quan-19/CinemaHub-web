@@ -17,6 +17,7 @@ import StaffDashboardPage from "../pages/staff/StaffDashboardPage.jsx";
 import StaffMoviesPage from "../pages/staff/StaffMoviesPage.jsx";
 import StaffPromotionsPage from "../pages/staff/StaffPromotionsPage.jsx";
 import StaffPlaceholderPage from "../pages/staff/StaffPlaceholderPage.jsx";
+import StaffProfilePage from "../pages/staff/StaffProfilePage.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -26,6 +27,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <StaffDashboardPage />,
+      },
+      {
+        path: "profile",
+        element: <StaffProfilePage />,
       },
       {
         path: "movies",

@@ -87,7 +87,7 @@ function StaffLayout() {
                 >
                   <Bell className="h-5 w-5" />
                 </button>
-
+                {/* 
                 <div className="flex items-center gap-2 rounded-2xl border border-zinc-800 bg-cinema-surface px-3 py-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cinema-primary text-xs font-semibold">
                     NV
@@ -100,7 +100,7 @@ function StaffLayout() {
                       staff@CinemaHub.vn
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </header>

@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Tag,
   Theater,
+  User,
   X,
 } from "lucide-react";
 
@@ -124,6 +125,13 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
             to="/staff"
             icon={LayoutDashboard}
             label="Dashboard"
+            collapsed={collapsed}
+            onNavigate={handleNavigate}
+          />
+          <SidebarLink
+            to="/staff/profile"
+            icon={User}
+            label="Hồ sơ"
             collapsed={collapsed}
             onNavigate={handleNavigate}
           />
