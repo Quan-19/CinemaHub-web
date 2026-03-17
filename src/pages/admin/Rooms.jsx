@@ -1,12 +1,9 @@
-import React from "react";
-
-const Rooms = () => {
-	return (
-		<div>
-			<h1>Rooms Page</h1>
-			<p>Quản lý phòng chiếu tại đây.</p>
-		</div>
-	);
+const Revenue = () => {
+  return (
+    <div>
+      <h1>Revenue Statistics</h1>
+    </div>
+  );
 };
 
-export default Rooms;
+export default Revenue;

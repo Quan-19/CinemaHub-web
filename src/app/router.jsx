@@ -13,13 +13,78 @@ import SeatSelectionPage from "../pages/SeatSelectionPage.jsx";
 import BookingConfirmationPage from "../pages/BookingConfirmationPage.jsx";
 import TicketPage from "../pages/TicketPage.jsx";
 
+// Admin pages
+import AdminLayout from "../layouts/AdminLayout.jsx";
+import Dashboard from "../pages/admin/Dashboard.jsx";
+import Movies from "../pages/admin/Movies.jsx";
+import Orders from "../pages/admin/Orders.jsx";
+import Customers from "../pages/admin/Customers.jsx";
+import Rooms from "../pages/admin/Rooms.jsx";
+import Showtimes from "../pages/admin/Showtimes.jsx";
+import Revenue from "../pages/admin/Revenue.jsx";
+import AdminPricingPage from "../pages/admin/AdminPricingPage.jsx";
 export const router = createBrowserRouter([
+  // {
+  //   path: "/",
+  //   element: <MainLayout />,
+  //   children: [
+  //     {
+  //       index: true,
+  //       element: <HomePage />,
+  //     },
+  //     {
+  //       path: "movies",
+  //       element: <MoviesPage />,
+  //     },
+  //     {
+  //       path: "movies/:id",
+  //       element: <MovieDetailPage />,
+  //     },
+  //     {
+  //       path: "booking/confirm",
+  //       element: <BookingConfirmationPage />,
+  //     },
+  //     {
+  //       path: "booking/:movieId",
+  //       element: <CinemaSelectionPage />,
+  //     },
+  //     {
+  //       path: "seats/:movieId/:cinemaId/:showtimeId",
+  //       element: <SeatSelectionPage />,
+  //     },
+  //     {
+  //       path: "ticket/:bookingCode",
+  //       element: <TicketPage />,
+  //     },
+  //     {
+  //       path: "cinemas",
+  //       element: <CinemaPage />,
+  //     },
+  //     {
+  //       path: "promotions",
+  //       element: <PromotionsPage />,
+  //     },
+  //     {
+  //       path: "auth",
+  //       element: <AuthPage />,
+  //     },
+  //     {
+  //       path: "profile",
+  //       element: <ProfilePage />,
+  //     },
+  //     {
+  //       path: "*",
+  //       element: <NotFoundPage />,
+  //     },
+  //   ],
+  // },
   {
-    path: "/",
-    element: <MainLayout />,
+    // Admin routes
+    path: "/admin",
+    element: <AdminLayout />,
     children: [
       {
-        index: true,
+        path: "Dashboard",
         element: <Dashboard />,
       },
       {
@@ -46,6 +111,10 @@ export const router = createBrowserRouter([
         path: "revenue",
         element: <Revenue />,
       },
+      {
+        path: "prices",
+        element: <AdminPricingPage/>,
+      }
     ],
   }
 ]);
