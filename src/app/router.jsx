@@ -23,6 +23,14 @@ import Rooms from "../pages/admin/Rooms.jsx";
 import Showtimes from "../pages/admin/Showtimes.jsx";
 import Revenue from "../pages/admin/Revenue.jsx";
 import AdminPricingPage from "../pages/admin/AdminPricingPage.jsx";
+
+//Staff
+import StaffLayout from "../layouts/StaffLayout.jsx";
+import StaffDashboardPage from "../pages/staff/StaffDashboardPage.jsx";
+import StaffMoviesPage from "../pages/staff/StaffMoviesPage.jsx";
+import StaffPromotionsPage from "../pages/staff/StaffPromotionsPage.jsx";
+import StaffPlaceholderPage from "../pages/staff/StaffPlaceholderPage.jsx";
+
 export const router = createBrowserRouter([
   // {
   //   path: "/",
@@ -116,5 +124,31 @@ export const router = createBrowserRouter([
         element: <AdminPricingPage/>,
       }
     ],
-  }
+  },
+  {
+    path: "/staff",
+    element: <StaffLayout />,
+    children: [
+      {
+        index: true,
+        element: <StaffDashboardPage />,
+      },
+      {
+        path: "movies",
+        element: <StaffMoviesPage />,
+      },
+      {
+        path: "showtimes",
+        element: <StaffPlaceholderPage title="Suất chiếu" />,
+      },
+      {
+        path: "rooms",
+        element: <StaffPlaceholderPage title="Phòng chiếu" />,
+      },
+      {
+        path: "promotions",
+        element: <StaffPromotionsPage />,
+      },
+    ],
+  },
 ]);
