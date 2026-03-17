@@ -39,9 +39,13 @@ export const router = createBrowserRouter([
         element: <CinemaSelectionPage />,
       },
       {
-        path: "seats/:movieId/:cinemaId/:showtimeId",
+        path: "seats/:showtimeId",
         element: <SeatSelectionPage />,
       },
+      // {
+      //   path: "seats/:movieId/:cinemaId/:showtimeId",
+      //   element: <SeatSelectionPage />,
+      // },
       {
         path: "ticket/:bookingCode",
         element: <TicketPage />,
