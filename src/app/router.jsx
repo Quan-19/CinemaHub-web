@@ -1,3 +1,79 @@
+// import { createBrowserRouter } from "react-router-dom";
+// import MainLayout from "../layouts/MainLayout.jsx";
+// import HomePage from "../pages/HomePage.jsx";
+// import MoviesPage from "../pages/MoviesPage.jsx";
+// import MovieDetailPage from "../pages/MovieDetailPage.jsx";
+// import CinemaPage from "../pages/CinemaPage.jsx";
+// import PromotionsPage from "../pages/PromotionsPage.jsx";
+// import AuthPage from "../pages/AuthPage.jsx";
+// import NotFoundPage from "../pages/NotFoundPage.jsx";
+// import ProfilePage from "../pages/ProfilePage.jsx";
+// import CinemaSelectionPage from "../pages/CinemaSelectionPage.jsx";
+// import SeatSelectionPage from "../pages/SeatSelectionPage.jsx";
+// import BookingConfirmationPage from "../pages/BookingConfirmationPage.jsx";
+// import TicketPage from "../pages/TicketPage.jsx";
+
+// export const router = createBrowserRouter([
+//   {
+//     path: "/",
+//     element: <MainLayout />,
+//     children: [
+//       {
+//         index: true,
+//         element: <HomePage />,
+//       },
+//       {
+//         path: "movies",
+//         element: <MoviesPage />,
+//       },
+//       {
+//         path: "movies/:id",
+//         element: <MovieDetailPage />,
+//       },
+//       {
+//         path: "booking/confirm",
+//         element: <BookingConfirmationPage />,
+//       },
+//       {
+//         path: "booking/:movieId",
+//         element: <CinemaSelectionPage />,
+//       },
+//       {
+//         path: "seats/:showtimeId",
+//         element: <SeatSelectionPage />,
+//       },
+//       // {
+//       //   path: "seats/:movieId/:cinemaId/:showtimeId",
+//       //   element: <SeatSelectionPage />,
+//       // },
+//       {
+//         path: "ticket/:bookingCode",
+//         element: <TicketPage />,
+//       },
+//       {
+//         path: "cinemas",
+//         element: <CinemaPage />,
+//       },
+//       {
+//         path: "promotions",
+//         element: <PromotionsPage />,
+//       },
+//       {
+//         path: "auth",
+//         element: <AuthPage />,
+//       },
+//       {
+//         path: "profile",
+//         element: <ProfilePage />,
+//       },
+//       {
+//         path: "*",
+//         element: <NotFoundPage />,
+//       },
+//     ],
+//   },
+// ]);
+
 import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout.jsx";
 import HomePage from "../pages/HomePage.jsx";
@@ -13,62 +89,146 @@ import SeatSelectionPage from "../pages/SeatSelectionPage.jsx";
 import BookingConfirmationPage from "../pages/BookingConfirmationPage.jsx";
 import TicketPage from "../pages/TicketPage.jsx";
 
+// Admin pages
+import AdminLayout from "../layouts/AdminLayout.jsx";
+import Dashboard from "../pages/admin/Dashboard.jsx";
+import Movies from "../pages/admin/Movies.jsx";
+import Orders from "../pages/admin/Orders.jsx";
+import Customers from "../pages/admin/Customers.jsx";
+import Rooms from "../pages/admin/Rooms.jsx";
+import Showtimes from "../pages/admin/Showtimes.jsx";
+import Revenue from "../pages/admin/Revenue.jsx";
+import AdminPricingPage from "../pages/admin/AdminPricingPage.jsx";
+
+//Staff
+import StaffLayout from "../layouts/StaffLayout.jsx";
+import StaffDashboardPage from "../pages/staff/StaffDashboardPage.jsx";
+import StaffMoviesPage from "../pages/staff/StaffMoviesPage.jsx";
+import StaffPromotionsPage from "../pages/staff/StaffPromotionsPage.jsx";
+import StaffPlaceholderPage from "../pages/staff/StaffPlaceholderPage.jsx";
+import StaffProfilePage from "../pages/staff/StaffProfilePage.jsx";
+
 export const router = createBrowserRouter([
+  // {
+  //   path: "/",
+  //   element: <MainLayout />,
+  //   children: [
+  //     {
+  //       index: true,
+  //       element: <HomePage />,
+  //     },
+  //     {
+  //       path: "movies",
+  //       element: <MoviesPage />,
+  //     },
+  //     {
+  //       path: "movies/:id",
+  //       element: <MovieDetailPage />,
+  //     },
+  //     {
+  //       path: "booking/confirm",
+  //       element: <BookingConfirmationPage />,
+  //     },
+  //     {
+  //       path: "booking/:movieId",
+  //       element: <CinemaSelectionPage />,
+  //     },
+  //     {
+  //       path: "seats/:movieId/:cinemaId/:showtimeId",
+  //       element: <SeatSelectionPage />,
+  //     },
+  //     {
+  //       path: "ticket/:bookingCode",
+  //       element: <TicketPage />,
+  //     },
+  //     {
+  //       path: "cinemas",
+  //       element: <CinemaPage />,
+  //     },
+  //     {
+  //       path: "promotions",
+  //       element: <PromotionsPage />,
+  //     },
+  //     {
+  //       path: "auth",
+  //       element: <AuthPage />,
+  //     },
+  //     {
+  //       path: "profile",
+  //       element: <ProfilePage />,
+  //     },
+  //     {
+  //       path: "*",
+  //       element: <NotFoundPage />,
+  //     },
+  //   ],
+  // },
   {
-    path: "/",
-    element: <MainLayout />,
+    // Admin routes
+    path: "/admin",
+    element: <AdminLayout />,
     children: [
       {
-        index: true,
-        element: <HomePage />,
+        path: "Dashboard",
+        element: <Dashboard />,
       },
       {
         path: "movies",
-        element: <MoviesPage />,
+        element: <Movies />,
       },
       {
-        path: "movies/:id",
-        element: <MovieDetailPage />,
+        path: "orders",
+        element: <Orders />,
       },
       {
-        path: "booking/confirm",
-        element: <BookingConfirmationPage />,
+        path: "customers",
+        element: <Customers />,
       },
       {
-        path: "booking/:movieId",
-        element: <CinemaSelectionPage />,
+        path: "rooms",
+        element: <Rooms />,
       },
       {
-        path: "seats/:showtimeId",
-        element: <SeatSelectionPage />,
-      },
-      // {
-      //   path: "seats/:movieId/:cinemaId/:showtimeId",
-      //   element: <SeatSelectionPage />,
-      // },
-      {
-        path: "ticket/:bookingCode",
-        element: <TicketPage />,
+        path: "showtimes",
+        element: <Showtimes />,
       },
       {
-        path: "cinemas",
-        element: <CinemaPage />,
+        path: "revenue",
+        element: <Revenue />,
       },
       {
-        path: "promotions",
-        element: <PromotionsPage />,
-      },
+        path: "prices",
+        element: <AdminPricingPage/>,
+      }
+    ],
+  },
+  {
+    path: "/staff",
+    element: <StaffLayout />,
+    children: [
       {
-        path: "auth",
-        element: <AuthPage />,
+        index: true,
+        element: <StaffDashboardPage />,
       },
       {
         path: "profile",
-        element: <ProfilePage />,
+        element: <StaffProfilePage />,
       },
       {
-        path: "*",
-        element: <NotFoundPage />,
+        path: "movies",
+        element: <StaffMoviesPage />,
+      },
+      {
+        path: "showtimes",
+        element: <StaffPlaceholderPage title="Suất chiếu" />,
+      },
+      {
+        path: "rooms",
+        element: <StaffPlaceholderPage title="Phòng chiếu" />,
+      },
+      {
+        path: "promotions",
+        element: <StaffPromotionsPage />,
       },
     ],
   },
