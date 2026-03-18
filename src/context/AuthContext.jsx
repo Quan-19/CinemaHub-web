@@ -38,6 +38,7 @@ async function upsertUserDocument(user, extra = {}) {
   if (!user?.uid) return;
   const userRef = doc(db, "users", user.uid);
   const snapshot = await getDoc(userRef);
+
   const baseData = {
     uid: user.uid,
     email: user.email ?? "",
@@ -70,28 +71,109 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  const loginWithEmail = async (email, password, remember) => {
+  // ================= LOGIN =================
+  // const loginWithEmail = async (email, password, remember) => {
+  //   try {
+  //     const persistence = remember
+  //       ? browserLocalPersistence
+  //       : browserSessionPersistence;
+
+  //     await setPersistence(auth, persistence);
+
+  //     const credential = await signInWithEmailAndPassword(
+  //       auth,
+  //       email,
+  //       password,
+  //     );
+
+  //     await reload(credential.user);
+
+  //     const token = await credential.user.getIdToken();
+
+  //     // 🔥 LẤY ROLE TỪ BACKEND
+  //     const res = await fetch("http://localhost:5000/api/users/me", {
+  //       method: "GET",
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+
+  //     if (!res.ok) {
+  //       throw new Error("Không lấy được thông tin user từ backend");
+  //     }
+
+  //     let data = {};
+
+  //     try {
+  //       const text = await res.text();
+  //       console.log("RAW RESPONSE:", text);
+
+  //       data = text ? JSON.parse(text) : {};
+  //     } catch (e) {
+  //       console.error("❌ JSON parse error:", e);
+  //     }
+
+  //     console.log("USER DATA:", data);
+
+  //     const role = data?.role;
+
+  //     if (!role) {
+  //       throw new Error("Không lấy được role từ backend");
+  //     }
+
+  //     // lưu role
+  //     localStorage.setItem("role", role);
+
+  //     // 🔥 ADMIN BYPASS VERIFY
+  //     if (!credential.user.emailVerified && role !== "admin") {
+  //       await signOut(auth);
+  //       throw createAuthError(
+  //         "auth/email-not-verified",
+  //         "Email chưa được xác minh.",
+  //       );
+  //     }
+
+  //     // 🔥 SYNC MYSQL
+  //     await fetch("http://localhost:5000/api/auth/sync-user", {
+  //       method: "POST",
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         name: credential.user.displayName,
+  //         avatar: credential.user.photoURL,
+  //       }),
+  //     });
+
+  //     await upsertUserDocument(credential.user);
+
+  //     return {
+  //       ...credential,
+  //       role,
+  //     };
+  //   } catch (err) {
+  //     console.error("LOGIN ERROR:", err);
+  //     throw err;
+  //   }
+  // };
+const loginWithEmail = async (email, password, remember) => {
+  try {
     const persistence = remember
       ? browserLocalPersistence
       : browserSessionPersistence;
 
     await setPersistence(auth, persistence);
 
-    const credential = await signInWithEmailAndPassword(auth, email, password);
+    const credential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
-    await reload(credential.user);
-
-    if (!credential.user.emailVerified) {
-      await signOut(auth);
-      throw createAuthError(
-        "auth/email-not-verified",
-        "Email chưa được xác minh.",
-      );
-    }
-
-    // sync MySQL
     const token = await credential.user.getIdToken();
 
+    // ✅ 1. SYNC TRƯỚC
     await fetch("http://localhost:5000/api/auth/sync-user", {
       method: "POST",
       headers: {
@@ -104,33 +186,37 @@ export function AuthProvider({ children }) {
       }),
     });
 
-    await upsertUserDocument(credential.user);
+    // ✅ 2. LẤY ROLE SAU
+    const res = await fetch("http://localhost:5000/api/users/me", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-    return credential;
-  };
-  const updateUserProfile = async (phone, dob) => {
+    const data = await res.json();
 
-  const currentUser = auth.currentUser;
+    const role = data.role;
 
-  if (!currentUser) return;
+    localStorage.setItem("role", role);
+    localStorage.setItem("token", token); // 🔥 lưu token
 
-  const token = await currentUser.getIdToken();
-
-  await fetch("http://localhost:5000/api/users/update-profile", {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email: currentUser.email,
-      phone: phone,
-      dob: dob,
-    }),
-  });
-
+    return {
+      ...credential,
+      role,
+    };
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+    throw err;
+  }
 };
-  const registerWithEmail = async (email, password, displayName, phone,dob) => {
+  // ================= REGISTER =================
+  const registerWithEmail = async (
+    email,
+    password,
+    displayName,
+    phone,
+    dob,
+  ) => {
     const credential = await createUserWithEmailAndPassword(
       auth,
       email,
@@ -147,9 +233,9 @@ export function AuthProvider({ children }) {
 
     await sendEmailVerification(credential.user);
 
-    // sync MySQL
     const token = await credential.user.getIdToken();
 
+    // 🔥 LUÔN LÀ USER (KHÔNG SET ADMIN Ở FRONTEND)
     await fetch("http://localhost:5000/api/auth/sync-user", {
       method: "POST",
       headers: {
@@ -161,6 +247,7 @@ export function AuthProvider({ children }) {
         phone: phone,
         avatar: randomAvatar,
         dob: dob,
+        role: "user",
       }),
     });
 
@@ -169,31 +256,39 @@ export function AuthProvider({ children }) {
     return credential;
   };
 
+  // ================= RESEND VERIFY =================
   const resendEmailVerification = async (email, password, remember = false) => {
     if (!email || !password) {
       throw createAuthError(
         "auth/missing-email-for-verification",
-        "Vui lòng nhập email và mật khẩu để gửi lại xác minh.",
+        "Vui lòng nhập email và mật khẩu.",
       );
     }
 
     const persistence = remember
       ? browserLocalPersistence
       : browserSessionPersistence;
+
     await setPersistence(auth, persistence);
+
     const credential = await signInWithEmailAndPassword(auth, email, password);
+
     await reload(credential.user);
 
     if (credential.user.emailVerified) {
-      await upsertUserDocument(credential.user, { emailVerified: true });
+      await upsertUserDocument(credential.user, {
+        emailVerified: true,
+      });
       return { alreadyVerified: true };
     }
 
     await sendEmailVerification(credential.user);
     await signOut(auth);
-    return { verificationSent: true, email: credential.user.email ?? email };
+
+    return { verificationSent: true };
   };
 
+  // ================= GOOGLE LOGIN =================
   const loginWithGoogle = async () => {
     const credential = await signInWithPopup(auth, googleProvider);
 
@@ -236,4 +331,4 @@ export function AuthProvider({ children }) {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useAuth = () => useContext(AuthContext); 
+export const useAuth = () => useContext(AuthContext);

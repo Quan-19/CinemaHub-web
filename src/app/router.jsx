@@ -109,67 +109,71 @@ import StaffPlaceholderPage from "../pages/staff/StaffPlaceholderPage.jsx";
 import StaffProfilePage from "../pages/staff/StaffProfilePage.jsx";
 
 export const router = createBrowserRouter([
-  // {
-  //   path: "/",
-  //   element: <MainLayout />,
-  //   children: [
-  //     {
-  //       index: true,
-  //       element: <HomePage />,
-  //     },
-  //     {
-  //       path: "movies",
-  //       element: <MoviesPage />,
-  //     },
-  //     {
-  //       path: "movies/:id",
-  //       element: <MovieDetailPage />,
-  //     },
-  //     {
-  //       path: "booking/confirm",
-  //       element: <BookingConfirmationPage />,
-  //     },
-  //     {
-  //       path: "booking/:movieId",
-  //       element: <CinemaSelectionPage />,
-  //     },
-  //     {
-  //       path: "seats/:movieId/:cinemaId/:showtimeId",
-  //       element: <SeatSelectionPage />,
-  //     },
-  //     {
-  //       path: "ticket/:bookingCode",
-  //       element: <TicketPage />,
-  //     },
-  //     {
-  //       path: "cinemas",
-  //       element: <CinemaPage />,
-  //     },
-  //     {
-  //       path: "promotions",
-  //       element: <PromotionsPage />,
-  //     },
-  //     {
-  //       path: "auth",
-  //       element: <AuthPage />,
-  //     },
-  //     {
-  //       path: "profile",
-  //       element: <ProfilePage />,
-  //     },
-  //     {
-  //       path: "*",
-  //       element: <NotFoundPage />,
-  //     },
-  //   ],
-  // },
+  {
+    path: "/",
+    element: <MainLayout />,
+    children: [
+      {
+        index: true,
+        element: <HomePage />,
+      },
+      {
+        path: "movies",
+        element: <MoviesPage />,
+      },
+      {
+        path: "movies/:id",
+        element: <MovieDetailPage />,
+      },
+      {
+        path: "booking/confirm",
+        element: <BookingConfirmationPage />,
+      },
+      {
+        path: "booking/:movieId",
+        element: <CinemaSelectionPage />,
+      },
+      {
+        path: "seats/:showtimeId",
+        element: <SeatSelectionPage />,
+      },
+      {
+        path: "seats/:movieId/:cinemaId/:showtimeId",
+        element: <SeatSelectionPage />,
+      },
+      {
+        path: "ticket/:bookingCode",
+        element: <TicketPage />,
+      },
+      {
+        path: "cinemas",
+        element: <CinemaPage />,
+      },
+      {
+        path: "promotions",
+        element: <PromotionsPage />,
+      },
+      {
+        path: "auth",
+        element: <AuthPage />,
+      },
+      {
+        path: "profile",
+        element: <ProfilePage />,
+      },
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
+    ],
+  },
   {
     // Admin routes
     path: "/admin",
     element: <AdminLayout />,
     children: [
       {
-        path: "Dashboard",
+        path: "dashboard",
         element: <Dashboard />,
       },
       {
