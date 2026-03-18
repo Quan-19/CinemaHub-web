@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import {
   ChevronLeft,
@@ -8,6 +8,7 @@ import {
   Plus,
   Settings,
   Trash2,
+  Wrench,
 } from "lucide-react";
 import { StaffCenteredModalShell } from "../../components/staff/StaffModalShell.jsx";
 import StaffIconButton from "../../components/staff/StaffIconButton.jsx";
@@ -107,11 +108,8 @@ function buildSeatGrid({ rows, seatsPerRow, vipRows, coupleRow }) {
       const isCouple = coupleRow === r;
       const type = isCouple ? "couple" : vipSet.has(r) ? "vip" : "standard";
 
-      // Deterministic maintenance pattern for demo UI.
-      const maintenance =
-        (r === 3 && (c === 5 || c === 6)) ||
-        (r === 4 && c === 4) ||
-        (r === 5 && c === 2);
+      const maintenance = false;
+
 
       seats.push({
         id: `${rowLabel}${c}`,
@@ -140,7 +138,9 @@ function SeatLegendItem({ colorClassName, label }) {
   );
 }
 
-function SeatMapModal({ room, cinemaName, onClose }) {
+function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMaintenance }) {
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+
   const seatRows = useMemo(() => {
     return buildSeatGrid({
       rows: room.rows,
@@ -150,6 +150,14 @@ function SeatMapModal({ room, cinemaName, onClose }) {
     });
   }, [room]);
 
+  const handleSeatClick = useCallback(
+    (seatId) => {
+      if (!maintenanceMode) return;
+      onToggleMaintenance(room.id, seatId);
+    },
+    [maintenanceMode, onToggleMaintenance, room.id]
+  );
+
   return (
     <StaffCenteredModalShell
       title={`Sơ đồ ghế — ${room.name}`}
@@ -157,9 +165,31 @@ function SeatMapModal({ room, cinemaName, onClose }) {
       maxWidthClassName="max-w-5xl"
     >
       <div className="space-y-4">
-        <div className="text-xs text-zinc-400">
-          {cinemaName} · {room.type} · {room.rows * room.seatsPerRow} ghế
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-zinc-400">
+            {cinemaName} · {room.type} · {room.rows * room.seatsPerRow} ghế
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setMaintenanceMode((v) => !v)}
+            className={[
+              "inline-flex h-9 items-center gap-2 rounded-2xl border px-4 text-xs font-semibold transition-colors",
+              maintenanceMode
+                ? "border-red-500 bg-red-500/20 text-red-400"
+                : "border-zinc-700 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-800",
+            ].join(" ")}
+          >
+            <Wrench className="h-3.5 w-3.5" aria-hidden="true" />
+            {maintenanceMode ? "Đang chọn bảo trì" : "Bảo trì ghế"}
+          </button>
         </div>
+
+        {maintenanceMode && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/5 px-4 py-2.5 text-xs text-red-300">
+            Nhấn vào ghế để đánh dấu / bỏ đánh dấu bảo trì. Ghế bảo trì sẽ không thể đặt được.
+          </div>
+        )}
 
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950/20 p-4 sm:p-5">
           <div className="relative mb-6 flex items-center justify-center">
@@ -235,22 +265,31 @@ function SeatMapModal({ room, cinemaName, onClose }) {
 
                     <div className="grid auto-cols-max grid-flow-col gap-2">
                       {row.seats.map((seat) => {
+                        const isMaintenance = maintenanceSeats.has(seat.id);
                         const base =
                           "h-7 w-7 rounded-[6px] border bg-zinc-950/10";
-                        const style = seat.maintenance
-                          ? "border-zinc-500 bg-zinc-900/30"
+                        const style = isMaintenance
+                          ? "border-red-500 bg-red-500/25"
                           : seat.type === "vip"
                           ? "border-amber-400"
                           : seat.type === "couple"
                           ? "border-fuchsia-400"
                           : "border-zinc-700 bg-zinc-800/40";
+                        const cursor = maintenanceMode
+                          ? "cursor-pointer hover:ring-2 hover:ring-red-400/40"
+                          : "";
 
                         return (
                           <div
                             key={seat.id}
-                            className={[base, style].join(" ")}
-                            title={seat.label}
+                            className={[base, style, cursor].join(" ")}
+                            title={
+                              isMaintenance
+                                ? `${seat.label} (Bảo trì)`
+                                : seat.label
+                            }
                             aria-label={seat.label}
+                            onClick={() => handleSeatClick(seat.id)}
                           />
                         );
                       })}
@@ -292,7 +331,7 @@ function SeatMapModal({ room, cinemaName, onClose }) {
                 label="Ghế Couple"
               />
               <SeatLegendItem
-                colorClassName="border-zinc-500 bg-zinc-900/30"
+                colorClassName="border-red-500 bg-red-500/25"
                 label="Bảo trì"
               />
             </div>
@@ -439,7 +478,7 @@ function RoomConfigModal({ mode, cinemaName, initialRoom, onClose, onSave }) {
   );
 }
 
-function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow }) {
+function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow, maintenanceSeats }) {
   const previewRows = Math.min(rows, 6);
   const remaining = Math.max(0, rows - previewRows);
   const grid = useMemo(() => {
@@ -461,7 +500,10 @@ function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow }) {
           {grid.map((row) => (
             <div key={row.label} className="grid grid-flow-col gap-1">
               {row.seats.map((seat) => {
-                const color = seat.reserved
+                const isMaint = maintenanceSeats && maintenanceSeats.has(seat.id);
+                const color = isMaint
+                  ? "bg-red-500"
+                  : seat.reserved
                   ? "bg-zinc-900/60"
                   : seat.type === "vip"
                   ? "bg-amber-500"
@@ -491,12 +533,18 @@ function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow }) {
   );
 }
 
-function RoomCard({ cinemaName, room, onView, onConfig, onDelete }) {
+function RoomCard({ cinemaName, room, onView, onConfig, onDelete, maintenanceSeats }) {
   const total = room.rows * room.seatsPerRow;
   const vipCount = room.vipRows.length;
+  const isInactive = room.status !== "active";
 
   return (
-    <div className="cinema-surface rounded-2xl border border-zinc-800 p-4">
+    <div
+      className={[
+        "cinema-surface rounded-2xl border border-zinc-800 p-4",
+        isInactive ? "opacity-60" : "",
+      ].join(" ")}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -515,7 +563,7 @@ function RoomCard({ cinemaName, room, onView, onConfig, onDelete }) {
             "border-zinc-800",
             room.status === "active"
               ? "bg-emerald-500/10 text-emerald-400"
-              : "bg-zinc-500/10 text-zinc-300",
+              : "bg-red-500/10 text-red-400",
           ].join(" ")}
         >
           {room.status === "active" ? "Hoạt động" : "Tạm dừng"}
@@ -528,6 +576,7 @@ function RoomCard({ cinemaName, room, onView, onConfig, onDelete }) {
           seatsPerRow={room.seatsPerRow}
           vipRows={room.vipRows}
           coupleRow={room.coupleRow}
+          maintenanceSeats={maintenanceSeats}
         />
       </div>
 
@@ -557,8 +606,15 @@ function RoomCard({ cinemaName, room, onView, onConfig, onDelete }) {
       <div className="mt-4 flex items-center gap-3">
         <button
           type="button"
-          onClick={onView}
-          className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-cyan-500/10 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/15"
+          onClick={isInactive ? undefined : onView}
+          disabled={isInactive}
+          className={[
+            "inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-800 text-sm font-semibold",
+            isInactive
+              ? "cursor-not-allowed bg-zinc-800/30 text-zinc-600"
+              : "bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/15",
+          ].join(" ")}
+          title={isInactive ? "Phòng đang tạm dừng — không thể xem sơ đồ" : ""}
         >
           <Eye className="h-4 w-4" aria-hidden="true" />
           Xem sơ đồ
@@ -712,6 +768,23 @@ function StaffRoomsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [createDraft, setCreateDraft] = useState(null);
 
+  // Map of roomId -> Set of maintenance seat IDs
+  const [maintenanceMap, setMaintenanceMap] = useState(() => new Map());
+
+  const handleToggleMaintenance = useCallback((roomId, seatId) => {
+    setMaintenanceMap((prev) => {
+      const next = new Map(prev);
+      const seats = new Set(next.get(roomId) ?? []);
+      if (seats.has(seatId)) {
+        seats.delete(seatId);
+      } else {
+        seats.add(seatId);
+      }
+      next.set(roomId, seats);
+      return next;
+    });
+  }, []);
+
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-4">
@@ -782,6 +855,7 @@ function StaffRoomsPage() {
             key={room.id}
             cinemaName={cinemaName}
             room={room}
+            maintenanceSeats={maintenanceMap.get(room.id) ?? new Set()}
             onView={() => setSeatRoom(room)}
             onConfig={() => setConfigRoom(room)}
             onDelete={() => {
@@ -802,6 +876,8 @@ function StaffRoomsPage() {
         <SeatMapModal
           room={seatRoom}
           cinemaName={cinemaName}
+          maintenanceSeats={maintenanceMap.get(seatRoom.id) ?? new Set()}
+          onToggleMaintenance={handleToggleMaintenance}
           onClose={() => setSeatRoom(null)}
         />
       ) : null}

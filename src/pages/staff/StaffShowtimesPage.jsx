@@ -123,9 +123,6 @@ function ShowtimeCard({ showtime, onEdit, onDelete }) {
             </span>
             <span>{showtime.language}</span>
             <span>{showtime.duration} phút</span>
-            <span className="font-semibold text-cinema-primary">
-              {showtime.price.toLocaleString()} ₫
-            </span>
           </div>
         </div>
 
@@ -160,7 +157,6 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
   const [room, setRoom] = useState(initial.room);
   const [format, setFormat] = useState(initial.format);
   const [language, setLanguage] = useState(initial.language);
-  const [price, setPrice] = useState(initial.price);
   const [status, setStatus] = useState(initial.status);
   const [error, setError] = useState(null);
 
@@ -194,7 +190,6 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
       room,
       format,
       language,
-      price: Number(price) || 0,
       status,
     });
   };
@@ -252,7 +247,7 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
+                className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -264,7 +259,7 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
                   type="time"
                   value={start}
                   onChange={(e) => setStart(e.target.value)}
-                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
+                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100"
                 />
               </div>
               <div>
@@ -312,35 +307,21 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <div className="text-xs font-semibold text-zinc-400">
-                  Ngôn ngữ
-                </div>
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
-                >
-                  {LANGUAGE_OPTIONS.map((l) => (
-                    <option key={l} value={l}>
-                      {l}
-                    </option>
-                  ))}
-                </select>
+            <div>
+              <div className="text-xs font-semibold text-zinc-400">
+                Ngôn ngữ
               </div>
-              <div>
-                <div className="text-xs font-semibold text-zinc-400">
-                  Giá vé (₫)
-                </div>
-                <input
-                  type="number"
-                  min="0"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
-                />
-              </div>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
+              >
+                {LANGUAGE_OPTIONS.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <div className="text-xs font-semibold text-zinc-400">
@@ -410,7 +391,6 @@ function StaffShowtimesPage() {
         room: "P1",
         format: "2D",
         language: "Phụ đề Việt",
-        price: 90000,
         status: "open",
       },
       {
@@ -425,7 +405,6 @@ function StaffShowtimesPage() {
         room: "P2",
         format: "3D",
         language: "Phụ đề Việt",
-        price: 110000,
         status: "open",
       },
       {
@@ -440,7 +419,6 @@ function StaffShowtimesPage() {
         room: "IMAX 1",
         format: "IMAX",
         language: "Phụ đề Việt",
-        price: 150000,
         status: "open",
       },
       {
@@ -455,7 +433,6 @@ function StaffShowtimesPage() {
         room: "P1",
         format: "2D",
         language: "Phụ đề Việt",
-        price: 90000,
         status: "locked",
       },
     ];
@@ -502,7 +479,6 @@ function StaffShowtimesPage() {
       room: ROOM_OPTIONS[0],
       format: FORMAT_OPTIONS[0],
       language: LANGUAGE_OPTIONS[0],
-      price: 90000,
       status: "open",
     };
     setEditModal({ mode: "create", data: initial });
