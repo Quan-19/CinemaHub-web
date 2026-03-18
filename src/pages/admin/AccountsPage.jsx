@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import AccountsHeader from "../../components/admin/Accounts/AccountsHeader";
 import AccountsStats from "../../components/admin/Accounts/AccountsStats";
 import AccountsFilter from "../../components/admin/Accounts/AccountsFilter";
@@ -106,7 +107,7 @@ export default function AccountsPage() {
   
   // State cho pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(8);
 
   // Filter accounts
   const filteredAccounts = accounts.filter((a) => {
@@ -126,6 +127,34 @@ export default function AccountsPage() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedAccounts = filteredAccounts.slice(startIndex, startIndex + itemsPerPage);
 
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+        range.push(i);
+      }
+    }
+
+    range.forEach((i) => {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push("...");
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    });
+
+    return rangeWithDots;
+  };
+
   // Handlers
   const handleAddAccount = () => {
     setEditAccount(null);
@@ -144,18 +173,26 @@ export default function AccountsPage() {
 
   const handleConfirmDelete = () => {
     if (deleteAccount) {
-      setAccounts(accounts.filter(a => a.id !== deleteAccount.id));
+      const updatedAccounts = accounts.filter(a => a.id !== deleteAccount.id);
+      setAccounts(updatedAccounts);
       setShowDeleteModal(false);
       setDeleteAccount(null);
+      
+      // Adjust current page if needed
+      const newTotalPages = Math.ceil(updatedAccounts.length / itemsPerPage);
+      if (currentPage > newTotalPages) {
+        setCurrentPage(Math.max(1, newTotalPages));
+      }
     }
   };
 
   const handleSaveAccount = (accountData) => {
     if (editAccount) {
       // Edit existing account
-      setAccounts(accounts.map(a => 
+      const updatedAccounts = accounts.map(a => 
         a.id === editAccount.id ? { ...a, ...accountData } : a
-      ));
+      );
+      setAccounts(updatedAccounts);
     } else {
       // Add new account
       const newAccount = {
@@ -164,10 +201,26 @@ export default function AccountsPage() {
         lastLogin: "Chưa đăng nhập",
         bookings: 0,
       };
-      setAccounts([...accounts, newAccount]);
+      const updatedAccounts = [...accounts, newAccount];
+      setAccounts(updatedAccounts);
+      
+      // Go to the page containing the new account
+      const newTotalPages = Math.ceil(updatedAccounts.length / itemsPerPage);
+      setCurrentPage(newTotalPages);
     }
     setShowModal(false);
     setEditAccount(null);
+  };
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
   };
 
   return (
@@ -195,37 +248,74 @@ export default function AccountsPage() {
       />
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-end items-center gap-2">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="w-10 h-10 rounded-lg bg-[#0d0d1a] border border-white/10 text-white/60 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition"
-          >
-            ‹
-          </button>
+      {filteredAccounts.length > 0 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className="flex items-center gap-4">
+            {/* Items per page selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-white/50 text-sm">Hiển thị:</span>
+              <select
+                value={itemsPerPage}
+                onChange={handleItemsPerPageChange}
+                className="bg-[#0d0d1a] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm outline-none focus:border-red-500/50 transition cursor-pointer"
+              >
+                <option value={5} className="bg-[#1a1a2e] text-white">5</option>
+                <option value={8} className="bg-[#1a1a2e] text-white">8</option>
+                <option value={10} className="bg-[#1a1a2e] text-white">10</option>
+                <option value={20} className="bg-[#1a1a2e] text-white">20</option>
+                <option value={50} className="bg-[#1a1a2e] text-white">50</option>
+              </select>
+            </div>
+            
+            <div className="text-white/50 text-sm">
+              {filteredAccounts.length > 0 ? (
+                <>Hiển thị {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredAccounts.length)} trong tổng số {filteredAccounts.length} tài khoản</>
+              ) : (
+                <>Không có tài khoản nào</>
+              )}
+            </div>
+          </div>
           
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`w-10 h-10 rounded-lg font-medium transition ${
-                currentPage === page
-                  ? "bg-red-600 text-white"
-                  : "bg-[#0d0d1a] border border-white/10 text-white/60 hover:bg-white/5"
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-          
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="w-10 h-10 rounded-lg bg-[#0d0d1a] border border-white/10 text-white/60 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition"
-          >
-            ›
-          </button>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              {/* Previous button */}
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="w-10 h-10 rounded-lg bg-[#0d0d1a] border border-white/10 text-white/60 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center"
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              {/* Page numbers */}
+              {getPageNumbers().map((page, index) => (
+                page === "..." ? (
+                  <span key={`dots-${index}`} className="text-white/40 px-2">...</span>
+                ) : (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`min-w-[40px] h-10 rounded-lg font-medium transition ${
+                      currentPage === page
+                        ? "bg-red-600 text-white"
+                        : "bg-[#0d0d1a] border border-white/10 text-white/60 hover:bg-white/5"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              ))}
+
+              {/* Next button */}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="w-10 h-10 rounded-lg bg-[#0d0d1a] border border-white/10 text-white/60 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
         </div>
       )}
 
