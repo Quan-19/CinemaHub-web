@@ -31,62 +31,64 @@ import StaffMoviesPage from "../pages/staff/StaffMoviesPage.jsx";
 import StaffPromotionsPage from "../pages/staff/StaffPromotionsPage.jsx";
 import StaffPlaceholderPage from "../pages/staff/StaffPlaceholderPage.jsx";
 import StaffProfilePage from "../pages/staff/StaffProfilePage.jsx";
+import StaffRoomsPage from "../pages/staff/StaffRoomsPage.jsx";
+import StaffShowtimesPage from "../pages/staff/StaffShowtimesPage.jsx";
 
 export const router = createBrowserRouter([
-  // {
-  //   path: "/",
-  //   element: <MainLayout />,
-  //   children: [
-  //     {
-  //       index: true,
-  //       element: <HomePage />,
-  //     },
-  //     {
-  //       path: "movies",
-  //       element: <MoviesPage />,
-  //     },
-  //     {
-  //       path: "movies/:id",
-  //       element: <MovieDetailPage />,
-  //     },
-  //     {
-  //       path: "booking/confirm",
-  //       element: <BookingConfirmationPage />,
-  //     },
-  //     {
-  //       path: "booking/:movieId",
-  //       element: <CinemaSelectionPage />,
-  //     },
-  //     {
-  //       path: "seats/:movieId/:cinemaId/:showtimeId",
-  //       element: <SeatSelectionPage />,
-  //     },
-  //     {
-  //       path: "ticket/:bookingCode",
-  //       element: <TicketPage />,
-  //     },
-  //     {
-  //       path: "cinemas",
-  //       element: <CinemaPage />,
-  //     },
-  //     {
-  //       path: "promotions",
-  //       element: <PromotionsPage />,
-  //     },
-  //     {
-  //       path: "auth",
-  //       element: <AuthPage />,
-  //     },
-  //     {
-  //       path: "profile",
-  //       element: <ProfilePage />,
-  //     },
-  //     {
-  //       path: "*",
-  //       element: <NotFoundPage />,
-  //     },
-  //   ],
-  // },
+  {
+    path: "/",
+    element: <MainLayout />,
+    children: [
+      {
+        index: true,
+        element: <HomePage />,
+      },
+      {
+        path: "movies",
+        element: <MoviesPage />,
+      },
+      {
+        path: "movies/:id",
+        element: <MovieDetailPage />,
+      },
+      {
+        path: "booking/confirm",
+        element: <BookingConfirmationPage />,
+      },
+      {
+        path: "booking/:movieId",
+        element: <CinemaSelectionPage />,
+      },
+      {
+        path: "seats/:movieId/:cinemaId/:showtimeId",
+        element: <SeatSelectionPage />,
+      },
+      {
+        path: "ticket/:bookingCode",
+        element: <TicketPage />,
+      },
+      {
+        path: "cinemas",
+        element: <CinemaPage />,
+      },
+      {
+        path: "promotions",
+        element: <PromotionsPage />,
+      },
+      {
+        path: "auth",
+        element: <AuthPage />,
+      },
+      {
+        path: "profile",
+        element: <ProfilePage />,
+      },
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
+    ],
+  },
   {
     // Admin routes
     path: "/admin",
@@ -122,8 +124,8 @@ export const router = createBrowserRouter([
       },
       {
         path: "prices",
-        element: <AdminPricingPage/>,
-      }
+        element: <AdminPricingPage />,
+      },
     ],
   },
   {
@@ -144,11 +146,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "showtimes",
-        element: <StaffPlaceholderPage title="Suất chiếu" />,
+        element: <StaffShowtimesPage />,
       },
       {
         path: "rooms",
-        element: <StaffPlaceholderPage title="Phòng chiếu" />,
+        element: <StaffRoomsPage />,
       },
       {
         path: "promotions",

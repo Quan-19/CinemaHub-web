@@ -1,5 +1,6 @@
 import { useOutletContext } from "react-router-dom";
 import { TrendingUp, Users, Ticket, Timer } from "lucide-react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 function StatCard({
   icon: Icon,
@@ -91,25 +92,150 @@ function ShowtimeRow({
   );
 }
 
-function Bars({ items }) {
-  const max = Math.max(...items.map((i) => i.value), 1);
+function HourlyTicketsChart({ items }) {
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+  const barsAreaRef = useRef(null);
+  const [tooltipPos, setTooltipPos] = useState({ left: 0, top: 0 });
+
+  const { chartMax, ticks } = useMemo(() => {
+    const maxValue = Math.max(...items.map((i) => i.value), 1);
+    const rounded = Math.ceil(maxValue / 25) * 25;
+    const nextMax = Math.max(100, rounded || 100);
+
+    return {
+      chartMax: nextMax,
+      ticks: [nextMax, nextMax * 0.75, nextMax * 0.5, nextMax * 0.25, 0].map(
+        (t) => Math.round(t)
+      ),
+    };
+  }, [items]);
+
+  const updateTooltipPosition = useCallback(() => {
+    if (hoveredIndex == null) return;
+    const root = barsAreaRef.current;
+    if (!root) return;
+
+    const cell = root.querySelector(`[data-index="${hoveredIndex}"]`);
+    const bar = cell?.querySelector(".hourly-bar");
+    if (!cell || !bar) return;
+
+    const rootRect = root.getBoundingClientRect();
+    const barRect = bar.getBoundingClientRect();
+
+    // Tooltip should sit above-right of the hovered bar (like the reference image)
+    const tooltipWidth = 160; // Tailwind w-40
+    const gutter = 12;
+    const offsetX = 12;
+    const offsetY = 10;
+
+    const nextLeft = Math.round(barRect.right - rootRect.left + offsetX);
+    const nextTop = Math.round(barRect.top - rootRect.top - offsetY);
+
+    const clampedLeft = Math.min(
+      Math.max(nextLeft, gutter),
+      Math.max(gutter, Math.round(rootRect.width) - tooltipWidth - gutter)
+    );
+    const clampedTop = Math.max(0, nextTop);
+
+    setTooltipPos({ left: clampedLeft, top: clampedTop });
+  }, [hoveredIndex]);
+
+  useLayoutEffect(() => {
+    updateTooltipPosition();
+  }, [updateTooltipPosition]);
+
+  useLayoutEffect(() => {
+    if (hoveredIndex == null) return;
+    window.addEventListener("resize", updateTooltipPosition);
+    return () => window.removeEventListener("resize", updateTooltipPosition);
+  }, [hoveredIndex, updateTooltipPosition]);
+
   return (
     <div className="mt-4">
-      <div className="grid grid-cols-7 gap-3 sm:gap-4">
-        {items.map((item) => (
-          <div key={item.label} className="flex flex-col items-center gap-2">
-            <div className="flex h-28 w-full items-end">
-              <div
-                className="w-full rounded-xl bg-cinema-primary"
-                style={{ height: `${Math.round((item.value / max) * 100)}%` }}
-                aria-label={`${item.label}: ${item.value}`}
-              />
+      <div className="grid grid-cols-[40px_1fr] gap-3">
+        <div className="flex h-36 flex-col justify-between pb-6 text-right text-xs font-medium text-zinc-500 sm:h-40">
+          {ticks.map((t) => (
+            <div key={t}>{t}</div>
+          ))}
+        </div>
+
+        <div>
+          <div className="relative h-36 border-b border-l border-zinc-800/70 sm:h-40">
+            {ticks
+              .filter((t) => t !== 0)
+              .map((t) => {
+                const pct = (t / chartMax) * 100;
+                return (
+                  <div
+                    key={t}
+                    className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-zinc-800/60"
+                    style={{ bottom: `${pct}%` }}
+                  />
+                );
+              })}
+
+            <div
+              ref={barsAreaRef}
+              className="absolute inset-x-0 bottom-0 top-0 grid auto-cols-fr grid-flow-col gap-3 px-2 pb-6 sm:gap-4"
+              onMouseLeave={() => setHoveredIndex(null)}
+            >
+              {hoveredIndex != null ? (
+                <div
+                  className="pointer-events-none absolute z-10 w-40 rounded-xl border border-zinc-800 bg-zinc-950/95 px-3 py-2 text-sm shadow-sm backdrop-blur transition-all duration-150 ease-out"
+                  style={{ left: tooltipPos.left, top: tooltipPos.top }}
+                  role="status"
+                >
+                  <div className="text-xs font-semibold text-zinc-100">
+                    {items[hoveredIndex]?.label}
+                  </div>
+                  <div className="mt-1 text-xs font-semibold text-red-500">
+                    Vé bán : {items[hoveredIndex]?.value}
+                  </div>
+                </div>
+              ) : null}
+
+              {items.map((item, index) => {
+                const heightPct = Math.round((item.value / chartMax) * 100);
+                const isHovered = hoveredIndex === index;
+
+                return (
+                  <div
+                    key={item.label}
+                    data-index={index}
+                    className="relative"
+                    onMouseEnter={() => setHoveredIndex(index)}
+                    onFocus={() => setHoveredIndex(index)}
+                    onBlur={() => setHoveredIndex(null)}
+                  >
+                    <div
+                      className={[
+                        "absolute inset-0 rounded-md transition-opacity duration-150",
+                        isHovered ? "bg-zinc-100 opacity-100" : "opacity-0",
+                      ].join(" ")}
+                      aria-hidden="true"
+                    />
+
+                    <div className="relative flex h-full items-end">
+                      <div
+                        className="hourly-bar w-full rounded-md bg-red-600"
+                        style={{
+                          height: `${Math.min(100, Math.max(0, heightPct))}%`,
+                        }}
+                        aria-label={`${item.label}: ${item.value}`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div className="text-[11px] font-medium text-zinc-500">
-              {item.label}
+
+            <div className="absolute inset-x-0 bottom-0 grid auto-cols-fr grid-flow-col gap-3 px-2 pt-2 text-center text-[11px] font-medium text-zinc-500 sm:gap-4">
+              {items.map((item) => (
+                <div key={item.label}>{item.label}</div>
+              ))}
             </div>
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
@@ -233,7 +359,7 @@ function StaffDashboardPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold">Vé bán theo giờ hôm nay</h2>
           </div>
-          <Bars
+          <HourlyTicketsChart
             items={[
               { label: "08:00", value: 12 },
               { label: "10:00", value: 28 },
@@ -242,6 +368,7 @@ function StaffDashboardPage() {
               { label: "16:00", value: 52 },
               { label: "18:00", value: 68 },
               { label: "20:00", value: 88 },
+              { label: "22:00", value: 44 },
             ]}
           />
         </div>
