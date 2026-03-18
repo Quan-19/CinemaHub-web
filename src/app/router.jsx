@@ -24,7 +24,7 @@ import Showtimes from "../pages/admin/Showtimes.jsx";
 import Revenue from "../pages/admin/Revenue.jsx";
 import AdminPricingPage from "../pages/admin/AdminPricingPage.jsx";
 import Cinemas from "../pages/admin/Cinemas.jsx";
-
+import AccountsPage from "../pages/admin/AccountsPage.jsx";
 //Staff
 import StaffLayout from "../layouts/StaffLayout.jsx";
 import StaffDashboardPage from "../pages/staff/StaffDashboardPage.jsx";
@@ -103,8 +103,10 @@ export const router = createBrowserRouter([
         path: "movies",
         element: <Movies />,
       },
-      {path: "cinemas",
-       element: <Cinemas/>,},
+      {
+        path: "cinemas",
+        element: <Cinemas />,
+      },
       {
         path: "orders",
         element: <Orders />,
@@ -128,7 +130,7 @@ export const router = createBrowserRouter([
       {
         path: "prices",
         element: <AdminPricingPage />,
-      },
+      }
     ],
   },
   {
