@@ -271,10 +271,10 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
                         const style = isMaintenance
                           ? "border-red-500 bg-red-500/25"
                           : seat.type === "vip"
-                          ? "border-amber-400"
-                          : seat.type === "couple"
-                          ? "border-fuchsia-400"
-                          : "border-zinc-700 bg-zinc-800/40";
+                            ? "border-amber-400"
+                            : seat.type === "couple"
+                              ? "border-fuchsia-400"
+                              : "border-zinc-700 bg-zinc-800/40";
                         const cursor = maintenanceMode
                           ? "cursor-pointer hover:ring-2 hover:ring-red-400/40"
                           : "";
@@ -504,12 +504,12 @@ function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow, maintenanceSea
                 const color = isMaint
                   ? "bg-red-500"
                   : seat.reserved
-                  ? "bg-zinc-900/60"
-                  : seat.type === "vip"
-                  ? "bg-amber-500"
-                  : seat.type === "couple"
-                  ? "bg-red-600"
-                  : "bg-zinc-400/30";
+                    ? "bg-zinc-900/60"
+                    : seat.type === "vip"
+                      ? "bg-amber-500"
+                      : seat.type === "couple"
+                        ? "bg-red-600"
+                        : "bg-zinc-400/30";
                 return (
                   <div
                     key={seat.id}
@@ -844,7 +844,7 @@ function StaffRoomsPage() {
       <div className="max-w-xs">
         <SelectInput
           value={cinemaName}
-          onChange={() => {}}
+          onChange={() => { }}
           options={[{ value: cinemaName, label: cinemaName }]}
         />
       </div>
