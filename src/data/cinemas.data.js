@@ -1,0 +1,26 @@
+export const mockCinemas = [
+  {
+    id: "CIN001",
+    name: "CGV Vincom Bà Triệu",
+    brand: "CGV",
+    city: "Hà Nội",
+    address: "191 Bà Triệu",
+    phone: "0123456789",
+    rooms: 6,
+    status: "active",
+    managerId: "S001",
+    managerName: "Nguyễn Văn A",
+  },
+  {
+    id: "CIN002",
+    name: "Lotte Landmark 81",
+    brand: "Lotte",
+    city: "TP.HCM",
+    address: "Landmark 81",
+    phone: "0987654321",
+    rooms: 8,
+    status: "maintenance",
+    managerId: null,
+    managerName: null,
+  },
+];

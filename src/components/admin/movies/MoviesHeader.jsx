@@ -5,7 +5,7 @@ export default function MoviesHeader({ total, onAdd }) {
     <div className="flex items-center justify-between">
 
       <div>
-        <h1 className="text-white text-[22px] font-bold">
+        <h1 className="text-2xl font-semibold text-white">
           Quản lý phim
         </h1>
         <p className="text-gray-400 text-sm">
