@@ -129,7 +129,12 @@ export const router = createBrowserRouter([
       },
       {
         path: "prices",
+
         element: <AdminPricingPage />,
+      },
+      {
+        path: "accounts",
+        element: <AccountsPage />,
       }
     ],
   },
