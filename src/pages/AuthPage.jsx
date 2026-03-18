@@ -52,7 +52,8 @@ function PasswordInput({ value, onChange, placeholder, id }) {
 }
 
 function LoginForm({ onSuccess, notice }) {
-  const { loginWithEmail, loginWithGoogle, resendEmailVerification } = useAuth();
+  const { loginWithEmail, loginWithGoogle, resendEmailVerification } =
+    useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -71,23 +72,23 @@ function LoginForm({ onSuccess, notice }) {
     e.preventDefault();
     setError("");
     setInfo("");
-    setPendingVerification(false);
-    if (!email || !password) {
-      setError("Vui lòng điền đầy đủ thông tin.");
-      return;
-    }
-    setLoading(true);
+
     try {
-      await loginWithEmail(email, password, remember);
-      onSuccess();
-      navigate("/");
-    } catch (err) {
-      setError(getErrorMessage(err.code));
-      if (err.code === "auth/email-not-verified") {
-        setPendingVerification(true);
+      const result = await loginWithEmail(email, password, remember);
+
+      console.log("LOGIN RESULT:", result);
+
+      // 👇 redirect theo role
+      if (result.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (result.role === "staff") {
+        navigate("/staff");
+      } else {
+        navigate("/");
       }
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.log(err);
+      setError(err.message);
     }
   };
 
@@ -121,7 +122,9 @@ function LoginForm({ onSuccess, notice }) {
         return;
       }
       setPendingVerification(true);
-      setInfo("Đã gửi lại email xác minh. Vui lòng kiểm tra hộp thư (và mục Spam).");
+      setInfo(
+        "Đã gửi lại email xác minh. Vui lòng kiểm tra hộp thư (và mục Spam).",
+      );
     } catch (err) {
       setError(getErrorMessage(err.code));
     } finally {
@@ -405,6 +408,7 @@ function RegisterForm({ onSuccess }) {
 }
 
 function getErrorMessage(code) {
+  console.log("getErrorMessage received code:", code);
   const map = {
     "auth/invalid-email": "Email không hợp lệ.",
     "auth/user-not-found": "Tài khoản không tồn tại.",
@@ -473,7 +477,7 @@ function AuthPage() {
           <RegisterForm
             onSuccess={(registeredEmail) => {
               setLoginNotice(
-                `Đăng ký thành công. Chúng tôi đã gửi email xác minh tới ${registeredEmail}.`
+                `Đăng ký thành công. Chúng tôi đã gửi email xác minh tới ${registeredEmail}.`,
               );
               setTab("login");
             }}

@@ -135,7 +135,7 @@ export const router = createBrowserRouter([
       {
         path: "accounts",
         element: <AccountsPage />,
-      }
+      },
     ],
   },
   {
