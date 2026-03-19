@@ -160,7 +160,7 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
           <SidebarLink
             to="/staff/rooms"
             icon={Theater}
-            label="Phòng chiếu"
+            label="Phòng chiếu & Ghế"
             collapsed={collapsed}
             onNavigate={handleNavigate}
           />
