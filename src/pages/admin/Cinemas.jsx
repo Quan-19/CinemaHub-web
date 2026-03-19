@@ -11,6 +11,7 @@ export default function CinemasPage() {
   const [cinemas, setCinemas] = useState(mockCinemas);
   const [search, setSearch] = useState("");
   const [cityFilter, setCityFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [showModal, setShowModal] = useState(false);
   const [showAssign, setShowAssign] = useState(false);
@@ -28,15 +29,30 @@ export default function CinemasPage() {
     status: "active",
     managerId: null,
     managerName: null,
+    managerEmail: null,
+    staffCount: 0,
   };
 
   const [form, setForm] = useState(defaultForm);
 
+  // Lọc dữ liệu
   const filtered = cinemas.filter(c => {
-    const matchSearch = c.name.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
+                       c.address.toLowerCase().includes(search.toLowerCase());
     const matchCity = cityFilter === "all" || c.city === cityFilter;
     return matchSearch && matchCity;
   });
+
+  // Reset page khi filter thay đổi
+  const handleSearchChange = (value) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
+  const handleCityFilterChange = (value) => {
+    setCityFilter(value);
+    setCurrentPage(1);
+  };
 
   const handleAdd = () => {
     setEditingCinema(null);
@@ -50,29 +66,54 @@ export default function CinemasPage() {
     setShowModal(true);
   };
 
+  const handleView = (cinema) => {
+    console.log("Viewing cinema:", cinema);
+    // View logic được xử lý trong component CinemasTable
+  };
+
   const handleSave = () => {
     if (editingCinema) {
+      // Update existing cinema
       setCinemas(prev =>
         prev.map(c =>
           c.id === editingCinema.id ? { ...c, ...form } : c
         )
       );
     } else {
-      setCinemas(prev => [
-        { id: Date.now(), ...form },
-        ...prev,
-      ]);
+      // Add new cinema
+      const newCinema = {
+        id: Date.now(),
+        ...form,
+        staffCount: form.staffCount || 0,
+      };
+      setCinemas(prev => [newCinema, ...prev]);
     }
     setShowModal(false);
+    setEditingCinema(null);
+    setCurrentPage(1); // Reset về trang đầu
   };
 
   const handleDelete = (id) => {
-    setCinemas(prev => prev.filter(c => c.id !== id));
+    if (window.confirm("Bạn có chắc chắn muốn xóa rạp này?")) {
+      setCinemas(prev => prev.filter(c => c.id !== id));
+      // Nếu trang hiện tại không còn dữ liệu, chuyển về trang trước
+      const newFiltered = filtered.filter(c => c.id !== id);
+      const maxPage = Math.ceil(newFiltered.length / 5);
+      if (currentPage > maxPage && maxPage > 0) {
+        setCurrentPage(maxPage);
+      } else if (newFiltered.length === 0) {
+        setCurrentPage(1);
+      }
+    }
   };
 
   const handleAssign = (cinema) => {
     setSelectedCinema(cinema);
     setShowAssign(true);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -83,9 +124,9 @@ export default function CinemasPage() {
 
       <CinemasFilter
         search={search}
-        setSearch={setSearch}
+        setSearch={handleSearchChange}
         cityFilter={cityFilter}
-        setCityFilter={setCityFilter}
+        setCityFilter={handleCityFilterChange}
         cinemas={cinemas}
       />
 
@@ -94,6 +135,10 @@ export default function CinemasPage() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onAssign={handleAssign}
+        onView={handleView}
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
+        itemsPerPage={5}
       />
 
       <CinemaModal
@@ -114,7 +159,6 @@ export default function CinemasPage() {
         cinema={selectedCinema}
         setCinemas={setCinemas}
       />
-
     </div>
   );
 }

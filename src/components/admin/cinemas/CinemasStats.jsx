@@ -1,12 +1,17 @@
 import { Building2, Star, User, Users } from "lucide-react";
 
-export default function CinemasStats() {
+export default function CinemasStats({ cinemas }) {
+  const totalCinemas = cinemas.length;
+  const activeCinemas = cinemas.filter(c => c.status === "active").length;
+  const noManagerCinemas = cinemas.filter(c => !c.managerName).length;
+  const totalStaff = cinemas.reduce((acc, c) => acc + (c.staffCount || 0), 0);
+
   return (
     <div className="grid grid-cols-4 gap-5">
-      <Card icon={<Building2 size={18} />} title="Tổng rạp" value="7" />
-      <Card icon={<Star size={18} />} title="Đang hoạt động" value="5" green />
-      <Card icon={<User size={18} />} title="Chưa có quản lý" value="5" yellow />
-      <Card icon={<Users size={18} />} title="Nhân viên" value="6" blue />
+      <Card icon={<Building2 size={18} />} title="Tổng rạp" value={totalCinemas} />
+      <Card icon={<Star size={18} />} title="Đang hoạt động" value={activeCinemas} green />
+      <Card icon={<User size={18} />} title="Chưa có quản lý" value={noManagerCinemas} yellow />
+      <Card icon={<Users size={18} />} title="Nhân viên" value={totalStaff} blue />
     </div>
   );
 }
