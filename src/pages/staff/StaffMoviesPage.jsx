@@ -3,11 +3,13 @@ import {
   Calendar,
   Clock,
   Globe,
+  Image as ImageIcon,
   Pencil,
   Plus,
   Search,
   Star,
   Trash2,
+  Upload,
 } from "lucide-react";
 import { MOVIES } from "../../data/mockData.js";
 import {
@@ -175,6 +177,8 @@ function EditMovieModal({
   const isAdd = mode === "add";
   const [errors, setErrors] = useState({});
   const scrollRef = useRef(null);
+  const posterRef = useRef(null);
+  const backdropRef = useRef(null);
 
   const [form, setForm] = useState(() => {
     const m = normalizeMovie(movie);
@@ -204,6 +208,14 @@ function EditMovieModal({
         genre: has ? prev.genre.filter((x) => x !== g) : [...prev.genre, g],
       };
     });
+  };
+
+  const handleFileChange = (e, field) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setForm((prev) => ({ ...prev, [field]: url }));
+    }
   };
 
   const save = (e) => {
@@ -272,53 +284,101 @@ function EditMovieModal({
           ref={scrollRef}
           className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-1"
         >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[96px_1fr]">
-            <div className="flex items-start">
-              <div className="h-24 w-20 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/40">
+          <div className="flex flex-col gap-6 sm:flex-row">
+            <div className="w-full sm:w-36">
+              <label className={labelBase}>Poster phim</label>
+              <div
+                onClick={() => posterRef.current?.click()}
+                className={[
+                  "relative mt-1.5 flex aspect-[2/3] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all hover:border-cinema-primary/50 hover:bg-zinc-900/60",
+                  errors.poster
+                    ? "border-cinema-primary/50 bg-cinema-primary/5"
+                    : "border-zinc-800 bg-zinc-900/40",
+                ].join(" ")}
+              >
                 {form.poster ? (
-                  <img
-                    src={form.poster}
-                    alt={form.title}
-                    className="h-full w-full object-cover"
-                  />
-                ) : null}
+                  <>
+                    <img
+                      src={form.poster}
+                      alt="Poster"
+                      className="h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
+                      <div className="flex flex-col items-center gap-1">
+                        <Upload className="h-5 w-5 text-white" />
+                        <span className="text-[10px] font-bold text-white">
+                          Thay đổi
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 p-4 text-center">
+                    <ImageIcon className="h-5 w-5 text-zinc-400" />
+                    <div className="text-xs font-semibold text-zinc-300">
+                      Tải poster
+                    </div>
+                  </div>
+                )}
+                <input
+                  ref={posterRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileChange(e, "poster")}
+                  className="hidden"
+                />
               </div>
+              {errors.poster ? (
+                <div className={errorText}>{errors.poster}</div>
+              ) : null}
             </div>
-            <div className="space-y-3">
-              <div>
-                <label className={labelBase}>URL Poster</label>
+
+            <div className="flex-1 min-w-0">
+              <label className={labelBase}>Backdrop (Ảnh nền)</label>
+              <div
+                onClick={() => backdropRef.current?.click()}
+                className={[
+                  "relative mt-1.5 flex aspect-video w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all hover:border-cinema-primary/50 hover:bg-zinc-900/60",
+                  errors.backdrop
+                    ? "border-cinema-primary/50 bg-cinema-primary/5"
+                    : "border-zinc-800 bg-zinc-900/40",
+                ].join(" ")}
+              >
+                {form.backdrop ? (
+                  <>
+                    <img
+                      src={form.backdrop}
+                      alt="Backdrop"
+                      className="h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
+                      <div className="flex flex-col items-center gap-1">
+                        <Upload className="h-5 w-5 text-white" />
+                        <span className="text-[10px] font-bold text-white">
+                          Thay đổi
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 p-4 text-center">
+                    <ImageIcon className="h-5 w-5 text-zinc-400" />
+                    <div className="text-xs font-semibold text-zinc-300">
+                      Tải backdrop
+                    </div>
+                  </div>
+                )}
                 <input
-                  className={[
-                    inputBase,
-                    errors.poster ? "border-cinema-primary" : "",
-                  ].join(" ")}
-                  value={form.poster}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, poster: e.target.value }))
-                  }
-                  placeholder="https://..."
+                  ref={backdropRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileChange(e, "backdrop")}
+                  className="hidden"
                 />
-                {errors.poster ? (
-                  <div className={errorText}>{errors.poster}</div>
-                ) : null}
               </div>
-              <div>
-                <label className={labelBase}>URL Backdrop</label>
-                <input
-                  className={[
-                    inputBase,
-                    errors.backdrop ? "border-cinema-primary" : "",
-                  ].join(" ")}
-                  value={form.backdrop}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, backdrop: e.target.value }))
-                  }
-                  placeholder="https://..."
-                />
-                {errors.backdrop ? (
-                  <div className={errorText}>{errors.backdrop}</div>
-                ) : null}
-              </div>
+              {errors.backdrop ? (
+                <div className={errorText}>{errors.backdrop}</div>
+              ) : null}
             </div>
           </div>
 

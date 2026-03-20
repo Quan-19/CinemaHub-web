@@ -4,10 +4,12 @@ import {
   Clapperboard,
   Clock,
   LayoutDashboard,
+  Megaphone,
   Tag,
   Theater,
   User,
   X,
+  FileText,
 } from "lucide-react";
 
 function SidebarLink({ to, icon: Icon, label, collapsed, onNavigate }) {
@@ -105,7 +107,10 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
         </button>
       </div>
 
-      <div className="px-3">
+      <div 
+        className="flex-1 overflow-y-auto px-3 pb-8 scrollbar-none"
+        style={{ maskImage: "linear-gradient(to bottom, black 85%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, black 85%, transparent 100%)" }}
+      >
         {!collapsed && (
           <div className="mb-3 rounded-2xl border border-zinc-800 bg-cinema-surface px-3 py-2 text-xs text-zinc-300">
             <span className="inline-flex items-center gap-2">
@@ -143,6 +148,20 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
           </div>
         )}
         <nav className="space-y-1">
+          <SidebarLink
+            to="/staff/banners"
+            icon={Megaphone}
+            label="Banner quảng cáo"
+            collapsed={collapsed}
+            onNavigate={handleNavigate}
+          />
+          <SidebarLink
+            to="/staff/articles"
+            icon={FileText}
+            label="Quản lý bài viết"
+            collapsed={collapsed}
+            onNavigate={handleNavigate}
+          />
           <SidebarLink
             to="/staff/movies"
             icon={Clapperboard}

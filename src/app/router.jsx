@@ -34,6 +34,8 @@ import StaffPlaceholderPage from "../pages/staff/StaffPlaceholderPage.jsx";
 import StaffProfilePage from "../pages/staff/StaffProfilePage.jsx";
 import StaffRoomsPage from "../pages/staff/StaffRoomsPage.jsx";
 import StaffShowtimesPage from "../pages/staff/StaffShowtimesPage.jsx";
+import StaffBannersPage from "../pages/staff/StaffBannersPage.jsx";
+import StaffArticlesPage from "../pages/staff/StaffArticlesPage.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -157,6 +159,14 @@ export const router = createBrowserRouter([
       {
         path: "showtimes",
         element: <StaffShowtimesPage />,
+      },
+      {
+        path: "banners",
+        element: <StaffBannersPage />,
+      },
+      {
+        path: "articles",
+        element: <StaffArticlesPage />,
       },
       {
         path: "rooms",
