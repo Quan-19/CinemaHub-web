@@ -30,14 +30,50 @@ export default function RoomsPage() {
       if (savedCinemas) {
         let cinemaData = JSON.parse(savedCinemas);
         
-        // Đảm bảo mỗi cinema đều có rooms array
+        // Đảm bảo mỗi cinema đều có rooms array và ID duy nhất
+        cinemaData = cinemaData.map(cinema => {
+          // Đảm bảo mỗi phòng có ID duy nhất bằng cách thêm timestamp nếu cần
+          const roomsWithUniqueIds = (cinema.rooms || []).map(room => {
+            // Nếu ID đã tồn tại và là duy nhất, giữ nguyên
+            if (room.id && !room.id.includes('_dup')) {
+              return room;
+            }
+            // Tạo ID mới dựa trên cinema ID và tên phòng + timestamp
+            return {
+              ...room,
+              id: `${cinema.id}_${room.name?.replace(/\s/g, '_')}_${Date.now()}_${Math.random()}`
+            };
+          });
+          
+          return {
+            ...cinema,
+            rooms: roomsWithUniqueIds,
+            currentRooms: roomsWithUniqueIds.length,
+            maxRooms: cinema.maxRooms || 4
+          };
+        });
+        
+        // Kiểm tra và loại bỏ trùng lặp ID trong toàn bộ hệ thống
+        const allRoomIds = new Set();
         cinemaData = cinemaData.map(cinema => ({
           ...cinema,
-          rooms: cinema.rooms || [],
-          currentRooms: cinema.rooms?.length || 0,
-          maxRooms: cinema.maxRooms || 4
+          rooms: cinema.rooms.filter(room => {
+            if (allRoomIds.has(room.id)) {
+              console.warn(`Duplicate room ID found: ${room.id}, removing duplicate`);
+              return false;
+            }
+            allRoomIds.add(room.id);
+            return true;
+          })
         }));
         
+        // Cập nhật currentRooms sau khi lọc
+        cinemaData = cinemaData.map(cinema => ({
+          ...cinema,
+          currentRooms: cinema.rooms.length
+        }));
+        
+        localStorage.setItem('cinemas', JSON.stringify(cinemaData));
         setCinemas(cinemaData);
         
         // Tạo danh sách rooms
@@ -112,20 +148,19 @@ export default function RoomsPage() {
       const maxRooms = targetCinema.maxRooms || 4;
       
       console.log(`Current rooms: ${currentRoomCount}, Max rooms: ${maxRooms}`);
-      console.log("Current rooms list:", currentRooms);
       
       if (currentRoomCount >= maxRooms) {
         alert(`Rạp ${targetCinema.name} đã đạt giới hạn tối đa ${maxRooms} phòng! Không thể thêm phòng mới.`);
         return;
       }
       
-      // Tạo ID mới
-      const newRoomId = `${targetCinema.id}_RM${currentRoomCount + 1}`;
+      // Tạo ID duy nhất cho phòng mới
+      const uniqueId = `${targetCinema.id}_${newRoom.name.replace(/\s/g, '_')}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
       
       // Tạo object phòng mới
       const newRoomObject = {
         ...newRoom,
-        id: newRoomId,
+        id: uniqueId,
         cinemaId: targetCinema.id,
         cinemaName: targetCinema.name,
         createdAt: new Date().toISOString()

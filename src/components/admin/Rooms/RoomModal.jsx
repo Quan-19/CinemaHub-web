@@ -60,7 +60,6 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
     if (!selectedCinemaData) return false;
     const currentRoomCount = getCurrentRoomCount(selectedCinemaData);
     const maxRooms = selectedCinemaData.maxRooms || 4;
-    console.log(`Checking canAddRoom: current=${currentRoomCount}, max=${maxRooms}`);
     return currentRoomCount < maxRooms;
   };
 
