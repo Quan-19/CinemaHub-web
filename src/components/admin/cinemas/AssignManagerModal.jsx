@@ -1,87 +1,132 @@
 import { X } from "lucide-react";
-import { useState } from "react";
-
-const mockStaff = [
-  { id: 1, name: "Nguyễn Hữu Thành", email: "thanh.nh@cinestar.vn" },
-  { id: 2, name: "Lê Quang Huy", email: "huy.lq@cinestar.vn" },
-  { id: 3, name: "Phạm Minh Tuấn", email: "tuan.pm@cinestar.vn" },
-];
-
-export default function AssignManagerModal({
-  show,
-  onClose,
-  cinema,
-  setCinemas,
-}) {
+import { useEffect, useState } from "react";
+import { getAuth } from "firebase/auth";
+export default function AssignManagerModal({ show, onClose, cinema }) {
+  const [users, setUsers] = useState([]);
   const [selected, setSelected] = useState(null);
 
-  if (!show || !cinema) return null;
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
 
-  const handleAssign = () => {
-    setCinemas(prev =>
-      prev.map(c =>
-        c.id === cinema.id
-          ? { ...c, managerName: selected?.name || null }
-          : c
-      )
-    );
-    onClose();
+        if (!user) return;
+
+        const token = await user.getIdToken();
+
+        const res = await fetch(
+          "http://localhost:5000/api/users/assign-users",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        console.log("STATUS:", res.status);
+
+        const data = await res.json();
+        console.log("DATA:", data);
+
+        setUsers(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("FETCH ERROR:", err);
+      }
+    };
+
+    // 🔥 THÊM DÒNG NÀY
+    if (show) {
+      fetchUsers();
+    }
+  }, [show]);
+
+  const handleAssign = async () => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      const token = await user.getIdToken(); // 🔥 FIX
+
+      await fetch(
+        `http://localhost:5000/api/cinemas/${cinema?.cinema_id}/assign-manager`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            manager_id: selected?.id || null,
+          }),
+        },
+      );
+
+      onClose();
+    } catch (err) {
+      console.error(err);
+    }
   };
+
+  if (!show) return null;
 
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
-
       <div className="w-[520px] bg-[#0B1220] border border-white/10 rounded-xl overflow-hidden">
-
         {/* HEADER */}
         <div className="flex justify-between items-center px-5 py-4 border-b border-white/10">
           <div>
             <h2 className="text-white font-semibold">
               Phân quyền quản lý chi nhánh
             </h2>
-            <p className="text-xs text-white/40">{cinema.name}</p>
+            <p className="text-xs text-white/40">
+              {cinema?.name || "Không có tên"}
+            </p>
           </div>
           <X onClick={onClose} className="cursor-pointer text-white/40" />
         </div>
 
-        {/* INFO BOX */}
-        <div className="p-4">
-          <div className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-lg text-xs text-white/70">
-            Khi phân quyền, tài khoản nhân viên sẽ được nâng lên vai trò 
-            <span className="text-purple-400 font-medium"> Quản lý chi nhánh</span>
-          </div>
-        </div>
-
         {/* LIST */}
         <div className="px-4 max-h-[250px] overflow-y-auto space-y-2">
-
-          {/* remove */}
+          {/* ❌ remove */}
           <div
             onClick={() => setSelected(null)}
-            className={`p-3 rounded-lg border cursor-pointer flex items-center gap-3 ${
-              selected === null ? "border-purple-500 bg-purple-500/10" : "border-white/10"
+            className={`p-3 rounded-lg border cursor-pointer ${
+              selected === null
+                ? "border-purple-500 bg-purple-500/10"
+                : "border-white/10"
             }`}
           >
             ❌ Không phân quyền
           </div>
 
-          {mockStaff.map(s => (
+          {/* 🔥 EMPTY */}
+          {users.length === 0 && (
+            <p className="text-center text-white/40 text-sm">
+              Không có user (check API backend)
+            </p>
+          )}
+
+          {/* 🔥 LIST */}
+          {users.map((u) => (
             <div
-              key={s.id}
-              onClick={() => setSelected(s)}
+              key={u.id}
+              onClick={() => setSelected(u)}
               className={`p-3 rounded-lg border cursor-pointer flex items-center gap-3 ${
-                selected?.id === s.id
+                selected?.id === u.id
                   ? "border-purple-500 bg-purple-500/10"
                   : "border-white/10"
               }`}
             >
               <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-sm">
-                {s.name[0]}
+                {u.name?.[0] || "?"}
               </div>
 
               <div>
-                <p className="text-sm">{s.name}</p>
-                <p className="text-xs text-white/40">{s.email}</p>
+                <p className="text-sm">{u.name}</p>
+                <p className="text-xs text-white/40">
+                  {u.email} • {u.role}
+                </p>
               </div>
             </div>
           ))}
@@ -100,10 +145,9 @@ export default function AssignManagerModal({
             onClick={handleAssign}
             className="flex-1 bg-purple-600 hover:bg-purple-700 py-2 rounded-lg"
           >
-            Xác nhận phân quyền
+            Xác nhận
           </button>
         </div>
-
       </div>
     </div>
   );

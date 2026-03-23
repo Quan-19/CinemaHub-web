@@ -27,8 +27,8 @@ export default function MoviesFilter({
           className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
         >
           <option value="all">Tất cả</option>
-          <option value="now-showing">Đang chiếu</option>
-          <option value="coming-soon">Sắp chiếu</option>
+          <option value="now_showing">Đang chiếu</option>
+          <option value="coming_soon">Sắp chiếu</option>
           <option value="ended">Đã kết thúc</option>
         </select>
       </div>
