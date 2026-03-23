@@ -28,6 +28,24 @@ export default function CinemasTable({
     setViewingCinema(null);
   };
 
+  // Helper function để lấy số phòng an toàn
+  const getRoomCount = (cinema) => {
+    if (cinema.currentRooms && typeof cinema.currentRooms === 'number') {
+      return cinema.currentRooms;
+    }
+    if (Array.isArray(cinema.rooms)) {
+      return cinema.rooms.length;
+    }
+    return 0;
+  };
+
+  const getMaxRooms = (cinema) => {
+    if (cinema.maxRooms && typeof cinema.maxRooms === 'number') {
+      return cinema.maxRooms;
+    }
+    return 4;
+  };
+
   return (
     <>
       <div className="bg-[#0B1220] border border-white/5 rounded-xl overflow-hidden">
@@ -53,21 +71,23 @@ export default function CinemasTable({
                   className="h-[74px] border-b border-white/5 hover:bg-white/[0.03]"
                 >
                   <td className="p-4">
-                    <p className="font-medium">{c.name}</p>
-                    <p className="text-xs text-white/30">{c.phone}</p>
+                    <p className="font-medium">{c.name || ""}</p>
+                    <p className="text-xs text-white/30">{c.phone || ""}</p>
                   </td>
 
                   <td>
                     <span className={`px-2.5 py-1 text-xs rounded-md ${brandColor(c.brand)}`}>
-                      {c.brand}
+                      {c.brand || "CGV"}
                     </span>
                   </td>
 
-                  <td className="text-white/70">{c.city}</td>
+                  <td className="text-white/70">{c.city || ""}</td>
 
-                  <td className="text-white/50 truncate max-w-[200px]">{c.address}</td>
+                  <td className="text-white/50 truncate max-w-[200px]">{c.address || ""}</td>
 
-                  <td className="text-center font-medium">{c.rooms}</td>
+                  <td className="text-center font-medium">
+                    {getRoomCount(c)}/{getMaxRooms(c)}
+                  </td>
 
                   <td>
                     <span className={`px-3 py-1 text-xs rounded-full ${statusColor(c.status)}`}>
@@ -79,11 +99,11 @@ export default function CinemasTable({
                     {c.managerName ? (
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-xs font-medium">
-                          {c.managerName[0]}
+                          {typeof c.managerName === 'string' && c.managerName.charAt(0)}
                         </div>
                         <div>
-                          <p className="text-sm">{c.managerName}</p>
-                          {c.managerEmail && (
+                          <p className="text-sm">{typeof c.managerName === 'string' ? c.managerName : ""}</p>
+                          {c.managerEmail && typeof c.managerEmail === 'string' && (
                             <p className="text-xs text-white/40">{c.managerEmail}</p>
                           )}
                           <p className="text-xs text-blue-400">
@@ -190,6 +210,18 @@ export default function CinemasTable({
 
 // MODAL XEM CHI TIẾT
 function ViewCinemaModal({ cinema, onClose }) {
+  if (!cinema) return null;
+
+  // Helper để lấy giá trị an toàn
+  const getSafeValue = (value) => {
+    if (value === null || value === undefined) return "Chưa có";
+    if (typeof value === 'object') {
+      if (Array.isArray(value)) return `${value.length} mục`;
+      return "Đã cấu hình";
+    }
+    return value;
+  };
+
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
       <div className="w-[500px] bg-[#0B1220] border border-white/10 rounded-xl overflow-hidden">
@@ -200,11 +232,14 @@ function ViewCinemaModal({ cinema, onClose }) {
 
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <InfoItem label="Tên rạp" value={cinema.name} />
-            <InfoItem label="Thương hiệu" value={cinema.brand} />
-            <InfoItem label="Thành phố" value={cinema.city} />
-            <InfoItem label="Số điện thoại" value={cinema.phone} />
-            <InfoItem label="Số phòng chiếu" value={cinema.rooms} />
+            <InfoItem label="Tên rạp" value={getSafeValue(cinema.name)} />
+            <InfoItem label="Thương hiệu" value={getSafeValue(cinema.brand)} />
+            <InfoItem label="Thành phố" value={getSafeValue(cinema.city)} />
+            <InfoItem label="Số điện thoại" value={getSafeValue(cinema.phone)} />
+            <InfoItem 
+              label="Số phòng chiếu" 
+              value={`${getRoomCount(cinema)}/${getMaxRooms(cinema)}`} 
+            />
             <InfoItem 
               label="Trạng thái" 
               value={cinema.status === "active" ? "Đang hoạt động" : "Bảo trì"}
@@ -212,19 +247,37 @@ function ViewCinemaModal({ cinema, onClose }) {
             />
           </div>
           
-          <InfoItem label="Địa chỉ" value={cinema.address} fullWidth />
+          <InfoItem label="Địa chỉ" value={getSafeValue(cinema.address)} fullWidth />
           
           <InfoItem 
             label="Quản lý" 
-            value={cinema.managerName || "Chưa có quản lý"}
+            value={getSafeValue(cinema.managerName || "Chưa có quản lý")}
             fullWidth
           />
           
           {cinema.managerEmail && (
-            <InfoItem label="Email quản lý" value={cinema.managerEmail} fullWidth />
+            <InfoItem label="Email quản lý" value={getSafeValue(cinema.managerEmail)} fullWidth />
           )}
           
-          <InfoItem label="Số nhân viên" value={cinema.staffCount || 0} />
+          <InfoItem label="Số nhân viên" value={getSafeValue(cinema.staffCount || 0)} />
+          
+          {/* Hiển thị danh sách phòng chiếu nếu có */}
+          {cinema.rooms && Array.isArray(cinema.rooms) && cinema.rooms.length > 0 && (
+            <div className="col-span-2">
+              <p className="text-xs text-white/40 mb-2">Danh sách phòng chiếu</p>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {cinema.rooms.map((room, index) => (
+                  <div key={room.id || index} className="bg-white/5 p-2 rounded text-xs">
+                    <span className="text-white/80 font-medium">
+                      {getSafeValue(room.name) || `Phòng ${index + 1}`}
+                    </span>
+                    {room.type && <span className="text-white/40 ml-2">({getSafeValue(room.type)})</span>}
+                    {room.capacity && <span className="text-white/40 ml-2">- {getSafeValue(room.capacity)} ghế</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end p-5 border-t border-white/10">
@@ -240,16 +293,44 @@ function ViewCinemaModal({ cinema, onClose }) {
   );
 }
 
+// Helper functions
+function getRoomCount(cinema) {
+  if (cinema.currentRooms && typeof cinema.currentRooms === 'number') {
+    return cinema.currentRooms;
+  }
+  if (Array.isArray(cinema.rooms)) {
+    return cinema.rooms.length;
+  }
+  return 0;
+}
+
+function getMaxRooms(cinema) {
+  if (cinema.maxRooms && typeof cinema.maxRooms === 'number') {
+    return cinema.maxRooms;
+  }
+  return 4;
+}
+
 function InfoItem({ label, value, fullWidth, status }) {
+  // Đảm bảo value luôn là kiểu dữ liệu có thể render được
+  let displayValue = value;
+  
+  if (displayValue === null || displayValue === undefined || displayValue === '') {
+    displayValue = "Chưa có";
+  } else if (typeof displayValue === 'object') {
+    // Nếu vẫn là object, chuyển thành string an toàn
+    displayValue = JSON.stringify(displayValue);
+  }
+  
   return (
     <div className={fullWidth ? "col-span-2" : ""}>
       <p className="text-xs text-white/40 mb-1">{label}</p>
       {status ? (
         <span className={`px-3 py-1 text-xs rounded-full ${statusColor(status)}`}>
-          {value}
+          {displayValue}
         </span>
       ) : (
-        <p className="text-sm text-white">{value}</p>
+        <p className="text-sm text-white">{displayValue}</p>
       )}
     </div>
   );

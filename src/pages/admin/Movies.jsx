@@ -1,4 +1,5 @@
-import { useState } from "react";
+// Movies.jsx
+import { useState, useEffect } from "react";
 import MoviesStats from "../../components/admin/movies/MoviesStats";
 import MoviesFilter from "../../components/admin/movies/MoviesFilter";
 import MoviesTable from "../../components/admin/movies/MoviesTable";
@@ -7,13 +8,12 @@ import MoviesHeader from "../../components/admin/movies/MoviesHeader";
 import { mockMovies } from "../../data/movies.data";
 
 export default function MoviesPage() {
-  const [movies, setMovies] = useState(mockMovies);
+  const [movies, setMovies] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
-
-  // 🔥 EDIT MODE
   const [editingMovie, setEditingMovie] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const defaultForm = {
     title: "",
@@ -30,85 +30,104 @@ export default function MoviesPage() {
 
   const [form, setForm] = useState(defaultForm);
 
+  // Load movies from localStorage or mock data
+  useEffect(() => {
+    const loadMovies = () => {
+      try {
+        const savedMovies = localStorage.getItem('movies');
+        if (savedMovies && JSON.parse(savedMovies).length > 0) {
+          setMovies(JSON.parse(savedMovies));
+        } else {
+          setMovies(mockMovies);
+          localStorage.setItem('movies', JSON.stringify(mockMovies));
+        }
+      } catch (error) {
+        console.error("Failed to load movies:", error);
+        setMovies(mockMovies);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadMovies();
+  }, []);
+
+  // Save movies to localStorage whenever they change
+  useEffect(() => {
+    if (movies.length > 0 && !loading) {
+      localStorage.setItem('movies', JSON.stringify(movies));
+    }
+  }, [movies, loading]);
+
   // FILTER
   const filtered = movies.filter((m) => {
-    const matchSearch = m.title
-      .toLowerCase()
-      .includes(search.toLowerCase());
-
-    const matchStatus =
-      statusFilter === "all" || m.status === statusFilter;
-
+    const matchSearch = m.title?.toLowerCase().includes(search.toLowerCase()) || false;
+    const matchStatus = statusFilter === "all" || m.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
-  // ✅ ADD
   const handleAdd = () => {
-    setEditingMovie(null); // không edit
+    setEditingMovie(null);
     setForm(defaultForm);
     setShowModal(true);
   };
 
-  // ✅ EDIT
   const handleEdit = (movie) => {
     setEditingMovie(movie);
     setForm(movie);
     setShowModal(true);
   };
 
-  // ✅ SAVE (CREATE + UPDATE)
   const handleSave = () => {
     if (editingMovie) {
-      // 👉 UPDATE
+      // UPDATE
       setMovies((prev) =>
         prev.map((m) =>
           m.id === editingMovie.id ? { ...m, ...form } : m
         )
       );
     } else {
-      // 👉 CREATE
+      // CREATE
       const newMovie = {
         id: Date.now(),
         ...form,
         ratingScore: 0,
         tickets: 0,
       };
-
       setMovies((prev) => [newMovie, ...prev]);
     }
-
     setShowModal(false);
     setEditingMovie(null);
   };
 
-  // DELETE
   const handleDelete = (id) => {
-    setMovies((prev) => prev.filter((m) => m.id !== id));
+    if (window.confirm("Bạn có chắc chắn muốn xóa phim này?")) {
+      setMovies((prev) => prev.filter((m) => m.id !== id));
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-5">
-
-      <MoviesHeader
-        total={movies.length}
-        onAdd={handleAdd}
-      />
-
+      <MoviesHeader total={movies.length} onAdd={handleAdd} />
       <MoviesStats movies={movies} />
-
       <MoviesFilter
         search={search}
         setSearch={setSearch}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
       />
-
       <MoviesTable
         movies={filtered}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
-
       <MovieModal
         show={showModal}
         onClose={() => {
@@ -118,9 +137,8 @@ export default function MoviesPage() {
         onSave={handleSave}
         form={form}
         setForm={setForm}
-        isEdit={!!editingMovie} // 🔥 truyền mode
+        isEdit={!!editingMovie}
       />
-
     </div>
   );
 }

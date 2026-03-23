@@ -4,7 +4,12 @@ export default function CinemasStats({ cinemas }) {
   const totalCinemas = cinemas.length;
   const activeCinemas = cinemas.filter(c => c.status === "active").length;
   const noManagerCinemas = cinemas.filter(c => !c.managerName).length;
-  const totalStaff = cinemas.reduce((acc, c) => acc + (c.staffCount || 0), 0);
+  
+  // Sửa cách tính tổng số nhân viên - đảm bảo staffCount là số
+  const totalStaff = cinemas.reduce((acc, c) => {
+    const staffCount = typeof c.staffCount === 'number' ? c.staffCount : 0;
+    return acc + staffCount;
+  }, 0);
 
   return (
     <div className="grid grid-cols-4 gap-5">
@@ -17,6 +22,9 @@ export default function CinemasStats({ cinemas }) {
 }
 
 function Card({ icon, title, value, green, yellow, blue }) {
+  // Đảm bảo value là số hoặc chuỗi, không phải object
+  const displayValue = typeof value === 'object' ? 0 : value;
+  
   return (
     <div className="bg-[#0B1220] border border-white/5 rounded-xl px-6 py-5 flex items-center gap-4">
       <div className={`
@@ -31,7 +39,7 @@ function Card({ icon, title, value, green, yellow, blue }) {
 
       <div>
         <p className="text-xs text-white/40 mb-1">{title}</p>
-        <h2 className="text-xl font-semibold">{value}</h2>
+        <h2 className="text-xl font-semibold">{displayValue}</h2>
       </div>
     </div>
   );

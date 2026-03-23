@@ -1,24 +1,6 @@
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 
-// Import accounts data - chỉ lấy staff
-const mockStaff = [
-  {
-    id: "ACC002",
-    name: "Trần Thị Staff",
-    email: "staff1@cinestar.vn",
-    role: "staff",
-    status: "active"
-  },
-  {
-    id: "ACC006",
-    name: "Vũ Thị Mai",
-    email: "mai.vu@gmail.com",
-    role: "staff",
-    status: "active"
-  }
-];
-
 export default function CinemaModal({
   show,
   onClose,
@@ -30,10 +12,21 @@ export default function CinemaModal({
   const [availableManagers, setAvailableManagers] = useState([]);
 
   useEffect(() => {
-    // Chỉ lấy nhân viên đang hoạt động
-    const staff = mockStaff.filter(s => s.role === "staff" && s.status === "active");
-    setAvailableManagers(staff);
+    loadManagers();
   }, []);
+
+  const loadManagers = () => {
+    try {
+      const savedAccounts = localStorage.getItem('accounts');
+      if (savedAccounts) {
+        const accounts = JSON.parse(savedAccounts);
+        const staff = accounts.filter(s => s.role === "staff" && s.status === "active");
+        setAvailableManagers(staff);
+      }
+    } catch (error) {
+      console.error("Failed to load managers:", error);
+    }
+  };
 
   if (!show) return null;
 
@@ -105,7 +98,7 @@ export default function CinemaModal({
             />
           </div>
 
-          {/* PHONE + ROOMS */}
+          {/* PHONE + MAX ROOMS */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-sm text-white/60">Số điện thoại</label>
@@ -117,20 +110,40 @@ export default function CinemaModal({
             </div>
 
             <div>
-              <label className="text-sm text-white/60">Số phòng chiếu</label>
+              <label className="text-sm text-white/60">
+                Số phòng tối đa
+                <span className="text-xs text-white/40 ml-1">(giới hạn)</span>
+              </label>
               <input
                 type="number"
                 min="1"
-                value={form.rooms || 4}
+                max="20"
+                value={form.maxRooms || 4}
                 onChange={e =>
-                  setForm(p => ({ ...p, rooms: Number(e.target.value) }))
+                  setForm(p => ({ ...p, maxRooms: Number(e.target.value) }))
                 }
                 className={inputClass}
               />
+              <p className="text-xs text-white/30 mt-1">
+                Số lượng phòng chiếu tối đa của rạp này
+              </p>
             </div>
           </div>
 
-          {/* MANAGER - CHỈ HIỂN THỊ STAFF */}
+          {/* SỐ PHÒNG HIỆN TẠI - CHỈ HIỂN THỊ KHI EDIT */}
+          {isEdit && (
+            <div>
+              <label className="text-sm text-white/60">Số phòng hiện tại</label>
+              <div className="mt-1 px-3 py-2 bg-[#020617] border border-white/10 rounded-lg text-sm text-white/70">
+                {form.currentRooms || 0} / {form.maxRooms || 4} phòng
+              </div>
+              <p className="text-xs text-yellow-400/70 mt-1">
+                {form.currentRooms >= form.maxRooms && "⚠️ Đã đạt giới hạn số phòng tối đa!"}
+              </p>
+            </div>
+          )}
+
+          {/* MANAGER */}
           <div>
             <label className="text-sm text-white/60">Quản lý chi nhánh</label>
             <select
