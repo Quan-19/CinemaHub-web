@@ -1,24 +1,5 @@
 import { X } from "lucide-react";
-import { useState } from "react";
-
-// Import accounts data từ AccountsPage hoặc từ API
-// Tạm thời lấy từ mock data
-const mockStaff = [
-  {
-    id: "ACC002",
-    name: "Trần Thị Staff",
-    email: "staff1@cinestar.vn",
-    role: "staff",
-    status: "active"
-  },
-  {
-    id: "ACC006",
-    name: "Vũ Thị Mai",
-    email: "mai.vu@gmail.com",
-    role: "staff",
-    status: "active"
-  }
-];
+import { useState, useEffect } from "react";
 
 export default function AssignManagerModal({
   show,
@@ -27,15 +8,30 @@ export default function AssignManagerModal({
   setCinemas,
 }) {
   const [selected, setSelected] = useState(null);
+  const [availableStaff, setAvailableStaff] = useState([]);
+
+  useEffect(() => {
+    loadStaff();
+  }, []);
+
+  const loadStaff = () => {
+    try {
+      const savedAccounts = localStorage.getItem('accounts');
+      if (savedAccounts) {
+        const accounts = JSON.parse(savedAccounts);
+        const staff = accounts.filter(s => s.role === "staff" && s.status === "active");
+        setAvailableStaff(staff);
+      }
+    } catch (error) {
+      console.error("Failed to load staff:", error);
+    }
+  };
 
   if (!show || !cinema) return null;
 
-  // Chỉ lọc những nhân viên đang hoạt động
-  const availableStaff = mockStaff.filter(s => s.role === "staff" && s.status === "active");
-
   const handleAssign = () => {
-    setCinemas(prev =>
-      prev.map(c =>
+    setCinemas(prev => {
+      const updated = prev.map(c =>
         c.id === cinema.id
           ? { 
               ...c, 
@@ -44,8 +40,10 @@ export default function AssignManagerModal({
               managerEmail: selected?.email || null,
             }
           : c
-      )
-    );
+      );
+      localStorage.setItem('cinemas', JSON.stringify(updated));
+      return updated;
+    });
     onClose();
   };
 

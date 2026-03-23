@@ -10,311 +10,50 @@ import { toast } from "react-hot-toast";
 
 // Giá vé CGV và Galaxy Cinema thực tế (2024)
 export const PRICE_CONFIG = {
-  // Giá vé cơ bản theo ngày thường
   standard: {
-    "2D": {
-      adult: 90000,
-      child: 70000,
-      student: 75000,
-      vip: 120000
-    },
-    "3D": {
-      adult: 110000,
-      child: 90000,
-      student: 95000,
-      vip: 150000
-    },
-    "IMAX": {
-      adult: 150000,
-      child: 130000,
-      student: 135000,
-      vip: 200000
-    },
-    "4DX": {
-      adult: 180000,
-      child: 160000,
-      student: 165000,
-      vip: 240000
-    }
+    "2D": { adult: 90000, child: 70000, student: 75000, vip: 120000 },
+    "3D": { adult: 110000, child: 90000, student: 95000, vip: 150000 },
+    "IMAX": { adult: 150000, child: 130000, student: 135000, vip: 200000 },
+    "4DX": { adult: 180000, child: 160000, student: 165000, vip: 240000 }
   },
-  
-  // Giá vé cuối tuần (Thứ 6,7,CN)
   weekend: {
-    "2D": {
-      adult: 100000,
-      child: 80000,
-      student: 85000,
-      vip: 140000
-    },
-    "3D": {
-      adult: 120000,
-      child: 100000,
-      student: 105000,
-      vip: 170000
-    },
-    "IMAX": {
-      adult: 170000,
-      child: 150000,
-      student: 155000,
-      vip: 230000
-    },
-    "4DX": {
-      adult: 200000,
-      child: 180000,
-      student: 185000,
-      vip: 270000
-    }
+    "2D": { adult: 100000, child: 80000, student: 85000, vip: 140000 },
+    "3D": { adult: 120000, child: 100000, student: 105000, vip: 170000 },
+    "IMAX": { adult: 170000, child: 150000, student: 155000, vip: 230000 },
+    "4DX": { adult: 200000, child: 180000, student: 185000, vip: 270000 }
+  },
+  early: {
+    "2D": { adult: 65000, child: 50000, student: 55000, vip: 90000 },
+    "3D": { adult: 85000, child: 70000, student: 75000, vip: 120000 }
+  },
+  midnight: {
+    "2D": { adult: 75000, child: 60000, student: 65000, vip: 100000 },
+    "3D": { adult: 95000, child: 80000, student: 85000, vip: 130000 }
   }
 };
 
-// Định nghĩa các loại suất chiếu đặc biệt với giá thực tế
 export const SPECIAL_TYPES = [
-  { 
-    value: "premiere", 
-    label: "Suất chiếu ra mắt", 
-    color: "#e50914", 
-    icon: "🎬", 
-    description: "Suất chiếu sớm trước ngày công chiếu chính thức",
-    priceMultiplier: 1.3, // Tăng 30% (phụ thu phòng vé)
-    availableFormats: ["2D", "IMAX", "4DX"]
-  },
-  { 
-    value: "holiday", 
-    label: "Suất chiếu ngày lễ", 
-    color: "#f59e0b", 
-    icon: "🎉", 
-    description: "Áp dụng cho các ngày lễ, Tết",
-    priceMultiplier: 1.2, // Tăng 20% (giá ngày lễ)
-    availableFormats: ["2D", "3D", "IMAX", "4DX"]
-  },
-  { 
-    value: "event", 
-    label: "Suất chiếu sự kiện", 
-    color: "#8b5cf6", 
-    icon: "🎪", 
-    description: "Suất chiếu đặc biệt có giao lưu, quà tặng",
-    priceMultiplier: 1.5, // Tăng 50% (bao gồm quà tặng)
-    availableFormats: ["2D", "IMAX"]
-  },
-  { 
-    value: "midnight", 
-    label: "Suất chiếu đêm", 
-    color: "#3b82f6", 
-    icon: "🌙", 
-    description: "Suất chiếu sau 23:00",
-    priceMultiplier: 0.8, // Giảm 20% (giá khuya)
-    availableFormats: ["2D", "3D"]
-  },
-  { 
-    value: "vip", 
-    label: "Suất chiếu VIP", 
-    color: "#f43f5e", 
-    icon: "👑", 
-    description: "Ghế ngồi VIP, đồ uống miễn phí",
-    priceMultiplier: 2.0, // Tăng 100% (dịch vụ VIP)
-    availableFormats: ["2D", "IMAX"]
-  },
-  { 
-    value: "couple", 
-    label: "Suất chiếu đôi", 
-    color: "#ec4899", 
-    icon: "💑", 
-    description: "Ghế đôi dành cho các cặp đôi",
-    priceMultiplier: 1.8, // Tăng 80% (giá vé đôi)
-    availableFormats: ["2D"]
-  },
-  { 
-    value: "early", 
-    label: "Suất chiếu sớm", 
-    color: "#10b981", 
-    icon: "🌅", 
-    description: "Suất chiếu trước 12:00 trưa",
-    priceMultiplier: 0.7, // Giảm 30% (giá sáng sớm)
-    availableFormats: ["2D", "3D"]
-  },
-  { 
-    value: "sweetbox", 
-    label: "Sweetbox", 
-    color: "#f97316", 
-    icon: "🍿", 
-    description: "Combo vé + bỏng nước",
-    priceMultiplier: 1.4, // Tăng 40% (bao gồm đồ ăn)
-    availableFormats: ["2D"]
-  }
+  { value: "premiere", label: "Suất chiếu ra mắt", color: "#e50914", icon: "🎬", priceMultiplier: 1.3, availableFormats: ["2D", "IMAX", "4DX"] },
+  { value: "holiday", label: "Suất chiếu ngày lễ", color: "#f59e0b", icon: "🎉", priceMultiplier: 1.2, availableFormats: ["2D", "3D", "IMAX", "4DX"] },
+  { value: "event", label: "Suất chiếu sự kiện", color: "#8b5cf6", icon: "🎪", priceMultiplier: 1.5, availableFormats: ["2D", "IMAX"] },
+  { value: "midnight", label: "Suất chiếu đêm", color: "#3b82f6", icon: "🌙", priceMultiplier: 0.8, availableFormats: ["2D", "3D"] },
+  { value: "vip", label: "Suất chiếu VIP", color: "#f43f5e", icon: "👑", priceMultiplier: 2.0, availableFormats: ["2D", "IMAX"] },
+  { value: "couple", label: "Suất chiếu đôi", color: "#ec4899", icon: "💑", priceMultiplier: 1.8, availableFormats: ["2D"] },
+  { value: "early", label: "Suất chiếu sớm", color: "#10b981", icon: "🌅", priceMultiplier: 0.7, availableFormats: ["2D", "3D"] },
+  { value: "sweetbox", label: "Sweetbox", color: "#f97316", icon: "🍿", priceMultiplier: 1.4, availableFormats: ["2D"] }
 ];
 
-const MOVIES = [
-  { id: "MV001", title: "Biệt Đội Chiến Thần", duration: 150, rating: "C16", poster: "/posters/biet-doi-chien-than.jpg" },
-  { id: "MV002", title: "Hành Trình Vũ Trụ", duration: 135, rating: "P", poster: "/posters/hanh-trinh-vu-tru.jpg" },
-  { id: "MV003", title: "Bóng Đêm Vĩnh Cửu", duration: 120, rating: "C18", poster: "/posters/bong-dem-vinh-cuu.jpg" },
-];
-
-const CINEMAS = [
-  { 
-    id: "C001", 
-    name: "CGV Vincom Bà Triệu", 
-    rooms: [
-      { id: "R001", name: "Phòng 1", type: "2D", capacity: 120, hasVip: true },
-      { id: "R002", name: "Phòng 2", type: "2D", capacity: 90, hasVip: true },
-      { id: "R003", name: "IMAX 1", type: "IMAX", capacity: 168, hasVip: true },
-    ]
-  },
-  { 
-    id: "C002", 
-    name: "CGV Aeon Mall Hà Đông", 
-    rooms: [
-      { id: "R004", name: "Phòng 1", type: "3D", capacity: 120, hasVip: true },
-      { id: "R005", name: "4DX Hall", type: "4DX", capacity: 80, hasVip: true },
-    ]
-  },
-  { 
-    id: "C003", 
-    name: "Galaxy Nguyễn Du", 
-    rooms: [
-      { id: "R006", name: "Phòng 1", type: "2D", capacity: 150, hasVip: true },
-      { id: "R007", name: "Phòng 2", type: "3D", capacity: 120, hasVip: true },
-    ]
-  }
-];
-
-// Mock data với giá vé thực tế
-const mockShowtimes = [
-  { 
-    id: "ST001", 
-    movieId: "MV001",
-    movieTitle: "Biệt Đội Chiến Thần", 
-    moviePoster: "/posters/biet-doi-chien-than.jpg",
-    cinemaId: "C001",
-    cinemaName: "CGV Vincom Bà Triệu", 
-    roomId: "R001",
-    roomName: "Phòng 1", 
-    date: "2026-03-20", 
-    time: "09:00", 
-    endTime: "11:30",
-    type: "2D", 
-    availableSeats: 87, 
-    totalSeats: 120, 
-    price: PRICE_CONFIG.early["2D"],
-    status: "ended",
-    special: true,
-    specialType: "early",
-    bookedCount: 33,
-    revenue: 2805000
-  },
-  { 
-    id: "ST002", 
-    movieId: "MV001",
-    movieTitle: "Biệt Đội Chiến Thần", 
-    moviePoster: "/posters/biet-doi-chien-than.jpg",
-    cinemaId: "C001",
-    cinemaName: "CGV Vincom Bà Triệu", 
-    roomId: "R003",
-    roomName: "IMAX 1", 
-    date: "2026-03-20", 
-    time: "11:30", 
-    endTime: "14:00",
-    type: "IMAX", 
-    availableSeats: 120, 
-    totalSeats: 168, 
-    price: PRICE_CONFIG.standard.IMAX,
-    status: "ended",
-    special: false,
-    specialType: null,
-    bookedCount: 48,
-    revenue: 7200000
-  },
-  { 
-    id: "ST003", 
-    movieId: "MV002",
-    movieTitle: "Hành Trình Vũ Trụ", 
-    moviePoster: "/posters/hanh-trinh-vu-tru.jpg",
-    cinemaId: "C002",
-    cinemaName: "CGV Aeon Mall Hà Đông", 
-    roomId: "R004",
-    roomName: "Phòng 1", 
-    date: "2026-03-20", 
-    time: "14:00", 
-    endTime: "16:15",
-    type: "3D", 
-    availableSeats: 43, 
-    totalSeats: 120, 
-    price: PRICE_CONFIG.standard["3D"],
-    status: "ongoing",
-    special: false,
-    specialType: null,
-    bookedCount: 77,
-    revenue: 8470000
-  },
-  { 
-    id: "ST004", 
-    movieId: "MV003",
-    movieTitle: "Bóng Đêm Vĩnh Cửu", 
-    moviePoster: "/posters/bong-dem-vinh-cuu.jpg",
-    cinemaId: "C001",
-    cinemaName: "CGV Vincom Bà Triệu", 
-    roomId: "R002",
-    roomName: "Phòng 2", 
-    date: "2026-03-20", 
-    time: "19:30", 
-    endTime: "21:30",
-    type: "2D", 
-    availableSeats: 55, 
-    totalSeats: 90, 
-    price: PRICE_CONFIG.weekend["2D"],
-    status: "scheduled",
-    special: true,
-    specialType: "weekend",
-    bookedCount: 35,
-    revenue: 3500000
-  },
-  { 
-    id: "ST005", 
-    movieId: "MV001",
-    movieTitle: "Biệt Đội Chiến Thần", 
-    moviePoster: "/posters/biet-doi-chien-than.jpg",
-    cinemaId: "C002",
-    cinemaName: "CGV Aeon Mall Hà Đông", 
-    roomId: "R005",
-    roomName: "4DX Hall", 
-    date: "2026-03-21", 
-    time: "23:30", 
-    endTime: "02:00",
-    type: "4DX", 
-    availableSeats: 60, 
-    totalSeats: 80, 
-    price: PRICE_CONFIG.standard["4DX"],
-    status: "scheduled",
-    special: true,
-    specialType: "midnight",
-    bookedCount: 20,
-    revenue: 2880000
-  },
-  { 
-    id: "ST006", 
-    movieId: "MV002",
-    movieTitle: "Hành Trình Vũ Trụ", 
-    moviePoster: "/posters/hanh-trinh-vu-tru.jpg",
-    cinemaId: "C003",
-    cinemaName: "Galaxy Nguyễn Du", 
-    roomId: "R006",
-    roomName: "Phòng 1", 
-    date: "2026-03-22", 
-    time: "20:00", 
-    endTime: "22:15",
-    type: "2D", 
-    availableSeats: 45, 
-    totalSeats: 150, 
-    price: PRICE_CONFIG.weekend["2D"],
-    status: "scheduled",
-    special: true,
-    specialType: "couple",
-    bookedCount: 105,
-    revenue: 9450000
-  }
-];
+export const statusConfig = {
+  scheduled: { label: "Sắp chiếu", color: "#22c55e", bg: "rgba(34,197,94,0.12)" },
+  ongoing: { label: "Đang chiếu", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
+  ended: { label: "Đã kết thúc", color: "#6b7280", bg: "rgba(107,114,128,0.12)" },
+  cancelled: { label: "Đã hủy", color: "#ef4444", bg: "rgba(239,68,68,0.12)" },
+};
 
 export default function ShowtimesPage() {
-  const [showtimes, setShowtimes] = useState(mockShowtimes);
+  const [showtimes, setShowtimes] = useState([]);
+  const [movies, setMovies] = useState([]);
+  const [cinemas, setCinemas] = useState([]);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("today");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -327,43 +66,129 @@ export default function ShowtimesPage() {
   const [selectedShowtimes, setSelectedShowtimes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(null);
+  const [dataLoading, setDataLoading] = useState(true);
   
   const itemsPerPage = 10;
 
-  // Hàm xác định giá vé dựa trên ngày và giờ
-  const getBasePriceByTime = (date, time, type) => {
-    const showDate = new Date(date);
-    const dayOfWeek = showDate.getDay(); // 0: Chủ nhật, 6: Thứ 7
-    const hour = parseInt(time.split(':')[0]);
+  // Load movies, cinemas và showtimes từ localStorage
+  useEffect(() => {
+    const loadData = () => {
+      setDataLoading(true);
+      try {
+        // Load movies
+        const savedMovies = localStorage.getItem('movies');
+        if (savedMovies) {
+          setMovies(JSON.parse(savedMovies));
+        } else {
+          setMovies([]);
+        }
+        
+        // Load cinemas - QUAN TRỌNG: Đảm bảo cấu trúc đúng
+        const savedCinemas = localStorage.getItem('cinemas');
+        if (savedCinemas) {
+          const cinemaData = JSON.parse(savedCinemas);
+          console.log("Loaded cinemas from localStorage:", cinemaData);
+          
+          // Đảm bảo mỗi cinema có rooms array và cấu trúc đúng
+          const normalizedCinemas = cinemaData.map(cinema => ({
+            ...cinema,
+            id: cinema.id,
+            name: cinema.name,
+            rooms: cinema.rooms || [],
+            currentRooms: cinema.currentRooms || cinema.rooms?.length || 0,
+            maxRooms: cinema.maxRooms || 4
+          }));
+          setCinemas(normalizedCinemas);
+          console.log("Normalized cinemas:", normalizedCinemas);
+        } else {
+          console.log("No cinemas found in localStorage");
+          setCinemas([]);
+        }
+        
+        // Load showtimes
+        const savedShowtimes = localStorage.getItem('showtimes');
+        if (savedShowtimes) {
+          setShowtimes(JSON.parse(savedShowtimes));
+        } else {
+          setShowtimes([]);
+        }
+      } catch (error) {
+        console.error("Failed to load data:", error);
+        toast.error("Lỗi tải dữ liệu!");
+      } finally {
+        setDataLoading(false);
+      }
+    };
     
-    // Kiểm tra ngày cuối tuần (Thứ 6,7, CN)
+    loadData();
+  }, []);
+
+  // Save showtimes to localStorage
+  useEffect(() => {
+    if (!dataLoading) {
+      localStorage.setItem('showtimes', JSON.stringify(showtimes));
+    }
+  }, [showtimes, dataLoading]);
+
+  // Listen for changes in localStorage
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'movies') {
+        try {
+          setMovies(JSON.parse(e.newValue) || []);
+        } catch (error) {
+          console.error("Failed to parse movies:", error);
+        }
+      }
+      if (e.key === 'cinemas') {
+        try {
+          const cinemaData = JSON.parse(e.newValue) || [];
+          const normalizedCinemas = cinemaData.map(cinema => ({
+            ...cinema,
+            rooms: cinema.rooms || [],
+            currentRooms: cinema.currentRooms || cinema.rooms?.length || 0,
+            maxRooms: cinema.maxRooms || 4
+          }));
+          setCinemas(normalizedCinemas);
+        } catch (error) {
+          console.error("Failed to parse cinemas:", error);
+        }
+      }
+      if (e.key === 'showtimes') {
+        try {
+          setShowtimes(JSON.parse(e.newValue) || []);
+        } catch (error) {
+          console.error("Failed to parse showtimes:", error);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const getBasePriceByTime = (date, time, type) => {
+    if (!date || !time || !type) return PRICE_CONFIG.standard["2D"];
+    
+    const showDate = new Date(date);
+    const dayOfWeek = showDate.getDay();
+    const hour = parseInt(time.split(':')[0]);
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6 || dayOfWeek === 5;
     
-    // Giá theo khung giờ
     if (hour < 12) {
-      // Suất sớm - giá thấp hơn
-      return PRICE_CONFIG.early || PRICE_CONFIG.standard;
+      return PRICE_CONFIG.early?.[type] || PRICE_CONFIG.standard[type] || PRICE_CONFIG.standard["2D"];
     } else if (hour >= 23) {
-      // Suất đêm - giá thấp hơn
-      return PRICE_CONFIG.midnight || PRICE_CONFIG.standard;
+      return PRICE_CONFIG.midnight?.[type] || PRICE_CONFIG.standard[type] || PRICE_CONFIG.standard["2D"];
     } else if (isWeekend) {
-      // Cuối tuần - giá cao hơn
-      return PRICE_CONFIG.weekend[type] || PRICE_CONFIG.standard[type];
+      return PRICE_CONFIG.weekend[type] || PRICE_CONFIG.standard[type] || PRICE_CONFIG.standard["2D"];
     } else {
-      // Ngày thường
       return PRICE_CONFIG.standard[type] || PRICE_CONFIG.standard["2D"];
     }
   };
 
-  // Tính giá vé dựa trên loại suất chiếu đặc biệt
   const calculateSpecialPrice = (basePrice, specialType, format) => {
     const special = SPECIAL_TYPES.find(t => t.value === specialType);
     if (!special) return basePrice;
-    
-    // Kiểm tra format có hỗ trợ không
-    if (!special.availableFormats.includes(format)) {
-      return basePrice; // Không hỗ trợ format này thì giữ giá gốc
-    }
+    if (!special.availableFormats.includes(format)) return basePrice;
     
     return {
       adult: Math.round(basePrice.adult * special.priceMultiplier / 1000) * 1000,
@@ -373,80 +198,139 @@ export default function ShowtimesPage() {
     };
   };
 
-  // Lọc dữ liệu nâng cao
-  const filtered = showtimes.filter(s => {
-    // Tìm kiếm
-    const matchSearch = search === "" || 
-      s.movieTitle.toLowerCase().includes(search.toLowerCase()) || 
-      s.cinemaName.toLowerCase().includes(search.toLowerCase()) ||
-      s.roomName.toLowerCase().includes(search.toLowerCase());
-    
-    // Lọc theo rạp
-    const matchCinema = cinemaFilter === "all" || s.cinemaId === cinemaFilter;
-    
-    // Lọc theo loại đặc biệt
-    const matchSpecial = specialFilter === "all" || 
-      (specialFilter === "special" && s.special) ||
-      (specialFilter !== "special" && s.specialType === specialFilter);
-    
-    // Lọc theo ngày (thông minh)
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    const weekLater = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
-    
-    let matchDate = true;
-    if (dateFilter === "today") {
-      matchDate = s.date === today;
-    } else if (dateFilter === "tomorrow") {
-      matchDate = s.date === tomorrow;
-    } else if (dateFilter === "week") {
-      matchDate = s.date >= today && s.date <= weekLater;
-    } else if (dateFilter !== "all") {
-      matchDate = s.date === dateFilter;
-    }
-    
-    // Lọc theo trạng thái
-    const matchStatus = statusFilter === "all" || s.status === statusFilter;
-    
-    return matchSearch && matchCinema && matchDate && matchStatus && matchSpecial;
-  });
-
-  // Tự động cập nhật trạng thái suất chiếu dựa vào thời gian thực
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setShowtimes(prev => prev.map(showtime => {
-        const now = new Date();
-        const showDate = new Date(`${showtime.date}T${showtime.time}`);
-        const endDate = new Date(`${showtime.date}T${showtime.endTime || addHours(showtime.time, 2)}`);
-        
-        let newStatus = showtime.status;
-        if (showtime.status !== "cancelled") {
-          if (now > endDate) {
-            newStatus = "ended";
-          } else if (now >= showDate && now <= endDate) {
-            newStatus = "ongoing";
-          } else if (now < showDate) {
-            newStatus = "scheduled";
-          }
-        }
-        
-        return { ...showtime, status: newStatus };
-      }));
-    }, 60000); // Cập nhật mỗi phút
-    
-    return () => clearInterval(interval);
-  }, []);
-
   const addHours = (time, hours) => {
+    if (!time) return "22:00";
     const [h, m] = time.split(':').map(Number);
     return `${String(h + hours).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   };
 
-  // Kiểm tra xung đột lịch chiếu
+  const calculateEndTime = (startTime, durationMinutes) => {
+    if (!startTime || !durationMinutes) return addHours(startTime || "00:00", 2);
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + durationMinutes + 15;
+    const endHours = Math.floor(totalMinutes / 60);
+    const endMinutes = totalMinutes % 60;
+    return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+  };
+
+  const getMovieDuration = (movieId) => {
+    const movie = movies.find(m => m.id === movieId);
+    return movie?.duration || 120;
+  };
+
+  const initNewForm = () => {
+    setForm({
+      movieId: "",
+      movieTitle: "",
+      cinemaId: "",
+      cinemaName: "",
+      roomId: "",
+      roomName: "",
+      type: "",
+      date: new Date().toISOString().split('T')[0],
+      time: "14:00",
+      endTime: "16:00",
+      specialType: "none",
+      special: false,
+      price: { adult: 0, child: 0, student: 0, vip: 0 },
+      totalSeats: 0,
+      availableSeats: 0,
+      status: "scheduled"
+    });
+  };
+
+  const updateForm = (updates) => {
+    setForm(prev => {
+      const newForm = { ...prev, ...updates };
+      
+      // Khi chọn cinema, cập nhật danh sách phòng và chọn phòng đầu tiên
+      if (updates.cinemaId !== undefined && updates.cinemaId !== prev.cinemaId) {
+        const cinema = cinemas.find(c => c.id == updates.cinemaId);
+        if (cinema) {
+          newForm.cinemaName = cinema.name;
+          const rooms = cinema.rooms || [];
+          
+          if (rooms.length > 0) {
+            const firstRoom = rooms[0];
+            newForm.roomId = firstRoom.id;
+            newForm.roomName = firstRoom.name;
+            newForm.type = firstRoom.type;
+            newForm.totalSeats = firstRoom.capacity || firstRoom.totalSeats || 0;
+            newForm.availableSeats = firstRoom.capacity || firstRoom.totalSeats || 0;
+          } else {
+            newForm.roomId = "";
+            newForm.roomName = "";
+            newForm.type = "";
+            newForm.totalSeats = 0;
+            newForm.availableSeats = 0;
+          }
+        }
+      }
+      
+      // Khi chọn room, cập nhật thông tin phòng
+      if (updates.roomId !== undefined && updates.roomId !== prev.roomId && newForm.cinemaId) {
+        const cinema = cinemas.find(c => c.id == newForm.cinemaId);
+        const room = cinema?.rooms?.find(r => r.id == updates.roomId);
+        if (room) {
+          newForm.roomName = room.name;
+          newForm.type = room.type;
+          newForm.totalSeats = room.capacity || room.totalSeats || 0;
+          newForm.availableSeats = room.capacity || room.totalSeats || 0;
+        }
+      }
+      
+      // Khi chọn movie, cập nhật tên phim và thời gian kết thúc
+      if (updates.movieId !== undefined && updates.movieId !== prev.movieId) {
+        const movie = movies.find(m => m.id == updates.movieId);
+        if (movie) {
+          newForm.movieTitle = movie.title;
+          newForm.movieDuration = movie.duration;
+          if (newForm.time) {
+            newForm.endTime = calculateEndTime(newForm.time, movie.duration);
+          }
+        }
+      }
+      
+      // Khi thay đổi thời gian, cập nhật thời gian kết thúc
+      if (updates.time !== undefined && updates.time !== prev.time && newForm.movieId) {
+        const duration = getMovieDuration(newForm.movieId);
+        newForm.endTime = calculateEndTime(newForm.time, duration);
+      }
+      
+      // Tính giá vé khi có đủ thông tin
+      if ((updates.date !== undefined || updates.time !== undefined || updates.type !== undefined || updates.specialType !== undefined) 
+          && newForm.date && newForm.time && newForm.type) {
+        const basePrice = getBasePriceByTime(newForm.date, newForm.time, newForm.type);
+        
+        if (newForm.specialType && newForm.specialType !== "none") {
+          newForm.price = calculateSpecialPrice(basePrice, newForm.specialType, newForm.type);
+          newForm.special = true;
+        } else {
+          newForm.price = basePrice;
+          newForm.special = false;
+        }
+      }
+      
+      return newForm;
+    });
+  };
+
+  const handleAdd = () => {
+    setEditingShowtime(null);
+    initNewForm();
+    setShowModal(true);
+  };
+
+  const handleEdit = (showtime) => {
+    setEditingShowtime(showtime);
+    setForm(showtime);
+    setShowModal(true);
+  };
+
   const checkConflict = (newShowtime) => {
     const conflicts = showtimes.filter(s => 
-      s.cinemaId === newShowtime.cinemaId &&
-      s.roomId === newShowtime.roomId &&
+      s.cinemaId == newShowtime.cinemaId &&
+      s.roomId == newShowtime.roomId &&
       s.date === newShowtime.date &&
       s.id !== newShowtime.id &&
       s.status !== "cancelled"
@@ -459,97 +343,22 @@ export default function ShowtimesPage() {
       const newEnd = new Date(`${newShowtime.date}T${newShowtime.endTime || addHours(newShowtime.time, 2)}`);
       
       if (newStart < existingEnd && newEnd > existingStart) {
-        return {
-          conflict: true,
-          with: existing
-        };
+        return { conflict: true, with: existing };
       }
     }
-    
     return { conflict: false };
-  };
-
-  // Tính end time dựa trên thời lượng phim
-  const calculateEndTime = (movieId, startTime) => {
-    const movie = MOVIES.find(m => m.id === movieId);
-    if (!movie) return addHours(startTime, 2);
-    
-    const [hours, minutes] = startTime.split(':').map(Number);
-    const totalMinutes = hours * 60 + minutes + movie.duration + 15; // Thêm 15 phút quảng cáo
-    const endHours = Math.floor(totalMinutes / 60);
-    const endMinutes = totalMinutes % 60;
-    return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
-  };
-
-  const handleAdd = () => {
-    setEditingShowtime(null);
-    const defaultTime = "10:00";
-    const basePrice = getBasePriceByTime(
-      new Date().toISOString().split('T')[0],
-      defaultTime,
-      CINEMAS[0].rooms[0].type
-    );
-    
-    setForm({
-      movieId: MOVIES[0].id,
-      movieTitle: MOVIES[0].title,
-      cinemaId: CINEMAS[0].id,
-      cinemaName: CINEMAS[0].name,
-      roomId: CINEMAS[0].rooms[0].id,
-      roomName: CINEMAS[0].rooms[0].name,
-      date: new Date().toISOString().split('T')[0],
-      time: defaultTime,
-      endTime: calculateEndTime(MOVIES[0].id, defaultTime),
-      type: CINEMAS[0].rooms[0].type,
-      totalSeats: CINEMAS[0].rooms[0].capacity,
-      availableSeats: CINEMAS[0].rooms[0].capacity,
-      price: basePrice,
-      special: false,
-      specialType: null,
-      status: "scheduled",
-      bookedCount: 0,
-      revenue: 0
-    });
-    setShowModal(true);
-  };
-
-  const handleEdit = (showtime) => {
-    setEditingShowtime(showtime);
-    setForm(showtime);
-    setShowModal(true);
   };
 
   const handleSave = async (formData) => {
     setLoading(true);
     
     try {
-      // Tính giá cơ bản dựa trên thời gian
-      const basePrice = getBasePriceByTime(
-        formData.date,
-        formData.time,
-        formData.type
-      );
-      
-      // Tính giá đặc biệt nếu có
-      let finalPrice = basePrice;
-      if (formData.special && formData.specialType) {
-        finalPrice = calculateSpecialPrice(
-          basePrice,
-          formData.specialType,
-          formData.type
-        );
-      }
-
-      // Tính end time dựa trên phim đã chọn
-      const endTime = calculateEndTime(formData.movieId, formData.time);
-      const formWithEndTime = { 
-        ...formData, 
-        endTime,
-        price: finalPrice
+      const finalFormData = {
+        ...formData,
+        endTime: formData.endTime || calculateEndTime(formData.time, getMovieDuration(formData.movieId)),
       };
-
-      // Kiểm tra xung đột
-      const { conflict, with: conflictingShow } = checkConflict(formWithEndTime);
+      
+      const { conflict, with: conflictingShow } = checkConflict(finalFormData);
       
       if (conflict) {
         const confirm = window.confirm(
@@ -561,30 +370,30 @@ export default function ShowtimesPage() {
         }
       }
 
-      // Giả lập API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-
       if (editingShowtime) {
         setShowtimes(prev =>
-          prev.map(s => s.id === editingShowtime.id ? { ...s, ...formWithEndTime } : s)
+          prev.map(s => s.id === editingShowtime.id ? { ...s, ...finalFormData } : s)
         );
         toast.success("Cập nhật suất chiếu thành công!");
       } else {
         const newShowtime = {
           id: `ST${Date.now()}`,
-          ...formWithEndTime,
-          availableSeats: formWithEndTime.totalSeats,
+          ...finalFormData,
+          availableSeats: finalFormData.totalSeats || 0,
           bookedCount: 0,
           revenue: 0,
-          status: "scheduled",
+          status: finalFormData.status || "scheduled",
         };
         setShowtimes(prev => [newShowtime, ...prev]);
         toast.success("Thêm suất chiếu thành công!");
       }
       
       setShowModal(false);
+      setEditingShowtime(null);
+      initNewForm();
     } catch (error) {
-      toast.error("Có lỗi xảy ra!");
+      console.error("Save error:", error);
+      toast.error("Có lỗi xảy ra khi lưu!");
     } finally {
       setLoading(false);
     }
@@ -594,7 +403,6 @@ export default function ShowtimesPage() {
     if (window.confirm("Bạn có chắc chắn muốn xóa suất chiếu này?")) {
       setLoading(true);
       try {
-        await new Promise(resolve => setTimeout(resolve, 500));
         setShowtimes(prev => prev.filter(s => s.id !== id));
         toast.success("Xóa suất chiếu thành công!");
       } catch (error) {
@@ -615,20 +423,17 @@ export default function ShowtimesPage() {
       revenue: 0,
       availableSeats: showtime.totalSeats
     };
-    
     setShowtimes(prev => [newShowtime, ...prev]);
     toast.success("Đã nhân bản suất chiếu!");
   };
 
   const handleBulkDelete = async () => {
     if (selectedShowtimes.length === 0) return;
-    
     const confirm = window.confirm(`Bạn có chắc muốn xóa ${selectedShowtimes.length} suất chiếu?`);
     if (!confirm) return;
     
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
       setShowtimes(prev => prev.filter(s => !selectedShowtimes.includes(s.id)));
       setSelectedShowtimes([]);
       toast.success(`Đã xóa ${selectedShowtimes.length} suất chiếu`);
@@ -641,14 +446,10 @@ export default function ShowtimesPage() {
 
   const handleBulkStatusChange = async (newStatus) => {
     if (selectedShowtimes.length === 0) return;
-    
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
       setShowtimes(prev =>
-        prev.map(s => 
-          selectedShowtimes.includes(s.id) ? { ...s, status: newStatus } : s
-        )
+        prev.map(s => selectedShowtimes.includes(s.id) ? { ...s, status: newStatus } : s)
       );
       setSelectedShowtimes([]);
       toast.success(`Đã cập nhật trạng thái ${selectedShowtimes.length} suất chiếu`);
@@ -661,27 +462,15 @@ export default function ShowtimesPage() {
 
   const handleBulkSpecialChange = async (specialType) => {
     if (selectedShowtimes.length === 0) return;
-    
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
       setShowtimes(prev =>
         prev.map(s => {
           if (selectedShowtimes.includes(s.id)) {
             const newSpecial = specialType !== "none";
-            
-            // Tính lại giá dựa trên loại suất mới
             const basePrice = getBasePriceByTime(s.date, s.time, s.type);
-            const newPrice = newSpecial ? 
-              calculateSpecialPrice(basePrice, specialType, s.type) : 
-              basePrice;
-            
-            return { 
-              ...s, 
-              special: newSpecial,
-              specialType: newSpecial ? specialType : null,
-              price: newPrice
-            };
+            const newPrice = newSpecial ? calculateSpecialPrice(basePrice, specialType, s.type) : basePrice;
+            return { ...s, special: newSpecial, specialType: newSpecial ? specialType : null, price: newPrice };
           }
           return s;
         })
@@ -695,53 +484,31 @@ export default function ShowtimesPage() {
     }
   };
 
-  const handleExport = (type) => {
-    switch(type) {
-      case 'excel':
-        exportToExcel();
-        break;
-      case 'pdf':
-        exportToPDF();
-        break;
-      case 'print':
-        printSchedule();
-        break;
-      default:
-        toast.success(`Đang xuất file ${type}...`);
-    }
-  };
-
   const exportToExcel = () => {
-    // Tạo dữ liệu cho Excel
-    const exportData = filtered.map(s => {
-      const specialType = SPECIAL_TYPES.find(t => t.value === s.specialType);
-      return {
-        'Tên phim': s.movieTitle,
-        'Rạp': s.cinemaName,
-        'Phòng': s.roomName,
-        'Ngày': s.date,
-        'Giờ': s.time,
-        'Định dạng': s.type,
-        'Loại suất': s.special ? (specialType?.label || 'Đặc biệt') : 'Thường',
-        'Ghế trống': `${s.availableSeats}/${s.totalSeats}`,
-        'Giá vé (người lớn)': `${s.price.adult?.toLocaleString()}đ`,
-        'Giá vé (trẻ em)': `${s.price.child?.toLocaleString()}đ`,
-        'Giá vé (sinh viên)': `${s.price.student?.toLocaleString()}đ`,
-        'Giá vé (VIP)': `${s.price.vip?.toLocaleString()}đ`,
-        'Trạng thái': statusConfig[s.status]?.label || s.status,
-        'Đã bán': s.bookedCount,
-        'Doanh thu': `${s.revenue?.toLocaleString()}đ`
-      };
-    });
+    if (filtered.length === 0) {
+      toast.error("Không có dữ liệu để xuất!");
+      return;
+    }
 
-    // Tạo CSV content
+    const exportData = filtered.map(s => ({
+      'Tên phim': s.movieTitle,
+      'Rạp': s.cinemaName,
+      'Phòng': s.roomName,
+      'Ngày': s.date,
+      'Giờ': s.time,
+      'Định dạng': s.type,
+      'Loại suất': s.special ? 'Đặc biệt' : 'Thường',
+      'Ghế trống': `${s.availableSeats}/${s.totalSeats}`,
+      'Giá vé (người lớn)': `${s.price?.adult?.toLocaleString()}đ`,
+      'Trạng thái': statusConfig[s.status]?.label || s.status
+    }));
+
     const headers = Object.keys(exportData[0]);
     const csvContent = [
       headers.join(','),
-      ...exportData.map(row => headers.map(header => `"${row[header]}"`).join(','))
+      ...exportData.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
     ].join('\n');
 
-    // Download file
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -750,7 +517,6 @@ export default function ShowtimesPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
     toast.success('Xuất file Excel thành công!');
   };
 
@@ -760,135 +526,132 @@ export default function ShowtimesPage() {
   };
 
   const printSchedule = () => {
+    if (filtered.length === 0) {
+      toast.error("Không có dữ liệu để in!");
+      return;
+    }
+
     const printWindow = window.open('', '_blank');
     const today = new Date().toLocaleDateString('vi-VN');
     
     printWindow.document.write(`
-      <html>
-        <head>
-          <title>Lịch chiếu phim - ${today}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h1 { color: #e50914; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th { background: #f5f5f5; padding: 10px; text-align: left; }
-            td { padding: 10px; border-bottom: 1px solid #ddd; }
-            .special-badge { 
-              display: inline-block;
-              padding: 2px 6px;
-              border-radius: 4px;
-              font-size: 11px;
-              font-weight: bold;
-            }
-            .price { color: #f59e0b; font-weight: bold; }
-          </style>
-        </head>
-        <body>
-          <h1>LỊCH CHIẾU PHIM - ${today}</h1>
-          <p>Tổng số: ${filtered.length} suất chiếu</p>
-          <p>Suất đặc biệt: ${filtered.filter(s => s.special).length} suất</p>
-          <table>
-            <thead>
+      <html><head><title>Lịch chiếu phim - ${today}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #e50914; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #f5f5f5; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+      </style></head>
+      <body>
+        <h1>LỊCH CHIẾU PHIM - ${today}</h1>
+        <p>Tổng số: ${filtered.length} suất chiếu</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Phim</th>
+              <th>Rạp</th>
+              <th>Phòng</th>
+              <th>Ngày</th>
+              <th>Giờ</th>
+              <th>Giá vé</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map(s => `
               <tr>
-                <th>Phim</th>
-                <th>Rạp</th>
-                <th>Phòng</th>
-                <th>Ngày</th>
-                <th>Giờ</th>
-                <th>Loại</th>
-                <th>Suất</th>
-                <th>Ghế</th>
-                <th>Giá vé</th>
-                <th>Trạng thái</th>
+                <td>${s.movieTitle || ''}</td>
+                <td>${s.cinemaName || ''}</td>
+                <td>${s.roomName || ''}</td>
+                <td>${new Date(s.date).toLocaleDateString('vi-VN')}</td>
+                <td>${s.time || ''}</td>
+                <td>${s.price?.adult?.toLocaleString() || 0}đ</td>
+                <td>${statusConfig[s.status]?.label || s.status || 'Sắp chiếu'}</td>
               </tr>
-            </thead>
-            <tbody>
-              ${filtered.map(s => {
-                const specialType = SPECIAL_TYPES.find(t => t.value === s.specialType);
-                return `
-                <tr>
-                  <td><strong>${s.movieTitle}</strong></td>
-                  <td>${s.cinemaName}</td>
-                  <td>${s.roomName}</td>
-                  <td>${new Date(s.date).toLocaleDateString('vi-VN')}</td>
-                  <td>${s.time}</td>
-                  <td>${s.type}</td>
-                  <td>
-                    ${s.special ? `<span class="special-badge" style="background: ${specialType?.color}20; color: ${specialType?.color}">${specialType?.icon} ${specialType?.label}</span>` : 'Thường'}
-                  </td>
-                  <td>${s.availableSeats}/${s.totalSeats}</td>
-                  <td class="price">${s.price.adult?.toLocaleString()}đ</td>
-                  <td>${statusConfig[s.status]?.label || s.status}</td>
-                </tr>
-              `}).join('')}
-            </tbody>
-          </table>
-        </body>
-      </html>
+            `).join('')}
+          </tbody>
+        </table>
+      </body></html>
     `);
-    
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
   };
 
-  // Lấy danh sách ngày có suất chiếu
+  const handleExport = (type) => {
+    switch(type) {
+      case 'excel': exportToExcel(); break;
+      case 'pdf': exportToPDF(); break;
+      case 'print': printSchedule(); break;
+      default: toast.success(`Đang xuất file ${type}...`);
+    }
+  };
+
+  const filtered = showtimes.filter(s => {
+    const matchSearch = search === "" || 
+      s.movieTitle?.toLowerCase().includes(search.toLowerCase()) || 
+      s.cinemaName?.toLowerCase().includes(search.toLowerCase()) ||
+      s.roomName?.toLowerCase().includes(search.toLowerCase());
+    
+    const matchCinema = cinemaFilter === "all" || s.cinemaId == cinemaFilter;
+    
+    const matchSpecial = specialFilter === "all" || 
+      (specialFilter === "special" && s.special) ||
+      (specialFilter !== "special" && specialFilter !== "all" && s.specialType === specialFilter);
+    
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    const weekLater = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+    
+    let matchDate = true;
+    if (dateFilter === "today") {
+      matchDate = s.date === today;
+    } else if (dateFilter === "tomorrow") {
+      matchDate = s.date === tomorrow;
+    } else if (dateFilter === "week") {
+      matchDate = s.date >= today && s.date <= weekLater;
+    } else if (dateFilter !== "all") {
+      matchDate = s.date === dateFilter;
+    }
+    
+    const matchStatus = statusFilter === "all" || s.status === statusFilter;
+    
+    return matchSearch && matchCinema && matchDate && matchStatus && matchSpecial;
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowtimes(prev => prev.map(showtime => {
+        const now = new Date();
+        const showDate = new Date(`${showtime.date}T${showtime.time}`);
+        const endDate = new Date(`${showtime.date}T${showtime.endTime || addHours(showtime.time, 2)}`);
+        
+        let newStatus = showtime.status;
+        if (showtime.status !== "cancelled") {
+          if (now > endDate) {
+            newStatus = "ended";
+          } else if (now >= showDate && now <= endDate) {
+            newStatus = "ongoing";
+          } else if (now < showDate) {
+            newStatus = "scheduled";
+          }
+        }
+        return { ...showtime, status: newStatus };
+      }));
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const availableDates = [...new Set(showtimes.map(s => s.date))].sort();
 
-  // Hàm cập nhật form khi chọn phim/rạp/phòng
-  const updateFormFromSelection = (updates) => {
-    setForm(prev => {
-      const newForm = { ...prev, ...updates };
-      
-      // Nếu chọn phim mới, cập nhật endTime
-      if (updates.movieId) {
-        newForm.endTime = calculateEndTime(updates.movieId, newForm.time);
-      }
-      
-      // Nếu chọn rạp mới hoặc phòng mới, cập nhật thông tin phòng
-      if (updates.cinemaId || updates.roomId) {
-        const cinema = CINEMAS.find(c => c.id === newForm.cinemaId);
-        if (cinema) {
-          const room = cinema.rooms.find(r => r.id === newForm.roomId) || cinema.rooms[0];
-          newForm.roomName = room.name;
-          newForm.type = room.type;
-          newForm.totalSeats = room.capacity;
-          newForm.availableSeats = room.capacity;
-        }
-      }
-      
-      // Nếu thay đổi loại suất đặc biệt, cập nhật giá
-      if (updates.specialType !== undefined) {
-        newForm.special = updates.specialType !== "none";
-        const basePrice = getBasePriceByTime(newForm.date, newForm.time, newForm.type);
-        if (newForm.special) {
-          newForm.price = calculateSpecialPrice(basePrice, updates.specialType, newForm.type);
-        } else {
-          newForm.price = basePrice;
-        }
-      }
-      
-      // Nếu thay đổi ngày hoặc giờ, cập nhật giá
-      if (updates.date || updates.time) {
-        const basePrice = getBasePriceByTime(
-          newForm.date,
-          newForm.time,
-          newForm.type
-        );
-        if (newForm.special && newForm.specialType) {
-          newForm.price = calculateSpecialPrice(
-            basePrice,
-            newForm.specialType,
-            newForm.type
-          );
-        } else {
-          newForm.price = basePrice;
-        }
-      }
-      
-      return newForm;
-    });
-  };
+  if (dataLoading) {
+    return (
+      <div className="p-6 flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-5">
@@ -914,11 +677,8 @@ export default function ShowtimesPage() {
         setStatusFilter={setStatusFilter}
         cinemaFilter={cinemaFilter}
         setCinemaFilter={setCinemaFilter}
-        specialFilter={specialFilter}
-        setSpecialFilter={setSpecialFilter}
         availableDates={availableDates}
-        cinemas={CINEMAS}
-        specialTypes={SPECIAL_TYPES}
+        cinemas={cinemas}
       />
 
       {selectedShowtimes.length > 0 && (
@@ -951,34 +711,37 @@ export default function ShowtimesPage() {
         specialTypes={SPECIAL_TYPES}
       />
 
-      {showModal && form && (
+      {showModal && (
         <ShowtimeModal
           show={showModal}
-          onClose={() => setShowModal(false)}
+          onClose={() => {
+            setShowModal(false);
+            setEditingShowtime(null);
+            initNewForm();
+          }}
           onSave={handleSave}
           form={form}
-          setForm={updateFormFromSelection}
+          setForm={updateForm}
           isEdit={!!editingShowtime}
-          movies={MOVIES}
-          cinemas={CINEMAS}
+          movies={movies}
+          cinemas={cinemas}
           loading={loading}
           specialTypes={SPECIAL_TYPES}
-          priceConfig={PRICE_CONFIG}
         />
       )}
 
       <QuickEditModal
         show={showQuickEdit}
-        onClose={() => setShowQuickEdit(false)}
+        onClose={() => {
+          setShowQuickEdit(false);
+          setEditingShowtime(null);
+        }}
         showtimes={showtimes.filter(s => selectedShowtimes.includes(s.id))}
         onSave={async (updates) => {
           setLoading(true);
           try {
-            await new Promise(resolve => setTimeout(resolve, 500));
             setShowtimes(prev =>
-              prev.map(s => 
-                selectedShowtimes.includes(s.id) ? { ...s, ...updates } : s
-              )
+              prev.map(s => selectedShowtimes.includes(s.id) ? { ...s, ...updates } : s)
             );
             setSelectedShowtimes([]);
             setShowQuickEdit(false);
@@ -995,10 +758,3 @@ export default function ShowtimesPage() {
     </div>
   );
 }
-
-export const statusConfig = {
-  scheduled: { label: "Sắp chiếu", color: "#22c55e", bg: "rgba(34,197,94,0.12)" },
-  ongoing: { label: "Đang chiếu", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
-  ended: { label: "Đã kết thúc", color: "#6b7280", bg: "rgba(107,114,128,0.12)" },
-  cancelled: { label: "Đã hủy", color: "#ef4444", bg: "rgba(239,68,68,0.12)" },
-};

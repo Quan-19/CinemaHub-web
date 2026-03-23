@@ -107,7 +107,6 @@ export default function ShowtimesTable({
                       />
                     </td>
 
-                    {/* Tên phim với tooltip */}
                     <td className="px-4 py-3">
                       <div className="relative group">
                         <span className="text-sm font-semibold text-white cursor-help">
@@ -123,13 +122,11 @@ export default function ShowtimesTable({
                       </div>
                     </td>
 
-                    {/* Rạp và phòng */}
                     <td className="px-4 py-3">
                       <div className="text-sm text-white/70">{showtime.cinemaName}</div>
                       <div className="text-xs text-white/35">{showtime.roomName}</div>
                     </td>
 
-                    {/* Thời gian */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="bg-red-600/20 p-1.5 rounded">
@@ -146,7 +143,6 @@ export default function ShowtimesTable({
                       </div>
                     </td>
 
-                    {/* Loại */}
                     <td className="px-4 py-3">
                       <span
                         className="px-2 py-1 rounded text-xs font-bold"
@@ -159,7 +155,6 @@ export default function ShowtimesTable({
                       </span>
                     </td>
 
-                    {/* Suất đặc biệt */}
                     <td className="px-4 py-3">
                       {showtime.special ? (
                         <SpecialShowtimeBadge 
@@ -172,7 +167,6 @@ export default function ShowtimesTable({
                       )}
                     </td>
 
-                    {/* Chỗ trống */}
                     <td className="px-4 py-3">
                       <div>
                         <span className="text-sm text-white">{showtime.availableSeats}</span>
@@ -189,7 +183,6 @@ export default function ShowtimesTable({
                       </div>
                     </td>
 
-                    {/* Giá vé */}
                     <td className="px-4 py-3">
                       <div className="text-sm font-bold text-yellow-500">
                         {showtime.price?.adult?.toLocaleString() || showtime.price?.toLocaleString()}đ
@@ -197,14 +190,13 @@ export default function ShowtimesTable({
                       <div className="text-xs text-white/40">
                         {showtime.bookedCount || 0} vé đã bán
                       </div>
-                      {showtime.special && showtime.specialDiscount > 0 && (
-                        <div className="text-[10px] text-green-400">
-                          Giảm {showtime.specialDiscount}%
+                      {showtime.special && showtime.specialDiscount !== 0 && (
+                        <div className={`text-[10px] ${showtime.specialDiscount > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {showtime.specialDiscount > 0 ? `+${showtime.specialDiscount}%` : `${showtime.specialDiscount}%`}
                         </div>
                       )}
                     </td>
 
-                    {/* Trạng thái */}
                     <td className="px-4 py-3">
                       <span
                         className="px-2 py-1 rounded-full text-xs font-semibold"
@@ -217,7 +209,6 @@ export default function ShowtimesTable({
                       </span>
                     </td>
 
-                    {/* Thao tác */}
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
                         <button
@@ -264,7 +255,6 @@ export default function ShowtimesTable({
         </table>
       </div>
 
-      {/* Phân trang */}
       {showtimes.length > 0 && (
         <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
           <span className="text-xs text-white/40">
