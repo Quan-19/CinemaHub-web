@@ -43,3 +43,4 @@ export const mockMovies = [
     score: 7.9,
 }
 ];
+

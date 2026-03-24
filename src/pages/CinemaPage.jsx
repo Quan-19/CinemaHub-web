@@ -38,22 +38,38 @@ function CinemaPage() {
   }, []);
 
   const regions = useMemo(() => {
-    const regionMap = {
-      hanoi: { id: "hanoi", label: "Hà Nội", desc: "Các rạp khu vực Hà Nội" },
-      hcm: { id: "hcm", label: "TP.HCM", desc: "Các rạp khu vực TP.HCM" },
-    };
+  const regionMap = [
+    { id: "hanoi", label: "Hà Nội" },
+    { id: "hcm", label: "TP.HCM" },
+    { id: "haiphong", label: "Hải Phòng" }, // 🔥 thêm luôn
+  ];
 
-    return Object.values(regionMap).map((region) => {
-      const regionCinemas = cinemas.filter((cinema) => {
-        const address = cinema.address?.toLowerCase() || "";
-        if (region.id === "hanoi") return address.includes("hà nội");
-        if (region.id === "hcm") return address.includes("tp.hcm");
-        return false;
-      });
+  return regionMap.map((region) => {
+    const regionCinemas = cinemas.filter((cinema) => {
+      const city = (cinema.city || "").toLowerCase();
+      const address = (cinema.address || "").toLowerCase();
 
-      return { ...region, cinemas: regionCinemas };
+      if (region.id === "hanoi") {
+        return city === "hanoi" || address.includes("ha noi");
+      }
+
+      if (region.id === "hcm") {
+        return city === "hcm" || address.includes("hcm");
+      }
+
+      if (region.id === "haiphong") {
+        return address.includes("hai phong");
+      }
+
+      return false;
     });
-  }, [cinemas]);
+
+    return {
+      ...region,
+      cinemas: regionCinemas,
+    };
+  });
+}, [cinemas]);
 
   const activeRegion = regions.find((r) => r.id === selectedRegion);
   const displayedCinemas = activeRegion ? activeRegion.cinemas : [];

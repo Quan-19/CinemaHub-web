@@ -59,48 +59,48 @@ function MoviesPage() {
 
   // fetch movies from backend
   useEffect(() => {
-  const fetchMovies = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/movies");
-      const data = await res.json();
+    const fetchMovies = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/movies");
+        const data = await res.json();
 
-      const formatted = data.map((m) => ({
-        id: m.movie_id,
-        title: m.title,
-        description: m.description,
-        duration: m.duration,
+        const formatted = data.map((m) => ({
+          id: m.movie_id || m.id,
+          title: m.title,
+          description: m.description,
+          duration: m.duration,
 
-        // rating star
-        score: m.rating || 0,
+          // rating star
+          score: m.rating || 0,
 
-        // lượt đánh giá
-        votes: m.views || 0,
+          // lượt đánh giá
+          votes: m.views || 0,
 
-        // phân loại tuổi
-        rating: m.age_rating,
+          // phân loại tuổi
+          rating: m.age_rating,
 
-        poster: m.poster,
-        trailer: m.trailer,
+          poster: m.poster,
+          trailer: m.trailer,
 
-        releaseDate: m.release_date,
+          releaseDate: m.release_date,
 
-        // convert status
-        status:
-          m.status === "now_showing"
-            ? "now-showing"
-            : m.status === "coming_soon"
-            ? "coming-soon"
-            : "ended",
-      }));
+          // convert status
+          status:
+            m.status === "now_showing"
+              ? "now-showing"
+              : m.status === "coming_soon"
+                ? "coming-soon"
+                : "ended",
+        }));
 
-      setMovies(formatted);
-    } catch (err) {
-      console.error("Lỗi load phim:", err);
-    }
-  };
+        setMovies(formatted);
+      } catch (err) {
+        console.error("Lỗi load phim:", err);
+      }
+    };
 
-  fetchMovies();
-}, []);
+    fetchMovies();
+  }, []);
 
   const filteredMovies = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -148,7 +148,6 @@ function MoviesPage() {
   return (
     <div className="text-white">
       <section className="cinema-surface relative px-4 py-8 sm:px-6 lg:px-8 rounded-b-2xl rounded-t-none">
-
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="mb-2 flex items-center gap-2 text-sm text-cinema-primary">

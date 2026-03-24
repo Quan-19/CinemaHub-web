@@ -2,32 +2,23 @@ import { Tag, Clock, Copy, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export const PromotionsPage = () => {
-
   const [promotions, setPromotions] = useState([]);
   const [copied, setCopied] = useState(null);
 
   useEffect(() => {
-
     const fetchPromotions = async () => {
-
       try {
-
-        const res = await fetch(
-          "http://localhost:5000/api/promotions"
-        );
+        const res = await fetch("http://localhost:5000/api/promotions");
 
         const data = await res.json();
 
         setPromotions(data);
-
       } catch (err) {
         console.error("Error loading promotions:", err);
       }
-
     };
 
     fetchPromotions();
-
   }, []);
 
   const handleCopy = (code) => {
@@ -60,25 +51,19 @@ export const PromotionsPage = () => {
             Khuyến mãi
           </h1>
 
-          <p className="text-zinc-400 text-sm">
-            Ưu đãi hấp dẫn dành cho bạn
-          </p>
-
+          <p className="text-zinc-400 text-sm">Ưu đãi hấp dẫn dành cho bạn</p>
         </div>
 
       </div>
 
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-
         {promotions.length === 0 && (
           <p className="text-zinc-400">Chưa có khuyến mãi</p>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
           {promotions.map((promo) => (
-
             <div
               key={promo.promotion_id}
               className="rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-all"
@@ -120,11 +105,7 @@ export const PromotionsPage = () => {
                 <div className="flex items-center gap-2 mb-3 text-zinc-500 text-xs">
 
                   <Clock className="w-3.5 h-3.5" />
-
-                  Hạn sử dụng:
-                  {" "}
-                  {new Date(promo.end_date).toLocaleDateString()}
-
+                  Hạn sử dụng: {new Date(promo.end_date).toLocaleDateString()}
                 </div>
 
                 <div className="flex items-center gap-2">

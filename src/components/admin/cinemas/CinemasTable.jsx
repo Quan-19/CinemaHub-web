@@ -1,107 +1,284 @@
 import { Pencil, Trash2, Eye } from "lucide-react";
+import { useState } from "react";
 
 export default function CinemasTable({
   cinemas,
   onEdit,
   onDelete,
   onAssign,
+  onView,
+  currentPage = 1,
+  onPageChange,
+  itemsPerPage = 5,
 }) {
+  const [viewingCinema, setViewingCinema] = useState(null);
+
+  // Tính toán phân trang
+  const totalPages = Math.ceil(cinemas.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentCinemas = cinemas.slice(startIndex, endIndex);
+  // Mảng các màu sắc khả dụng cho button quản lý
+  const managerColorMap = {
+    purple: "bg-purple-600 hover:bg-purple-700",
+    blue: "bg-blue-600 hover:bg-blue-700",
+    cyan: "bg-cyan-600 hover:bg-cyan-700",
+    green: "bg-green-600 hover:bg-green-700",
+    pink: "bg-pink-600 hover:bg-pink-700",
+    indigo: "bg-indigo-600 hover:bg-indigo-700",
+    orange: "bg-orange-600 hover:bg-orange-700",
+    teal: "bg-teal-600 hover:bg-teal-700",
+    red: "bg-red-600 hover:bg-red-700",
+    amber: "bg-amber-600 hover:bg-amber-700",
+    lime: "bg-lime-600 hover:bg-lime-700",
+    fuchsia: "bg-fuchsia-600 hover:bg-fuchsia-700",
+  };
+
+  // Hàm lấy màu dựa trên chuỗi (tên quản lý) -> màu cố định cho từng người
+  const getManagerColorClass = (managerName) => {
+    if (!managerName) return "";
+    const colors = Object.keys(managerColorMap);
+    let hash = 0;
+    for (let i = 0; i < managerName.length; i++) {
+      hash = (hash << 5) - hash + managerName.charCodeAt(i);
+      hash |= 0; // chuyển về 32-bit integer
+    }
+    const index = Math.abs(hash) % colors.length;
+    const colorName = colors[index];
+    return managerColorMap[colorName];
+  };
+  const handleView = (cinema) => {
+    setViewingCinema(cinema);
+    if (onView) onView(cinema);
+  };
+
+  const closeViewModal = () => {
+    setViewingCinema(null);
+  };
+
   return (
-    <div className="bg-[#0B1220] border border-white/5 rounded-xl overflow-hidden">
-
-      <table className="w-full text-sm">
-
-        <thead className="text-white/40 text-xs border-b border-white/5 bg-white/[0.02]">
-          <tr>
-            <th className="p-4 text-left">Tên rạp</th>
-            <th>Thương hiệu</th>
-            <th>Thành phố</th>
-            <th>Địa chỉ</th>
-            <th className="text-center">Phòng chiếu</th>
-            <th>Trạng thái</th>
-            <th>Quản lý chi nhánh</th>
-            <th className="text-center">Thao tác</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {cinemas.map(c => (
-            <tr
-              key={c.id}
-              className="h-[74px] border-b border-white/5 hover:bg-white/[0.03]"
-            >
-
-              <td className="p-4">
-                <p className="font-medium">{c.name}</p>
-                <p className="text-xs text-white/30">{c.phone}</p>
-              </td>
-
-              <td>
-                <span className={`px-2.5 py-1 text-xs rounded-md ${brandColor(c.brand)}`}>
-                  {c.brand}
-                </span>
-              </td>
-
-              <td className="text-white/70">{c.city}</td>
-
-              <td className="text-white/50 truncate">{c.address}</td>
-
-              <td className="text-center font-medium">{c.rooms}</td>
-
-              <td>
-                <span className={`px-3 py-1 text-xs rounded-full ${statusColor(c.status)}`}>
-                  {c.status === "active" ? "Đang hoạt động" : "Bảo trì"}
-                </span>
-              </td>
-
-              <td>
-                {c.managerName ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-xs">
-                      {c.managerName[0]}
-                    </div>
-                    <div>
-                      <p className="text-sm">{c.managerName}</p>
-                      <p className="text-xs text-blue-400">
-                        Quản lý chi nhánh
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => onAssign(c)}
-                    className="text-yellow-400 border border-yellow-500/30 px-3 py-1 rounded-md text-xs hover:bg-yellow-500/10"
-                  >
-                    🔑 Phân quyền
-                  </button>
-                )}
-              </td>
-
-              <td>
-                <div className="flex justify-center gap-2">
-                  <Eye size={16} className="text-blue-400" />
-                  <Pencil size={16} className="text-cyan-400 cursor-pointer" onClick={() => onEdit(c)} />
-                  <Trash2 size={16} className="text-red-500 cursor-pointer" onClick={() => onDelete(c.id)} />
-                </div>
-              </td>
-
+    <>
+      <div className="bg-[#0B1220] border border-white/5 rounded-xl overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="text-white/40 text-xs border-b border-white/5 bg-white/[0.02]">
+            <tr>
+              <th className="p-4 text-left">Tên rạp</th>
+              <th className="text-left">Thương hiệu</th>
+              <th className="text-left">Thành phố</th>
+              <th className="text-left">Địa chỉ</th>
+              <th className="text-center">Phòng chiếu</th>
+              <th className="text-left">Trạng thái</th>
+              <th className="text-left">Quản lý chi nhánh</th>
+              <th className="text-center">Thao tác</th>
             </tr>
-          ))}
-        </tbody>
+          </thead>
 
-      </table>
+          <tbody>
+            {currentCinemas.length > 0 ? (
+              currentCinemas.map((c) => (
+                <tr
+                  key={c.id}
+                  className="h-[74px] border-b border-white/5 hover:bg-white/[0.03]"
+                >
+                  <td className="p-4">
+                    <p className="font-medium">{c.name}</p>
+                    <p className="text-xs text-white/30">{c.phone}</p>
+                  </td>
 
-      <div className="flex justify-between items-center px-4 py-3 text-xs text-white/40">
-        <span>Hiển thị 1-{cinemas.length} / {cinemas.length} rạp</span>
+                  <td>
+                    <span
+                      className={`px-2.5 py-1 text-xs rounded-md ${brandColor(c.brand)}`}
+                    >
+                      {c.brand}
+                    </span>
+                  </td>
 
-        <div className="flex gap-2 items-center">
-          <button className="w-8 h-8 rounded bg-white/5">‹</button>
-          <button className="w-8 h-8 rounded bg-red-600 text-white">1</button>
-          <button className="w-8 h-8 rounded bg-white/5">2</button>
-          <button className="w-8 h-8 rounded bg-white/5">›</button>
+                  <td className="text-white/70">{c.city}</td>
+
+                  <td className="text-white/50 truncate max-w-[200px]">
+                    {c.address}
+                  </td>
+
+                  <td className="text-center font-medium">{c.rooms}</td>
+
+                  <td>
+                    <span
+                      className={`px-3 py-1 text-xs rounded-full ${statusColor(c.status)}`}
+                    >
+                      {c.status === "active" ? "Đang hoạt động" : "Bảo trì"}
+                    </span>
+                  </td>
+
+                  {/* 🔑 Phân quyền hoặc hiển thị tên quản lý */}
+                  <td>
+                    <button
+                      onClick={() => onAssign(c)}
+                      className={`px-3 py-1 text-xs rounded-md transition ${
+                        c.managerName
+                          ? `${getManagerColorClass(c.managerName)} text-white`
+                          : "text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/10"
+                      }`}
+                    >
+                      {c.managerName ? c.managerName : "🔑 Phân quyền"}
+                    </button>
+                  </td>
+
+                  <td>
+                    <div className="flex justify-center gap-3">
+                      <Eye
+                        size={18}
+                        className="text-blue-400 cursor-pointer hover:text-blue-300"
+                        onClick={() => handleView(c)}
+                      />
+                      <Pencil
+                        size={18}
+                        className="text-cyan-400 cursor-pointer hover:text-cyan-300"
+                        onClick={() => onEdit(c)}
+                      />
+                      <Trash2
+                        size={18}
+                        className="text-red-500 cursor-pointer hover:text-red-400"
+                        onClick={() => onDelete(c.id)}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="8" className="text-center py-8 text-white/40">
+                  Không tìm thấy rạp nào
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        {/* PHÂN TRANG */}
+        <div className="flex justify-between items-center px-4 py-3 text-xs text-white/40">
+          <span>
+            Hiển thị {startIndex + 1}-{Math.min(endIndex, cinemas.length)} /{" "}
+            {cinemas.length} rạp
+          </span>
+
+          <div className="flex gap-2 items-center">
+            <button
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`w-8 h-8 rounded flex items-center justify-center ${
+                currentPage === 1
+                  ? "bg-white/5 text-white/20 cursor-not-allowed"
+                  : "bg-white/5 hover:bg-white/10 text-white"
+              }`}
+            >
+              ‹
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => onPageChange(page)}
+                className={`w-8 h-8 rounded ${
+                  currentPage === page
+                    ? "bg-red-600 text-white"
+                    : "bg-white/5 hover:bg-white/10 text-white/60"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`w-8 h-8 rounded flex items-center justify-center ${
+                currentPage === totalPages
+                  ? "bg-white/5 text-white/20 cursor-not-allowed"
+                  : "bg-white/5 hover:bg-white/10 text-white"
+              }`}
+            >
+              ›
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* MODAL XEM CHI TIẾT */}
+      {viewingCinema && (
+        <ViewCinemaModal cinema={viewingCinema} onClose={closeViewModal} />
+      )}
+    </>
+  );
+}
+
+// MODAL XEM CHI TIẾT
+function ViewCinemaModal({ cinema, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
+      <div className="w-[500px] bg-[#0B1220] border border-white/10 rounded-xl overflow-hidden">
+        <div className="flex justify-between items-center px-5 py-4 border-b border-white/10">
+          <h2 className="text-white font-semibold text-lg">Chi tiết rạp</h2>
+          <button onClick={onClose} className="text-white/40 hover:text-white">
+            ✕
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <InfoItem label="Tên rạp" value={cinema.name} />
+            <InfoItem label="Thương hiệu" value={cinema.brand} />
+            <InfoItem label="Thành phố" value={cinema.city} />
+            <InfoItem label="Số điện thoại" value={cinema.phone} />
+            <InfoItem label="Số phòng chiếu" value={cinema.rooms} />
+            <InfoItem
+              label="Trạng thái"
+              value={cinema.status === "active" ? "Đang hoạt động" : "Bảo trì"}
+              status={cinema.status}
+            />
+          </div>
+
+          <InfoItem label="Địa chỉ" value={cinema.address} fullWidth />
+          <InfoItem
+            label="Quản lý"
+            value={cinema.managerName || "Chưa có quản lý"}
+            fullWidth
+          />
+          {cinema.managerEmail && (
+            <InfoItem
+              label="Email quản lý"
+              value={cinema.managerEmail}
+              fullWidth
+            />
+          )}
+          <InfoItem label="Số nhân viên" value={cinema.staffCount || 0} />
+        </div>
+
+        <div className="flex justify-end p-5 border-t border-white/10">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoItem({ label, value, fullWidth, status }) {
+  return (
+    <div className={fullWidth ? "col-span-2" : ""}>
+      <p className="text-xs text-white/40 mb-1">{label}</p>
+      {status ? (
+        <span
+          className={`px-3 py-1 text-xs rounded-full ${statusColor(status)}`}
+        >
+          {value}
+        </span>
+      ) : (
+        <p className="text-sm text-white">{value}</p>
+      )}
     </div>
   );
 }

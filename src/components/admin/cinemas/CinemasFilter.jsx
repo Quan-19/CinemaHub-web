@@ -25,11 +25,11 @@ export default function CinemasFilter({
       <select
         value={cityFilter}
         onChange={e => setCityFilter(e.target.value)}
-        className="px-4 py-2.5 bg-[#0B1220] border border-white/10 rounded-lg text-sm"
+        className="px-4 py-2.5 bg-[#0B1220] border border-white/10 rounded-lg text-sm focus:outline-none focus:border-white/20"
       >
         <option value="all">Tất cả thành phố</option>
         {cities.map(c => (
-          <option key={c}>{c}</option>
+          <option key={c} value={c}>{c}</option>
         ))}
       </select>
 

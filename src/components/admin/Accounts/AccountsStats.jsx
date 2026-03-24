@@ -18,7 +18,7 @@ export default function AccountsStats({ data }) {
     },
     {
       label: "Khách hàng",
-      value: data.filter((x) => x.role === "user").length,
+      value: data.filter((x) => x.role === "customer").length,
       icon: <User size={18} />,
       color: "bg-cyan-500/20 text-cyan-400",
       borderColor: "border-cyan-500/30",

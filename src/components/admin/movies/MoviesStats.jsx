@@ -1,28 +1,46 @@
 export default function MoviesStats({ movies }) {
+  const today = new Date();
+
+  // 🔥 COPY Y CHANG LOGIC TỪ TABLE
+  const getStatus = (movie) => {
+    const releaseDate = new Date(movie.releaseDate);
+
+    if (releaseDate > today) return "coming_soon";
+    if (releaseDate <= today && movie.status === "now_showing")
+      return "now_showing";
+
+    return "ended";
+  };
+
   const stats = [
     {
       label: "Đang chiếu",
-      count: movies.filter(m => m.status === "now-showing").length,
+      count: movies.filter((m) => getStatus(m) === "now_showing").length,
       color: "#22c55e",
     },
     {
       label: "Sắp chiếu",
-      count: movies.filter(m => m.status === "coming-soon").length,
+      count: movies.filter((m) => getStatus(m) === "coming_soon").length,
       color: "#f59e0b",
     },
     {
       label: "Đã kết thúc",
-      count: movies.filter(m => m.status === "ended").length,
+      count: movies.filter((m) => getStatus(m) === "ended").length,
       color: "#6b7280",
     },
   ];
 
   return (
     <div className="grid grid-cols-3 gap-3">
-      {stats.map(s => (
-        <div key={s.label}
-          className="rounded-xl p-4 flex items-center gap-3 bg-[#0d0d1a] border border-white/10">
-          <div className="w-2 h-10 rounded-full" style={{ background: s.color }} />
+      {stats.map((s) => (
+        <div
+          key={s.label}
+          className="rounded-xl p-4 flex items-center gap-3 bg-[#0d0d1a] border border-white/10"
+        >
+          <div
+            className="w-2 h-10 rounded-full"
+            style={{ background: s.color }}
+          />
           <div>
             <div className="text-white text-xl font-bold">{s.count}</div>
             <div className="text-gray-400 text-xs">{s.label}</div>

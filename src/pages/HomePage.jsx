@@ -34,7 +34,7 @@ const HomePage = () => {
         // map dữ liệu từ DB
         const movies = data.map((m) => ({
           ...m,
-          score: m.rating || 0,
+          rating: m.rating || 0,
           poster: m.poster,
           backdrop: m.backdrop || m.poster,
         }));
@@ -116,8 +116,8 @@ const HomePage = () => {
 
               <div className="mb-4 flex items-center gap-4">
                 <span className="flex items-center gap-1 text-yellow-400">
-                  <Star className="w-4 h-4 fill-current" />
-                  {current.score}/10
+                  {/* <Star className="w-4 h-4 fill-current" /> */}
+                  {current.rating}/10
                 </span>
 
                 <span className="flex items-center gap-1 text-zinc-400">
@@ -134,7 +134,7 @@ const HomePage = () => {
 
                 {/* BOOKING */}
                 <button
-                  onClick={() => navigate(`/movies/${current.movie_id}`)}
+                  onClick={() => navigate(`/movies/${current.id}`)}
                   className="cinema-btn-primary"
                 >
                   <Ticket className="w-4 h-4" />

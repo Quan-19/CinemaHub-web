@@ -37,7 +37,7 @@ export const MovieDetailPage = () => {
         const data = await res.json();
 
         const formatted = data.map((m) => ({
-          id: m.movie_id.toString(),
+          id: (m.movie_id || m.id)?.toString(),
           title: m.title,
           originalTitle: m.title,
           description: m.description,
@@ -93,7 +93,7 @@ export const MovieDetailPage = () => {
   }
 
   const handleBooking = () => {
-    navigate(`/cinema/${movie.id}`);
+    navigate(`/movies/${movie.id}`);
   };
 
   const handleShare = async () => {
@@ -300,7 +300,13 @@ export const MovieDetailPage = () => {
             <div className="flex gap-3">
               {movie.status === "now-showing" && (
                 <button
-                  onClick={() => navigate(`/booking/${id}`)}
+                  onClick={() =>
+                    navigate(`/booking/${id}`, {
+                      state: {
+                        movie: movie,
+                      },
+                    })
+                  }
                   className="flex items-center gap-2 px-6 py-3 rounded-xl text-white bg-red-600"
                 >
                   <Ticket className="w-4 h-4" />

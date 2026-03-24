@@ -12,7 +12,7 @@ export default function CinemasHeader({ total, onAdd }) {
 
       <button
         onClick={onAdd}
-        className="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-lg text-sm font-medium"
+        className="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-lg text-sm font-medium transition"
       >
         + Thêm rạp
       </button>
