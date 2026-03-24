@@ -1,7 +1,6 @@
 import { Building2, Star, User, Users } from "lucide-react";
 
 export default function CinemasStats({ cinemas }) {
-  // 🧠 xử lý data
   const total = cinemas.length;
 
   const active = cinemas.filter(c => c.status === "active").length;
@@ -17,6 +16,7 @@ export default function CinemasStats({ cinemas }) {
       <Card icon={<Building2 size={18} />} title="Tổng rạp" value={total} />
       <Card icon={<Star size={18} />} title="Đang hoạt động" value={active} green />
       <Card icon={<User size={18} />} title="Chưa có quản lý" value={noManager} yellow />
+
       <Card icon={<Users size={18} />} title="Nhân viên" value={totalStaff} blue />
     </div>
   );

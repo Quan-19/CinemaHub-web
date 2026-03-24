@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Film, Lock, Mail, Phone, User, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
+// ---------- Google Icon ----------
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
     <path
@@ -24,6 +25,7 @@ const GoogleIcon = () => (
   </svg>
 );
 
+// ---------- Password Input ----------
 function PasswordInput({ value, onChange, placeholder, id }) {
   const [show, setShow] = useState(false);
   return (
@@ -51,9 +53,9 @@ function PasswordInput({ value, onChange, placeholder, id }) {
   );
 }
 
-function LoginForm({ onSuccess }) {
+// ---------- Login Form ----------
+function LoginForm({ onLogin }) {
   const { loginWithEmail, loginWithGoogle } = useAuth();
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -63,15 +65,12 @@ function LoginForm({ onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!email || !password) {
-      setError("Vui lòng điền đầy đủ thông tin.");
-      return;
-    }
+    if (!email || !password) return setError("Vui lòng điền đầy đủ thông tin.");
+
     setLoading(true);
     try {
-      await loginWithEmail(email, password, remember);
-      onSuccess();
-      navigate("/");
+      const user = await loginWithEmail(email, password, remember);
+      onLogin(user); // 🔥 trả user cho modal xử lý navigate
     } catch (err) {
       setError(getErrorMessage(err.code));
     } finally {
@@ -83,13 +82,11 @@ function LoginForm({ onSuccess }) {
     setError("");
     setLoading(true);
     try {
-      await loginWithGoogle();
-      onSuccess();
-      navigate("/");
+      const user = await loginWithGoogle();
+      onLogin(user); // 🔥 trả user cho modal xử lý navigate
     } catch (err) {
-      if (err.code !== "auth/popup-closed-by-user") {
+      if (err.code !== "auth/popup-closed-by-user")
         setError(getErrorMessage(err.code));
-      }
     } finally {
       setLoading(false);
     }
@@ -97,6 +94,7 @@ function LoginForm({ onSuccess }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Email */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-zinc-300">
           Email
@@ -115,6 +113,7 @@ function LoginForm({ onSuccess }) {
         </div>
       </div>
 
+      {/* Password */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-zinc-300">
           Mật khẩu
@@ -126,6 +125,7 @@ function LoginForm({ onSuccess }) {
         />
       </div>
 
+      {/* Options */}
       <div className="flex items-center justify-between">
         <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-400">
           <input
@@ -158,6 +158,7 @@ function LoginForm({ onSuccess }) {
         {loading ? "Đang đăng nhập..." : "Đăng nhập"}
       </button>
 
+      {/* Hoặc Google */}
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-zinc-700" />
         <span className="text-xs text-zinc-500">hoặc</span>
@@ -168,7 +169,7 @@ function LoginForm({ onSuccess }) {
         type="button"
         onClick={handleGoogle}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-60"
       >
         <GoogleIcon />
         Đăng nhập với Google
@@ -177,6 +178,7 @@ function LoginForm({ onSuccess }) {
   );
 }
 
+// ---------- Register Form ----------
 function RegisterForm({ onSuccess }) {
   const { registerWithEmail } = useAuth();
   const navigate = useNavigate();
@@ -207,26 +209,17 @@ function RegisterForm({ onSuccess }) {
       setError("Vui lòng điền đầy đủ thông tin.");
       return;
     }
-    if (phone.length > 10) {
-      setPhoneError("Số điện thoại không được vượt quá 10 số.");
-      return;
-    }
-    if (password !== confirm) {
-      setError("Mật khẩu xác nhận không khớp.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự.");
-      return;
-    }
-    if (!agreed) {
-      setError("Vui lòng đồng ý với điều khoản sử dụng.");
-      return;
-    }
+    if (phone.length > 10)
+      return setPhoneError("Số điện thoại không được vượt quá 10 số.");
+    if (password !== confirm) return setError("Mật khẩu xác nhận không khớp.");
+    if (password.length < 6)
+      return setError("Mật khẩu phải có ít nhất 6 ký tự.");
+    if (!agreed) return setError("Vui lòng đồng ý với điều khoản sử dụng.");
+
     setLoading(true);
     try {
       await registerWithEmail(email, password, name);
-      onSuccess();
+      onSuccess(); // 🔥 gọi sau khi đăng ký thành công
       navigate("/");
     } catch (err) {
       setError(getErrorMessage(err.code));
@@ -237,6 +230,7 @@ function RegisterForm({ onSuccess }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Họ và tên */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-zinc-300">
           Họ và Tên
@@ -255,6 +249,7 @@ function RegisterForm({ onSuccess }) {
         </div>
       </div>
 
+      {/* Email */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-zinc-300">
           Email
@@ -273,6 +268,7 @@ function RegisterForm({ onSuccess }) {
         </div>
       </div>
 
+      {/* Số điện thoại */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-zinc-300">
           Số điện thoại
@@ -296,6 +292,7 @@ function RegisterForm({ onSuccess }) {
         )}
       </div>
 
+      {/* Password / Confirm */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-zinc-300">
@@ -319,6 +316,7 @@ function RegisterForm({ onSuccess }) {
         </div>
       </div>
 
+      {/* Agree */}
       <label className="flex cursor-pointer items-start gap-2 text-sm text-zinc-400">
         <input
           type="checkbox"
@@ -355,6 +353,7 @@ function RegisterForm({ onSuccess }) {
   );
 }
 
+// ---------- Error map ----------
 function getErrorMessage(code) {
   const map = {
     "auth/invalid-email": "Email không hợp lệ.",
@@ -369,8 +368,18 @@ function getErrorMessage(code) {
   return map[code] ?? "Đã có lỗi xảy ra. Vui lòng thử lại.";
 }
 
+// ---------- Auth Modal ----------
 function AuthModal({ onClose }) {
+  const navigate = useNavigate();
   const [tab, setTab] = useState("login");
+
+  const handleLogin = (user) => {
+    const role = user?.role?.toLowerCase();
+    if (role === "admin") navigate("/admin/dashboard");
+    else if (role === "staff") navigate("/staff");
+    else navigate("/");
+    onClose(); // 🔥 đóng modal sau khi navigate
+  };
 
   return (
     <div
@@ -381,22 +390,20 @@ function AuthModal({ onClose }) {
       }}
     >
       <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-zinc-800 bg-cinema-surface p-8 shadow-2xl">
-        {/* Nút đóng */}
         <button
           onClick={onClose}
-          className="absolute left-4 top-4 flex items-center gap-1.5 text-sm text-zinc-400 transition-colors hover:text-white"
+          className="absolute left-4 top-4 flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white"
         >
           ← Trang chủ
         </button>
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+          className="absolute right-4 top-4 rounded-lg p-1.5 text-zinc-400 hover:bg-white/10 hover:text-white"
           aria-label="Đóng"
         >
           <X className="h-4 w-4" />
         </button>
 
-        {/* Logo */}
         <div className="mb-6 flex flex-col items-center gap-2 pt-4">
           <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-cinema-primary to-cinema-primary-dark shadow-lg">
             <Film className="h-6 w-6 text-white" />
@@ -409,33 +416,27 @@ function AuthModal({ onClose }) {
         <div className="mb-6 flex rounded-xl border border-zinc-700 bg-zinc-800/50 p-1">
           <button
             onClick={() => setTab("login")}
-            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
-              tab === "login"
-                ? "bg-zinc-700 text-white shadow"
-                : "text-zinc-400 hover:text-white"
-            }`}
+            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${tab === "login" ? "bg-zinc-700 text-white shadow" : "text-zinc-400 hover:text-white"}`}
           >
             Đăng nhập
           </button>
           <button
             onClick={() => setTab("register")}
-            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
-              tab === "register"
-                ? "bg-zinc-700 text-white shadow"
-                : "text-zinc-400 hover:text-white"
-            }`}
+            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${tab === "register" ? "bg-zinc-700 text-white shadow" : "text-zinc-400 hover:text-white"}`}
           >
             Đăng ký
           </button>
         </div>
 
         {tab === "login" ? (
-          <LoginForm
-            onSuccess={onClose}
-            onSwitchToRegister={() => setTab("register")}
-          />
+          <LoginForm onLogin={handleLogin} />
         ) : (
-          <RegisterForm onSuccess={onClose} />
+          <RegisterForm
+            onSuccess={() => {
+              navigate("/");
+              onClose();
+            }}
+          />
         )}
       </div>
     </div>

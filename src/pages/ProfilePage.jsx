@@ -17,14 +17,14 @@ const today = new Date();
 const maxDob = new Date(
   today.getFullYear() - 5,
   today.getMonth(),
-  today.getDate()
+  today.getDate(),
 )
   .toISOString()
   .split("T")[0];
 const minDob = new Date(
   today.getFullYear() - 120,
   today.getMonth(),
-  today.getDate()
+  today.getDate(),
 )
   .toISOString()
   .split("T")[0];
@@ -89,14 +89,39 @@ function ProfilePage() {
 
   const handleSave = async () => {
     if (phoneError || dobError) return;
+
     setSaving(true);
+
     try {
       const userRef = doc(db, "users", user.uid);
+
+      // lưu Firestore
       await setDoc(
         userRef,
-        { phone, dob, updatedAt: serverTimestamp() },
-        { merge: true }
+        {
+          phone,
+          dob,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
       );
+
+      // 🔥 sync MySQL
+      const token = await user.getIdToken();
+
+      await fetch("http://localhost:5000/api/users/update-profile", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: user.email,
+          phone: phone,
+          dob: dob,
+        }),
+      });
+
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
@@ -104,6 +129,11 @@ function ProfilePage() {
     } finally {
       setSaving(false);
     }
+    console.log("CALL UPDATE MYSQL", {
+      email: user.email,
+      phone,
+      dob,
+    });
   };
 
   const provider = user.providerData?.[0]?.providerId ?? "password";
@@ -242,8 +272,8 @@ function ProfilePage() {
             saved
               ? "bg-emerald-700 text-white"
               : saving
-              ? "bg-cinema-primary/60 text-white/70 cursor-not-allowed"
-              : "bg-cinema-primary text-white hover:bg-cinema-primary-dark active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                ? "bg-cinema-primary/60 text-white/70 cursor-not-allowed"
+                : "bg-cinema-primary text-white hover:bg-cinema-primary-dark active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
           }`}
         >
           <Save className="h-4 w-4" />

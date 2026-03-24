@@ -35,10 +35,8 @@ export default function CinemasPage() {
       const res = await fetch("http://localhost:5000/api/cinemas");
       const data = await res.json();
 
-      console.log("API DATA:", data); // 👈 thêm dòng này để debug
-
-      // 🔥 FIX CHÍNH
-      setCinemas(Array.isArray(data) ? data : data.cinemas || []);
+      // Giả sử API trả về mảng các rạp
+      setCinemas(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Fetch cinemas error:", err);
     }
@@ -76,7 +74,30 @@ export default function CinemasPage() {
     setForm(defaultForm);
     setShowModal(true);
   };
+  // Trong component CinemasPage
+  const handleAssignSuccess = (cinemaId, manager) => {
+  setCinemas(prev =>
+    prev.map(cinema =>
+      cinema.cinema_id === cinemaId
+        ? {
+            ...cinema,
+            manager_id: manager?.id || null,
+            managerName: manager?.name || null,   // Đồng bộ với tên field trong table
+            manager_email: manager?.email || null,
+          }
+        : cinema
+    )
+  );
+  setShowAssign(false);
+};
 
+  // Trong JSX
+  <AssignManagerModal
+    show={showAssign}
+    onClose={() => setShowAssign(false)}
+    cinema={selectedCinema}
+    onAssigned={handleAssignSuccess} // 🔥 truyền callback
+  />;
   const handleEdit = (cinema) => {
     setEditingCinema(cinema);
     setForm(cinema);
@@ -177,7 +198,7 @@ export default function CinemasPage() {
         show={showAssign}
         onClose={() => setShowAssign(false)}
         cinema={selectedCinema}
-        setCinemas={setCinemas}
+        onAssigned={handleAssignSuccess}
       />
     </div>
   );
