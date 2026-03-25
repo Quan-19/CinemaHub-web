@@ -1,4 +1,4 @@
-// Showtimes.jsx - Update calculateEndTime function
+// Showtimes.jsx - Complete corrected file
 import { useState, useEffect } from "react";
 import ShowtimesHeader from "../../components/admin/showtimes/ShowtimesHeader";
 import ShowtimesStats from "../../components/admin/showtimes/ShowtimesStats";
@@ -10,9 +10,21 @@ import QuickEditModal from "../../components/admin/showtimes/QuickEditModal";
 import { toast } from "react-hot-toast";
 
 export const statusConfig = {
-  scheduled: { label: "Sắp chiếu", color: "#22c55e", bg: "rgba(34,197,94,0.12)" },
-  ongoing: { label: "Đang chiếu", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
-  ended: { label: "Đã kết thúc", color: "#6b7280", bg: "rgba(107,114,128,0.12)" },
+  scheduled: {
+    label: "Sắp chiếu",
+    color: "#22c55e",
+    bg: "rgba(34,197,94,0.12)",
+  },
+  ongoing: {
+    label: "Đang chiếu",
+    color: "#f59e0b",
+    bg: "rgba(245,158,11,0.12)",
+  },
+  ended: {
+    label: "Đã kết thúc",
+    color: "#6b7280",
+    bg: "rgba(107,114,128,0.12)",
+  },
   cancelled: { label: "Đã hủy", color: "#ef4444", bg: "rgba(239,68,68,0.12)" },
 };
 
@@ -25,6 +37,7 @@ export default function ShowtimesPage() {
   const [dateFilter, setDateFilter] = useState("today");
   const [statusFilter, setStatusFilter] = useState("all");
   const [cinemaFilter, setCinemaFilter] = useState("all");
+  const [specialFilter, setSpecialFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [showQuickEdit, setShowQuickEdit] = useState(false);
@@ -33,7 +46,7 @@ export default function ShowtimesPage() {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(null);
   const [dataLoading, setDataLoading] = useState(true);
-  
+
   const itemsPerPage = 10;
 
   // Hàm xác định khung giờ
@@ -96,7 +109,8 @@ export default function ShowtimesPage() {
     const loadData = () => {
       setDataLoading(true);
       try {
-        const savedMovies = localStorage.getItem('movies');
+        // Load movies
+        const savedMovies = localStorage.getItem("movies");
         if (savedMovies) {
           setMovies(JSON.parse(savedMovies));
         } else {
@@ -112,7 +126,7 @@ export default function ShowtimesPage() {
             name: cinema.name,
             rooms: cinema.rooms || [],
             currentRooms: cinema.currentRooms || cinema.rooms?.length || 0,
-            maxRooms: cinema.maxRooms || 4
+            maxRooms: cinema.maxRooms || 4,
           }));
           setCinemas(normalizedCinemas);
         } else {
@@ -142,51 +156,42 @@ export default function ShowtimesPage() {
         setDataLoading(false);
       }
     };
-    
+
     loadData();
   }, []);
 
   // Save showtimes to localStorage
   useEffect(() => {
     if (!dataLoading) {
-      localStorage.setItem('showtimes', JSON.stringify(showtimes));
+      localStorage.setItem("showtimes", JSON.stringify(showtimes));
     }
   }, [showtimes, dataLoading]);
 
   // Listen for changes in localStorage
   useEffect(() => {
     const handleStorageChange = (e) => {
-      if (e.key === 'movies') {
+      if (e.key === "movies") {
         try {
           setMovies(JSON.parse(e.newValue) || []);
         } catch (error) {
           console.error("Failed to parse movies:", error);
         }
       }
-      if (e.key === 'cinemas') {
+      if (e.key === "cinemas") {
         try {
           const cinemaData = JSON.parse(e.newValue) || [];
-          const normalizedCinemas = cinemaData.map(cinema => ({
+          const normalizedCinemas = cinemaData.map((cinema) => ({
             ...cinema,
             rooms: cinema.rooms || [],
             currentRooms: cinema.currentRooms || cinema.rooms?.length || 0,
-            maxRooms: cinema.maxRooms || 4
+            maxRooms: cinema.maxRooms || 4,
           }));
           setCinemas(normalizedCinemas);
         } catch (error) {
           console.error("Failed to parse cinemas:", error);
         }
       }
-      if (e.key === 'pricing_rules') {
-        try {
-          const rules = JSON.parse(e.newValue) || [];
-          setPricingRules(rules);
-          console.log("Pricing rules updated:", rules.length);
-        } catch (error) {
-          console.error("Failed to parse pricing rules:", error);
-        }
-      }
-      if (e.key === 'showtimes') {
+      if (e.key === "showtimes") {
         try {
           setShowtimes(JSON.parse(e.newValue) || []);
         } catch (error) {
@@ -194,34 +199,78 @@ export default function ShowtimesPage() {
         }
       }
     };
-    
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
+
+  const getBasePriceByTime = (date, time, type) => {
+    if (!date || !time || !type) return PRICE_CONFIG.standard["2D"];
+
+    const showDate = new Date(date);
+    const dayOfWeek = showDate.getDay();
+    const hour = parseInt(time.split(":")[0]);
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6 || dayOfWeek === 5;
+
+    if (hour < 12) {
+      return (
+        PRICE_CONFIG.early?.[type] ||
+        PRICE_CONFIG.standard[type] ||
+        PRICE_CONFIG.standard["2D"]
+      );
+    } else if (hour >= 23) {
+      return (
+        PRICE_CONFIG.midnight?.[type] ||
+        PRICE_CONFIG.standard[type] ||
+        PRICE_CONFIG.standard["2D"]
+      );
+    } else if (isWeekend) {
+      return (
+        PRICE_CONFIG.weekend[type] ||
+        PRICE_CONFIG.standard[type] ||
+        PRICE_CONFIG.standard["2D"]
+      );
+    } else {
+      return PRICE_CONFIG.standard[type] || PRICE_CONFIG.standard["2D"];
+    }
+  };
+
+  const calculateSpecialPrice = (basePrice, specialType, format) => {
+    const special = SPECIAL_TYPES.find((t) => t.value === specialType);
+    if (!special) return basePrice;
+    if (!special.availableFormats.includes(format)) return basePrice;
+
+    return {
+      adult:
+        Math.round((basePrice.adult * special.priceMultiplier) / 1000) * 1000,
+      child:
+        Math.round((basePrice.child * special.priceMultiplier) / 1000) * 1000,
+      student:
+        Math.round((basePrice.student * special.priceMultiplier) / 1000) * 1000,
+      vip: Math.round((basePrice.vip * special.priceMultiplier) / 1000) * 1000,
+    };
+  };
 
   const addHours = (time, hours) => {
     if (!time) return "22:00";
-    const [h, m] = time.split(':').map(Number);
-    return `${String(h + hours).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    const [h, m] = time.split(":").map(Number);
+    return `${String(h + hours).padStart(2, "0")}:${String(m).padStart(
+      2,
+      "0"
+    )}`;
   };
 
   // Hàm tính giờ kết thúc - xử lý đúng khi vượt quá 24h
   const calculateEndTime = (startTime, durationMinutes) => {
-    if (!startTime || !durationMinutes) return addHours(startTime || "00:00", 2);
-    
-    const [hours, minutes] = startTime.split(':').map(Number);
-    const totalMinutes = hours * 60 + minutes + durationMinutes + 15; // +15 phút quảng cáo
-    
+    if (!startTime || !durationMinutes)
+      return addHours(startTime || "00:00", 2);
+    const [hours, minutes] = startTime.split(":").map(Number);
+    const totalMinutes = hours * 60 + minutes + durationMinutes + 15;
     const endHours = Math.floor(totalMinutes / 60);
     const endMinutes = totalMinutes % 60;
-    
-    // Nếu giờ kết thúc >= 24, hiển thị với định dạng "+1 ngày"
-    if (endHours >= 24) {
-      const nextDayHours = endHours - 24;
-      return `${String(nextDayHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')} (ngày hôm sau)`;
-    }
-    
-    return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+    return `${String(endHours).padStart(2, "0")}:${String(endMinutes).padStart(
+      2,
+      "0"
+    )}`;
   };
 
   // Hàm tính giờ kết thúc cho hiển thị trong bảng (format ngắn gọn)
@@ -250,7 +299,7 @@ export default function ShowtimesPage() {
   };
 
   const getMovieDuration = (movieId) => {
-    const movie = movies.find(m => m.id === movieId);
+    const movie = movies.find((m) => m.id === movieId);
     return movie?.duration || 120;
   };
 
@@ -263,7 +312,7 @@ export default function ShowtimesPage() {
       roomId: "",
       roomName: "",
       type: "",
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString().split("T")[0],
       time: "14:00",
       endTime: "16:00",
       prices: {
@@ -273,32 +322,33 @@ export default function ShowtimesPage() {
       },
       totalSeats: 0,
       availableSeats: 0,
-      status: "scheduled"
+      status: "scheduled",
     });
   };
 
   const updateForm = (updates) => {
-    setForm(prev => {
+    setForm((prev) => {
       const newForm = { ...prev, ...updates };
-      
-      if (updates.cinemaId !== undefined && updates.cinemaId !== prev.cinemaId) {
-        const cinema = cinemas.find(c => c.id == updates.cinemaId);
+
+      // Khi chọn cinema, cập nhật danh sách phòng và chọn phòng đầu tiên
+      if (
+        updates.cinemaId !== undefined &&
+        updates.cinemaId !== prev.cinemaId
+      ) {
+        const cinema = cinemas.find((c) => c.id == updates.cinemaId);
         if (cinema) {
           newForm.cinemaName = cinema.name;
           const rooms = cinema.rooms || [];
-          
+
           if (rooms.length > 0) {
             const firstRoom = rooms[0];
             newForm.roomId = firstRoom.id;
             newForm.roomName = firstRoom.name;
             newForm.type = firstRoom.type;
-            newForm.totalSeats = firstRoom.capacity || firstRoom.totalSeats || 0;
-            newForm.availableSeats = firstRoom.capacity || firstRoom.totalSeats || 0;
-            
-            const seatPrices = getPricesBySeatType(newForm.date, newForm.time, newForm.type);
-            if (seatPrices) {
-              newForm.prices = seatPrices;
-            }
+            newForm.totalSeats =
+              firstRoom.capacity || firstRoom.totalSeats || 0;
+            newForm.availableSeats =
+              firstRoom.capacity || firstRoom.totalSeats || 0;
           } else {
             newForm.roomId = "";
             newForm.roomName = "";
@@ -308,10 +358,15 @@ export default function ShowtimesPage() {
           }
         }
       }
-      
-      if (updates.roomId !== undefined && updates.roomId !== prev.roomId && newForm.cinemaId) {
-        const cinema = cinemas.find(c => c.id == newForm.cinemaId);
-        const room = cinema?.rooms?.find(r => r.id == updates.roomId);
+
+      // Khi chọn room, cập nhật thông tin phòng
+      if (
+        updates.roomId !== undefined &&
+        updates.roomId !== prev.roomId &&
+        newForm.cinemaId
+      ) {
+        const cinema = cinemas.find((c) => c.id == newForm.cinemaId);
+        const room = cinema?.rooms?.find((r) => r.id == updates.roomId);
         if (room) {
           newForm.roomName = room.name;
           newForm.type = room.type;
@@ -324,9 +379,10 @@ export default function ShowtimesPage() {
           }
         }
       }
-      
+
+      // Khi chọn movie, cập nhật tên phim và thời gian kết thúc
       if (updates.movieId !== undefined && updates.movieId !== prev.movieId) {
-        const movie = movies.find(m => m.id == updates.movieId);
+        const movie = movies.find((m) => m.id == updates.movieId);
         if (movie) {
           newForm.movieTitle = movie.title;
           newForm.movieDuration = movie.duration;
@@ -335,19 +391,46 @@ export default function ShowtimesPage() {
           }
         }
       }
-      
-      if (updates.time !== undefined && updates.time !== prev.time && newForm.movieId) {
+
+      // Khi thay đổi thời gian, cập nhật thời gian kết thúc
+      if (
+        updates.time !== undefined &&
+        updates.time !== prev.time &&
+        newForm.movieId
+      ) {
         const duration = getMovieDuration(newForm.movieId);
         newForm.endTime = calculateEndTime(newForm.time, duration);
       }
-      
-      if ((updates.date !== undefined || updates.time !== undefined) && newForm.date && newForm.time && newForm.type) {
-        const seatPrices = getPricesBySeatType(newForm.date, newForm.time, newForm.type);
-        if (seatPrices) {
-          newForm.prices = seatPrices;
+
+      // Tính giá vé khi có đủ thông tin
+      if (
+        (updates.date !== undefined ||
+          updates.time !== undefined ||
+          updates.type !== undefined ||
+          updates.specialType !== undefined) &&
+        newForm.date &&
+        newForm.time &&
+        newForm.type
+      ) {
+        const basePrice = getBasePriceByTime(
+          newForm.date,
+          newForm.time,
+          newForm.type
+        );
+
+        if (newForm.specialType && newForm.specialType !== "none") {
+          newForm.price = calculateSpecialPrice(
+            basePrice,
+            newForm.specialType,
+            newForm.type
+          );
+          newForm.special = true;
+        } else {
+          newForm.price = basePrice;
+          newForm.special = false;
         }
       }
-      
+
       return newForm;
     });
   };
@@ -369,34 +452,27 @@ export default function ShowtimesPage() {
   };
 
   const checkConflict = (newShowtime) => {
-    const conflicts = showtimes.filter(s => 
-      s.cinemaId == newShowtime.cinemaId &&
-      s.roomId == newShowtime.roomId &&
-      s.date === newShowtime.date &&
-      s.id !== newShowtime.id &&
-      s.status !== "cancelled"
+    const conflicts = showtimes.filter(
+      (s) =>
+        s.cinemaId == newShowtime.cinemaId &&
+        s.roomId == newShowtime.roomId &&
+        s.date === newShowtime.date &&
+        s.id !== newShowtime.id &&
+        s.status !== "cancelled"
     );
 
     for (let existing of conflicts) {
       const existingStart = new Date(`${existing.date}T${existing.time}`);
-      // Xử lý end time cho existing
-      let existingEndTime = existing.endTime;
-      let existingEndDate = existing.date;
-      if (existingEndTime && existingEndTime.includes('ngày hôm sau')) {
-        existingEndTime = existingEndTime.replace(' (ngày hôm sau)', '');
-        existingEndDate = new Date(new Date(existing.date).getTime() + 86400000).toISOString().split('T')[0];
-      }
-      const existingEnd = new Date(`${existingEndDate}T${existingEndTime || addHours(existing.time, 2)}`);
-      
+      const existingEnd = new Date(
+        `${existing.date}T${existing.endTime || addHours(existing.time, 2)}`
+      );
       const newStart = new Date(`${newShowtime.date}T${newShowtime.time}`);
-      let newEndDate = newShowtime.date;
-      let newEndTimeRaw = newShowtime.endTime;
-      if (newEndTimeRaw && newEndTimeRaw.includes('ngày hôm sau')) {
-        newEndTimeRaw = newEndTimeRaw.replace(' (ngày hôm sau)', '');
-        newEndDate = new Date(new Date(newShowtime.date).getTime() + 86400000).toISOString().split('T')[0];
-      }
-      const newEnd = new Date(`${newEndDate}T${newEndTimeRaw || addHours(newShowtime.time, 2)}`);
-      
+      const newEnd = new Date(
+        `${newShowtime.date}T${
+          newShowtime.endTime || addHours(newShowtime.time, 2)
+        }`
+      );
+
       if (newStart < existingEnd && newEnd > existingStart) {
         return { conflict: true, with: existing };
       }
@@ -406,15 +482,17 @@ export default function ShowtimesPage() {
 
   const handleSave = async (formData) => {
     setLoading(true);
-    
+
     try {
       const finalFormData = {
         ...formData,
-        endTime: formData.endTime || calculateEndTime(formData.time, getMovieDuration(formData.movieId)),
+        endTime:
+          formData.endTime ||
+          calculateEndTime(formData.time, getMovieDuration(formData.movieId)),
       };
-      
+
       const { conflict, with: conflictingShow } = checkConflict(finalFormData);
-      
+
       if (conflict) {
         const confirm = window.confirm(
           `Suất chiếu này xung đột với "${conflictingShow.movieTitle}" lúc ${conflictingShow.time}. Bạn có muốn tiếp tục?`
@@ -426,8 +504,10 @@ export default function ShowtimesPage() {
       }
 
       if (editingShowtime) {
-        setShowtimes(prev =>
-          prev.map(s => s.id === editingShowtime.id ? { ...s, ...finalFormData } : s)
+        setShowtimes((prev) =>
+          prev.map((s) =>
+            s.id === editingShowtime.id ? { ...s, ...finalFormData } : s
+          )
         );
         toast.success("Cập nhật suất chiếu thành công!");
       } else {
@@ -439,10 +519,10 @@ export default function ShowtimesPage() {
           revenue: 0,
           status: finalFormData.status || "scheduled",
         };
-        setShowtimes(prev => [newShowtime, ...prev]);
+        setShowtimes((prev) => [newShowtime, ...prev]);
         toast.success("Thêm suất chiếu thành công!");
       }
-      
+
       setShowModal(false);
       setEditingShowtime(null);
       initNewForm();
@@ -458,7 +538,7 @@ export default function ShowtimesPage() {
     if (window.confirm("Bạn có chắc chắn muốn xóa suất chiếu này?")) {
       setLoading(true);
       try {
-        setShowtimes(prev => prev.filter(s => s.id !== id));
+        setShowtimes((prev) => prev.filter((s) => s.id !== id));
         toast.success("Xóa suất chiếu thành công!");
       } catch (error) {
         toast.error("Có lỗi xảy ra!");
@@ -472,24 +552,28 @@ export default function ShowtimesPage() {
     const newShowtime = {
       ...showtime,
       id: `ST${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString().split("T")[0],
       status: "scheduled",
       bookedCount: 0,
       revenue: 0,
-      availableSeats: showtime.totalSeats
+      availableSeats: showtime.totalSeats,
     };
-    setShowtimes(prev => [newShowtime, ...prev]);
+    setShowtimes((prev) => [newShowtime, ...prev]);
     toast.success("Đã nhân bản suất chiếu!");
   };
 
   const handleBulkDelete = async () => {
     if (selectedShowtimes.length === 0) return;
-    const confirm = window.confirm(`Bạn có chắc muốn xóa ${selectedShowtimes.length} suất chiếu?`);
+    const confirm = window.confirm(
+      `Bạn có chắc muốn xóa ${selectedShowtimes.length} suất chiếu?`
+    );
     if (!confirm) return;
-    
+
     setLoading(true);
     try {
-      setShowtimes(prev => prev.filter(s => !selectedShowtimes.includes(s.id)));
+      setShowtimes((prev) =>
+        prev.filter((s) => !selectedShowtimes.includes(s.id))
+      );
       setSelectedShowtimes([]);
       toast.success(`Đã xóa ${selectedShowtimes.length} suất chiếu`);
     } catch (error) {
@@ -503,11 +587,48 @@ export default function ShowtimesPage() {
     if (selectedShowtimes.length === 0) return;
     setLoading(true);
     try {
-      setShowtimes(prev =>
-        prev.map(s => selectedShowtimes.includes(s.id) ? { ...s, status: newStatus } : s)
+      setShowtimes((prev) =>
+        prev.map((s) =>
+          selectedShowtimes.includes(s.id) ? { ...s, status: newStatus } : s
+        )
       );
       setSelectedShowtimes([]);
-      toast.success(`Đã cập nhật trạng thái ${selectedShowtimes.length} suất chiếu`);
+      toast.success(
+        `Đã cập nhật trạng thái ${selectedShowtimes.length} suất chiếu`
+      );
+    } catch (error) {
+      toast.error("Có lỗi xảy ra!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkSpecialChange = async (specialType) => {
+    if (selectedShowtimes.length === 0) return;
+    setLoading(true);
+    try {
+      setShowtimes((prev) =>
+        prev.map((s) => {
+          if (selectedShowtimes.includes(s.id)) {
+            const newSpecial = specialType !== "none";
+            const basePrice = getBasePriceByTime(s.date, s.time, s.type);
+            const newPrice = newSpecial
+              ? calculateSpecialPrice(basePrice, specialType, s.type)
+              : basePrice;
+            return {
+              ...s,
+              special: newSpecial,
+              specialType: newSpecial ? specialType : null,
+              price: newPrice,
+            };
+          }
+          return s;
+        })
+      );
+      setSelectedShowtimes([]);
+      toast.success(
+        `Đã cập nhật loại suất chiếu cho ${selectedShowtimes.length} suất`
+      );
     } catch (error) {
       toast.error("Có lỗi xảy ra!");
     } finally {
@@ -521,41 +642,46 @@ export default function ShowtimesPage() {
       return;
     }
 
-    const exportData = filtered.map(s => ({
-      'Tên phim': s.movieTitle,
-      'Rạp': s.cinemaName,
-      'Phòng': s.roomName,
-      'Ngày': s.date,
-      'Giờ bắt đầu': s.time,
-      'Giờ kết thúc': s.endTime || "---",
-      'Định dạng': s.type,
-      'Ghế trống': `${s.availableSeats}/${s.totalSeats}`,
-      'Giá ghế Thường': `${s.prices?.Thường?.toLocaleString()}đ`,
-      'Giá ghế VIP': `${s.prices?.VIP?.toLocaleString()}đ`,
-      'Giá ghế Couple': `${s.prices?.Couple?.toLocaleString()}đ`,
-      'Trạng thái': statusConfig[s.status]?.label || s.status
+    const exportData = filtered.map((s) => ({
+      "Tên phim": s.movieTitle,
+      Rạp: s.cinemaName,
+      Phòng: s.roomName,
+      Ngày: s.date,
+      Giờ: s.time,
+      "Định dạng": s.type,
+      "Loại suất": s.special ? "Đặc biệt" : "Thường",
+      "Ghế trống": `${s.availableSeats}/${s.totalSeats}`,
+      "Giá vé (người lớn)": `${s.price?.adult?.toLocaleString()}đ`,
+      "Trạng thái": statusConfig[s.status]?.label || s.status,
     }));
 
     const headers = Object.keys(exportData[0]);
     const csvContent = [
-      headers.join(','),
-      ...exportData.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
-    ].join('\n');
+      headers.join(","),
+      ...exportData.map((row) =>
+        headers.map((header) => `"${row[header] || ""}"`).join(",")
+      ),
+    ].join("\n");
 
-    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `suat-chieu-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `suat-chieu-${new Date().toISOString().split("T")[0]}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('Xuất file Excel thành công!');
+    toast.success("Xuất file Excel thành công!");
   };
 
   const exportToPDF = () => {
     window.print();
-    toast.success('Đã mở trang in, bạn có thể lưu dưới dạng PDF');
+    toast.success("Đã mở trang in, bạn có thể lưu dưới dạng PDF");
   };
 
   const printSchedule = () => {
@@ -564,9 +690,9 @@ export default function ShowtimesPage() {
       return;
     }
 
-    const printWindow = window.open('', '_blank');
-    const today = new Date().toLocaleDateString('vi-VN');
-    
+    const printWindow = window.open("", "_blank");
+    const today = new Date().toLocaleDateString("vi-VN");
+
     printWindow.document.write(`
       <html><head><title>Lịch chiếu phim - ${today}</title>
       <style>
@@ -596,21 +722,27 @@ export default function ShowtimesPage() {
             </tr>
           </thead>
           <tbody>
-            ${filtered.map(s => `
+            ${filtered
+              .map(
+                (s) => `
               <tr>
-                <td>${s.movieTitle || ''}</td>
-                <td>${s.cinemaName || ''}</td>
-                <td>${s.roomName || ''}</td>
-                <td>${new Date(s.date).toLocaleDateString('vi-VN')}</td>
-                <td>${s.time || ''}</td>
-                <td>${s.endTime || '---'}</td>
-                <td>${s.type || ''}</td>
+                <td>${s.movieTitle || ""}</td>
+                <td>${s.cinemaName || ""}</td>
+                <td>${s.roomName || ""}</td>
+                <td>${new Date(s.date).toLocaleDateString("vi-VN")}</td>
+                <td>${s.time || ""}</td>
+                <td>${s.endTime || ""}</td>
+                <td>${s.type || ""}</td>
                 <td>${s.prices?.Thường?.toLocaleString() || 0}đ</td>
                 <td>${s.prices?.VIP?.toLocaleString() || 0}đ</td>
                 <td>${s.prices?.Couple?.toLocaleString() || 0}đ</td>
-                <td>${statusConfig[s.status]?.label || s.status || 'Sắp chiếu'}</td>
+                <td>${
+                  statusConfig[s.status]?.label || s.status || "Sắp chiếu"
+                }</td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join("")}
           </tbody>
         </table>
       </body></html>
@@ -621,26 +753,44 @@ export default function ShowtimesPage() {
   };
 
   const handleExport = (type) => {
-    switch(type) {
-      case 'excel': exportToExcel(); break;
-      case 'pdf': exportToPDF(); break;
-      case 'print': printSchedule(); break;
-      default: toast.success(`Đang xuất file ${type}...`);
+    switch (type) {
+      case "excel":
+        exportToExcel();
+        break;
+      case "pdf":
+        exportToPDF();
+        break;
+      case "print":
+        printSchedule();
+        break;
+      default:
+        toast.success(`Đang xuất file ${type}...`);
     }
   };
 
-  const filtered = showtimes.filter(s => {
-    const matchSearch = search === "" || 
-      s.movieTitle?.toLowerCase().includes(search.toLowerCase()) || 
+  const filtered = showtimes.filter((s) => {
+    const matchSearch =
+      search === "" ||
+      s.movieTitle?.toLowerCase().includes(search.toLowerCase()) ||
       s.cinemaName?.toLowerCase().includes(search.toLowerCase()) ||
       s.roomName?.toLowerCase().includes(search.toLowerCase());
-    
+
     const matchCinema = cinemaFilter === "all" || s.cinemaId == cinemaFilter;
-    
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    const weekLater = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
-    
+
+    const matchSpecial = specialFilter === "all" ||
+      (specialFilter === "special" && s.special) ||
+      (specialFilter !== "special" &&
+        specialFilter !== "all" &&
+        s.specialType === specialFilter);
+
+    const today = new Date().toISOString().split("T")[0];
+    const tomorrow = new Date(Date.now() + 86400000)
+      .toISOString()
+      .split("T")[0];
+    const weekLater = new Date(Date.now() + 7 * 86400000)
+      .toISOString()
+      .split("T")[0];
+
     let matchDate = true;
     if (dateFilter === "today") {
       matchDate = s.date === today;
@@ -651,12 +801,15 @@ export default function ShowtimesPage() {
     } else if (dateFilter !== "all") {
       matchDate = s.date === dateFilter;
     }
-    
+
     const matchStatus = statusFilter === "all" || s.status === statusFilter;
-    
-    return matchSearch && matchCinema && matchDate && matchStatus;
+
+    return (
+      matchSearch && matchCinema && matchDate && matchStatus && matchSpecial
+    );
   });
 
+  // Update showtimes status every minute
   useEffect(() => {
     const interval = setInterval(() => {
       setShowtimes(prev => prev.map(showtime => {
@@ -688,7 +841,7 @@ export default function ShowtimesPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const availableDates = [...new Set(showtimes.map(s => s.date))].sort();
+  const availableDates = [...new Set(showtimes.map((s) => s.date))].sort();
 
   if (dataLoading) {
     return (
@@ -706,8 +859,8 @@ export default function ShowtimesPage() {
         onExport={handleExport}
       />
 
-      <ShowtimesStats 
-        showtimes={showtimes} 
+      <ShowtimesStats
+        showtimes={showtimes}
         onDateChange={setDateFilter}
       />
 
@@ -775,12 +928,14 @@ export default function ShowtimesPage() {
           setShowQuickEdit(false);
           setEditingShowtime(null);
         }}
-        showtimes={showtimes.filter(s => selectedShowtimes.includes(s.id))}
+        showtimes={showtimes.filter((s) => selectedShowtimes.includes(s.id))}
         onSave={async (updates) => {
           setLoading(true);
           try {
-            setShowtimes(prev =>
-              prev.map(s => selectedShowtimes.includes(s.id) ? { ...s, ...updates } : s)
+            setShowtimes((prev) =>
+              prev.map((s) =>
+                selectedShowtimes.includes(s.id) ? { ...s, ...updates } : s
+              )
             );
             setSelectedShowtimes([]);
             setShowQuickEdit(false);
