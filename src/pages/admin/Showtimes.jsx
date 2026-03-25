@@ -9,6 +9,7 @@ import BulkActionBar from "../../components/admin/showtimes/BulkActionBar";
 import QuickEditModal from "../../components/admin/showtimes/QuickEditModal";
 import { toast } from "react-hot-toast";
 
+// Cấu hình giá cơ bản theo thời gian và loại phòng
 export const statusConfig = {
   scheduled: {
     label: "Sắp chiếu",
