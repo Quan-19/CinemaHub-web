@@ -85,7 +85,7 @@ export default function MoviesTable({ movies, onEdit, onDelete }) {
                   {/* PHÂN LOẠI */}
                   <td className="px-4 py-3">
                     <span className="px-2 py-1 rounded bg-yellow-500/20 text-yellow-400 text-xs">
-                      {m.rating || "-"}
+                      {m.ageRating || "Không xác định"}
                     </span>
                   </td>
 

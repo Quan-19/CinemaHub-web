@@ -110,14 +110,16 @@ export default function MovieModal({
             <div>
               <label className={labelClass}>Phân loại</label>
               <select
-                value={form?.rating || "P"}
-                onChange={(e) => setForm({ ...form, rating: e.target.value })}
+                value={form?.ageRating || "P"}
+                onChange={(e) =>
+                  setForm({ ...form, ageRating: e.target.value })
+                }
                 className={inputClass}
               >
                 <option value="P">P</option>
-                <option value="T13">T13</option>
-                <option value="T16">T16</option>
-                <option value="T18">T18</option>
+                <option value="C13">C13</option>
+                <option value="C16">C16</option>
+                <option value="C18">C18</option>
               </select>
             </div>
           </div>
