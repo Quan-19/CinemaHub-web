@@ -38,6 +38,8 @@ import StaffPromotionsPage from "../pages/staff/StaffPromotionsPage.jsx";
 import StaffProfilePage from "../pages/staff/StaffProfilePage.jsx";
 import StaffRoomsPage from "../pages/staff/StaffRoomsPage.jsx";
 import StaffShowtimesPage from "../pages/staff/StaffShowtimesPage.jsx";
+import StaffBannersPage from "../pages/staff/StaffBannersPage.jsx";
+import StaffArticlesPage from "../pages/staff/StaffArticlesPage.jsx";
 
 // ✅ AuthContext hook
 import { useAuth } from "../context/AuthContext.jsx";

@@ -24,7 +24,7 @@ export default function MoviesPage() {
     releaseDate: "",
     duration: 0,
     rating: "P",
-    status: "coming_soon", // 🔥 FIX
+    status: "coming_soon", 
     genre: [],
   };
 
@@ -98,7 +98,7 @@ export default function MoviesPage() {
         ? new Date(movie.release_date).toISOString().split("T")[0]
         : "",
       duration: movie.duration ?? 0,
-      rating: movie.age_rating || "P",
+      ageRating: movie.ageRating || "P",
       status: movie.status || "coming_soon",
       genre:
         typeof movie.genre === "string"
@@ -138,7 +138,7 @@ export default function MoviesPage() {
           formData.duration === undefined
             ? (editingMovie.duration ?? 0)
             : Number(formData.duration),
-        rating: formData.rating || editingMovie.age_rating || "P",
+        ageRating: formData.ageRating || editingMovie.ageRating || "P",
         status: formData.status || editingMovie.status || "coming_soon",
         genre:
           Array.isArray(formData.genre) && formData.genre.length > 0

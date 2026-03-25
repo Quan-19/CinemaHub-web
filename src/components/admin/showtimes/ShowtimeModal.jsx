@@ -1,5 +1,6 @@
-import { X, Sparkles } from "lucide-react";
-import { useState, useEffect } from "react";
+// ShowtimeModal.jsx - Full version with end time handling
+import { X, Search } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 export default function ShowtimeModal({
   show,
@@ -11,16 +12,60 @@ export default function ShowtimeModal({
   movies,
   cinemas,
   loading,
-  specialTypes,
 }) {
   const [availableRooms, setAvailableRooms] = useState([]);
+  const [searchMovieTerm, setSearchMovieTerm] = useState("");
+  const [showMovieDropdown, setShowMovieDropdown] = useState(false);
+  const [filteredMovies, setFilteredMovies] = useState([]);
+  const movieInputRef = useRef(null);
+  const dropdownRef = useRef(null);
 
+  // Cập nhật danh sách phòng khi chọn rạp
   useEffect(() => {
     if (form?.cinemaId) {
-      const cinema = cinemas.find(c => c.id === form.cinemaId);
-      setAvailableRooms(cinema?.rooms || []);
+      const cinema = cinemas.find(c => c.id == form.cinemaId);
+      if (cinema) {
+        const rooms = cinema.rooms || [];
+        setAvailableRooms(rooms);
+      } else {
+        setAvailableRooms([]);
+      }
+    } else {
+      setAvailableRooms([]);
     }
   }, [form?.cinemaId, cinemas]);
+
+  useEffect(() => {
+    if (form?.movieTitle) {
+      setSearchMovieTerm(form.movieTitle);
+    }
+  }, [form?.movieTitle]);
+
+  useEffect(() => {
+    if (searchMovieTerm.trim() === "") {
+      setFilteredMovies([]);
+    } else {
+      const filtered = movies.filter(movie =>
+        movie.title?.toLowerCase().includes(searchMovieTerm.toLowerCase())
+      );
+      setFilteredMovies(filtered.slice(0, 10));
+    }
+  }, [searchMovieTerm, movies]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target) &&
+        movieInputRef.current &&
+        !movieInputRef.current.contains(event.target)
+      ) {
+        setShowMovieDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   if (!show) return null;
 
@@ -28,56 +73,132 @@ export default function ShowtimeModal({
   
   const selectClass = "w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition [&>option]:bg-[#2d2d44] [&>option]:text-white";
 
-  const handleMovieChange = (movieId) => {
-    const movie = movies.find(m => m.id === movieId);
+  const handleMovieSelect = (movie) => {
     setForm({ 
-      movieId, 
-      movieTitle: movie?.title || "" 
+      ...form,
+      movieId: movie.id, 
+      movieTitle: movie.title,
+      movieDuration: movie.duration
     });
+    setSearchMovieTerm(movie.title);
+    setShowMovieDropdown(false);
+  };
+
+  const handleMovieSearchChange = (value) => {
+    setSearchMovieTerm(value);
+    setShowMovieDropdown(true);
+    if (value === "") {
+      setForm({ ...form, movieId: "", movieTitle: "", movieDuration: null });
+    }
   };
 
   const handleCinemaChange = (cinemaId) => {
-    const cinema = cinemas.find(c => c.id === cinemaId);
-    setForm({ 
-      cinemaId, 
-      cinemaName: cinema?.name || "",
-      roomId: cinema?.rooms[0]?.id || "" 
-    });
+    const cinema = cinemas.find(c => c.id == cinemaId);
+    if (cinema) {
+      const rooms = cinema.rooms || [];
+      
+      setForm({ 
+        ...form,
+        cinemaId, 
+        cinemaName: cinema?.name || "",
+        roomId: "",
+        roomName: "",
+        type: "",
+        totalSeats: 0,
+        availableSeats: 0,
+      });
+    }
   };
 
   const handleRoomChange = (roomId) => {
-    const cinema = cinemas.find(c => c.id === form.cinemaId);
-    const room = cinema?.rooms.find(r => r.id === roomId);
+    const cinema = cinemas.find(c => c.id == form.cinemaId);
+    const room = cinema?.rooms?.find(r => r.id == roomId);
+    if (room) {
+      setForm({ 
+        ...form,
+        roomId, 
+        roomName: room.name,
+        type: room.type,
+        totalSeats: room.capacity || room.totalSeats || 0,
+        availableSeats: room.capacity || room.totalSeats || 0,
+      });
+    }
+  };
+
+  // Tính giờ kết thúc dựa trên giờ bắt đầu và thời lượng phim
+  const calculateEndTime = () => {
+    if (!form?.time || !form?.movieDuration) return "";
+    const [hours, minutes] = form.time.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + form.movieDuration + 15; // +15 phút quảng cáo
+    const endHours = Math.floor(totalMinutes / 60);
+    const endMinutes = totalMinutes % 60;
+    
+    // Nếu giờ kết thúc >= 24, hiển thị với định dạng "+1 ngày"
+    if (endHours >= 24) {
+      const nextDayHours = endHours - 24;
+      return `${String(nextDayHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')} (ngày hôm sau)`;
+    }
+    
+    return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+  };
+
+  // Khi giờ bắt đầu hoặc phim thay đổi, tự động tính giờ kết thúc
+  const handleTimeChange = (time) => {
+    if (!form?.movieDuration) {
+      setForm({ ...form, time: time, endTime: "" });
+      return;
+    }
+    
+    const [hours, minutes] = time.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + form.movieDuration + 15;
+    const endHours = Math.floor(totalMinutes / 60);
+    const endMinutes = totalMinutes % 60;
+    
+    let endTimeStr;
+    if (endHours >= 24) {
+      const nextDayHours = endHours - 24;
+      endTimeStr = `${String(nextDayHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')} (ngày hôm sau)`;
+    } else {
+      endTimeStr = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+    }
+    
     setForm({ 
-      roomId, 
-      roomName: room?.name,
-      type: room?.type,
-      totalSeats: room?.capacity,
-      availableSeats: room?.capacity
+      ...form, 
+      time: time,
+      endTime: endTimeStr
     });
   };
 
-  const handleSpecialTypeChange = (specialType) => {
-    setForm({ 
-      specialType,
-      special: specialType !== "none"
-    });
-  };
-
-  const handlePriceChange = (type, value) => {
+  // Xử lý thay đổi giá cho từng loại ghế
+  const handlePriceChange = (seatType, value) => {
     setForm({
-      price: {
-        ...form.price,
-        [type]: Number(value)
+      ...form,
+      prices: {
+        ...form.prices,
+        [seatType]: Number(value)
       }
     });
   };
 
+  const selectedCinema = cinemas.find(c => c.id == form?.cinemaId);
+  const currentRoomCount = selectedCinema?.rooms?.length || 0;
+  const maxRooms = selectedCinema?.maxRooms || 4;
+
+  const hasRooms = availableRooms.length > 0;
+  const isRoomDisabled = !form?.cinemaId || !hasRooms;
+
+  // Danh sách loại ghế
+  const seatTypes = [
+    { key: "Thường", label: "Ghế Thường", color: "text-gray-300", bg: "bg-gray-500/10", border: "border-gray-500/20" },
+    { key: "VIP", label: "Ghế VIP", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
+    { key: "Couple", label: "Ghế Couple", color: "text-pink-400", bg: "bg-pink-500/10", border: "border-pink-500/20" }
+  ];
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="w-full max-w-lg bg-[#0d0d1a] border border-white/10 rounded-2xl">
+      <div className="w-full max-w-lg bg-[#0d0d1a] border border-white/10 rounded-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10">
+        <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10 flex-shrink-0">
           <h2 className="text-lg font-bold text-white">
             {isEdit ? "Chỉnh sửa suất chiếu" : "Thêm suất chiếu"}
           </h2>
@@ -89,65 +210,136 @@ export default function ShowtimeModal({
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+        {/* Body - Scrollable */}
+        <div className="p-6 space-y-4 overflow-y-auto flex-1">
           <div className="grid grid-cols-2 gap-4">
-            {/* Phim */}
-            <div className="col-span-2">
+            {/* Phim - Autocomplete */}
+            <div className="col-span-2 relative">
               <label className="block text-xs text-white/55 mb-1.5">Phim *</label>
-              <select
-                value={form.movieId || ""}
-                onChange={e => handleMovieChange(e.target.value)}
-                className={selectClass}
-                required
-                style={{ backgroundColor: '#1a1a2e' }}
-              >
-                <option value="" className="bg-[#2d2d44] text-white/70">Chọn phim</option>
-                {movies.map(movie => (
-                  <option key={movie.id} value={movie.id} className="bg-[#2d2d44] text-white hover:bg-[#3d3d5c]">
-                    {movie.title} ({movie.rating}) - {movie.duration} phút
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35" />
+                  <input
+                    ref={movieInputRef}
+                    type="text"
+                    value={searchMovieTerm}
+                    onChange={(e) => handleMovieSearchChange(e.target.value)}
+                    onFocus={() => setShowMovieDropdown(true)}
+                    placeholder="Gõ tên phim để tìm kiếm..."
+                    className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
+                  />
+                  {searchMovieTerm && (
+                    <button
+                      onClick={() => {
+                        handleMovieSearchChange("");
+                        setForm({ ...form, movieId: "", movieTitle: "", movieDuration: null });
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      <X size={14} className="text-white/35 hover:text-white/70" />
+                    </button>
+                  )}
+                </div>
+
+                {showMovieDropdown && filteredMovies.length > 0 && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute z-50 mt-1 w-full bg-[#1a1a2e] border border-white/10 rounded-lg shadow-xl max-h-64 overflow-y-auto"
+                  >
+                    {filteredMovies.map(movie => (
+                      <button
+                        key={movie.id}
+                        onClick={() => handleMovieSelect(movie)}
+                        className="w-full text-left px-4 py-2.5 hover:bg-white/10 transition border-b border-white/5 last:border-0"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-white font-medium">{movie.title}</span>
+                          <span className="text-xs text-white/40">{movie.duration} phút</span>
+                        </div>
+                        {movie.rating && (
+                          <div className="text-xs text-white/30 mt-0.5">
+                            {movie.rating} • {movie.language || "Phụ đề"}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {showMovieDropdown && searchMovieTerm && filteredMovies.length === 0 && (
+                  <div className="absolute z-50 mt-1 w-full bg-[#1a1a2e] border border-white/10 rounded-lg shadow-xl p-4 text-center">
+                    <p className="text-sm text-white/40">Không tìm thấy phim "{searchMovieTerm}"</p>
+                  </div>
+                )}
+              </div>
+              {form?.movieId && (
+                <p className="text-[10px] text-green-400 mt-1">
+                  ✓ Đã chọn: {form.movieTitle} • Thời lượng: {form.movieDuration} phút
+                </p>
+              )}
             </div>
 
             {/* Rạp chiếu */}
             <div>
               <label className="block text-xs text-white/55 mb-1.5">Rạp chiếu *</label>
               <select
-                value={form.cinemaId || ""}
+                value={form?.cinemaId || ""}
                 onChange={e => handleCinemaChange(e.target.value)}
                 className={selectClass}
                 required
-                style={{ backgroundColor: '#1a1a2e' }}
               >
                 <option value="" className="bg-[#2d2d44] text-white/70">Chọn rạp</option>
-                {cinemas.map(cinema => (
-                  <option key={cinema.id} value={cinema.id} className="bg-[#2d2d44] text-white">
-                    {cinema.name}
-                  </option>
-                ))}
+                {cinemas.map(cinema => {
+                  const roomCount = cinema.rooms?.length || 0;
+                  const maxRoomLimit = cinema.maxRooms || 4;
+                  return (
+                    <option key={cinema.id} value={cinema.id} className="bg-[#2d2d44] text-white">
+                      {cinema.name} ({roomCount}/{maxRoomLimit} phòng)
+                    </option>
+                  );
+                })}
               </select>
+              {form?.cinemaId && selectedCinema && (
+                <p className="text-[10px] text-white/40 mt-1">
+                  Rạp có {currentRoomCount}/{maxRooms} phòng
+                </p>
+              )}
             </div>
 
             {/* Phòng chiếu */}
             <div>
               <label className="block text-xs text-white/55 mb-1.5">Phòng chiếu *</label>
               <select
-                value={form.roomId || ""}
+                value={form?.roomId || ""}
                 onChange={e => handleRoomChange(e.target.value)}
                 className={selectClass}
-                disabled={!form.cinemaId}
+                disabled={isRoomDisabled}
                 required
-                style={{ backgroundColor: '#1a1a2e' }}
+                style={{ opacity: isRoomDisabled ? 0.5 : 1 }}
               >
-                <option value="" className="bg-[#2d2d44] text-white/70">Chọn phòng</option>
+                <option value="" className="bg-[#2d2d44] text-white/70">
+                  {!form?.cinemaId 
+                    ? "Chọn rạp trước" 
+                    : !hasRooms 
+                    ? "Rạp này chưa có phòng" 
+                    : "Chọn phòng"}
+                </option>
                 {availableRooms.map(room => (
                   <option key={room.id} value={room.id} className="bg-[#2d2d44] text-white">
-                    {room.name} ({room.type} - {room.capacity} ghế)
+                    {room.name} ({room.type} - {room.capacity || room.totalSeats || 0} ghế)
                   </option>
                 ))}
               </select>
+              {form?.cinemaId && !hasRooms && (
+                <p className="text-[10px] text-yellow-400 mt-1">
+                  ⚠️ Rạp này chưa có phòng chiếu. Vui lòng thêm phòng trước.
+                </p>
+              )}
+              {form?.roomId && form?.type && (
+                <p className="text-[10px] text-blue-400 mt-1">
+                  📍 Định dạng: {form.type} • Sức chứa: {form.totalSeats} ghế
+                </p>
+              )}
             </div>
 
             {/* Ngày chiếu */}
@@ -155,8 +347,8 @@ export default function ShowtimeModal({
               <label className="block text-xs text-white/55 mb-1.5">Ngày chiếu *</label>
               <input
                 type="date"
-                value={form.date || ""}
-                onChange={e => setForm({ date: e.target.value })}
+                value={form?.date || ""}
+                onChange={e => setForm({ ...form, date: e.target.value })}
                 className={inputClass}
                 min={new Date().toISOString().split('T')[0]}
                 required
@@ -164,149 +356,142 @@ export default function ShowtimeModal({
               />
             </div>
 
-            {/* Giờ chiếu */}
+            {/* Giờ bắt đầu */}
             <div>
-              <label className="block text-xs text-white/55 mb-1.5">Giờ chiếu *</label>
+              <label className="block text-xs text-white/55 mb-1.5">Giờ bắt đầu *</label>
               <input
                 type="time"
-                value={form.time || ""}
-                onChange={e => setForm({ time: e.target.value })}
+                value={form?.time || ""}
+                onChange={e => handleTimeChange(e.target.value)}
                 className={inputClass}
                 required
                 style={{ colorScheme: 'dark' }}
               />
             </div>
 
+            {/* Giờ kết thúc - Tự động tính */}
+            <div>
+              <label className="block text-xs text-white/55 mb-1.5">Giờ kết thúc</label>
+              <div className={`w-full border rounded-lg px-3 py-2 text-sm ${
+                form?.endTime && form.endTime.includes('ngày hôm sau') 
+                  ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30' 
+                  : 'text-white bg-[#2d2d44] border-white/10'
+              }`}>
+                {form?.endTime || (form?.movieDuration ? calculateEndTime() : "Chọn phim và giờ bắt đầu")}
+              </div>
+              {form?.movieDuration && (
+                <p className="text-[10px] text-blue-400 mt-1">
+                  ⏱️ Thời lượng: {form.movieDuration} phút + 15 phút quảng cáo
+                  {form?.endTime && form.endTime.includes('ngày hôm sau') && (
+                    <span className="text-yellow-400 ml-2">📅 Kết thúc vào ngày hôm sau</span>
+                  )}
+                </p>
+              )}
+            </div>
+
             {/* Định dạng */}
             <div>
               <label className="block text-xs text-white/55 mb-1.5">Định dạng</label>
-              <input
-                type="text"
-                value={form.type || ""}
-                className={inputClass + " bg-[#2d2d44]"}
-                disabled
-                readOnly
-              />
+              <div className={`w-full border rounded-lg px-3 py-2 text-sm ${form?.type ? 'text-white' : 'text-white/40'} bg-[#2d2d44] border-white/10`}>
+                {form?.type || "Chưa chọn phòng"}
+              </div>
             </div>
 
             {/* Tổng số ghế */}
             <div>
               <label className="block text-xs text-white/55 mb-1.5">Số ghế</label>
-              <input
-                type="text"
-                value={form.totalSeats || ""}
-                className={inputClass + " bg-[#2d2d44]"}
-                disabled
-                readOnly
-              />
+              <div className="w-full bg-[#2d2d44] border border-white/10 rounded-lg px-3 py-2 text-white text-sm">
+                {form?.totalSeats || 0} ghế
+              </div>
             </div>
+          </div>
 
-            {/* Loại suất đặc biệt */}
-            <div className="col-span-2">
-              <label className="block text-xs text-white/55 mb-1.5 flex items-center gap-1">
-                <Sparkles size={12} className="text-purple-400" />
-                Loại suất chiếu
-              </label>
-              <select
-                value={form.specialType || "none"}
-                onChange={e => handleSpecialTypeChange(e.target.value)}
-                className={selectClass}
-                style={{ backgroundColor: '#1a1a2e' }}
-              >
-                <option value="none" className="bg-[#2d2d44] text-white">Suất chiếu thường</option>
-                {specialTypes.map(type => (
-                  <option 
-                    key={type.value} 
-                    value={type.value} 
-                    className="bg-[#2d2d44]"
-                    style={{ color: type.color }}
-                  >
-                    {type.icon} {type.label} {type.multiplier !== 1 && `(${type.multiplier > 1 ? '+' : ''}${Math.round((type.multiplier - 1) * 100)}% giá)`}
-                  </option>
-                ))}
-              </select>
-              {form.specialType !== "none" && (
-                <p className="text-[10px] text-purple-400 mt-1">
-                  ✨ Giá vé sẽ tự động điều chỉnh theo loại suất chiếu
-                </p>
-              )}
+          {/* GIÁ VÉ THEO LOẠI GHẾ */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-white/80 mb-3">
+              Giá vé theo loại ghế
+            </label>
+            <div className="space-y-3">
+              {seatTypes.map(seat => (
+                <div key={seat.key} className={`p-3 rounded-lg border ${seat.bg} ${seat.border}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <label className={`block text-sm font-medium ${seat.color} mb-1`}>
+                        {seat.label}
+                      </label>
+                      <p className="text-[10px] text-white/40">
+                        Giá áp dụng cho tất cả ghế {seat.key.toLowerCase()} trong phòng
+                      </p>
+                    </div>
+                    <div className="w-40">
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">₫</span>
+                        <input
+                          type="number"
+                          placeholder="0"
+                          value={form?.prices?.[seat.key] || ""}
+                          onChange={e => handlePriceChange(seat.key, e.target.value)}
+                          className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition"
+                          min="0"
+                          step="1000"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
+            <p className="text-[10px] text-blue-400 mt-3 flex items-center gap-1">
+              💡 Giá vé được tự động lấy từ bảng giá theo loại ghế và thời gian chiếu
+            </p>
+          </div>
 
-            {/* Giá vé */}
-            <div className="col-span-2">
-              <label className="block text-xs text-white/55 mb-1.5">Giá vé (VNĐ)</label>
-              <div className="grid grid-cols-2 gap-3">
+          {/* Trạng thái */}
+          <div>
+            <label className="block text-xs text-white/55 mb-1.5">Trạng thái</label>
+            <select
+              value={form?.status || "scheduled"}
+              onChange={e => setForm({ ...form, status: e.target.value })}
+              className={selectClass}
+            >
+              <option value="scheduled" className="bg-[#2d2d44] text-green-400">Sắp chiếu</option>
+              <option value="ongoing" className="bg-[#2d2d44] text-yellow-400">Đang chiếu</option>
+              <option value="ended" className="bg-[#2d2d44] text-gray-400">Đã kết thúc</option>
+              <option value="cancelled" className="bg-[#2d2d44] text-red-400">Hủy</option>
+            </select>
+          </div>
+
+          {/* Thông tin phòng chiếu đã chọn */}
+          {form?.roomId && form?.type && form?.totalSeats > 0 && (
+            <div className="mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <div className="flex items-center gap-2 text-xs text-blue-400 mb-1">
+                <span>🎬</span>
+                <span>Thông tin phòng chiếu</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <input
-                    type="number"
-                    placeholder="Người lớn"
-                    value={form.price?.adult || ""}
-                    onChange={e => handlePriceChange('adult', e.target.value)}
-                    className={inputClass}
-                    min="0"
-                    step="1000"
-                  />
-                  <p className="text-[10px] text-white/30 mt-1">Người lớn</p>
+                  <span className="text-white/50">Phòng:</span>
+                  <span className="text-white ml-2">{form.roomName}</span>
                 </div>
                 <div>
-                  <input
-                    type="number"
-                    placeholder="Trẻ em"
-                    value={form.price?.child || ""}
-                    onChange={e => handlePriceChange('child', e.target.value)}
-                    className={inputClass}
-                    min="0"
-                    step="1000"
-                  />
-                  <p className="text-[10px] text-white/30 mt-1">Trẻ em</p>
+                  <span className="text-white/50">Định dạng:</span>
+                  <span className="text-white ml-2">{form.type}</span>
                 </div>
                 <div>
-                  <input
-                    type="number"
-                    placeholder="Sinh viên"
-                    value={form.price?.student || ""}
-                    onChange={e => handlePriceChange('student', e.target.value)}
-                    className={inputClass}
-                    min="0"
-                    step="1000"
-                  />
-                  <p className="text-[10px] text-white/30 mt-1">Sinh viên</p>
+                  <span className="text-white/50">Sức chứa:</span>
+                  <span className="text-white ml-2">{form.totalSeats} ghế</span>
                 </div>
                 <div>
-                  <input
-                    type="number"
-                    placeholder="VIP"
-                    value={form.price?.vip || ""}
-                    onChange={e => handlePriceChange('vip', e.target.value)}
-                    className={inputClass}
-                    min="0"
-                    step="1000"
-                  />
-                  <p className="text-[10px] text-white/30 mt-1">VIP</p>
+                  <span className="text-white/50">Rạp:</span>
+                  <span className="text-white ml-2">{form.cinemaName}</span>
                 </div>
               </div>
             </div>
-
-            {/* Trạng thái */}
-            <div>
-              <label className="block text-xs text-white/55 mb-1.5">Trạng thái</label>
-              <select
-                value={form.status || "scheduled"}
-                onChange={e => setForm({ status: e.target.value })}
-                className={selectClass}
-                style={{ backgroundColor: '#1a1a2e' }}
-              >
-                <option value="scheduled" className="bg-[#2d2d44] text-green-400">Sắp chiếu</option>
-                <option value="ongoing" className="bg-[#2d2d44] text-yellow-400">Đang chiếu</option>
-                <option value="ended" className="bg-[#2d2d44] text-gray-400">Đã kết thúc</option>
-                <option value="cancelled" className="bg-[#2d2d44] text-red-400">Hủy</option>
-              </select>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 pt-4 border-t border-white/10">
+        <div className="flex gap-3 p-6 pt-4 border-t border-white/10 flex-shrink-0">
           <button
             onClick={onClose}
             disabled={loading}

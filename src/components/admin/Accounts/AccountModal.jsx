@@ -2,44 +2,60 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 export default function AccountModal({ data, onClose, onSave }) {
+  // ✅ Kết hợp: Khởi tạo state từ data (giống Code 2)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    role: "customer",
+    role: "customer", // ✅ GIỮ customer từ Code 1
     status: "active",
   });
 
-  // 🔥 sync data khi edit
+  // ✅ GIỮ useEffect từ Code 1 để đồng bộ khi data thay đổi
   useEffect(() => {
     if (data) {
       setFormData({
         name: data.name || "",
         email: data.email || "",
         phone: data.phone || "",
-        role: data.role || "customer", // ✅ FIX
+        role: data.role || "customer",
         status: data.status || "active",
       });
     }
   }, [data]);
 
+  // ✅ THÊM validation từ Code 1
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.email || !formData.phone) {
+      alert("Vui lòng nhập đầy đủ thông tin");
+      return;
+    }
+    
+    // ✅ THÊM email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      alert("Email không hợp lệ");
+      return;
+    }
+    
+    // ✅ THÊM phone format validation
+    const phoneRegex = /^[0-9]{10,11}$/;
+    if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
+      alert("Số điện thoại không hợp lệ (10-11 số)");
+      return;
+    }
+    
+    onSave(formData);
+  };
+
+  // ✅ THÊM handleChange từ Code 1 (clean code)
   const handleChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    // 🔥 validate nhẹ
-    if (!formData.name || !formData.email || !formData.phone) {
-      alert("Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-
-    onSave(formData);
   };
 
   return (
@@ -60,14 +76,16 @@ export default function AccountModal({ data, onClose, onSave }) {
 
         <form onSubmit={handleSubmit}>
           <div className="p-6 space-y-5">
-            {/* Name */}
+            {/* Họ và tên */}
             <div className="space-y-2">
               <label className="text-white/70 text-sm">Họ và tên</label>
               <input
                 type="text"
+                placeholder="Nhập họ và tên" // ✅ THÊM placeholder từ Code 2
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white"
+                required
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30" // ✅ THÊM styling từ Code 2
               />
             </div>
 
@@ -76,45 +94,49 @@ export default function AccountModal({ data, onClose, onSave }) {
               <label className="text-white/70 text-sm">Email</label>
               <input
                 type="email"
+                placeholder="email@example.com" // ✅ THÊM placeholder
                 value={formData.email}
                 onChange={(e) => handleChange("email", e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white"
+                required
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
               />
             </div>
 
-            {/* Phone */}
+            {/* Số điện thoại */}
             <div className="space-y-2">
               <label className="text-white/70 text-sm">Số điện thoại</label>
               <input
                 type="tel"
+                placeholder="0912 345 678" // ✅ THÊM placeholder
                 value={formData.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white"
+                required
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
               />
             </div>
 
-            {/* Role */}
+            {/* Vai trò */}
             <div className="space-y-2">
               <label className="text-white/70 text-sm">Vai trò</label>
               <select
                 value={formData.role}
                 onChange={(e) => handleChange("role", e.target.value)}
-                className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-4 py-3 text-white"
+                className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition appearance-none cursor-pointer"
               >
                 <option value="admin">Admin</option>
                 <option value="staff">Nhân viên</option>
-                <option value="customer">Khách hàng</option> {/* ✅ FIX */}
+                <option value="customer">Khách hàng</option> {/* ✅ GIỮ customer từ Code 1 */}
               </select>
             </div>
 
-            {/* Status */}
+            {/* Trạng thái (chỉ hiện khi edit) */}
             {data && (
               <div className="space-y-2">
                 <label className="text-white/70 text-sm">Trạng thái</label>
                 <select
                   value={formData.status}
                   onChange={(e) => handleChange("status", e.target.value)}
-                  className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-4 py-3 text-white"
+                  className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition appearance-none cursor-pointer"
                 >
                   <option value="active">Hoạt động</option>
                   <option value="inactive">Tạm ngưng</option>
@@ -129,15 +151,15 @@ export default function AccountModal({ data, onClose, onSave }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-white/10 text-white py-3 rounded-lg"
+              className="flex-1 bg-white/10 hover:bg-white/20 text-white py-3 rounded-lg font-medium transition" // ✅ THÊM hover từ Code 2
             >
               Huỷ
             </button>
             <button
               type="submit"
-              className="flex-1 bg-red-600 text-white py-3 rounded-lg"
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition" // ✅ THÊM hover từ Code 2
             >
-              {data ? "Cập nhật" : "Tạo"}
+              {data ? "Cập nhật" : "Tạo tài khoản"} {/* ✅ GIỮ text từ Code 2 */}
             </button>
           </div>
         </form>

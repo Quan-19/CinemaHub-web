@@ -12,41 +12,13 @@ export default function CinemasTable({
   itemsPerPage = 5,
 }) {
   const [viewingCinema, setViewingCinema] = useState(null);
-
+  
   // Tính toán phân trang
   const totalPages = Math.ceil(cinemas.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentCinemas = cinemas.slice(startIndex, endIndex);
-  // Mảng các màu sắc khả dụng cho button quản lý
-  const managerColorMap = {
-    purple: "bg-purple-600 hover:bg-purple-700",
-    blue: "bg-blue-600 hover:bg-blue-700",
-    cyan: "bg-cyan-600 hover:bg-cyan-700",
-    green: "bg-green-600 hover:bg-green-700",
-    pink: "bg-pink-600 hover:bg-pink-700",
-    indigo: "bg-indigo-600 hover:bg-indigo-700",
-    orange: "bg-orange-600 hover:bg-orange-700",
-    teal: "bg-teal-600 hover:bg-teal-700",
-    red: "bg-red-600 hover:bg-red-700",
-    amber: "bg-amber-600 hover:bg-amber-700",
-    lime: "bg-lime-600 hover:bg-lime-700",
-    fuchsia: "bg-fuchsia-600 hover:bg-fuchsia-700",
-  };
 
-  // Hàm lấy màu dựa trên chuỗi (tên quản lý) -> màu cố định cho từng người
-  const getManagerColorClass = (managerName) => {
-    if (!managerName) return "";
-    const colors = Object.keys(managerColorMap);
-    let hash = 0;
-    for (let i = 0; i < managerName.length; i++) {
-      hash = (hash << 5) - hash + managerName.charCodeAt(i);
-      hash |= 0; // chuyển về 32-bit integer
-    }
-    const index = Math.abs(hash) % colors.length;
-    const colorName = colors[index];
-    return managerColorMap[colorName];
-  };
   const handleView = (cinema) => {
     setViewingCinema(cinema);
     if (onView) onView(cinema);
@@ -54,6 +26,24 @@ export default function CinemasTable({
 
   const closeViewModal = () => {
     setViewingCinema(null);
+  };
+
+  // Helper function để lấy số phòng an toàn
+  const getRoomCount = (cinema) => {
+    if (cinema.currentRooms && typeof cinema.currentRooms === 'number') {
+      return cinema.currentRooms;
+    }
+    if (Array.isArray(cinema.rooms)) {
+      return cinema.rooms.length;
+    }
+    return 0;
+  };
+
+  const getMaxRooms = (cinema) => {
+    if (cinema.maxRooms && typeof cinema.maxRooms === 'number') {
+      return cinema.maxRooms;
+    }
+    return 4;
   };
 
   return (
@@ -75,70 +65,78 @@ export default function CinemasTable({
 
           <tbody>
             {currentCinemas.length > 0 ? (
-              currentCinemas.map((c) => (
+              currentCinemas.map(c => (
                 <tr
                   key={c.id}
                   className="h-[74px] border-b border-white/5 hover:bg-white/[0.03]"
                 >
                   <td className="p-4">
-                    <p className="font-medium">{c.name}</p>
-                    <p className="text-xs text-white/30">{c.phone}</p>
+                    <p className="font-medium">{c.name || ""}</p>
+                    <p className="text-xs text-white/30">{c.phone || ""}</p>
                   </td>
 
                   <td>
-                    <span
-                      className={`px-2.5 py-1 text-xs rounded-md ${brandColor(c.brand)}`}
-                    >
-                      {c.brand}
+                    <span className={`px-2.5 py-1 text-xs rounded-md ${brandColor(c.brand)}`}>
+                      {c.brand || "CGV"}
                     </span>
                   </td>
 
-                  <td className="text-white/70">{c.city}</td>
+                  <td className="text-white/70">{c.city || ""}</td>
 
-                  <td className="text-white/50 truncate max-w-[200px]">
-                    {c.address}
+                  <td className="text-white/50 truncate max-w-[200px]">{c.address || ""}</td>
+
+                  <td className="text-center font-medium">
+                    {getRoomCount(c)}/{getMaxRooms(c)}
                   </td>
 
-                  <td className="text-center font-medium">{c.rooms}</td>
-
                   <td>
-                    <span
-                      className={`px-3 py-1 text-xs rounded-full ${statusColor(c.status)}`}
-                    >
+                    <span className={`px-3 py-1 text-xs rounded-full ${statusColor(c.status)}`}>
                       {c.status === "active" ? "Đang hoạt động" : "Bảo trì"}
                     </span>
                   </td>
 
-                  {/* 🔑 Phân quyền hoặc hiển thị tên quản lý */}
                   <td>
-                    <button
-                      onClick={() => onAssign(c)}
-                      className={`px-3 py-1 text-xs rounded-md transition ${
-                        c.managerName
-                          ? `${getManagerColorClass(c.managerName)} text-white`
-                          : "text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/10"
-                      }`}
-                    >
-                      {c.managerName ? c.managerName : "🔑 Phân quyền"}
-                    </button>
+                    {c.managerName ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-xs font-medium">
+                          {typeof c.managerName === 'string' && c.managerName.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-sm">{typeof c.managerName === 'string' ? c.managerName : ""}</p>
+                          {c.managerEmail && typeof c.managerEmail === 'string' && (
+                            <p className="text-xs text-white/40">{c.managerEmail}</p>
+                          )}
+                          <p className="text-xs text-blue-400">
+                            Quản lý chi nhánh
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => onAssign(c)}
+                        className="text-yellow-400 border border-yellow-500/30 px-3 py-1 rounded-md text-xs hover:bg-yellow-500/10 transition"
+                      >
+                        🔑 Phân quyền
+                      </button>
+                    )}
                   </td>
 
                   <td>
                     <div className="flex justify-center gap-3">
-                      <Eye
-                        size={18}
-                        className="text-blue-400 cursor-pointer hover:text-blue-300"
+                      <Eye 
+                        size={18} 
+                        className="text-blue-400 cursor-pointer hover:text-blue-300" 
                         onClick={() => handleView(c)}
                       />
-                      <Pencil
-                        size={18}
-                        className="text-cyan-400 cursor-pointer hover:text-cyan-300"
-                        onClick={() => onEdit(c)}
+                      <Pencil 
+                        size={18} 
+                        className="text-cyan-400 cursor-pointer hover:text-cyan-300" 
+                        onClick={() => onEdit(c)} 
                       />
-                      <Trash2
-                        size={18}
-                        className="text-red-500 cursor-pointer hover:text-red-400"
-                        onClick={() => onDelete(c.id)}
+                      <Trash2 
+                        size={18} 
+                        className="text-red-500 cursor-pointer hover:text-red-400" 
+                        onClick={() => onDelete(c.id)} 
                       />
                     </div>
                   </td>
@@ -155,52 +153,53 @@ export default function CinemasTable({
         </table>
 
         {/* PHÂN TRANG */}
-        <div className="flex justify-between items-center px-4 py-3 text-xs text-white/40">
-          <span>
-            Hiển thị {startIndex + 1}-{Math.min(endIndex, cinemas.length)} /{" "}
-            {cinemas.length} rạp
-          </span>
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center px-4 py-3 text-xs text-white/40 border-t border-white/5">
+            <span>
+              Hiển thị {startIndex + 1}-{Math.min(endIndex, cinemas.length)} / {cinemas.length} rạp
+            </span>
 
-          <div className="flex gap-2 items-center">
-            <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`w-8 h-8 rounded flex items-center justify-center ${
-                currentPage === 1
-                  ? "bg-white/5 text-white/20 cursor-not-allowed"
-                  : "bg-white/5 hover:bg-white/10 text-white"
-              }`}
-            >
-              ‹
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <div className="flex gap-2 items-center">
               <button
-                key={page}
-                onClick={() => onPageChange(page)}
-                className={`w-8 h-8 rounded ${
-                  currentPage === page
-                    ? "bg-red-600 text-white"
-                    : "bg-white/5 hover:bg-white/10 text-white/60"
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`w-8 h-8 rounded flex items-center justify-center ${
+                  currentPage === 1 
+                    ? 'bg-white/5 text-white/20 cursor-not-allowed' 
+                    : 'bg-white/5 hover:bg-white/10 text-white'
                 }`}
               >
-                {page}
+                ‹
               </button>
-            ))}
-
-            <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`w-8 h-8 rounded flex items-center justify-center ${
-                currentPage === totalPages
-                  ? "bg-white/5 text-white/20 cursor-not-allowed"
-                  : "bg-white/5 hover:bg-white/10 text-white"
-              }`}
-            >
-              ›
-            </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => onPageChange(page)}
+                  className={`w-8 h-8 rounded ${
+                    currentPage === page
+                      ? 'bg-red-600 text-white'
+                      : 'bg-white/5 hover:bg-white/10 text-white/60'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              
+              <button
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`w-8 h-8 rounded flex items-center justify-center ${
+                  currentPage === totalPages 
+                    ? 'bg-white/5 text-white/20 cursor-not-allowed' 
+                    : 'bg-white/5 hover:bg-white/10 text-white'
+                }`}
+              >
+                ›
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* MODAL XEM CHI TIẾT */}
@@ -213,44 +212,89 @@ export default function CinemasTable({
 
 // MODAL XEM CHI TIẾT
 function ViewCinemaModal({ cinema, onClose }) {
+  if (!cinema) return null;
+
+  // Helper để lấy giá trị an toàn
+  const getSafeValue = (value) => {
+    if (value === null || value === undefined) return "Chưa có";
+    if (typeof value === 'object') {
+      if (Array.isArray(value)) return `${value.length} mục`;
+      return "Đã cấu hình";
+    }
+    return value;
+  };
+
+  const getRoomCount = (cinema) => {
+    if (cinema.currentRooms && typeof cinema.currentRooms === 'number') {
+      return cinema.currentRooms;
+    }
+    if (Array.isArray(cinema.rooms)) {
+      return cinema.rooms.length;
+    }
+    return 0;
+  };
+
+  const getMaxRooms = (cinema) => {
+    if (cinema.maxRooms && typeof cinema.maxRooms === 'number') {
+      return cinema.maxRooms;
+    }
+    return 4;
+  };
+
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
       <div className="w-[500px] bg-[#0B1220] border border-white/10 rounded-xl overflow-hidden">
         <div className="flex justify-between items-center px-5 py-4 border-b border-white/10">
           <h2 className="text-white font-semibold text-lg">Chi tiết rạp</h2>
-          <button onClick={onClose} className="text-white/40 hover:text-white">
-            ✕
-          </button>
+          <button onClick={onClose} className="text-white/40 hover:text-white">✕</button>
         </div>
 
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <InfoItem label="Tên rạp" value={cinema.name} />
-            <InfoItem label="Thương hiệu" value={cinema.brand} />
-            <InfoItem label="Thành phố" value={cinema.city} />
-            <InfoItem label="Số điện thoại" value={cinema.phone} />
-            <InfoItem label="Số phòng chiếu" value={cinema.rooms} />
-            <InfoItem
-              label="Trạng thái"
+            <InfoItem label="Tên rạp" value={getSafeValue(cinema.name)} />
+            <InfoItem label="Thương hiệu" value={getSafeValue(cinema.brand)} />
+            <InfoItem label="Thành phố" value={getSafeValue(cinema.city)} />
+            <InfoItem label="Số điện thoại" value={getSafeValue(cinema.phone)} />
+            <InfoItem 
+              label="Số phòng chiếu" 
+              value={`${getRoomCount(cinema)}/${getMaxRooms(cinema)}`} 
+            />
+            <InfoItem 
+              label="Trạng thái" 
               value={cinema.status === "active" ? "Đang hoạt động" : "Bảo trì"}
               status={cinema.status}
             />
           </div>
-
-          <InfoItem label="Địa chỉ" value={cinema.address} fullWidth />
-          <InfoItem
-            label="Quản lý"
-            value={cinema.managerName || "Chưa có quản lý"}
+          
+          <InfoItem label="Địa chỉ" value={getSafeValue(cinema.address)} fullWidth />
+          
+          <InfoItem 
+            label="Quản lý" 
+            value={getSafeValue(cinema.managerName || "Chưa có quản lý")}
             fullWidth
           />
+          
           {cinema.managerEmail && (
-            <InfoItem
-              label="Email quản lý"
-              value={cinema.managerEmail}
-              fullWidth
-            />
+            <InfoItem label="Email quản lý" value={getSafeValue(cinema.managerEmail)} fullWidth />
           )}
-          <InfoItem label="Số nhân viên" value={cinema.staffCount || 0} />
+          
+          {/* Hiển thị danh sách phòng chiếu nếu có */}
+          {cinema.rooms && Array.isArray(cinema.rooms) && cinema.rooms.length > 0 && (
+            <div className="col-span-2">
+              <p className="text-xs text-white/40 mb-2">Danh sách phòng chiếu</p>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {cinema.rooms.map((room, index) => (
+                  <div key={room.id || index} className="bg-white/5 p-2 rounded text-xs">
+                    <span className="text-white/80 font-medium">
+                      {getSafeValue(room.name) || `Phòng ${index + 1}`}
+                    </span>
+                    {room.type && <span className="text-white/40 ml-2">({getSafeValue(room.type)})</span>}
+                    {room.capacity && <span className="text-white/40 ml-2">- {getSafeValue(room.capacity)} ghế</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end p-5 border-t border-white/10">
@@ -267,17 +311,23 @@ function ViewCinemaModal({ cinema, onClose }) {
 }
 
 function InfoItem({ label, value, fullWidth, status }) {
+  let displayValue = value;
+  
+  if (displayValue === null || displayValue === undefined || displayValue === '') {
+    displayValue = "Chưa có";
+  } else if (typeof displayValue === 'object') {
+    displayValue = JSON.stringify(displayValue);
+  }
+  
   return (
     <div className={fullWidth ? "col-span-2" : ""}>
       <p className="text-xs text-white/40 mb-1">{label}</p>
       {status ? (
-        <span
-          className={`px-3 py-1 text-xs rounded-full ${statusColor(status)}`}
-        >
-          {value}
+        <span className={`px-3 py-1 text-xs rounded-full ${statusColor(status)}`}>
+          {displayValue}
         </span>
       ) : (
-        <p className="text-sm text-white">{value}</p>
+        <p className="text-sm text-white">{displayValue}</p>
       )}
     </div>
   );

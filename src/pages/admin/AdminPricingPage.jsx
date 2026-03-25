@@ -1,159 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PricingTable from "../../components/admin/Pricing/PricingTable.jsx";
 import PricingModal from "../../components/admin/Pricing/PricingModal.jsx";
 import PricingStats from "../../components/admin/Pricing/PricingStats.jsx";
-import PricingFilter from "../../components/admin/Pricing/PricingFilter.jsx";
 import DeleteConfirmModal from "../../components/admin/Pricing/DeleteConfirmModal.jsx";
 import { Plus, Filter, X } from "lucide-react";
 
-const mockPrices = [
-  {
-    id: "1",
-    name: "2D Thường - Ngày thường - Sáng",
-    type: "2D",
-    seat: "Thường",
-    day: "Ngày thường",
-    time: "Sáng (trước 12h)",
-    base: 75000,
-    final: 75000,
-    active: true
-  },
-  {
-    id: "2",
-    name: "2D Thường - Ngày thường - Chiều",
-    type: "2D",
-    seat: "Thường",
-    day: "Ngày thường",
-    time: "Chiều (12-18h)",
-    base: 85000,
-    final: 85000,
-    active: true
-  },
-  {
-    id: "3",
-    name: "2D Thường - Ngày thường - Tối",
-    type: "2D",
-    seat: "Thường",
-    day: "Ngày thường",
-    time: "Tối (sau 18h)",
-    base: 95000,
-    final: 95000,
-    active: true
-  },
-  {
-    id: "4",
-    name: "2D Thường - Cuối tuần - Sáng",
-    type: "2D",
-    seat: "Thường",
-    day: "Cuối tuần",
-    time: "Sáng (trước 12h)",
-    base: 85000,
-    final: 85000,
-    active: true
-  },
-  {
-    id: "5",
-    name: "2D Thường - Cuối tuần - Chiều/Tối",
-    type: "2D",
-    seat: "Thường",
-    day: "Cuối tuần",
-    time: "Tối (sau 18h)",
-    base: 105000,
-    final: 105000,
-    active: true
-  },
-  {
-    id: "6",
-    name: "2D VIP - Ngày thường",
-    type: "2D",
-    seat: "VIP",
-    day: "Ngày thường",
-    time: "Chiều (12-18h)",
-    base: 110000,
-    final: 110000,
-    active: true
-  },
-  {
-    id: "7",
-    name: "2D VIP - Cuối tuần",
-    type: "2D",
-    seat: "VIP",
-    day: "Cuối tuần",
-    time: "Chiều (12-18h)",
-    base: 130000,
-    final: 130000,
-    active: true
-  },
-  {
-    id: "8",
-    name: "2D Couple - Mọi ngày",
-    type: "2D",
-    seat: "Couple",
-    day: "Ngày thường",
-    time: "Tối (sau 18h)",
-    base: 160000,
-    final: 160000,
-    active: true
-  },
-  {
-    id: "9",
-    name: "3D Thường - Ngày thường - Tối",
-    type: "3D",
-    seat: "Thường",
-    day: "Ngày thường",
-    time: "Tối (sau 18h)",
-    base: 120000,
-    final: 120000,
-    active: true
-  },
-  {
-    id: "10",
-    name: "3D VIP - Cuối tuần - Tối",
-    type: "3D",
-    seat: "VIP",
-    day: "Cuối tuần",
-    time: "Tối (sau 18h)",
-    base: 160000,
-    final: 160000,
-    active: true
-  },
-  {
-    id: "11",
-    name: "IMAX VIP - Cuối tuần - Tối",
-    type: "IMAX",
-    seat: "VIP",
-    day: "Cuối tuần",
-    time: "Tối (sau 18h)",
-    base: 180000,
-    final: 180000,
-    active: true
-  },
-  {
-    id: "12",
-    name: "4DX VIP - Ngày thường - Chiều",
-    type: "4DX",
-    seat: "VIP",
-    day: "Ngày thường",
-    time: "Chiều (12-18h)",
-    base: 150000,
-    final: 150000,
-    active: true
-  },
-  {
-    id: "13",
-    name: "4DX Couple - Cuối tuần - Tối",
-    type: "4DX",
-    seat: "Couple",
-    day: "Cuối tuần",
-    time: "Tối (sau 18h)",
-    base: 220000,
-    final: 220000,
-    active: true
-  }
-];
 
 export default function AdminPricingPage() {
-  const [data, setData] = useState(mockPrices);
+  const [data, setData] = useState([]);
   const [filterType, setFilterType] = useState("all");
   const [filterSeat, setFilterSeat] = useState("all");
   const [showModal, setShowModal] = useState(false);
@@ -163,6 +17,45 @@ export default function AdminPricingPage() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load data từ localStorage khi component mount
+  useEffect(() => {
+    loadDataFromLocalStorage();
+  }, []);
+
+  // Save data to localStorage whenever data changes
+  useEffect(() => {
+    if (!isLoading) {
+      saveDataToLocalStorage(data);
+    }
+  }, [data, isLoading]);
+
+  const loadDataFromLocalStorage = () => {
+    setIsLoading(true);
+    try {
+      const savedData = localStorage.getItem("pricing_rules");
+      if (savedData) {
+        setData(JSON.parse(savedData));
+      } else {
+        // Khởi tạo với mảng rỗng, không có dữ liệu mẫu
+        setData([]);
+      }
+    } catch (error) {
+      console.error("Error loading data from localStorage:", error);
+      setData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveDataToLocalStorage = (dataToSave) => {
+    try {
+      localStorage.setItem("pricing_rules", JSON.stringify(dataToSave));
+    } catch (error) {
+      console.error("Error saving data to localStorage:", error);
+    }
+  };
 
   // Filter data based on type, seat, and search term
   const filtered = data.filter(item => {
@@ -223,6 +116,61 @@ export default function AdminPricingPage() {
     setSearchTerm("");
   };
 
+  // Export data to JSON file (tiện cho backup)
+  const handleExportData = () => {
+    const dataStr = JSON.stringify(data, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `pricing_rules_${new Date().toISOString().split("T")[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Import data from JSON file
+  const handleImportData = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        if (Array.isArray(importedData)) {
+          setData(importedData);
+          alert(`Đã import thành công ${importedData.length} quy tắc giá!`);
+        } else {
+          alert("File không hợp lệ. Vui lòng chọn file JSON đúng định dạng.");
+        }
+      } catch (error) {
+        console.error("Error importing data:", error);
+        alert("Lỗi khi đọc file. Vui lòng kiểm tra lại định dạng file.");
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = ""; // Reset input
+  };
+
+  // Reset all data (xóa toàn bộ)
+  const handleResetAll = () => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa TẤT CẢ quy tắc giá? Hành động này không thể hoàn tác.")) {
+      setData([]);
+      localStorage.removeItem("pricing_rules");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-400">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       {/* HEADER */}
@@ -234,7 +182,7 @@ export default function AdminPricingPage() {
           </p>
         </div>
 
-        <div className="flex gap-3 w-full md:w-auto">
+        <div className="flex gap-3 w-full md:w-auto flex-wrap">
           {/* Search bar */}
           <div className="flex-1 md:w-64">
             <input
@@ -244,6 +192,36 @@ export default function AdminPricingPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full h-10 px-4 rounded-lg bg-[#0d0d1a] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
             />
+          </div>
+
+          {/* Import/Export Buttons */}
+          <div className="relative group">
+            <button
+              className="px-4 py-2 rounded-lg bg-[#0d0d1a] hover:bg-[#1a1a2e] transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span className="hidden sm:inline">Xuất/Nhập</span>
+            </button>
+            <div className="absolute right-0 mt-2 w-48 bg-[#0d0d1a] rounded-lg border border-white/10 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+              <button
+                onClick={handleExportData}
+                className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-white/10 rounded-t-lg transition-colors"
+                disabled={data.length === 0}
+              >
+                📤 Xuất dữ liệu (JSON)
+              </button>
+              <label className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-white/10 rounded-b-lg transition-colors cursor-pointer block">
+                📥 Nhập dữ liệu (JSON)
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportData}
+                  className="hidden"
+                />
+              </label>
+            </div>
           </div>
 
           <button
@@ -283,13 +261,22 @@ export default function AdminPricingPage() {
               <Filter size={14} />
               Bộ lọc nâng cao
             </h3>
-            <button
-              onClick={clearFilters}
-              className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
-            >
-              <X size={14} />
-              Xóa bộ lọc
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleResetAll}
+                className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1"
+              >
+                <X size={14} />
+                Xóa tất cả dữ liệu
+              </button>
+              <button
+                onClick={clearFilters}
+                className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
+              >
+                <X size={14} />
+                Xóa bộ lọc
+              </button>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -367,10 +354,29 @@ export default function AdminPricingPage() {
         </div>
       )}
 
-      <PricingStats data={data} />
+      {data.length === 0 && !isLoading && (
+        <div className="mb-6 p-8 bg-[#0d0d1a] rounded-xl border border-white/10 text-center">
+          <svg className="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p className="text-gray-400 mb-2">Chưa có dữ liệu quy tắc giá</p>
+          <p className="text-sm text-gray-500 mb-4">Nhấn "Thêm bảng giá" để tạo quy tắc giá đầu tiên</p>
+          <button
+            onClick={() => {
+              setEditingItem(null);
+              setShowModal(true);
+            }}
+            className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg inline-flex items-center gap-2 transition-colors"
+          >
+            <Plus size={16} /> Thêm bảng giá đầu tiên
+          </button>
+        </div>
+      )}
+
+      {data.length > 0 && <PricingStats data={data} />}
       
       {/* Active Filters Display */}
-      {(filterType !== "all" || filterSeat !== "all" || searchTerm) && (
+      {(filterType !== "all" || filterSeat !== "all" || searchTerm) && data.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <span className="text-xs text-gray-400">Đang lọc:</span>
           {filterType !== "all" && (
@@ -406,13 +412,15 @@ export default function AdminPricingPage() {
         </div>
       )}
 
-      <PricingTable 
-        data={filtered} 
-        onEdit={handleEdit}
-        onDelete={setDeleteItem}
-        onView={handleView}
-        onToggleActive={handleToggleActive}
-      />
+      {data.length > 0 && (
+        <PricingTable 
+          data={filtered} 
+          onEdit={handleEdit}
+          onDelete={setDeleteItem}
+          onView={handleView}
+          onToggleActive={handleToggleActive}
+        />
+      )}
 
       {/* Add/Edit Modal */}
       <PricingModal
@@ -452,7 +460,7 @@ export default function AdminPricingPage() {
   );
 }
 
-// View Detail Modal Component (giữ nguyên như cũ)
+// View Detail Modal Component
 function ViewDetailModal({ item, onClose, onEdit }) {
   if (!item) return null;
 

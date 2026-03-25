@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
+import { toast } from "react-hot-toast";
 
 export default function CinemaModal({
   show,
@@ -10,43 +11,69 @@ export default function CinemaModal({
   setForm,
   isEdit,
 }) {
-  const [users, setUsers] = useState([]);
+  const [availableManagers, setAvailableManagers] = useState([]);
+  const [loadingManagers, setLoadingManagers] = useState(false);
+
+  useEffect(() => {
+    if (show) {
+      loadManagers();
+    }
+  }, [show]);
+
+  const loadManagers = async () => {
+    setLoadingManagers(true);
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) return;
+      
+      const token = await user.getIdToken();
+      const res = await fetch("http://localhost:5000/api/users/assign-users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (!res.ok) throw new Error("Failed to fetch users");
+      
+      const data = await res.json();
+      // Lọc chỉ lấy nhân viên (staff) có thể làm quản lý
+      const staff = (Array.isArray(data) ? data : []).filter(
+        s => s.role === "staff" && s.status === "active"
+      );
+      setAvailableManagers(staff);
+    } catch (error) {
+      console.error("Failed to load managers:", error);
+      toast.error("Không thể tải danh sách nhân viên");
+    } finally {
+      setLoadingManagers(false);
+    }
+  };
+
+  if (!show) return null;
 
   const inputClass =
     "mt-1 w-full bg-[#020617] border border-white/10 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-white/20";
 
-  // 🔥 fetch users thật
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const auth = getAuth();
-        const user = auth.currentUser;
-        if (!user) return;
-
-        const token = await user.getIdToken();
-
-        const res = await fetch(
-          "http://localhost:5000/api/users/assign-users",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-
-        const data = await res.json();
-        console.log("USERS:", data);
-
-        setUsers(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("FETCH USERS ERROR:", err);
+  const handleManagerChange = (e) => {
+    const managerId = e.target.value;
+    if (managerId === "") {
+      setForm(p => ({
+        ...p,
+        managerId: null,
+        managerName: null,
+        managerEmail: null,
+      }));
+    } else {
+      const selectedManager = availableManagers.find(s => s.id == managerId);
+      if (selectedManager) {
+        setForm(p => ({
+          ...p,
+          managerId: selectedManager.id,
+          managerName: selectedManager.name,
+          managerEmail: selectedManager.email,
+        }));
       }
-    };
-
-    if (show) fetchUsers();
-  }, [show]);
-
-  if (!show) return null;
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
@@ -68,9 +95,9 @@ export default function CinemaModal({
           <div>
             <label className="text-sm text-white/60">Tên rạp</label>
             <input
-              placeholder="VD: CGV Vincom Center"
-              value={form.name}
-              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              placeholder="VD: CGV Vincom Center Bà Triệu"
+              value={form.name || ""}
+              onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
               className={inputClass}
             />
           </div>
@@ -80,10 +107,8 @@ export default function CinemaModal({
             <div>
               <label className="text-sm text-white/60">Thương hiệu</label>
               <select
-                value={form.brand}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, brand: e.target.value }))
-                }
+                value={form.brand || "CGV"}
+                onChange={e => setForm(p => ({ ...p, brand: e.target.value }))}
                 className={inputClass}
               >
                 <option>CGV</option>
@@ -97,10 +122,8 @@ export default function CinemaModal({
               <label className="text-sm text-white/60">Thành phố</label>
               <input
                 placeholder="Hà Nội / TP.HCM"
-                value={form.city}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, city: e.target.value }))
-                }
+                value={form.city || ""}
+                onChange={e => setForm(p => ({ ...p, city: e.target.value }))}
                 className={inputClass}
               />
             </div>
@@ -111,74 +134,94 @@ export default function CinemaModal({
             <label className="text-sm text-white/60">Địa chỉ</label>
             <input
               placeholder="Số nhà, đường, quận..."
-              value={form.address}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, address: e.target.value }))
-              }
+              value={form.address || ""}
+              onChange={e => setForm(p => ({ ...p, address: e.target.value }))}
               className={inputClass}
             />
           </div>
 
-          {/* PHONE + ROOMS */}
+          {/* PHONE + MAX ROOMS */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-sm text-white/60">Số điện thoại</label>
               <input
-                value={form.phone}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, phone: e.target.value }))
-                }
+                value={form.phone || ""}
+                onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
                 className={inputClass}
               />
             </div>
 
             <div>
-              <label className="text-sm text-white/60">Số phòng chiếu</label>
+              <label className="text-sm text-white/60">
+                Số phòng tối đa
+                <span className="text-xs text-white/40 ml-1">(giới hạn)</span>
+              </label>
               <input
                 type="number"
-                value={form.rooms}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, rooms: Number(e.target.value) }))
+                min="1"
+                max="20"
+                value={form.maxRooms || 4}
+                onChange={e =>
+                  setForm(p => ({ ...p, maxRooms: Number(e.target.value) }))
                 }
                 className={inputClass}
               />
+              <p className="text-xs text-white/30 mt-1">
+                Số lượng phòng chiếu tối đa của rạp này
+              </p>
             </div>
           </div>
 
-          {/* 🔥 MANAGER (REAL DATA) */}
+          {/* SỐ PHÒNG HIỆN TẠI - CHỈ HIỂN THỊ KHI EDIT */}
+          {isEdit && (
+            <div>
+              <label className="text-sm text-white/60">Số phòng hiện tại</label>
+              <div className="mt-1 px-3 py-2 bg-[#020617] border border-white/10 rounded-lg text-sm text-white/70">
+                {form.currentRooms || 0} / {form.maxRooms || 4} phòng
+              </div>
+              <p className="text-xs text-yellow-400/70 mt-1">
+                {form.currentRooms >= form.maxRooms && "⚠️ Đã đạt giới hạn số phòng tối đa!"}
+              </p>
+            </div>
+          )}
+
+          {/* MANAGER */}
           <div>
             <label className="text-sm text-white/60">Quản lý chi nhánh</label>
             <select
               value={form.managerId || ""}
-              onChange={(e) => {
-                const selectedUser = users.find((u) => u.id == e.target.value);
-
-                setForm((p) => ({
-                  ...p,
-                  managerId: selectedUser?.id || null,
-                  managerName: selectedUser?.name || null,
-                }));
-              }}
+              onChange={handleManagerChange}
               className={inputClass}
+              disabled={loadingManagers}
             >
-              <option value="">Không có</option>
-
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.role})
+              <option value="">Chưa có quản lý</option>
+              {availableManagers.map(s => (
+                <option key={s.id} value={s.id}>
+                  {s.name} - {s.email}
                 </option>
               ))}
             </select>
+            {loadingManagers && (
+              <p className="text-xs text-white/40 mt-1">Đang tải danh sách nhân viên...</p>
+            )}
+            {!loadingManagers && availableManagers.length === 0 && (
+              <p className="text-xs text-yellow-400 mt-1">
+                Không có nhân viên nào khả dụng để phân quyền
+              </p>
+            )}
+            {form.managerName && (
+              <p className="text-xs text-green-400 mt-1">
+                ✓ Đang được quản lý bởi: {form.managerName}
+              </p>
+            )}
           </div>
 
           {/* STATUS */}
           <div>
             <label className="text-sm text-white/60">Trạng thái</label>
             <select
-              value={form.status}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, status: e.target.value }))
-              }
+              value={form.status || "active"}
+              onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
               className={inputClass}
             >
               <option value="active">Đang hoạt động</option>
@@ -191,14 +234,14 @@ export default function CinemaModal({
         <div className="flex gap-3 p-5 border-t border-white/10">
           <button
             onClick={onClose}
-            className="flex-1 bg-white/10 hover:bg-white/20 py-2 rounded-lg"
+            className="flex-1 bg-white/10 hover:bg-white/20 py-2 rounded-lg transition"
           >
             Huỷ
           </button>
 
           <button
             onClick={onSave}
-            className="flex-1 bg-red-600 hover:bg-red-700 py-2 rounded-lg"
+            className="flex-1 bg-red-600 hover:bg-red-700 py-2 rounded-lg transition"
           >
             {isEdit ? "Lưu thay đổi" : "Thêm rạp"}
           </button>

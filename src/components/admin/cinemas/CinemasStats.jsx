@@ -1,28 +1,22 @@
 import { Building2, Star, User, Users } from "lucide-react";
 
 export default function CinemasStats({ cinemas }) {
-  const total = cinemas.length;
-
-  const active = cinemas.filter(c => c.status === "active").length;
-
-  const noManager = cinemas.filter(c => !c.managerId).length;
-
-  const totalStaff = cinemas.reduce((sum, c) => {
-    return sum + (c.staffCount || 0); // nếu chưa có thì = 0
-  }, 0);
+  const totalCinemas = cinemas.length;
+  const activeCinemas = cinemas.filter(c => c.status === "active").length;
+  const noManagerCinemas = cinemas.filter(c => !c.managerName).length;
 
   return (
-    <div className="grid grid-cols-4 gap-5">
-      <Card icon={<Building2 size={18} />} title="Tổng rạp" value={total} />
-      <Card icon={<Star size={18} />} title="Đang hoạt động" value={active} green />
-      <Card icon={<User size={18} />} title="Chưa có quản lý" value={noManager} yellow />
-
-      <Card icon={<Users size={18} />} title="Nhân viên" value={totalStaff} blue />
+    <div className="grid grid-cols-3 gap-5">
+      <Card icon={<Building2 size={18} />} title="Tổng rạp" value={totalCinemas} />
+      <Card icon={<Star size={18} />} title="Đang hoạt động" value={activeCinemas} green />
+      <Card icon={<User size={18} />} title="Chưa có quản lý" value={noManagerCinemas} yellow />
     </div>
   );
 }
 
 function Card({ icon, title, value, green, yellow, blue }) {
+  const displayValue = typeof value === 'object' ? 0 : value;
+  
   return (
     <div className="bg-[#0B1220] border border-white/5 rounded-xl px-6 py-5 flex items-center gap-4">
       <div className={`
@@ -37,7 +31,7 @@ function Card({ icon, title, value, green, yellow, blue }) {
 
       <div>
         <p className="text-xs text-white/40 mb-1">{title}</p>
-        <h2 className="text-xl font-semibold">{value}</h2>
+        <h2 className="text-xl font-semibold">{displayValue}</h2>
       </div>
     </div>
   );

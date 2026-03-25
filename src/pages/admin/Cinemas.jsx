@@ -1,21 +1,22 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import CinemasHeader from "../../components/admin/cinemas/CinemasHeader";
 import CinemasStats from "../../components/admin/cinemas/CinemasStats";
 import CinemasFilter from "../../components/admin/cinemas/CinemasFilter";
 import CinemasTable from "../../components/admin/cinemas/CinemasTable";
 import CinemaModal from "../../components/admin/cinemas/CinemaModal";
 import AssignManagerModal from "../../components/admin/cinemas/AssignManagerModal";
+import { toast } from "react-hot-toast";
 
 export default function CinemasPage() {
   const [cinemas, setCinemas] = useState([]);
   const [search, setSearch] = useState("");
   const [cityFilter, setCityFilter] = useState("all");
-
   const [showModal, setShowModal] = useState(false);
-  const [showAssign, setShowAssign] = useState(false);
-
+  const [showAssignModal, setShowAssignModal] = useState(false);
   const [editingCinema, setEditingCinema] = useState(null);
   const [selectedCinema, setSelectedCinema] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const defaultForm = {
     name: "",
@@ -23,81 +24,94 @@ export default function CinemasPage() {
     city: "",
     address: "",
     phone: "",
-    rooms: 4,
+    maxRooms: 4,
+    currentRooms: 0,
+    rooms: [],
     status: "active",
+    managerId: null,
+    managerName: null,
+    managerEmail: null,
   };
 
   const [form, setForm] = useState(defaultForm);
 
-  // ================= FETCH DATA =================
+  // ================= FETCH DATA FROM API =================
   const fetchCinemas = async () => {
+    setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/cinemas");
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:5000/api/cinemas", {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      });
+      
+      if (!res.ok) throw new Error("Failed to fetch cinemas");
+      
       const data = await res.json();
-
-      // Giả sử API trả về mảng các rạp
-      setCinemas(Array.isArray(data) ? data : []);
+      
+      // Normalize data từ API
+      const normalizedCinemas = (Array.isArray(data) ? data : []).map(cinema => ({
+        id: cinema.cinema_id || cinema.id,
+        cinema_id: cinema.cinema_id || cinema.id,
+        name: cinema.name || "",
+        brand: cinema.brand || "CGV",
+        city: cinema.city || "",
+        address: cinema.address || "",
+        phone: cinema.phone || "",
+        maxRooms: cinema.maxRooms || 4,
+        currentRooms: cinema.currentRooms || cinema.rooms?.length || 0,
+        rooms: cinema.rooms || [],
+        status: cinema.status || "active",
+        managerId: cinema.manager_id || cinema.managerId || null,
+        managerName: cinema.manager_name || cinema.managerName || null,
+        managerEmail: cinema.manager_email || cinema.managerEmail || null,
+        createdAt: cinema.created_at || cinema.createdAt || new Date().toISOString(),
+      }));
+      
+      setCinemas(normalizedCinemas);
+      
+      // Lưu vào localStorage để backup
+      localStorage.setItem('cinemas', JSON.stringify(normalizedCinemas));
     } catch (err) {
       console.error("Fetch cinemas error:", err);
+      toast.error("Không thể tải danh sách rạp. Vui lòng thử lại!");
+      
+      // Fallback: thử đọc từ localStorage nếu có
+      const savedCinemas = localStorage.getItem('cinemas');
+      if (savedCinemas && JSON.parse(savedCinemas).length > 0) {
+        setCinemas(JSON.parse(savedCinemas));
+        toast.info("Đã tải dữ liệu từ bộ nhớ tạm");
+      } else {
+        setCinemas([]);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const fetchCinemas = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/cinemas");
-        const data = await res.json();
-
-        console.log("DATA:", data); // debug
-
-        setCinemas(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error(err);
-        setCinemas([]);
-      }
-    };
-
     fetchCinemas();
   }, []);
 
   // ================= FILTER =================
-  const filtered = cinemas.filter((c) => {
-    const matchSearch = c.name?.toLowerCase().includes(search.toLowerCase());
+  const filtered = cinemas.filter(c => {
+    const matchSearch = c.name?.toLowerCase().includes(search.toLowerCase()) ||
+                        c.address?.toLowerCase().includes(search.toLowerCase());
     const matchCity = cityFilter === "all" || c.city === cityFilter;
     return matchSearch && matchCity;
   });
 
-  // ================= ACTION =================
-
+  // ================= ACTIONS =================
   const handleAdd = () => {
     setEditingCinema(null);
-    setForm(defaultForm);
+    setForm({
+      ...defaultForm,
+      id: Date.now(),
+    });
     setShowModal(true);
   };
-  // Trong component CinemasPage
-  const handleAssignSuccess = (cinemaId, manager) => {
-  setCinemas(prev =>
-    prev.map(cinema =>
-      cinema.cinema_id === cinemaId
-        ? {
-            ...cinema,
-            manager_id: manager?.id || null,
-            managerName: manager?.name || null,   // Đồng bộ với tên field trong table
-            manager_email: manager?.email || null,
-          }
-        : cinema
-    )
-  );
-  setShowAssign(false);
-};
 
-  // Trong JSX
-  <AssignManagerModal
-    show={showAssign}
-    onClose={() => setShowAssign(false)}
-    cinema={selectedCinema}
-    onAssigned={handleAssignSuccess} // 🔥 truyền callback
-  />;
   const handleEdit = (cinema) => {
     setEditingCinema(cinema);
     setForm(cinema);
@@ -107,66 +121,148 @@ export default function CinemasPage() {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("token");
-
+      
       if (editingCinema) {
-        await fetch(
-          `http://localhost:5000/api/cinemas/${editingCinema.cinema_id}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(form),
+        // UPDATE
+        const response = await fetch(`http://localhost:5000/api/cinemas/${editingCinema.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
           },
+          body: JSON.stringify({
+            name: form.name,
+            brand: form.brand,
+            city: form.city,
+            address: form.address,
+            phone: form.phone,
+            maxRooms: form.maxRooms,
+            status: form.status,
+          }),
+        });
+        
+        if (!response.ok) throw new Error("Update failed");
+        
+        // Update local state
+        setCinemas(prev =>
+          prev.map(c =>
+            c.id === editingCinema.id ? { ...c, ...form } : c
+          )
         );
+        toast.success("Cập nhật rạp thành công!");
       } else {
-        await fetch("http://localhost:5000/api/cinemas", {
+        // CREATE
+        const response = await fetch("http://localhost:5000/api/cinemas", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: token ? `Bearer ${token}` : "",
           },
-          body: JSON.stringify(form),
+          body: JSON.stringify({
+            name: form.name,
+            brand: form.brand,
+            city: form.city,
+            address: form.address,
+            phone: form.phone,
+            maxRooms: form.maxRooms,
+            status: form.status,
+          }),
         });
+        
+        if (!response.ok) throw new Error("Create failed");
+        
+        const newCinema = await response.json();
+        
+        // Add to local state
+        const cinemaToAdd = {
+          ...form,
+          id: newCinema.cinema_id || newCinema.id,
+          cinema_id: newCinema.cinema_id || newCinema.id,
+          rooms: [],
+          currentRooms: 0,
+          createdAt: new Date().toISOString(),
+        };
+        setCinemas(prev => [...prev, cinemaToAdd]);
+        toast.success("Thêm rạp mới thành công!");
       }
-
-      fetchCinemas();
+      
+      // Refresh data từ API
+      await fetchCinemas();
       setShowModal(false);
+      setEditingCinema(null);
     } catch (err) {
       console.error("Save cinema error:", err);
+      toast.error("Có lỗi xảy ra. Vui lòng thử lại!");
     }
   };
 
   const handleDelete = async (id) => {
-    try {
-      const token = localStorage.getItem("token");
-
-      await fetch(`http://localhost:5000/api/cinemas/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      fetchCinemas();
-    } catch (err) {
-      console.error("Delete error:", err);
+    const cinemaToDelete = cinemas.find(c => c.id === id);
+    
+    if (cinemaToDelete?.rooms?.length > 0) {
+      toast.error(`Không thể xóa rạp vì còn ${cinemaToDelete.rooms.length} phòng chiếu!`);
+      return;
+    }
+    
+    if (window.confirm("Bạn có chắc chắn muốn xóa rạp này?")) {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`http://localhost:5000/api/cinemas/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        });
+        
+        if (!response.ok) throw new Error("Delete failed");
+        
+        setCinemas(prev => prev.filter(c => c.id !== id));
+        toast.success("Xóa rạp thành công!");
+      } catch (err) {
+        console.error("Delete error:", err);
+        toast.error("Không thể xóa rạp. Vui lòng thử lại!");
+      }
     }
   };
 
   const handleAssign = (cinema) => {
     setSelectedCinema(cinema);
-    setShowAssign(true);
+    setShowAssignModal(true);
   };
+
+  const handleAssignSuccess = (cinemaId, manager) => {
+    setCinemas(prev =>
+      prev.map(cinema =>
+        cinema.id === cinemaId
+          ? {
+              ...cinema,
+              managerId: manager?.id || null,
+              managerName: manager?.name || null,
+              managerEmail: manager?.email || null,
+            }
+          : cinema
+      )
+    );
+    toast.success("Phân quyền quản lý thành công!");
+    setShowAssignModal(false);
+  };
+
+  // ================= LOADING STATE =================
+  if (loading) {
+    return (
+      <div className="p-6 flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
 
   // ================= UI =================
   return (
     <div className="p-6 space-y-5">
       <CinemasHeader total={cinemas.length} onAdd={handleAdd} />
-
+      
       <CinemasStats cinemas={cinemas} />
-
+      
       <CinemasFilter
         search={search}
         setSearch={setSearch}
@@ -174,14 +270,17 @@ export default function CinemasPage() {
         setCityFilter={setCityFilter}
         cinemas={cinemas}
       />
-
+      
       <CinemasTable
         cinemas={filtered}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onAssign={handleAssign}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        itemsPerPage={5}
       />
-
+      
       <CinemaModal
         show={showModal}
         onClose={() => {
@@ -193,10 +292,13 @@ export default function CinemasPage() {
         setForm={setForm}
         isEdit={!!editingCinema}
       />
-
+      
       <AssignManagerModal
-        show={showAssign}
-        onClose={() => setShowAssign(false)}
+        show={showAssignModal}
+        onClose={() => {
+          setShowAssignModal(false);
+          setSelectedCinema(null);
+        }}
         cinema={selectedCinema}
         onAssigned={handleAssignSuccess}
       />

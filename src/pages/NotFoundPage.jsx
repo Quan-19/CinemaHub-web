@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom'
 
 function NotFoundPage() {
   return (
@@ -17,15 +17,12 @@ function NotFoundPage() {
           Trang bạn tìm không tồn tại
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-sm text-zinc-400 sm:text-base">
-          Có thể đường dẫn đã thay đổi hoặc nội dung đã bị xoá. Bạn có thể quay
-          về trang chủ hoặc tiếp tục khám phá các phim đang chiếu.
+          Có thể đường dẫn đã thay đổi hoặc nội dung đã bị xoá. Bạn có thể quay về
+          trang chủ hoặc tiếp tục khám phá các phim đang chiếu.
         </p>
 
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link
-            className="cinema-btn-primary w-full justify-center sm:w-auto"
-            to="/"
-          >
+          <Link className="cinema-btn-primary w-full justify-center sm:w-auto" to="/">
             Quay về trang chủ
           </Link>
           <Link
@@ -37,7 +34,7 @@ function NotFoundPage() {
         </div>
       </div>
     </section>
-  );
+  )
 }
 
-export default NotFoundPage;
+export default NotFoundPage
