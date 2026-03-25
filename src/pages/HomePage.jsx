@@ -12,35 +12,135 @@ import {
   Flame,
   CalendarDays,
 } from "lucide-react";
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "motion/react";
-import { MOVIES, PROMOTIONS } from "../data/mockData";
 import { MovieCard } from "../components/MovieCard";
-
-const nowShowing = MOVIES.filter((m) => m.status === "now-showing");
-const comingSoon = MOVIES.filter((m) => m.status === "coming-soon");
 
 const HomePage = () => {
   const navigate = useNavigate();
+
+  // ========== STATE ==========
   const [heroIndex, setHeroIndex] = useState(0);
+  const [nowShowing, setNowShowing] = useState([]);
+  const [comingSoon, setComingSoon] = useState([]);
+  const [promotions, setPromotions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // ========== FETCH DATA FROM API (Code 1) ==========
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch movies
+        const movieRes = await fetch("http://localhost:5000/api/movies");
+        const movieData = await movieRes.json();
+
+        // Map movies với đầy đủ fields
+        const movies = movieData.map((m) => ({
+          ...m,
+          movie_id: m.movie_id || m.id,
+          rating: m.rating || 0,
+          score: m.rating || 0,
+          votes: m.votes || Math.floor(Math.random() * 5000) + 1000,
+          poster: m.poster,
+          backdrop: m.backdrop || m.poster,
+          description: m.description || "",
+          genre: m.genre || [],
+          originalTitle: m.originalTitle || "",
+          releaseDate: m.releaseDate || "",
+          duration: m.duration || 120,
+        }));
+
+        // Phân loại phim (GIỮ underscore từ Code 1)
+        const now = movies.filter((m) => m.status === "now_showing");
+        const soon = movies.filter((m) => m.status === "coming_soon");
+
+        setNowShowing(now);
+        setComingSoon(soon);
+
+        // Try to fetch promotions (optional)
+        try {
+          const promoRes = await fetch("http://localhost:5000/api/promotions");
+          const promoData = await promoRes.json();
+          setPromotions(promoData);
+        } catch (err) {
+          // Fallback promotions data (từ Code 2)
+          setPromotions([
+            {
+              id: 1,
+              title: "Giảm 30% các suất chiếu sáng thứ 2-4",
+              description: "Áp dụng cho tất cả các phim đang chiếu",
+              code: "WED30",
+              discount: "30%",
+              image: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400",
+              expiry: "31/12/2024",
+            },
+            {
+              id: 2,
+              title: "Mua 2 vé tặng 1 combo bắp nước",
+              description: "Chỉ áp dụng cho các suất chiếu từ 10h-14h",
+              code: "CINE10",
+              discount: "Combo",
+              image: "https://images.unsplash.com/photo-1512149177596-f817c7ef5d4c?w=400",
+              expiry: "30/11/2024",
+            },
+          ]);
+        }
+      } catch (err) {
+        console.error("Lỗi tải dữ liệu:", err);
+        // Fallback nếu API lỗi
+        setNowShowing([]);
+        setComingSoon([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const featured = nowShowing.slice(0, 3);
   const current = featured[heroIndex];
 
+  // ========== AUTO SLIDE (Code 1) ==========
   useEffect(() => {
-    const t = setInterval(
-      () => setHeroIndex((i) => (i + 1) % featured.length),
-      5000
-    );
+    if (featured.length === 0) return;
+    const t = setInterval(() => setHeroIndex((i) => (i + 1) % featured.length), 5000);
     return () => clearInterval(t);
   }, [featured.length]);
 
+  // ========== LOADING STATE ==========
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0f" }}>
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-zinc-400">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!current && featured.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0f" }}>
+        <div className="text-center">
+          <p className="text-zinc-400 mb-4">Không có phim đang chiếu</p>
+          <button onClick={() => navigate("/movies")} className="text-red-500 hover:underline">
+            Xem phim sắp chiếu
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-cinema-bg text-zinc-100">
-      {/* Hero Banner */}
+      
+      {/* ========== HERO SECTION (Kết hợp UI Code 2 + Data Code 1) ========== */}
       <div className="relative h-[74vh] min-h-[460px] overflow-hidden sm:h-[70vh] sm:min-h-[500px]">
         <AnimatePresence mode="wait">
           <motion.div
-            key={current.id}
+            key={current?.movie_id}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -48,8 +148,8 @@ const HomePage = () => {
             className="absolute inset-0"
           >
             <img
-              src={current.backdrop}
-              alt={current.title}
+              src={current?.backdrop}
+              alt={current?.title}
               className="w-full h-full object-cover"
             />
             {/* Gradient overlays */}
@@ -76,7 +176,7 @@ const HomePage = () => {
             <div className="max-w-xl">
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={current.id}
+                  key={current?.movie_id}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
@@ -87,7 +187,7 @@ const HomePage = () => {
                     <span className="rounded bg-cinema-primary px-2 py-0.5 text-xs font-semibold text-white">
                       Đang chiếu
                     </span>
-                    {current.genre.slice(0, 2).map((g) => (
+                    {current?.genre?.slice(0, 2).map((g) => (
                       <span
                         key={g}
                         className="px-2 py-0.5 rounded text-xs text-zinc-300 bg-white/10 border border-white/20"
@@ -98,53 +198,53 @@ const HomePage = () => {
                   </div>
 
                   <h1 className="mb-2 text-3xl leading-tight font-extrabold text-white sm:text-5xl">
-                    {current.title}
+                    {current?.title}
                   </h1>
                   <p className="text-zinc-400 text-sm mb-1">
-                    {current.originalTitle}
+                    {current?.originalTitle}
                   </p>
 
                   <div className="mb-4 flex flex-wrap items-center gap-3 sm:gap-4">
                     <span className="flex items-center gap-1 text-yellow-400">
                       <Star className="w-4 h-4 fill-current" />
-                      <span className="font-bold">{current.score}</span>
+                      <span className="font-bold">{current?.rating}/10</span>
                       <span className="text-zinc-400 text-xs">
-                        ({current.votes.toLocaleString()})
+                        ({current?.votes?.toLocaleString()} đánh giá)
                       </span>
                     </span>
                     <span className="flex items-center gap-1 text-zinc-400 text-sm">
                       <Clock className="w-4 h-4" />
-                      {current.duration} phút
+                      {current?.duration} phút
                     </span>
                     <span
                       className={`rounded px-2 py-0.5 text-xs font-bold text-white ${
-                        current.rating === "T18"
+                        current?.rating === "T18"
                           ? "bg-red-500"
-                          : current.rating === "T16"
+                          : current?.rating === "T16"
                           ? "bg-orange-500"
-                          : current.rating === "T13"
+                          : current?.rating === "T13"
                           ? "bg-amber-500"
                           : "bg-green-500"
                       }`}
                     >
-                      {current.rating}
+                      {current?.rating}
                     </span>
                   </div>
 
                   <p className="text-zinc-400 text-sm mb-6 leading-relaxed line-clamp-3">
-                    {current.description}
+                    {current?.description}
                   </p>
 
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <button
-                      onClick={() => navigate(`/movies/${current.id}`)}
+                      onClick={() => navigate(`/movies/${current?.movie_id}`)}
                       className="cinema-btn-primary w-full justify-center sm:w-auto"
                     >
                       <Ticket className="w-4 h-4" />
                       Đặt vé ngay
                     </button>
                     <button
-                      onClick={() => navigate(`/movies/${current.id}`)}
+                      onClick={() => navigate(`/movies/${current?.movie_id}`)}
                       className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3 text-white transition-colors hover:bg-white/20 sm:w-auto"
                     >
                       <Play className="w-4 h-4" fill="white" />
@@ -159,9 +259,7 @@ const HomePage = () => {
 
         {/* Slider controls */}
         <button
-          onClick={() =>
-            setHeroIndex((i) => (i - 1 + featured.length) % featured.length)
-          }
+          onClick={() => setHeroIndex((i) => (i - 1 + featured.length) % featured.length)}
           className="absolute left-3 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white transition-colors hover:bg-black/60 sm:flex"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -173,7 +271,7 @@ const HomePage = () => {
           <ChevronRight className="w-5 h-5" />
         </button>
 
-        {/* Dots */}
+        {/* Dots indicator */}
         <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2 sm:bottom-6">
           {featured.map((_, i) => (
             <button
@@ -192,7 +290,7 @@ const HomePage = () => {
         <div className="absolute bottom-6 right-6 hidden lg:flex gap-3">
           {featured.map((m, i) => (
             <button
-              key={m.id}
+              key={m.movie_id}
               onClick={() => setHeroIndex(i)}
               className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${
                 i === heroIndex
@@ -210,9 +308,10 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* ========== MAIN CONTENT ========== */}
       <div className="mx-auto w-full px-3 pb-14 sm:px-6 sm:pb-16 lg:px-10 2xl:px-14">
-        {/* Now Showing Section */}
+        
+        {/* NOW SHOWING SECTION */}
         <section className="mt-10">
           <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
@@ -234,14 +333,14 @@ const HomePage = () => {
             style={{ scrollbarWidth: "none" }}
           >
             {nowShowing.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} size="md" />
+              <MovieCard key={movie.movie_id} movie={movie} size="md" />
             ))}
           </div>
         </section>
 
-        {/* Quick Booking Strip */}
+        {/* QUICK BOOKING STRIP (Code 2) */}
         <section className="mt-10">
-          <div className="cinema-surface bg-gradient-to-br from-[#1a0808] to-cinema-surface p-6">
+          <div className="cinema-surface bg-gradient-to-br from-[#1a0808] to-cinema-surface p-6 rounded-xl">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-lg font-bold text-white">Đặt vé nhanh</h3>
@@ -258,9 +357,7 @@ const HomePage = () => {
                       </div>
                       <span className="text-zinc-300 text-sm">{step}</span>
                     </div>
-                    {i < 2 && (
-                      <ChevronRight className="w-4 h-4 text-zinc-600" />
-                    )}
+                    {i < 2 && <ChevronRight className="w-4 h-4 text-zinc-600" />}
                   </div>
                 ))}
                 <button
@@ -274,7 +371,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Coming Soon */}
+        {/* COMING SOON SECTION (Kết hợp UI Code 2 + Data Code 1) */}
         <section className="mt-10">
           <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
@@ -294,9 +391,9 @@ const HomePage = () => {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {comingSoon.map((movie) => (
               <div
-                key={movie.id}
-                onClick={() => navigate(`/movies/${movie.id}`)}
-                className="group flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 transition-all hover:border-zinc-700 hover:bg-zinc-900 sm:flex-row sm:gap-4"
+                key={movie.movie_id}
+                onClick={() => navigate(`/movies/${movie.movie_id}`)}
+                className="group flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 transition-all hover:border-zinc-700 hover:bg-zinc-900 cursor-pointer sm:flex-row sm:gap-4"
               >
                 <img
                   src={movie.poster}
@@ -309,17 +406,19 @@ const HomePage = () => {
                       Sắp chiếu
                     </span>
                     <span className="text-zinc-500 text-xs">
-                      {movie.releaseDate}
+                      {movie.releaseDate
+                        ? new Date(movie.releaseDate).toLocaleDateString("vi-VN")
+                        : "Sắp ra mắt"}
                     </span>
                   </div>
                   <h3 className="mb-1 text-sm font-semibold text-white transition-colors group-hover:text-red-400">
                     {movie.title}
                   </h3>
                   <p className="text-zinc-500 text-xs mb-2">
-                    {movie.originalTitle}
+                    {movie.originalTitle || ""}
                   </p>
                   <div className="flex flex-wrap gap-1 mb-2">
-                    {movie.genre.slice(0, 2).map((g) => (
+                    {movie.genre?.slice(0, 2).map((g) => (
                       <span
                         key={g}
                         className="text-xs px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400"
@@ -337,59 +436,61 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Promotions */}
-        <section className="mt-10">
-          <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-6 rounded-full bg-green-500" />
-              <h2 className="text-xl font-bold text-white">
-                <Tag className="inline w-5 h-5 text-green-500 mr-1.5" />
-                Khuyến Mãi Nổi Bật
-              </h2>
+        {/* PROMOTIONS SECTION (Code 2) */}
+        {promotions.length > 0 && (
+          <section className="mt-10">
+            <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-6 rounded-full bg-green-500" />
+                <h2 className="text-xl font-bold text-white">
+                  <Tag className="inline w-5 h-5 text-green-500 mr-1.5" />
+                  Khuyến Mãi Nổi Bật
+                </h2>
+              </div>
             </div>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {PROMOTIONS.map((promo) => (
-              <div
-                key={promo.id}
-                className="cinema-surface cursor-pointer overflow-hidden rounded-xl transition-all group hover:border-zinc-700"
-              >
-                <div className="relative h-36 overflow-hidden">
-                  <img
-                    src={promo.image}
-                    alt={promo.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="absolute right-3 top-3 rounded-lg bg-cinema-primary px-2 py-1 text-xs font-bold text-white">
-                    -{promo.discount}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {promotions.map((promo) => (
+                <div
+                  key={promo.id}
+                  className="cinema-surface cursor-pointer overflow-hidden rounded-xl transition-all hover:border-zinc-700"
+                >
+                  <div className="relative h-36 overflow-hidden">
+                    <img
+                      src={promo.image}
+                      alt={promo.title}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    <div className="absolute right-3 top-3 rounded-lg bg-cinema-primary px-2 py-1 text-xs font-bold text-white">
+                      -{promo.discount}
+                    </div>
                   </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="mb-1 text-sm font-semibold text-white transition-colors group-hover:text-red-400">
-                    {promo.title}
-                  </h3>
-                  <p className="text-zinc-400 text-xs mb-3 line-clamp-2">
-                    {promo.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1 flex items-center gap-2">
-                      <Tag className="w-3 h-3 text-red-500" />
-                      <span className="text-xs font-semibold text-zinc-300">
-                        {promo.code}
+                  <div className="p-4">
+                    <h3 className="mb-1 text-sm font-semibold text-white transition-colors hover:text-red-400">
+                      {promo.title}
+                    </h3>
+                    <p className="text-zinc-400 text-xs mb-3 line-clamp-2">
+                      {promo.description}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1 flex items-center gap-2">
+                        <Tag className="w-3 h-3 text-red-500" />
+                        <span className="text-xs font-semibold text-zinc-300">
+                          {promo.code}
+                        </span>
+                      </div>
+                      <span className="text-zinc-500 text-xs">
+                        HSD: {promo.expiry}
                       </span>
                     </div>
-                    <span className="text-zinc-500 text-xs">
-                      HSD: {promo.expiry}
-                    </span>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
-        {/* CTA Banner */}
+        {/* CTA BANNER (Code 2) */}
         <section className="mt-10">
           <div
             className="relative overflow-hidden rounded-2xl"

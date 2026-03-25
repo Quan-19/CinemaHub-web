@@ -64,12 +64,35 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setLoading(false);
-    });
-    return unsubscribe;
-  }, []);
+  const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+      try {
+        const token = await firebaseUser.getIdToken();
+        const res = await fetch("http://localhost:5000/api/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUser({
+            ...firebaseUser,
+            role: data.role,
+          });
+        } else {
+          // Nếu token không hợp lệ hoặc user không tồn tại ở backend
+          await signOut(auth);
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch user role:", err);
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+    }
+    setLoading(false);
+  });
+  return unsubscribe;
+}, []);
 
   // ================= LOGIN =================
   // const loginWithEmail = async (email, password, remember) => {
@@ -157,58 +180,50 @@ export function AuthProvider({ children }) {
   //     throw err;
   //   }
   // };
-  const loginWithEmail = async (email, password, remember) => {
-    try {
-      const persistence = remember
-        ? browserLocalPersistence
-        : browserSessionPersistence;
+const loginWithEmail = async (email, password, remember) => {
+  try {
+    const persistence = remember ? browserLocalPersistence : browserSessionPersistence;
+    await setPersistence(auth, persistence);
 
-      await setPersistence(auth, persistence);
+    const credential = await signInWithEmailAndPassword(auth, email, password);
+    const token = await credential.user.getIdToken();
 
-      const credential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
+    // Sync user với backend
+    await fetch("http://localhost:5000/api/auth/sync-user", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
 
-      const token = await credential.user.getIdToken();
+    // Lấy thông tin user từ backend (có role)
+    const res = await fetch("http://localhost:5000/api/users/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    const role = data?.role;
 
-      // ✅ 1. SYNC TRƯỚC
-      await fetch("http://localhost:5000/api/auth/sync-user", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: credential.user.displayName,
-          avatar: credential.user.photoURL,
-        }),
-      });
+    // Lưu role vào localStorage (nếu cần)
+    localStorage.setItem("role", role);
+    localStorage.setItem("token", token);
 
-      // ✅ 2. LẤY ROLE SAU
-      const res = await fetch("http://localhost:5000/api/users/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    // 🔥 Tạo user object có role và set vào context
+    const userData = {
+      uid: credential.user.uid,
+      email: credential.user.email,
+      displayName: credential.user.displayName,
+      photoURL: credential.user.photoURL,
+      role: role,
+    };
+    setUser(userData);
 
-      const data = await res.json();
-
-      const role = data.role;
-
-      localStorage.setItem("role", role);
-      localStorage.setItem("token", token); // 🔥 lưu token
-
-      return {
-        ...credential,
-        role,
-      };
-    } catch (err) {
-      console.error("LOGIN ERROR:", err);
-      throw err;
-    }
-  };
+    return userData;
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+    throw err;
+  }
+};
   // ================= REGISTER =================
   const registerWithEmail = async (
     email,
@@ -290,27 +305,32 @@ export function AuthProvider({ children }) {
 
   // ================= GOOGLE LOGIN =================
   const loginWithGoogle = async () => {
-    const credential = await signInWithPopup(auth, googleProvider);
+  const credential = await signInWithPopup(auth, googleProvider);
+  const token = await credential.user.getIdToken();
 
-    const token = await credential.user.getIdToken();
+  await fetch("http://localhost:5000/api/auth/sync-user", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
 
-    await fetch("http://localhost:5000/api/auth/sync-user", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: credential.user.displayName,
-        avatar: credential.user.photoURL,
-      }),
-    });
+  const res = await fetch("http://localhost:5000/api/users/me", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
 
-    await upsertUserDocument(credential.user);
-
-    return credential;
+  const userData = {
+    uid: credential.user.uid,
+    email: credential.user.email,
+    displayName: credential.user.displayName,
+    photoURL: credential.user.photoURL,
+    role: data.role,
   };
-
+  setUser(userData);
+  return userData;
+};
   const logout = () => signOut(auth);
 
   return (

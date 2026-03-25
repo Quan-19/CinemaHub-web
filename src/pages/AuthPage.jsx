@@ -74,21 +74,22 @@ function LoginForm({ onSuccess, notice }) {
     setInfo("");
 
     try {
-      const result = await loginWithEmail(email, password, remember);
+      const userData = await loginWithEmail(email, password, remember);
 
-      console.log("LOGIN RESULT:", result);
-
-      // 👇 redirect theo role
-      if (result.role === "admin") {
+      // dùng role để redirect
+      if (userData.role === "admin") {
         navigate("/admin/dashboard");
-      } else if (result.role === "staff") {
+      } else if (userData.role === "staff") {
         navigate("/staff");
       } else {
         navigate("/");
       }
+      onSuccess();
     } catch (err) {
-      console.log(err);
-      setError(err.message);
+      setError(getErrorMessage(err.code));
+      if (err.code === "auth/email-not-verified") {
+        setPendingVerification(true);
+      }
     }
   };
 
@@ -98,9 +99,16 @@ function LoginForm({ onSuccess, notice }) {
     setPendingVerification(false);
     setLoading(true);
     try {
-      await loginWithGoogle();
+      const userData = await loginWithGoogle();
+
+      if (userData.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (userData.role === "staff") {
+        navigate("/staff");
+      } else {
+        navigate("/");
+      }
       onSuccess();
-      navigate("/");
     } catch (err) {
       if (err.code !== "auth/popup-closed-by-user") {
         setError(getErrorMessage(err.code));

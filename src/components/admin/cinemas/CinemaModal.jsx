@@ -1,5 +1,7 @@
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
+import { getAuth } from "firebase/auth";
+import { toast } from "react-hot-toast";
 
 export default function CinemaModal({
   show,
@@ -10,21 +12,39 @@ export default function CinemaModal({
   isEdit,
 }) {
   const [availableManagers, setAvailableManagers] = useState([]);
+  const [loadingManagers, setLoadingManagers] = useState(false);
 
   useEffect(() => {
-    loadManagers();
-  }, []);
+    if (show) {
+      loadManagers();
+    }
+  }, [show]);
 
-  const loadManagers = () => {
+  const loadManagers = async () => {
+    setLoadingManagers(true);
     try {
-      const savedAccounts = localStorage.getItem('accounts');
-      if (savedAccounts) {
-        const accounts = JSON.parse(savedAccounts);
-        const staff = accounts.filter(s => s.role === "staff" && s.status === "active");
-        setAvailableManagers(staff);
-      }
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) return;
+      
+      const token = await user.getIdToken();
+      const res = await fetch("http://localhost:5000/api/users/assign-users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (!res.ok) throw new Error("Failed to fetch users");
+      
+      const data = await res.json();
+      // Lọc chỉ lấy nhân viên (staff) có thể làm quản lý
+      const staff = (Array.isArray(data) ? data : []).filter(
+        s => s.role === "staff" && s.status === "active"
+      );
+      setAvailableManagers(staff);
     } catch (error) {
       console.error("Failed to load managers:", error);
+      toast.error("Không thể tải danh sách nhân viên");
+    } finally {
+      setLoadingManagers(false);
     }
   };
 
@@ -32,6 +52,28 @@ export default function CinemaModal({
 
   const inputClass =
     "mt-1 w-full bg-[#020617] border border-white/10 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-white/20";
+
+  const handleManagerChange = (e) => {
+    const managerId = e.target.value;
+    if (managerId === "") {
+      setForm(p => ({
+        ...p,
+        managerId: null,
+        managerName: null,
+        managerEmail: null,
+      }));
+    } else {
+      const selectedManager = availableManagers.find(s => s.id == managerId);
+      if (selectedManager) {
+        setForm(p => ({
+          ...p,
+          managerId: selectedManager.id,
+          managerName: selectedManager.name,
+          managerEmail: selectedManager.email,
+        }));
+      }
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
@@ -148,16 +190,9 @@ export default function CinemaModal({
             <label className="text-sm text-white/60">Quản lý chi nhánh</label>
             <select
               value={form.managerId || ""}
-              onChange={e => {
-                const staff = availableManagers.find(s => s.id == e.target.value);
-                setForm(p => ({
-                  ...p,
-                  managerId: staff?.id || null,
-                  managerName: staff?.name || null,
-                  managerEmail: staff?.email || null,
-                }));
-              }}
+              onChange={handleManagerChange}
               className={inputClass}
+              disabled={loadingManagers}
             >
               <option value="">Chưa có quản lý</option>
               {availableManagers.map(s => (
@@ -166,9 +201,17 @@ export default function CinemaModal({
                 </option>
               ))}
             </select>
-            {availableManagers.length === 0 && (
+            {loadingManagers && (
+              <p className="text-xs text-white/40 mt-1">Đang tải danh sách nhân viên...</p>
+            )}
+            {!loadingManagers && availableManagers.length === 0 && (
               <p className="text-xs text-yellow-400 mt-1">
                 Không có nhân viên nào khả dụng để phân quyền
+              </p>
+            )}
+            {form.managerName && (
+              <p className="text-xs text-green-400 mt-1">
+                ✓ Đang được quản lý bởi: {form.managerName}
               </p>
             )}
           </div>

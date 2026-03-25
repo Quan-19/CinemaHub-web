@@ -1,3 +1,4 @@
+// RoomModal.jsx (phiên bản sửa lỗi)
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
@@ -14,6 +15,7 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
     status: "active",
   });
 
+  const [vipRowsInput, setVipRowsInput] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [selectedCinemaData, setSelectedCinemaData] = useState(null);
@@ -43,8 +45,13 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
         coupleRow: editingRoom.coupleRow || null,
         status: editingRoom.status || "active",
       });
+      // Hiển thị VIP rows dưới dạng chuỗi phân cách bằng dấu phẩy
+      setVipRowsInput((editingRoom.vipRows || []).join(", "));
       const cinema = cinemas?.find(c => c.id == editingRoom.cinemaId);
       setSelectedCinemaData(cinema);
+    } else {
+      // Reset input khi thêm mới
+      setVipRowsInput("");
     }
     setErrors({});
   }, [editingRoom, show, cinemas]);
@@ -61,6 +68,17 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
     const currentRoomCount = getCurrentRoomCount(selectedCinemaData);
     const maxRooms = selectedCinemaData.maxRooms || 4;
     return currentRoomCount < maxRooms;
+  };
+
+  const parseVipRows = (value) => {
+    const parts = String(value)
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
+    const numbers = parts
+      .map((p) => Number(p))
+      .filter((n) => Number.isFinite(n) && n > 0);
+    return Array.from(new Set(numbers)).sort((a, b) => a - b);
   };
 
   const validate = () => {
@@ -91,6 +109,17 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
     }
     
     return newErrors;
+  };
+
+  const handleVipRowsChange = (value) => {
+    setVipRowsInput(value);
+    const parsedRows = parseVipRows(value);
+    setForm({ ...form, vipRows: parsedRows });
+    
+    // Xóa lỗi nếu có
+    if (errors.vipRows) {
+      setErrors({ ...errors, vipRows: null });
+    }
   };
 
   const handleSubmit = async () => {
@@ -134,11 +163,6 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
     if (errors.cinemaId) {
       setErrors({ ...errors, cinemaId: null });
     }
-  };
-
-  const handleVipRowsChange = (value) => {
-    const rows = value.split(",").map(s => parseInt(s.trim())).filter(Boolean);
-    setForm({ ...form, vipRows: rows });
   };
 
   const currentRoomCount = selectedCinemaData ? getCurrentRoomCount(selectedCinemaData) : 0;
@@ -323,15 +347,16 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
               )}
             </div>
 
-            {/* Hàng VIP */}
-            <div>
+            {/* Hàng VIP - đã sửa */}
+            <div className="col-span-2">
               <label className="block text-sm text-gray-400 mb-2">
                 Hàng VIP (phân cách bằng dấu phẩy)
               </label>
               <input
-                value={form.vipRows.join(",")}
+                type="text"
+                value={vipRowsInput}
                 onChange={(e) => handleVipRowsChange(e.target.value)}
-                placeholder="VD: 5,6,7"
+                placeholder="VD: 5, 6, 7"
                 className="w-full px-4 py-2 rounded-lg outline-none"
                 style={{
                   background: "#020617",
@@ -342,10 +367,13 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
               {errors.vipRows && (
                 <p className="text-red-500 text-xs mt-1">{errors.vipRows}</p>
               )}
+              <p className="text-gray-500 text-xs mt-1">
+                Nhập số hàng, cách nhau bằng dấu phẩy (ví dụ: 5, 6, 7)
+              </p>
             </div>
 
             {/* Hàng Couple */}
-            <div>
+            <div className="col-span-2">
               <label className="block text-sm text-gray-400 mb-2">
                 Hàng Couple (để trống nếu không có)
               </label>

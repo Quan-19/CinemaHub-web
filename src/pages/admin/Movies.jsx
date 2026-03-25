@@ -1,19 +1,19 @@
-// Movies.jsx
 import { useState, useEffect } from "react";
+import { getAuth } from "firebase/auth"; // 🔥 THÊM DÒNG NÀY
+
 import MoviesStats from "../../components/admin/movies/MoviesStats";
 import MoviesFilter from "../../components/admin/movies/MoviesFilter";
 import MoviesTable from "../../components/admin/movies/MoviesTable";
 import MovieModal from "../../components/admin/movies/MovieModal";
 import MoviesHeader from "../../components/admin/movies/MoviesHeader";
-import { mockMovies } from "../../data/movies.data";
 
 export default function MoviesPage() {
   const [movies, setMovies] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
+
   const [editingMovie, setEditingMovie] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   const defaultForm = {
     title: "",
@@ -24,94 +24,152 @@ export default function MoviesPage() {
     releaseDate: "",
     duration: 0,
     rating: "P",
-    status: "coming-soon",
+    status: "coming_soon", 
     genre: [],
   };
 
   const [form, setForm] = useState(defaultForm);
 
-  // Load movies from localStorage or mock data
-  useEffect(() => {
-    const loadMovies = () => {
-      try {
-        const savedMovies = localStorage.getItem('movies');
-        if (savedMovies && JSON.parse(savedMovies).length > 0) {
-          setMovies(JSON.parse(savedMovies));
-        } else {
-          setMovies(mockMovies);
-          localStorage.setItem('movies', JSON.stringify(mockMovies));
-        }
-      } catch (error) {
-        console.error("Failed to load movies:", error);
-        setMovies(mockMovies);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadMovies();
-  }, []);
+  const formatDateForInput = (value) => {
+    if (!value) return "";
 
-  // Save movies to localStorage whenever they change
-  useEffect(() => {
-    if (movies.length > 0 && !loading) {
-      localStorage.setItem('movies', JSON.stringify(movies));
+    if (typeof value === "string") {
+      const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
+      if (match) return match[1];
     }
-  }, [movies, loading]);
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const parseGenre = (genreValue) => {
+    if (Array.isArray(genreValue)) return genreValue;
+    if (typeof genreValue === "string") {
+      return genreValue
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+    return [];
+  };
+
+  // 🔹 FETCH
+  const fetchMovies = async () => {
+    const res = await fetch("http://localhost:5000/api/movies");
+    const data = await res.json();
+    setMovies(data);
+  };
+
+  useEffect(() => {
+    fetchMovies();
+  }, []);
 
   // FILTER
   const filtered = movies.filter((m) => {
-    const matchSearch = m.title?.toLowerCase().includes(search.toLowerCase()) || false;
+    const matchSearch = m.title.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || m.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
+  // ADD
   const handleAdd = () => {
     setEditingMovie(null);
     setForm(defaultForm);
     setShowModal(true);
   };
 
+  // EDIT
+  // ------------------- MoviesPage -------------------
   const handleEdit = (movie) => {
     setEditingMovie(movie);
-    setForm(movie);
+
+    setForm({
+      title: movie.title || "",
+      originalTitle: movie.originalTitle || "",
+      director: movie.director || "",
+      cast: movie.cast || "",
+      country: movie.country || "",
+      releaseDate: movie.release_date
+        ? new Date(movie.release_date).toISOString().split("T")[0]
+        : "",
+      duration: movie.duration ?? 0,
+      ageRating: movie.ageRating || "P",
+      status: movie.status || "coming_soon",
+      genre:
+        typeof movie.genre === "string"
+          ? movie.genre.split(",").map((s) => s.trim())
+          : Array.isArray(movie.genre)
+            ? movie.genre
+            : [],
+      movie_id: movie.id,
+    });
+
     setShowModal(true);
   };
 
-  const handleSave = () => {
-    if (editingMovie) {
-      // UPDATE
-      setMovies((prev) =>
-        prev.map((m) =>
-          m.id === editingMovie.id ? { ...m, ...form } : m
-        )
-      );
-    } else {
-      // CREATE
-      const newMovie = {
-        id: Date.now(),
-        ...form,
-        ratingScore: 0,
-        tickets: 0,
+  // ------------------- SAVE -------------------
+  const handleSave = async (formData) => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) return alert("Chưa đăng nhập");
+
+      const token = await user.getIdToken(true);
+
+      // 🔹 Merge formData với editingMovie để patch
+      const payload = {
+        movie_id: editingMovie.id,
+        title: formData.title?.trim() || editingMovie.title || "",
+        originalTitle:
+          formData.originalTitle?.trim() || editingMovie.original_title || "",
+        director: formData.director?.trim() || editingMovie.director || "",
+        cast: formData.cast?.trim() || editingMovie.cast || "",
+        country: formData.country?.trim() || editingMovie.country || "",
+        releaseDate:
+          formData.releaseDate || formatDateForInput(editingMovie.release_date),
+        duration:
+          formData.duration === "" ||
+          formData.duration === null ||
+          formData.duration === undefined
+            ? (editingMovie.duration ?? 0)
+            : Number(formData.duration),
+        ageRating: formData.ageRating || editingMovie.ageRating || "P",
+        status: formData.status || editingMovie.status || "coming_soon",
+        genre:
+          Array.isArray(formData.genre) && formData.genre.length > 0
+            ? formData.genre
+            : parseGenre(editingMovie.genre),
       };
-      setMovies((prev) => [newMovie, ...prev]);
-    }
-    setShowModal(false);
-    setEditingMovie(null);
-  };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa phim này?")) {
-      setMovies((prev) => prev.filter((m) => m.id !== id));
+      console.log("FORM SEND:", payload);
+
+      const res = await fetch(
+        `http://localhost:5000/api/movies/${payload.movie_id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      const data = await res.json();
+      console.log("UPDATE RES:", data);
+
+      await fetchMovies();
+      setShowModal(false);
+      setEditingMovie(null);
+    } catch (err) {
+      console.error("SAVE ERROR:", err);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="p-6 flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="p-6 space-y-5">
@@ -123,11 +181,7 @@ export default function MoviesPage() {
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
       />
-      <MoviesTable
-        movies={filtered}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      <MoviesTable movies={filtered} onEdit={handleEdit} onDelete={() => {}} />
       <MovieModal
         show={showModal}
         onClose={() => {

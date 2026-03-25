@@ -153,51 +153,53 @@ export default function CinemasTable({
         </table>
 
         {/* PHÂN TRANG */}
-        <div className="flex justify-between items-center px-4 py-3 text-xs text-white/40">
-          <span>
-            Hiển thị {startIndex + 1}-{Math.min(endIndex, cinemas.length)} / {cinemas.length} rạp
-          </span>
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center px-4 py-3 text-xs text-white/40 border-t border-white/5">
+            <span>
+              Hiển thị {startIndex + 1}-{Math.min(endIndex, cinemas.length)} / {cinemas.length} rạp
+            </span>
 
-          <div className="flex gap-2 items-center">
-            <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`w-8 h-8 rounded flex items-center justify-center ${
-                currentPage === 1 
-                  ? 'bg-white/5 text-white/20 cursor-not-allowed' 
-                  : 'bg-white/5 hover:bg-white/10 text-white'
-              }`}
-            >
-              ‹
-            </button>
-            
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+            <div className="flex gap-2 items-center">
               <button
-                key={page}
-                onClick={() => onPageChange(page)}
-                className={`w-8 h-8 rounded ${
-                  currentPage === page
-                    ? 'bg-red-600 text-white'
-                    : 'bg-white/5 hover:bg-white/10 text-white/60'
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`w-8 h-8 rounded flex items-center justify-center ${
+                  currentPage === 1 
+                    ? 'bg-white/5 text-white/20 cursor-not-allowed' 
+                    : 'bg-white/5 hover:bg-white/10 text-white'
                 }`}
               >
-                {page}
+                ‹
               </button>
-            ))}
-            
-            <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`w-8 h-8 rounded flex items-center justify-center ${
-                currentPage === totalPages 
-                  ? 'bg-white/5 text-white/20 cursor-not-allowed' 
-                  : 'bg-white/5 hover:bg-white/10 text-white'
-              }`}
-            >
-              ›
-            </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => onPageChange(page)}
+                  className={`w-8 h-8 rounded ${
+                    currentPage === page
+                      ? 'bg-red-600 text-white'
+                      : 'bg-white/5 hover:bg-white/10 text-white/60'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              
+              <button
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`w-8 h-8 rounded flex items-center justify-center ${
+                  currentPage === totalPages 
+                    ? 'bg-white/5 text-white/20 cursor-not-allowed' 
+                    : 'bg-white/5 hover:bg-white/10 text-white'
+                }`}
+              >
+                ›
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* MODAL XEM CHI TIẾT */}
@@ -220,6 +222,23 @@ function ViewCinemaModal({ cinema, onClose }) {
       return "Đã cấu hình";
     }
     return value;
+  };
+
+  const getRoomCount = (cinema) => {
+    if (cinema.currentRooms && typeof cinema.currentRooms === 'number') {
+      return cinema.currentRooms;
+    }
+    if (Array.isArray(cinema.rooms)) {
+      return cinema.rooms.length;
+    }
+    return 0;
+  };
+
+  const getMaxRooms = (cinema) => {
+    if (cinema.maxRooms && typeof cinema.maxRooms === 'number') {
+      return cinema.maxRooms;
+    }
+    return 4;
   };
 
   return (
@@ -259,8 +278,6 @@ function ViewCinemaModal({ cinema, onClose }) {
             <InfoItem label="Email quản lý" value={getSafeValue(cinema.managerEmail)} fullWidth />
           )}
           
-          <InfoItem label="Số nhân viên" value={getSafeValue(cinema.staffCount || 0)} />
-          
           {/* Hiển thị danh sách phòng chiếu nếu có */}
           {cinema.rooms && Array.isArray(cinema.rooms) && cinema.rooms.length > 0 && (
             <div className="col-span-2">
@@ -293,32 +310,12 @@ function ViewCinemaModal({ cinema, onClose }) {
   );
 }
 
-// Helper functions
-function getRoomCount(cinema) {
-  if (cinema.currentRooms && typeof cinema.currentRooms === 'number') {
-    return cinema.currentRooms;
-  }
-  if (Array.isArray(cinema.rooms)) {
-    return cinema.rooms.length;
-  }
-  return 0;
-}
-
-function getMaxRooms(cinema) {
-  if (cinema.maxRooms && typeof cinema.maxRooms === 'number') {
-    return cinema.maxRooms;
-  }
-  return 4;
-}
-
 function InfoItem({ label, value, fullWidth, status }) {
-  // Đảm bảo value luôn là kiểu dữ liệu có thể render được
   let displayValue = value;
   
   if (displayValue === null || displayValue === undefined || displayValue === '') {
     displayValue = "Chưa có";
   } else if (typeof displayValue === 'object') {
-    // Nếu vẫn là object, chuyển thành string an toàn
     displayValue = JSON.stringify(displayValue);
   }
   
