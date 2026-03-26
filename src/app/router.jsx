@@ -8,7 +8,7 @@ import StaffLayout from "../layouts/StaffLayout.jsx";
 // Pages
 import HomePage from "../pages/HomePage.jsx";
 import MoviesPage from "../pages/MoviesPage.jsx";
-import MovieDetailPage from "../pages/MovieDetailPage.jsx";
+import { MovieDetailPage } from "../pages/MovieDetailPage.jsx";
 import CinemaPage from "../pages/CinemaPage.jsx";
 import PromotionsPage from "../pages/PromotionsPage.jsx";
 import AuthPage from "../pages/AuthPage.jsx";
