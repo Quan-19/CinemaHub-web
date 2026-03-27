@@ -1,9 +1,10 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
   Clapperboard,
   Clock,
   LayoutDashboard,
+  LogOut,
   Megaphone,
   Tag,
   Theater,
@@ -11,6 +12,7 @@ import {
   X,
   FileText,
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 function SidebarLink({ to, icon: Icon, label, collapsed, onNavigate }) {
   return (
@@ -48,7 +50,18 @@ function SidebarLink({ to, icon: Icon, label, collapsed, onNavigate }) {
 }
 
 function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
   const handleNavigate = () => {
+    if (typeof onClose === "function") onClose();
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    navigate("/auth");
     if (typeof onClose === "function") onClose();
   };
 
@@ -107,9 +120,13 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
         </button>
       </div>
 
-      <div 
+      <div
         className="flex-1 overflow-y-auto px-3 pb-8 scrollbar-none"
-        style={{ maskImage: "linear-gradient(to bottom, black 85%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, black 85%, transparent 100%)" }}
+        style={{
+          maskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, black 85%, transparent 100%)",
+        }}
       >
         {!collapsed && (
           <div className="mb-3 rounded-2xl border border-zinc-800 bg-cinema-surface px-3 py-2 text-xs text-zinc-300">
@@ -194,7 +211,12 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
       </div>
 
       <div className="mt-auto p-3">
-        <div className="rounded-2xl border border-zinc-800 bg-cinema-surface px-3 py-3">
+        <div
+          className={[
+            "rounded-2xl border border-zinc-800 bg-cinema-surface",
+            collapsed ? "px-2 py-2" : "px-3 py-3",
+          ].join(" ")}
+        >
           <div
             className={[
               "flex items-center gap-3",
@@ -214,14 +236,21 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
             )}
           </div>
 
-          {!collapsed && (
-            <button
-              type="button"
-              className="mt-3 w-full rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
-            >
-              Đăng xuất
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleLogout}
+            aria-label="Đăng xuất"
+            title="Đăng xuất"
+            className={[
+              "inline-flex items-center justify-center transition",
+              collapsed
+                ? "mx-auto mt-2 h-9 w-9 rounded-full border border-zinc-700/80 bg-zinc-900/60 text-zinc-300 hover:border-cinema-primary/40 hover:bg-cinema-primary/10 hover:text-white"
+                : "mt-3 w-full gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900",
+            ].join(" ")}
+          >
+            <LogOut className="h-4 w-4" />
+            {!collapsed && <span>Đăng xuất</span>}
+          </button>
         </div>
       </div>
     </aside>

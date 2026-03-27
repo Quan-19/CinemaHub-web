@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ChevronLeft,
@@ -8,7 +8,6 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { MOVIES, CINEMAS, DATES } from "../data/mockData";
 import { useBooking } from "../context/BookingContext";
 
 const BRAND_COLORS = {
@@ -25,22 +24,117 @@ const TYPE_LABELS = {
   "4DX": { label: "4DX", color: "#7c3aed" },
 };
 
-const REGION_OPTIONS = [
-  { id: "hanoi", label: "Hà Nội", desc: "Cụm rạp tại Hà Nội" },
-  { id: "hcm", label: "TP.HCM", desc: "Cụm rạp tại TP.HCM" },
-];
+const REGION_LABEL_MAP = {
+  hanoi: "Hà Nội",
+  hcm: "TP.HCM",
+};
 
-const getRegionIdFromAddress = (address = "") => {
-  const normalized = address.toLowerCase();
-  if (normalized.includes("hà nội")) return "hanoi";
-  if (normalized.includes("tp.hcm")) return "hcm";
+const formatTime = (value) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "--:--";
+  return date.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const formatDateKey = (value) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const removeDiacritics = (value = "") =>
+  String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+const createRegionOption = (regionId) => {
+  const fallbackLabel = regionId
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+  const label = REGION_LABEL_MAP[regionId] || fallbackLabel;
+  return {
+    id: regionId,
+    label,
+    desc: `Cụm rạp tại ${label}`,
+  };
+};
+
+const getRegionIdFromCinema = (cinema = {}) => {
+  const city = removeDiacritics(cinema.city || "").toLowerCase();
+  const address = removeDiacritics(cinema.address || "").toLowerCase();
+
+  if (
+    city.includes("ha noi") ||
+    city.includes("hanoi") ||
+    address.includes("ha noi") ||
+    address.includes("hanoi")
+  ) {
+    return "hanoi";
+  }
+
+  if (
+    city.includes("ho chi minh") ||
+    city.includes("hcm") ||
+    address.includes("ho chi minh") ||
+    address.includes("tp.hcm") ||
+    address.includes("hcm")
+  ) {
+    return "hcm";
+  }
+
+  if (city) {
+    return city.replace(/\s+/g, "-");
+  }
+
   return "";
 };
+
+const normalizeList = (value) => {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+const normalizeMovie = (movie) => ({
+  ...movie,
+  id: movie.id ?? movie.movie_id,
+  movie_id: movie.movie_id ?? movie.id,
+  genre: normalizeList(movie.genre),
+  duration: movie.duration ?? 120,
+  rating: movie.rating || movie.age_rating || "P",
+});
+
+const normalizeCinema = (cinema) => ({
+  ...cinema,
+  id: String(cinema.id ?? cinema.cinema_id),
+  cinema_id: cinema.cinema_id ?? cinema.id,
+  brand: cinema.brand || "Cinema",
+  name: cinema.name || "Rạp chiếu",
+  address: cinema.address || "",
+  city: cinema.city || "",
+  showtimes: [],
+});
 
 export const CinemaSelectionPage = () => {
   const { movieId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [apiMovie, setApiMovie] = useState(null);
+  const [apiCinemas, setApiCinemas] = useState([]);
+  const [apiShowtimes, setApiShowtimes] = useState([]);
+  const [movieLoading, setMovieLoading] = useState(true);
+  const [scheduleLoading, setScheduleLoading] = useState(true);
   const {
     setSelectedMovie,
     setSelectedCinema,
@@ -49,27 +143,218 @@ export const CinemaSelectionPage = () => {
   } = useBooking();
   const preferredCinemaId = searchParams.get("cinemaId");
   const hasPreferredCinema = Boolean(
-    preferredCinemaId && CINEMAS.some((c) => c.id === preferredCinemaId)
+    preferredCinemaId &&
+      apiCinemas.some((c) => String(c.id) === String(preferredCinemaId))
   );
   const preferredCinema = hasPreferredCinema
-    ? CINEMAS.find((cinema) => cinema.id === preferredCinemaId)
+    ? apiCinemas.find(
+        (cinema) => String(cinema.id) === String(preferredCinemaId)
+      )
     : null;
 
-  const movie = MOVIES.find((m) => m.id === movieId);
+  const dateOptions = useMemo(() => {
+    const todayKey = formatDateKey(new Date());
+    const uniqueDateKeys = Array.from(
+      new Set(
+        apiShowtimes
+          .map((showtime) => formatDateKey(showtime.start_time))
+          .filter(Boolean)
+      )
+    ).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+    return uniqueDateKeys.map((value) => {
+      const currentDate = new Date(value);
+      const dayLabel =
+        value === todayKey
+          ? "Hôm nay"
+          : currentDate
+              .toLocaleDateString("vi-VN", { weekday: "short" })
+              .replace("thứ", "T")
+              .replace("Thứ", "T");
+
+      return {
+        value,
+        day: dayLabel,
+        date: currentDate.getDate(),
+        month: currentDate.getMonth() + 1,
+      };
+    });
+  }, [apiShowtimes]);
+
   const [selectedDateIdx, setSelectedDateIdx] = useState(0);
+  const selectedDateValue = dateOptions[selectedDateIdx]?.value || "";
+
+  const cinemasWithShowtimes = useMemo(() => {
+    const byCinema = new Map(
+      apiCinemas.map((cinema) => [String(cinema.id), cinema])
+    );
+    const groupedShowtimes = new Map();
+
+    apiShowtimes.forEach((showtime) => {
+      const showDate = formatDateKey(showtime.start_time);
+      if (!showDate || showDate !== selectedDateValue) return;
+
+      const cinemaKey = String(showtime.cinema_id);
+      if (!groupedShowtimes.has(cinemaKey)) {
+        groupedShowtimes.set(cinemaKey, []);
+      }
+
+      groupedShowtimes.get(cinemaKey).push({
+        ...showtime,
+        id: String(showtime.showtime_id),
+        showtime_id: showtime.showtime_id,
+        time: formatTime(showtime.start_time),
+        type: showtime.format || "2D",
+        price: Number(showtime.base_price) || 0,
+        base_price: Number(showtime.base_price) || 0,
+        availableSeats: null,
+      });
+    });
+
+    return Array.from(groupedShowtimes.entries())
+      .map(([cinemaId, showtimes]) => {
+        const cinema = byCinema.get(String(cinemaId));
+        if (!cinema) return null;
+
+        return {
+          ...cinema,
+          showtimes: showtimes.sort(
+            (a, b) =>
+              new Date(a.start_time).getTime() -
+              new Date(b.start_time).getTime()
+          ),
+        };
+      })
+      .filter(Boolean);
+  }, [apiCinemas, apiShowtimes, selectedDateValue]);
+
   const [selectedRegion, setSelectedRegion] = useState(
-    preferredCinema ? getRegionIdFromAddress(preferredCinema.address) : ""
+    preferredCinema ? getRegionIdFromCinema(preferredCinema) : ""
   );
   const [expandedCinema, setExpandedCinema] = useState(
     hasPreferredCinema ? preferredCinemaId : null
   );
 
+  const regionOptions = useMemo(() => {
+    const regionIds = Array.from(
+      new Set(
+        cinemasWithShowtimes
+          .map((cinema) => getRegionIdFromCinema(cinema))
+          .filter(Boolean)
+      )
+    );
+    return regionIds.map(createRegionOption);
+  }, [cinemasWithShowtimes]);
+
+  useEffect(() => {
+    if (selectedDateIdx <= dateOptions.length - 1) return;
+    setSelectedDateIdx(0);
+  }, [dateOptions, selectedDateIdx]);
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchSchedules = async () => {
+      setScheduleLoading(true);
+      try {
+        const [cinemaRes, showtimeRes] = await Promise.all([
+          fetch("http://localhost:5000/api/cinemas"),
+          fetch("http://localhost:5000/api/showtimes"),
+        ]);
+
+        if (!cinemaRes.ok || !showtimeRes.ok) {
+          throw new Error("Failed to load schedule data");
+        }
+
+        const [cinemaData, showtimeData] = await Promise.all([
+          cinemaRes.json(),
+          showtimeRes.json(),
+        ]);
+
+        if (!active) return;
+
+        const normalizedCinemas = (cinemaData || []).map(normalizeCinema);
+        const showtimesByMovie = (showtimeData || []).filter(
+          (showtime) => String(showtime.movie_id) === String(movieId)
+        );
+
+        setApiCinemas(normalizedCinemas);
+        setApiShowtimes(showtimesByMovie);
+      } catch {
+        if (!active) return;
+        setApiCinemas([]);
+        setApiShowtimes([]);
+      } finally {
+        if (active) setScheduleLoading(false);
+      }
+    };
+
+    if (!movieId) {
+      setApiCinemas([]);
+      setApiShowtimes([]);
+      setScheduleLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    fetchSchedules();
+    return () => {
+      active = false;
+    };
+  }, [movieId]);
+
+  useEffect(() => {
+    if (!hasPreferredCinema && !selectedRegion) return;
+    if (selectedRegion) return;
+    setSelectedRegion(getRegionIdFromCinema(preferredCinema));
+  }, [hasPreferredCinema, preferredCinema, selectedRegion]);
+
+  useEffect(() => {
+    if (!hasPreferredCinema || expandedCinema) return;
+    setExpandedCinema(preferredCinemaId);
+  }, [hasPreferredCinema, preferredCinemaId, expandedCinema]);
+  useEffect(() => {
+    let active = true;
+
+    const fetchMovieById = async () => {
+      setMovieLoading(true);
+      try {
+        const res = await fetch(`http://localhost:5000/api/movies/${movieId}`);
+        if (!res.ok) throw new Error("Movie not found in API");
+        const data = await res.json();
+        if (active && data) {
+          setApiMovie(normalizeMovie(data));
+        }
+      } catch {
+        if (active) setApiMovie(null);
+      } finally {
+        if (active) setMovieLoading(false);
+      }
+    };
+
+    if (!movieId) {
+      setApiMovie(null);
+      setMovieLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    fetchMovieById();
+    return () => {
+      active = false;
+    };
+  }, [movieId]);
+
+  const movie = apiMovie;
+
   const regionCinemas = useMemo(
     () =>
-      CINEMAS.filter(
-        (cinema) => getRegionIdFromAddress(cinema.address) === selectedRegion
+      cinemasWithShowtimes.filter(
+        (cinema) => getRegionIdFromCinema(cinema) === selectedRegion
       ),
-    [selectedRegion]
+    [cinemasWithShowtimes, selectedRegion]
   );
 
   const orderedCinemas = useMemo(() => {
@@ -84,6 +369,17 @@ export const CinemaSelectionPage = () => {
     ];
   }, [hasPreferredCinema, preferredCinemaId, regionCinemas]);
 
+  if (movieLoading || scheduleLoading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "#0a0a0f" }}
+      >
+        <p className="text-zinc-400">Đang tải lịch chiếu...</p>
+      </div>
+    );
+  }
+
   if (!movie) {
     return (
       <div
@@ -96,19 +392,25 @@ export const CinemaSelectionPage = () => {
   }
 
   const handleSelectShowtime = (cinemaId, showtimeId) => {
-    const cinema = CINEMAS.find((c) => c.id === cinemaId);
+    const cinema = cinemasWithShowtimes.find(
+      (c) => String(c.id) === String(cinemaId)
+    );
+    if (!cinema) return;
+
     const showtime = cinema.showtimes.find((s) => s.id === showtimeId);
+    if (!showtime) return;
+
     setSelectedMovie(movie);
     setSelectedCinema(cinema);
     setSelectedShowtime(showtime);
-    setSelectedDate(DATES[selectedDateIdx].value);
-    navigate(`/seats/${movieId}/${cinemaId}/${showtimeId}`);
+    setSelectedDate(selectedDateValue);
+    navigate(`/seats/${showtimeId}`);
   };
 
   const handleSelectRegion = (regionId) => {
     setSelectedRegion(regionId);
-    const cinemasInRegion = CINEMAS.filter(
-      (cinema) => getRegionIdFromAddress(cinema.address) === regionId
+    const cinemasInRegion = cinemasWithShowtimes.filter(
+      (cinema) => getRegionIdFromCinema(cinema) === regionId
     );
     const defaultExpanded =
       hasPreferredCinema &&
@@ -230,7 +532,7 @@ export const CinemaSelectionPage = () => {
             className="flex gap-2 overflow-x-auto pb-1"
             style={{ scrollbarWidth: "none" }}
           >
-            {DATES.map((d, i) => (
+            {dateOptions.map((d, i) => (
               <button
                 key={d.value}
                 onClick={() => setSelectedDateIdx(i)}
@@ -252,6 +554,11 @@ export const CinemaSelectionPage = () => {
               </button>
             ))}
           </div>
+          {dateOptions.length === 0 && (
+            <p className="text-zinc-500 text-sm mt-3">
+              Phim này hiện chưa có lịch chiếu.
+            </p>
+          )}
         </div>
 
         {/* Region + Cinema list */}
@@ -260,9 +567,9 @@ export const CinemaSelectionPage = () => {
         </h2>
         {!selectedRegion ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-            {REGION_OPTIONS.map((region) => {
-              const count = CINEMAS.filter(
-                (cinema) => getRegionIdFromAddress(cinema.address) === region.id
+            {regionOptions.map((region) => {
+              const count = cinemasWithShowtimes.filter(
+                (cinema) => getRegionIdFromCinema(cinema) === region.id
               ).length;
               return (
                 <button
@@ -286,6 +593,11 @@ export const CinemaSelectionPage = () => {
                 </button>
               );
             })}
+            {regionOptions.length === 0 && (
+              <div className="rounded-xl border border-zinc-800 px-4 py-5 text-zinc-500 text-sm">
+                Chưa có khu vực khả dụng cho phim này.
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -312,6 +624,11 @@ export const CinemaSelectionPage = () => {
               )}
 
             <div className="space-y-3">
+              {orderedCinemas.length === 0 && (
+                <div className="rounded-xl border border-zinc-800 px-4 py-5 text-zinc-500 text-sm">
+                  Không có suất chiếu ở khu vực này cho ngày đã chọn.
+                </div>
+              )}
               {orderedCinemas.map((cinema) => (
                 <div
                   key={cinema.id}
@@ -379,9 +696,13 @@ export const CinemaSelectionPage = () => {
                       <div className="flex flex-wrap gap-2 mt-4">
                         {cinema.showtimes.map((st) => {
                           const typeInfo = TYPE_LABELS[st.type];
-                          const isFull = st.availableSeats === 0;
+                          const hasSeatInfo =
+                            typeof st.availableSeats === "number";
+                          const isFull = hasSeatInfo && st.availableSeats === 0;
                           const isLow =
-                            st.availableSeats > 0 && st.availableSeats <= 20;
+                            hasSeatInfo &&
+                            st.availableSeats > 0 &&
+                            st.availableSeats <= 20;
                           return (
                             <button
                               key={st.id}
@@ -430,7 +751,9 @@ export const CinemaSelectionPage = () => {
                                     ? "Hết vé"
                                     : isLow
                                     ? `Còn ${st.availableSeats} ghế`
-                                    : `${st.availableSeats} ghế trống`}
+                                    : hasSeatInfo
+                                    ? `${st.availableSeats} ghế trống`
+                                    : "Xem sơ đồ ghế"}
                                 </span>
                               </div>
                             </button>

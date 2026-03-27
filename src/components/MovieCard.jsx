@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 export const MovieCard = ({ movie, size = "md" }) => {
   const isNowShowing = movie.status === "now-showing";
+  const movieId = movie.movie_id ?? movie.id;
 
   const widthClass =
     size === "md"
@@ -15,7 +16,10 @@ export const MovieCard = ({ movie, size = "md" }) => {
     <article
       className={`${widthClass} cinema-surface overflow-hidden transition hover:border-zinc-700`}
     >
-      <Link to={`/movies/${movie.id}`} className="group relative block aspect-[3/4]">
+      <Link
+        to={`/movies/${movieId}`}
+        className="group relative block aspect-[3/4]"
+      >
         <img
           src={movie.poster}
           alt={movie.title}
