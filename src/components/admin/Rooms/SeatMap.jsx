@@ -402,4 +402,4 @@ export default function SeatMap({ room, onClose }) {
       </div>
     </div>
   );
-}
+}       

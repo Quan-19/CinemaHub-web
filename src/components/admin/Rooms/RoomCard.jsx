@@ -8,7 +8,13 @@ const typeColors = {
 };
 
 export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatus }) {
-  const typeStyle = typeColors[room.type];
+  const typeStyle = typeColors[room.type] || { color: "#fff", bg: "rgba(255,255,255,0.1)" };
+  
+  // ensure numeric
+  const rows = Number(room.rows) || 0;
+  const cols = Number(room.cols) || 0;
+  const vipRows = Array.isArray(room.vipRows) ? room.vipRows : [];
+  const coupleRow = Number(room.coupleRow) || null;
 
   return (
     <div
@@ -22,7 +28,7 @@ export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatu
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <h3 className="text-lg font-bold text-white">{room.name}</h3>
+            <h3 className="text-lg font-bold text-white">{room.name || "Unknown"}</h3>
             <span
               className="px-2 py-0.5 rounded text-xs font-bold"
               style={{
@@ -30,16 +36,18 @@ export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatu
                 color: typeStyle.color,
               }}
             >
-              {room.type}
+              {room.type || "Unknown"}
             </span>
           </div>
-          <p className="text-sm text-gray-400">{room.cinemaName}</p>
+          <p className="text-sm text-gray-400">{room.cinemaName || "Unknown Cinema"}</p>
         </div>
+
+        {/* Status Button */}
         <button
           onClick={() => onToggleStatus(room)}
           className={`px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 transition-colors ${
-            room.status === "active" 
-              ? "bg-green-500/20 text-green-400 hover:bg-green-500/30" 
+            room.status === "active"
+              ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
               : "bg-orange-500/20 text-orange-400 hover:bg-orange-500/30"
           }`}
         >
@@ -49,18 +57,14 @@ export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatu
       </div>
 
       {/* Mini Seat Preview */}
-      <div
-        className="rounded-lg p-3 mb-4"
-        style={{ background: "rgba(255,255,255,0.04)" }}
-      >
+      <div className="rounded-lg p-3 mb-4" style={{ background: "rgba(255,255,255,0.04)" }}>
         <div className="text-center text-xs text-gray-500 mb-2">— Màn hình —</div>
-        {Array.from({ length: Math.min(room.rows, 6) }, (_, rowIdx) => {
-          const isVip = room.vipRows.includes(rowIdx + 1);
-          const isCouple = room.coupleRow === rowIdx + 1;
-          const numSeats = isCouple 
-            ? Math.floor(room.cols / 2) 
-            : Math.min(room.cols, 10);
-          
+
+        {Array.from({ length: Math.min(rows, 6) }, (_, rowIdx) => {
+          const isVip = vipRows.includes(rowIdx + 1);
+          const isCouple = coupleRow === rowIdx + 1;
+          const numSeats = isCouple ? Math.floor(cols / 2) : Math.min(cols, 10);
+
           return (
             <div key={rowIdx} className="flex justify-center gap-0.5 mb-0.5">
               {Array.from({ length: numSeats }, (_, ci) => (
@@ -70,11 +74,7 @@ export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatu
                     width: isCouple ? 10 : 6,
                     height: 5,
                     borderRadius: 1,
-                    background: isVip 
-                      ? "#f59e0b" 
-                      : isCouple 
-                      ? "#e50914" 
-                      : "rgba(255,255,255,0.15)",
+                    background: isVip ? "#f59e0b" : isCouple ? "#e50914" : "rgba(255,255,255,0.15)",
                     opacity: Math.random() < 0.2 ? 0.3 : 1,
                   }}
                 />
@@ -82,36 +82,26 @@ export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatu
             </div>
           );
         })}
-        {room.rows > 6 && (
+
+        {rows > 6 && (
           <div className="text-center text-xs text-gray-600 mt-2">
-            ... {room.rows - 6} hàng nữa
+            ... {rows - 6} hàng nữa
           </div>
         )}
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 mb-4">
-        <div
-          className="text-center p-2 rounded-lg"
-          style={{ background: "rgba(255,255,255,0.04)" }}
-        >
-          <div className="text-xl font-bold text-white">{room.totalSeats}</div>
+        <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
+          <div className="text-xl font-bold text-white">{rows * cols}</div>
           <div className="text-xs text-gray-500">Tổng ghế</div>
         </div>
-        <div
-          className="text-center p-2 rounded-lg"
-          style={{ background: "rgba(255,255,255,0.04)" }}
-        >
-          <div className="text-xl font-bold text-white">
-            {room.rows}×{room.cols}
-          </div>
+        <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
+          <div className="text-xl font-bold text-white">{rows}×{cols}</div>
           <div className="text-xs text-gray-500">Hàng × Cột</div>
         </div>
-        <div
-          className="text-center p-2 rounded-lg"
-          style={{ background: "rgba(255,255,255,0.04)" }}
-        >
-          <div className="text-xl font-bold text-white">{room.vipRows.length}</div>
+        <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
+          <div className="text-xl font-bold text-white">{vipRows.length}</div>
           <div className="text-xs text-gray-500">Hàng VIP</div>
         </div>
       </div>
