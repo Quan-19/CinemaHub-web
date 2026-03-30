@@ -13,7 +13,7 @@ import {
 import { StaffCenteredModalShell } from "../../components/staff/StaffModalShell.jsx";
 import StaffIconButton from "../../components/staff/StaffIconButton.jsx";
 import { makeId } from "../../components/staff/staffUtils.js";
-
+import { useEffect } from "react";
 function Badge({ children, className = "" }) {
   return (
     <span
@@ -110,7 +110,6 @@ function buildSeatGrid({ rows, seatsPerRow, vipRows, coupleRow }) {
 
       const maintenance = false;
 
-
       seats.push({
         id: `${rowLabel}${c}`,
         label: `${rowLabel}${c}`,
@@ -138,7 +137,13 @@ function SeatLegendItem({ colorClassName, label }) {
   );
 }
 
-function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMaintenance }) {
+function SeatMapModal({
+  room,
+  cinemaName,
+  onClose,
+  maintenanceSeats,
+  onToggleMaintenance,
+}) {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
 
   const seatRows = useMemo(() => {
@@ -155,7 +160,7 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
       if (!maintenanceMode) return;
       onToggleMaintenance(room.id, seatId);
     },
-    [maintenanceMode, onToggleMaintenance, room.id]
+    [maintenanceMode, onToggleMaintenance, room.id],
   );
 
   return (
@@ -187,7 +192,8 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
 
         {maintenanceMode && (
           <div className="rounded-xl border border-red-500/30 bg-red-500/5 px-4 py-2.5 text-xs text-red-300">
-            Nhấn vào ghế để đánh dấu / bỏ đánh dấu bảo trì. Ghế bảo trì sẽ không thể đặt được.
+            Nhấn vào ghế để đánh dấu / bỏ đánh dấu bảo trì. Ghế bảo trì sẽ không
+            thể đặt được.
           </div>
         )}
 
@@ -356,13 +362,13 @@ function RoomConfigModal({ mode, cinemaName, initialRoom, onClose, onSave }) {
   const [type, setType] = useState(initialRoom?.type ?? "2D");
   const [rows, setRows] = useState(String(initialRoom?.rows ?? 10));
   const [seatsPerRow, setSeatsPerRow] = useState(
-    String(initialRoom?.seatsPerRow ?? 12)
+    String(initialRoom?.seatsPerRow ?? 12),
   );
   const [vipRows, setVipRows] = useState(
-    (initialRoom?.vipRows ?? [5, 6]).join(",")
+    (initialRoom?.vipRows ?? [5, 6]).join(","),
   );
   const [coupleRow, setCoupleRow] = useState(
-    String(initialRoom?.coupleRow ?? 10)
+    String(initialRoom?.coupleRow ?? 10),
   );
   const [status, setStatus] = useState(initialRoom?.status ?? "active");
 
@@ -478,7 +484,13 @@ function RoomConfigModal({ mode, cinemaName, initialRoom, onClose, onSave }) {
   );
 }
 
-function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow, maintenanceSeats }) {
+function MiniSeatPreview({
+  rows,
+  seatsPerRow,
+  vipRows,
+  coupleRow,
+  maintenanceSeats,
+}) {
   const previewRows = Math.min(rows, 6);
   const remaining = Math.max(0, rows - previewRows);
   const grid = useMemo(() => {
@@ -500,7 +512,8 @@ function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow, maintenanceSea
           {grid.map((row) => (
             <div key={row.label} className="grid grid-flow-col gap-1">
               {row.seats.map((seat) => {
-                const isMaint = maintenanceSeats && maintenanceSeats.has(seat.id);
+                const isMaint =
+                  maintenanceSeats && maintenanceSeats.has(seat.id);
                 const color = isMaint
                   ? "bg-red-500"
                   : seat.reserved
@@ -533,7 +546,14 @@ function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow, maintenanceSea
   );
 }
 
-function RoomCard({ cinemaName, room, onView, onConfig, onDelete, maintenanceSeats }) {
+function RoomCard({
+  cinemaName,
+  room,
+  onView,
+  onConfig,
+  onDelete,
+  maintenanceSeats,
+}) {
   const total = room.rows * room.seatsPerRow;
   const vipCount = room.vipRows.length;
   const isInactive = room.status !== "active";
@@ -666,86 +686,71 @@ function Pagination({ page, totalPages, onPrev, onNext }) {
 }
 
 function StaffRoomsPage() {
+  const [selectedCinemaId, setSelectedCinemaId] = useState("");
   const { subtitle } = useOutletContext();
 
-  const cinemaName = useMemo(() => {
-    const text = String(subtitle ?? "");
-    const parts = text.split("—");
-    return (parts[0] ?? "").trim() || "CGV Vincom Center Bà Triệu";
-  }, [subtitle]);
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  // const cinemaName = useMemo(() => {
+  //   if (rooms.length > 0) {
+  //     return rooms[0].cinemaName || "";
+  //   }
+  //   return "";
+  // }, [rooms]);
+  useEffect(() => {
+    loadRooms();
+  }, []);
+  const cinemaList = useMemo(() => {
+    const map = new Map();
 
-  const [rooms, setRooms] = useState(() => [
-    {
-      id: "r1",
-      cinemaName: "CGV Vincom Center Bà Triệu",
-      name: "Phòng 1",
-      type: "2D",
-      rows: 10,
-      seatsPerRow: 12,
-      vipRows: [5, 6],
-      coupleRow: 10,
-      status: "active",
-    },
-    {
-      id: "r2",
-      cinemaName: "CGV Vincom Center Bà Triệu",
-      name: "Phòng 2",
-      type: "3D",
-      rows: 9,
-      seatsPerRow: 10,
-      vipRows: [5, 6],
-      coupleRow: 9,
-      status: "active",
-    },
-    {
-      id: "r3",
-      cinemaName: "CGV Vincom Center Bà Triệu",
-      name: "IMAX 1",
-      type: "IMAX",
-      rows: 12,
-      seatsPerRow: 14,
-      vipRows: [6, 7, 8],
-      coupleRow: null,
-      status: "active",
-    },
-    {
-      id: "r4",
-      cinemaName: "CGV Vincom Center Bà Triệu",
-      name: "Phòng 3",
-      type: "2D",
-      rows: 10,
-      seatsPerRow: 12,
-      vipRows: [5, 6],
-      coupleRow: 10,
-      status: "inactive",
-    },
-    {
-      id: "r5",
-      cinemaName: "CGV Vincom Center Bà Triệu",
-      name: "Phòng 4",
-      type: "3D",
-      rows: 10,
-      seatsPerRow: 12,
-      vipRows: [5, 6],
-      coupleRow: 10,
-      status: "active",
-    },
-    {
-      id: "r6",
-      cinemaName: "CGV Vincom Center Bà Triệu",
-      name: "4DX 1",
-      type: "4DX",
-      rows: 8,
-      seatsPerRow: 10,
-      vipRows: [4, 5],
-      coupleRow: null,
-      status: "active",
-    },
-  ]);
+    rooms.forEach((r) => {
+      if (!map.has(r.cinemaId)) {
+        map.set(r.cinemaId, {
+          value: r.cinemaId,
+          label: r.cinemaName,
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [rooms]);
+
+  const loadRooms = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch("http://localhost:5000/api/rooms");
+      const data = await res.json();
+
+      const roomsData = Array.isArray(data) ? data : data.data || [];
+
+      // ✅ KHÔNG MAP LẠI SAI FIELD NỮA
+      const mapped = roomsData.map((r) => ({
+        id: r.id,
+        cinemaId: r.cinemaId,
+        cinemaName: r.cinemaName,
+        name: r.name,
+        type: r.type,
+        rows: r.rows,
+        seatsPerRow: r.cols, // 🔥 đổi từ cols
+        vipRows: r.vipRows || [],
+        coupleRow: r.coupleRow,
+        status: r.status,
+      }));
+
+      setRooms(mapped);
+    } catch (err) {
+      console.error("Load rooms error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const staffRooms = useMemo(() => {
-    return rooms.filter((r) => r.cinemaName === cinemaName);
-  }, [rooms, cinemaName]);
+    if (!selectedCinemaId) return rooms;
+
+    return rooms.filter((r) => String(r.cinemaId) === String(selectedCinemaId));
+  }, [rooms, selectedCinemaId]);
 
   const totals = useMemo(() => {
     const byType = { "2D": 0, "3D": 0, IMAX: 0, "4DX": 0 };
@@ -784,7 +789,9 @@ function StaffRoomsPage() {
       return next;
     });
   }, []);
-
+  if (loading) {
+    return <div className="text-white p-6">Loading...</div>;
+  }
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-4">
@@ -800,7 +807,7 @@ function StaffRoomsPage() {
           onClick={() => {
             setCreateDraft({
               id: makeId("room"),
-              cinemaName,
+              cinemaId: selectedCinemaId || cinemaList[0]?.value,
               name: "",
               type: "2D",
               rows: 10,
@@ -842,10 +849,15 @@ function StaffRoomsPage() {
       </section>
 
       <div className="max-w-xs">
-        <SelectInput
+        {/* <SelectInput
           value={cinemaName}
-          onChange={() => { }}
+          onChange={() => {}}
           options={[{ value: cinemaName, label: cinemaName }]}
+        /> */}
+        <SelectInput
+          value={selectedCinemaId}
+          onChange={setSelectedCinemaId}
+          options={[{ value: "", label: "Tất cả rạp" }, ...cinemaList]}
         />
       </div>
 
@@ -853,13 +865,24 @@ function StaffRoomsPage() {
         {pagedRooms.map((room) => (
           <RoomCard
             key={room.id}
-            cinemaName={cinemaName}
+            cinemaName={room.cinemaName} // ✅ FIX CHUẨN
             room={room}
             maintenanceSeats={maintenanceMap.get(room.id) ?? new Set()}
             onView={() => setSeatRoom(room)}
             onConfig={() => setConfigRoom(room)}
-            onDelete={() => {
-              setRooms((prev) => prev.filter((r) => r.id !== room.id));
+            onDelete={async () => {
+              try {
+                const res = await fetch(
+                  `http://localhost:5000/api/rooms/${room.id}`,
+                  { method: "DELETE" },
+                );
+
+                if (!res.ok) throw new Error("Delete failed");
+
+                await loadRooms();
+              } catch (err) {
+                console.error(err);
+              }
             }}
           />
         ))}
@@ -875,7 +898,7 @@ function StaffRoomsPage() {
       {seatRoom ? (
         <SeatMapModal
           room={seatRoom}
-          cinemaName={cinemaName}
+          cinemaName={seatRoom?.cinemaName}
           maintenanceSeats={maintenanceMap.get(seatRoom.id) ?? new Set()}
           onToggleMaintenance={handleToggleMaintenance}
           onClose={() => setSeatRoom(null)}
@@ -885,12 +908,12 @@ function StaffRoomsPage() {
       {configRoom ? (
         <RoomConfigModal
           mode="edit"
-          cinemaName={cinemaName}
+          cinemaName={configRoom?.cinemaName}
           initialRoom={configRoom}
           onClose={() => setConfigRoom(null)}
           onSave={(nextRoom) => {
             setRooms((prev) =>
-              prev.map((r) => (r.id === nextRoom.id ? nextRoom : r))
+              prev.map((r) => (r.id === nextRoom.id ? nextRoom : r)),
             );
             setConfigRoom(null);
           }}
@@ -900,16 +923,41 @@ function StaffRoomsPage() {
       {createOpen && createDraft ? (
         <RoomConfigModal
           mode="create"
-          cinemaName={cinemaName}
+          cinemaName={
+            cinemaList.find((c) => c.value === selectedCinemaId)?.label || ""
+          }
           initialRoom={createDraft}
           onClose={() => {
             setCreateOpen(false);
             setCreateDraft(null);
           }}
-          onSave={(nextRoom) => {
-            setRooms((prev) => [nextRoom, ...prev]);
-            setCreateOpen(false);
-            setCreateDraft(null);
+          onSave={async (nextRoom) => {
+            try {
+              const res = await fetch("http://localhost:5000/api/rooms", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  cinema_id: nextRoom.cinemaId,
+                  name: nextRoom.name,
+                  type: nextRoom.type,
+                  seat_rows: nextRoom.rows,
+                  seat_cols: nextRoom.seatsPerRow,
+                  vip_rows: JSON.stringify(nextRoom.vipRows),
+                  couple_row: nextRoom.coupleRow,
+                  total_seats: nextRoom.rows * nextRoom.seatsPerRow,
+                  status: nextRoom.status,
+                }),
+              });
+
+              if (!res.ok) throw new Error("Create failed");
+
+              await loadRooms();
+              setCreateOpen(false);
+            } catch (err) {
+              console.error(err);
+            }
           }}
         />
       ) : null}

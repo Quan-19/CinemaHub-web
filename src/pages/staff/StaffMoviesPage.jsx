@@ -11,7 +11,6 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { MOVIES } from "../../data/mockData.js";
 import {
   ddmmyyyyToInput,
   inputToDdmmyyyy,
@@ -20,73 +19,7 @@ import {
 import { StaffCenteredModalShell } from "../../components/staff/StaffModalShell.jsx";
 import StaffSuccessToast from "../../components/staff/StaffSuccessToast.jsx";
 import StaffConfirmModal from "../../components/staff/StaffConfirmModal.jsx";
-
-const EXTRA_MOVIES = [
-  {
-    id: "lego-odyssey",
-    title: "Hành Trình Vũ Trụ",
-    originalTitle: "Lego Odyssey",
-    status: "now-showing",
-    genre: ["Hoạt hình", "Phiêu lưu"],
-    score: 9.1,
-    votes: 16200,
-    duration: 162,
-    rating: "P",
-    description:
-      "Cuộc phiêu lưu ngoài không gian đầy sắc màu của đội phi hành gia Lego.",
-    backdrop:
-      "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1600&q=80",
-    poster:
-      "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80",
-    releaseDate: "12/02/2026",
-    director: "Christopher Nolan",
-    language: "Phụ đề Việt",
-    country: "Mỹ",
-    cast: ["Chris Evans", "Scarlett Johansson"],
-  },
-  {
-    id: "dragon-flight",
-    title: "Rồng Bay Lên",
-    originalTitle: "Dragon Rise",
-    status: "now-showing",
-    genre: ["Hoạt hình", "Phiêu lưu"],
-    score: 8.7,
-    votes: 9500,
-    duration: 95,
-    rating: "P",
-    description: "Một cô bé và chú rồng nhỏ khám phá vùng đất bí ẩn trên mây.",
-    backdrop:
-      "https://images.unsplash.com/photo-1490633874781-1c63cc424610?auto=format&fit=crop&w=1600&q=80",
-    poster:
-      "https://images.unsplash.com/photo-1490633874781-1c63cc424610?auto=format&fit=crop&w=600&q=80",
-    releaseDate: "02/01/2026",
-    director: "Pete Docter",
-    language: "Lồng tiếng Việt",
-    country: "Mỹ",
-    cast: ["Tom Holland", "Zendaya"],
-  },
-  {
-    id: "last-ride",
-    title: "Chuyến Đi Cuối Cùng",
-    originalTitle: "The Final Journey",
-    status: "now-showing",
-    genre: ["Kinh dị", "Tâm lý"],
-    score: 8.9,
-    votes: 12800,
-    duration: 112,
-    rating: "T13",
-    description: "Phi vụ cuối đưa nhóm lính đánh thuê vào vòng xoáy nguy hiểm.",
-    backdrop:
-      "https://images.unsplash.com/photo-1451188502541-13943edb6acb?auto=format&fit=crop&w=1600&q=80",
-    poster:
-      "https://images.unsplash.com/photo-1451188502541-13943edb6acb?auto=format&fit=crop&w=600&q=80",
-    releaseDate: "22/12/2025",
-    director: "James Wan",
-    language: "Lồng tiếng Việt",
-    country: "Mỹ",
-    cast: ["Robert Downey Jr.", "Chris Hemsworth"],
-  },
-];
+import { getAuth } from "firebase/auth";
 
 const GENRE_OPTIONS = [
   "Hành động",
@@ -104,8 +37,8 @@ const GENRE_OPTIONS = [
 
 const RATING_OPTIONS = ["P", "T13", "T16", "T18"];
 const STATUS_OPTIONS = [
-  { label: "Đang chiếu", value: "now-showing" },
-  { label: "Sắp chiếu", value: "coming-soon" },
+  { label: "Đang chiếu", value: "now_showing" },
+  { label: "Sắp chiếu", value: "coming_soon" },
 ];
 
 const LANGUAGE_OPTIONS = ["Phụ đề Việt", "Lồng tiếng Việt"];
@@ -143,7 +76,7 @@ function normalizeMovie(movie) {
 }
 
 function StatusBadge({ status }) {
-  const isNowShowing = status === "now-showing";
+  const isNowShowing = status === "now_showing";
   return (
     <span
       className={[
@@ -190,7 +123,7 @@ function EditMovieModal({
       genre: [...(m.genre || [])],
       rating: m.rating || "T16",
       duration: m.duration ?? "",
-      status: m.status || "now-showing",
+      status: m.status || "now_showing",
       releaseDate: ddmmyyyyToInput(m.releaseDate) || "",
       director: m.director || "",
       castText: (m.cast || []).join(", "),
@@ -246,25 +179,41 @@ function EditMovieModal({
     }
 
     const updated = {
-      ...movie,
-      poster: form.poster.trim(),
-      backdrop: form.backdrop.trim(),
-      title: form.title.trim(),
-      originalTitle: form.originalTitle.trim(),
-      genre: form.genre,
-      rating: form.rating,
-      duration: Number(form.duration) || 0,
-      status: form.status,
-      releaseDate: inputToDdmmyyyy(form.releaseDate),
-      director: form.director.trim(),
-      cast: form.castText
+      id: movie.id,
+    };
+
+    // chỉ add nếu có giá trị
+    if (form.poster.trim()) updated.poster = form.poster.trim();
+    if (form.backdrop.trim()) updated.backdrop = form.backdrop.trim();
+    if (form.title.trim()) updated.title = form.title.trim();
+    if (form.originalTitle.trim())
+      updated.originalTitle = form.originalTitle.trim();
+
+    if (form.genre.length > 0) updated.genre = form.genre;
+
+    if (form.rating) updated.rating = form.rating;
+
+    if (form.duration) updated.duration = Number(form.duration);
+
+    if (form.status) updated.status = form.status;
+
+    if (form.releaseDate) {
+      updated.releaseDate = inputToDdmmyyyy(form.releaseDate);
+    }
+
+    if (form.director.trim()) updated.director = form.director.trim();
+
+    if (form.castText.trim()) {
+      updated.cast = form.castText
         .split(",")
         .map((x) => x.trim())
-        .filter(Boolean),
-      description: form.description.trim(),
-      language: form.language,
-      country: form.country,
-    };
+        .filter(Boolean);
+    }
+
+    if (form.description.trim()) updated.description = form.description.trim();
+
+    if (form.language) updated.language = form.language;
+    if (form.country) updated.country = form.country;
     onSave(updated);
   };
 
@@ -623,7 +572,7 @@ function StaffMovieCard({ movie, onEdit, onDelete }) {
           <span className="inline-flex items-center gap-1 text-yellow-400">
             <Star className="h-3.5 w-3.5" />
             <span className="font-semibold text-yellow-300">
-              {movie.score || "N/A"}
+              {movie.rating || "N/A"}
             </span>
           </span>
           <span className="inline-flex items-center gap-1 text-zinc-400">
@@ -632,7 +581,7 @@ function StaffMovieCard({ movie, onEdit, onDelete }) {
           </span>
           <span className="inline-flex items-center gap-1 text-zinc-400">
             <Globe className="h-3.5 w-3.5" />
-            {movie.language || "Phụ đề Việt"}
+            {movie.subtitle || "Phụ đề Việt"}
           </span>
         </div>
 
@@ -665,7 +614,7 @@ function StaffMovieCard({ movie, onEdit, onDelete }) {
           <StatusBadge status={movie.status} />
         </div>
         <div className="absolute right-3 top-3">
-          <RatingBadge rating={movie.rating || "T16"} />
+          <RatingBadge rating={movie.ageRating || "T16"} />
         </div>
 
         <div className="absolute inset-0 z-10 hidden items-center justify-center gap-3 opacity-0 pointer-events-none transition duration-200 [@media(hover:hover)]:flex [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-hover:pointer-events-auto">
@@ -727,16 +676,8 @@ function StaffMovieCard({ movie, onEdit, onDelete }) {
 }
 
 function StaffMoviesPage() {
-  const seedMovies = useMemo(() => {
-    const base = [...MOVIES, ...EXTRA_MOVIES].map(normalizeMovie);
-    return base.map((m) => ({
-      ...m,
-      // Ensure there is a backdrop for wide cards
-      backdrop: m.backdrop || m.poster,
-    }));
-  }, []);
-
-  const [movies, setMovies] = useState(seedMovies);
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("all");
   const [editing, setEditing] = useState(null);
@@ -746,12 +687,31 @@ function StaffMoviesPage() {
   const toastTimeoutRef = useRef(null);
 
   useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/movies");
+        const data = await res.json();
+
+        setMovies(data);
+      } catch (err) {
+        console.error("Fetch movies error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMovies();
+  }, []);
+  useEffect(() => {
     return () => {
       if (toastTimeoutRef.current) {
         clearTimeout(toastTimeoutRef.current);
         toastTimeoutRef.current = null;
       }
     };
+    if (loading) {
+      return <div className="text-white p-6">Loading movies...</div>;
+    }
   }, []);
 
   const showSuccess = (message) => {
@@ -766,23 +726,83 @@ function StaffMoviesPage() {
   const closeDelete = () => setConfirmDelete(null);
   const closeAdd = () => setAdding(false);
 
-  const onSave = (updated) => {
-    setMovies((prev) =>
-      prev.map((m) => (m.id === updated.id ? normalizeMovie(updated) : m))
-    );
-    closeEdit();
-    showSuccess("Cập nhật phim thành công");
+  const onSave = async (updated) => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      const token = await user.getIdToken();
+
+      await fetch(`http://localhost:5000/api/movies/${updated.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updated),
+      });
+
+      // reload lại
+      const res = await fetch("http://localhost:5000/api/movies");
+      const data = await res.json();
+      setMovies(data);
+
+      closeEdit();
+      showSuccess("Cập nhật phim thành công");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const onDelete = (id) => {
-    setMovies((prev) => prev.filter((m) => m.id !== id));
-    closeDelete();
+  const onDelete = async (id) => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      const token = await user.getIdToken();
+
+      await fetch(`http://localhost:5000/api/movies/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setMovies((prev) => prev.filter((m) => m.id !== id));
+      closeDelete();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const onAdd = (created) => {
-    setMovies((prev) => [normalizeMovie(created), ...prev]);
-    closeAdd();
-    showSuccess("Thêm phim thành công");
+  const onAdd = async (created) => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      const token = await user.getIdToken();
+
+      const res = await fetch("http://localhost:5000/api/movies", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...created,
+          genre: created.genre, // array OK
+        }),
+      });
+
+      const result = await res.json();
+
+      // reload lại list
+      const newRes = await fetch("http://localhost:5000/api/movies");
+      const newData = await newRes.json();
+      setMovies(newData);
+
+      closeAdd();
+      showSuccess("Thêm phim thành công");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const filteredMovies = useMemo(() => {
@@ -859,8 +879,8 @@ function StaffMoviesPage() {
           <div className="flex flex-wrap items-center gap-2 lg:justify-end">
             {[
               { label: "Tất cả", value: "all" },
-              { label: "Đang chiếu", value: "now-showing" },
-              { label: "Sắp chiếu", value: "coming-soon" },
+              { label: "Đang chiếu", value: "now_showing" },
+              { label: "Sắp chiếu", value: "coming_soon" },
             ].map((t) => {
               const active = tab === t.value;
               return (
