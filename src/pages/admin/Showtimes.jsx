@@ -105,49 +105,101 @@ export default function ShowtimesPage() {
   };
 
   // Load tất cả dữ liệu từ localStorage
+  // Showtimes.jsx - Phần sửa trong useEffect loadData
+
   useEffect(() => {
-    const loadData = () => {
+    const loadData = async () => {
       setDataLoading(true);
       try {
-        // Load movies
-        const savedMovies = localStorage.getItem("movies");
-        if (savedMovies) {
-          setMovies(JSON.parse(savedMovies));
-        } else {
-          setMovies([]);
-        }
+        const [moviesRes, cinemasRes, showtimesRes] = await Promise.all([
+          fetch("http://localhost:5000/api/movies"),
+          fetch("http://localhost:5000/api/cinemas"),
+          fetch("http://localhost:5000/api/showtimes"),
+        ]);
 
-        const savedCinemas = localStorage.getItem("cinemas");
-        if (savedCinemas) {
-          const cinemaData = JSON.parse(savedCinemas);
-          const normalizedCinemas = cinemaData.map((cinema) => ({
-            ...cinema,
-            id: cinema.id,
-            name: cinema.name,
-            rooms: cinema.rooms || [],
-            currentRooms: cinema.currentRooms || cinema.rooms?.length || 0,
-            maxRooms: cinema.maxRooms || 4,
-          }));
-          setCinemas(normalizedCinemas);
-        } else {
-          setCinemas([]);
-        }
+        const moviesData = await moviesRes.json();
+        const cinemasData = await cinemasRes.json();
+        let showtimesData = await showtimesRes.json();
 
+        console.log("🟢 RAW SHOWTIMES DATA:", showtimesData);
+
+        setMovies(moviesData);
+
+        const normalizedCinemas = cinemasData.map((cinema) => ({
+          ...cinema,
+          id: cinema.id,
+          name: cinema.name,
+          rooms: cinema.rooms || [],
+          currentRooms: cinema.rooms?.length || 0,
+          maxRooms: cinema.maxRooms || 4,
+        }));
+
+        setCinemas(normalizedCinemas);
+
+        // CHUẨN HÓA SHOWTIMES
+        const normalizedShowtimes = showtimesData.map((s) => {
+          // Xử lý date
+          let formattedDate = s.date;
+          if (s.date && s.date.includes("T")) {
+            formattedDate = s.date.split("T")[0];
+          }
+
+          // Xử lý time
+          let formattedTime = s.time;
+          if (s.time && s.time.includes(":")) {
+            formattedTime = s.time.slice(0, 5);
+          }
+
+          // Xử lý endTime
+          let formattedEndTime = s.endTime;
+          if (formattedEndTime && formattedEndTime.includes("T")) {
+            formattedEndTime = formattedEndTime.slice(0, 5);
+          } else if (formattedEndTime && formattedEndTime.includes(":")) {
+            formattedEndTime = formattedEndTime.slice(0, 5);
+          }
+
+          // Xử lý prices - chuyển string thành number
+          const normalizedPrices = {
+            Thường: Number(s.prices?.Thường) || Number(s.base_price) || 90000,
+            VIP: Number(s.prices?.VIP) || Number(s.base_price) * 1.2,
+            Couple: Number(s.prices?.Couple) || Number(s.base_price) * 1.5,
+          };
+
+          // Xử lý status
+          let normalizedStatus = s.status;
+          if (s.status === "available") normalizedStatus = "scheduled";
+
+          return {
+            id: String(s.id),
+            movieId: s.movieId,
+            movieTitle: s.movieTitle || "Không xác định",
+            cinemaId: s.cinemaId,
+            cinemaName: s.cinemaName || "Không xác định",
+            roomId: s.roomId,
+            roomName: s.roomName || "Không xác định",
+            type: s.type || "2D",
+            date: formattedDate,
+            time: formattedTime,
+            endTime: formattedEndTime || "---",
+            prices: normalizedPrices,
+            base_price: Number(s.base_price) || normalizedPrices.Thường,
+            totalSeats: s.totalSeats || 100,
+            availableSeats: s.availableSeats || 100,
+            bookedCount: s.bookedCount || 0,
+            revenue: s.revenue || 0,
+            status: normalizedStatus,
+            special: s.special || false,
+            specialType: s.specialType || null,
+          };
+        });
+
+        console.log("🟢 NORMALIZED SHOWTIMES:", normalizedShowtimes);
+        setShowtimes(normalizedShowtimes);
+
+        // pricingRules
         const savedPricingRules = localStorage.getItem("pricing_rules");
         if (savedPricingRules) {
-          const rules = JSON.parse(savedPricingRules);
-          setPricingRules(rules);
-          console.log("Loaded pricing rules:", rules.length);
-        } else {
-          console.warn("No pricing rules found in localStorage");
-          setPricingRules([]);
-        }
-
-        const savedShowtimes = localStorage.getItem("showtimes");
-        if (savedShowtimes) {
-          setShowtimes(JSON.parse(savedShowtimes));
-        } else {
-          setShowtimes([]);
+          setPricingRules(JSON.parse(savedPricingRules));
         }
       } catch (error) {
         console.error("Failed to load data:", error);
@@ -161,11 +213,12 @@ export default function ShowtimesPage() {
   }, []);
 
   // Save showtimes to localStorage
+  // Trong Showtimes.jsx, thêm useEffect này ngay sau useState
   useEffect(() => {
-    if (!dataLoading) {
-      localStorage.setItem("showtimes", JSON.stringify(showtimes));
-    }
-  }, [showtimes, dataLoading]);
+    console.log("🔍 ALL SHOWTIMES:", showtimes);
+    console.log("🔍 FIRST SHOWTIME:", showtimes[0]);
+    console.log("🔍 PRICES STRUCTURE:", showtimes[0]?.prices);
+  }, [showtimes]);
 
   // Listen for changes in localStorage
   useEffect(() => {

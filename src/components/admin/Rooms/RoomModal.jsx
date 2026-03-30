@@ -2,7 +2,14 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
-export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom, cinemas = [] }) {
+export default function RoomModal({
+  show,
+  onClose,
+  onAdd,
+  onUpdate,
+  editingRoom,
+  cinemas = [],
+}) {
   const [form, setForm] = useState({
     name: "",
     cinemaId: "",
@@ -23,7 +30,7 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
   useEffect(() => {
     if (cinemas && cinemas.length > 0 && !editingRoom) {
       const firstCinema = cinemas[0];
-      setForm(prev => ({
+      setForm((prev) => ({
         ...prev,
         cinemaId: firstCinema.id,
         cinemaName: firstCinema.name,
@@ -47,7 +54,7 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
       });
       // Hiển thị VIP rows dưới dạng chuỗi phân cách bằng dấu phẩy
       setVipRowsInput((editingRoom.vipRows || []).join(", "));
-      const cinema = cinemas?.find(c => c.id == editingRoom.cinemaId);
+      const cinema = cinemas?.find((c) => c.id == editingRoom.cinemaId);
       setSelectedCinemaData(cinema);
     } else {
       // Reset input khi thêm mới
@@ -59,8 +66,7 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
   if (!show) return null;
 
   const getCurrentRoomCount = (cinema) => {
-    if (!cinema) return 0;
-    return cinema.rooms?.length || 0;
+    return cinema.currentRooms || 0;
   };
 
   const canAddRoom = () => {
@@ -85,15 +91,16 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
     const newErrors = {};
     if (!form.name.trim()) newErrors.name = "Tên phòng không được để trống";
     if (!form.cinemaId) newErrors.cinemaId = "Vui lòng chọn rạp chiếu";
-    
+
     if (!editingRoom && !canAddRoom()) {
       const maxRooms = selectedCinemaData?.maxRooms || 4;
       newErrors.cinemaId = `Rạp này đã đạt giới hạn tối đa ${maxRooms} phòng. Không thể thêm phòng mới.`;
     }
-    
-    if (form.rows < 4 || form.rows > 20) newErrors.rows = "Số hàng phải từ 4-20";
+
+    if (form.rows < 4 || form.rows > 20)
+      newErrors.rows = "Số hàng phải từ 4-20";
     if (form.cols < 4 || form.cols > 20) newErrors.cols = "Số cột phải từ 4-20";
-    
+
     if (form.coupleRow) {
       if (form.coupleRow < 1 || form.coupleRow > form.rows) {
         newErrors.coupleRow = `Hàng couple phải từ 1-${form.rows}`;
@@ -102,12 +109,14 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
         newErrors.coupleRow = "Hàng couple không thể trùng với hàng VIP";
       }
     }
-    
-    const invalidVipRows = form.vipRows.filter(row => row < 1 || row > form.rows);
+
+    const invalidVipRows = form.vipRows.filter(
+      (row) => row < 1 || row > form.rows,
+    );
     if (invalidVipRows.length > 0) {
       newErrors.vipRows = `Hàng VIP phải từ 1-${form.rows}`;
     }
-    
+
     return newErrors;
   };
 
@@ -115,7 +124,7 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
     setVipRowsInput(value);
     const parsedRows = parseVipRows(value);
     setForm({ ...form, vipRows: parsedRows });
-    
+
     // Xóa lỗi nếu có
     if (errors.vipRows) {
       setErrors({ ...errors, vipRows: null });
@@ -134,7 +143,8 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
       const totalCapacity = form.rows * form.cols;
       const roomData = {
         ...form,
-        cinemaName: cinemas.find(c => c.id == form.cinemaId)?.name || form.cinemaName,
+        cinemaName:
+          cinemas.find((c) => c.id == form.cinemaId)?.name || form.cinemaName,
         capacity: totalCapacity,
         totalSeats: totalCapacity,
       };
@@ -152,20 +162,22 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
   };
 
   const handleCinemaChange = (cinemaId) => {
-    const cinema = cinemas.find(c => c.id == cinemaId);
-    setForm({ 
-      ...form, 
-      cinemaId, 
-      cinemaName: cinema?.name || "" 
+    const cinema = cinemas.find((c) => c.id == cinemaId);
+    setForm({
+      ...form,
+      cinemaId,
+      cinemaName: cinema?.name || "",
     });
     setSelectedCinemaData(cinema || null);
-    
+
     if (errors.cinemaId) {
       setErrors({ ...errors, cinemaId: null });
     }
   };
 
-  const currentRoomCount = selectedCinemaData ? getCurrentRoomCount(selectedCinemaData) : 0;
+  const currentRoomCount = selectedCinemaData
+    ? getCurrentRoomCount(selectedCinemaData)
+    : 0;
   const maxRooms = selectedCinemaData?.maxRooms || 4;
   const isAtMaxRooms = !editingRoom && currentRoomCount >= maxRooms;
 
@@ -213,7 +225,9 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
                 className="w-full px-4 py-2 rounded-lg outline-none transition-colors"
                 style={{
                   background: "#020617",
-                  border: errors.name ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                  border: errors.name
+                    ? "1px solid #ef4444"
+                    : "1px solid rgba(255,255,255,0.1)",
                   color: "#fff",
                 }}
               />
@@ -231,16 +245,18 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
                 value={form.cinemaId}
                 onChange={(e) => handleCinemaChange(e.target.value)}
                 disabled={!!editingRoom}
-                className={`w-full px-4 py-2 rounded-lg outline-none cursor-pointer ${editingRoom ? 'opacity-70' : ''}`}
+                className={`w-full px-4 py-2 rounded-lg outline-none cursor-pointer ${editingRoom ? "opacity-70" : ""}`}
                 style={{
                   background: "#020617",
-                  border: errors.cinemaId ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                  border: errors.cinemaId
+                    ? "1px solid #ef4444"
+                    : "1px solid rgba(255,255,255,0.1)",
                   color: "#fff",
                 }}
               >
                 <option value="">Chọn rạp chiếu</option>
-                {cinemas.map(cinema => {
-                  const roomCount = cinema.rooms?.length || 0;
+                {cinemas.map((cinema) => {
+                  const roomCount = cinema.currentRooms || 0;
                   return (
                     <option key={cinema.id} value={cinema.id}>
                       {cinema.name} ({roomCount}/{cinema.maxRooms || 4} phòng)
@@ -251,13 +267,21 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
               {errors.cinemaId && (
                 <p className="text-red-500 text-xs mt-1">{errors.cinemaId}</p>
               )}
-              
+
               {selectedCinemaData && !editingRoom && (
-                <div className={`mt-2 p-2 rounded-lg text-xs ${isAtMaxRooms ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'}`}>
+                <div
+                  className={`mt-2 p-2 rounded-lg text-xs ${isAtMaxRooms ? "bg-red-500/10 text-red-400" : "bg-blue-500/10 text-blue-400"}`}
+                >
                   {isAtMaxRooms ? (
-                    <span>⚠️ Rạp này đã đạt giới hạn {maxRooms} phòng. Không thể thêm phòng mới.</span>
+                    <span>
+                      ⚠️ Rạp này đã đạt giới hạn {maxRooms} phòng. Không thể
+                      thêm phòng mới.
+                    </span>
                   ) : (
-                    <span>📊 Rạp hiện có {currentRoomCount}/{maxRooms} phòng. Có thể thêm {maxRooms - currentRoomCount} phòng nữa.</span>
+                    <span>
+                      📊 Rạp hiện có {currentRoomCount}/{maxRooms} phòng. Có thể
+                      thêm {maxRooms - currentRoomCount} phòng nữa.
+                    </span>
                   )}
                 </div>
               )}
@@ -265,7 +289,9 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
 
             {/* Loại phòng */}
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Loại phòng</label>
+              <label className="block text-sm text-gray-400 mb-2">
+                Loại phòng
+              </label>
               <select
                 value={form.type}
                 onChange={(e) => setForm({ ...form, type: e.target.value })}
@@ -285,7 +311,9 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
 
             {/* Trạng thái */}
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Trạng thái</label>
+              <label className="block text-sm text-gray-400 mb-2">
+                Trạng thái
+              </label>
               <select
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
@@ -311,11 +339,15 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
                 min={4}
                 max={20}
                 value={form.rows}
-                onChange={(e) => setForm({ ...form, rows: Number(e.target.value) })}
+                onChange={(e) =>
+                  setForm({ ...form, rows: Number(e.target.value) })
+                }
                 className="w-full px-4 py-2 rounded-lg outline-none"
                 style={{
                   background: "#020617",
-                  border: errors.rows ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                  border: errors.rows
+                    ? "1px solid #ef4444"
+                    : "1px solid rgba(255,255,255,0.1)",
                   color: "#fff",
                 }}
               />
@@ -334,11 +366,15 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
                 min={4}
                 max={20}
                 value={form.cols}
-                onChange={(e) => setForm({ ...form, cols: Number(e.target.value) })}
+                onChange={(e) =>
+                  setForm({ ...form, cols: Number(e.target.value) })
+                }
                 className="w-full px-4 py-2 rounded-lg outline-none"
                 style={{
                   background: "#020617",
-                  border: errors.cols ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                  border: errors.cols
+                    ? "1px solid #ef4444"
+                    : "1px solid rgba(255,255,255,0.1)",
                   color: "#fff",
                 }}
               />
@@ -360,7 +396,9 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
                 className="w-full px-4 py-2 rounded-lg outline-none"
                 style={{
                   background: "#020617",
-                  border: errors.vipRows ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                  border: errors.vipRows
+                    ? "1px solid #ef4444"
+                    : "1px solid rgba(255,255,255,0.1)",
                   color: "#fff",
                 }}
               />
@@ -380,15 +418,19 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
               <input
                 type="number"
                 value={form.coupleRow || ""}
-                onChange={(e) => setForm({ 
-                  ...form, 
-                  coupleRow: e.target.value ? Number(e.target.value) : null 
-                })}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    coupleRow: e.target.value ? Number(e.target.value) : null,
+                  })
+                }
                 placeholder="VD: 10"
                 className="w-full px-4 py-2 rounded-lg outline-none"
                 style={{
                   background: "#020617",
-                  border: errors.coupleRow ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                  border: errors.coupleRow
+                    ? "1px solid #ef4444"
+                    : "1px solid rgba(255,255,255,0.1)",
                   color: "#fff",
                 }}
               />
@@ -407,7 +449,9 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
                 border: "1px solid rgba(229,9,20,0.15)",
               }}
             >
-              <div className="text-xs text-gray-400 mb-2">Thông tin tổng quan</div>
+              <div className="text-xs text-gray-400 mb-2">
+                Thông tin tổng quan
+              </div>
               <div className="flex justify-between items-center">
                 <div>
                   <div className="text-2xl font-bold text-red-500">
@@ -450,14 +494,16 @@ export default function RoomModal({ show, onClose, onAdd, onUpdate, editingRoom,
             onClick={handleSubmit}
             disabled={loading || (!editingRoom && isAtMaxRooms)}
             className={`flex-1 py-2.5 rounded-lg transition-colors hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 ${
-              !editingRoom && isAtMaxRooms ? 'cursor-not-allowed' : ''
+              !editingRoom && isAtMaxRooms ? "cursor-not-allowed" : ""
             }`}
             style={{
               background: "#e50914",
               color: "#fff",
             }}
           >
-            {loading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+            {loading && (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            )}
             {editingRoom ? "Lưu cấu hình" : "Thêm phòng"}
           </button>
         </div>

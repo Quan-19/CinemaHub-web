@@ -23,7 +23,7 @@ export default function ShowtimeModal({
   // Cập nhật danh sách phòng khi chọn rạp
   useEffect(() => {
     if (form?.cinemaId) {
-      const cinema = cinemas.find(c => c.id == form.cinemaId);
+      const cinema = cinemas.find((c) => c.id == form.cinemaId);
       if (cinema) {
         const rooms = cinema.rooms || [];
         setAvailableRooms(rooms);
@@ -45,8 +45,8 @@ export default function ShowtimeModal({
     if (searchMovieTerm.trim() === "") {
       setFilteredMovies([]);
     } else {
-      const filtered = movies.filter(movie =>
-        movie.title?.toLowerCase().includes(searchMovieTerm.toLowerCase())
+      const filtered = movies.filter((movie) =>
+        movie.title?.toLowerCase().includes(searchMovieTerm.toLowerCase()),
       );
       setFilteredMovies(filtered.slice(0, 10));
     }
@@ -55,7 +55,7 @@ export default function ShowtimeModal({
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        dropdownRef.current && 
+        dropdownRef.current &&
         !dropdownRef.current.contains(event.target) &&
         movieInputRef.current &&
         !movieInputRef.current.contains(event.target)
@@ -69,16 +69,18 @@ export default function ShowtimeModal({
 
   if (!show) return null;
 
-  const inputClass = "w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30";
-  
-  const selectClass = "w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition [&>option]:bg-[#2d2d44] [&>option]:text-white";
+  const inputClass =
+    "w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30";
+
+  const selectClass =
+    "w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition [&>option]:bg-[#2d2d44] [&>option]:text-white";
 
   const handleMovieSelect = (movie) => {
-    setForm({ 
+    setForm({
       ...form,
-      movieId: movie.id, 
+      movieId: movie.id,
       movieTitle: movie.title,
-      movieDuration: movie.duration
+      movieDuration: movie.duration,
     });
     setSearchMovieTerm(movie.title);
     setShowMovieDropdown(false);
@@ -93,13 +95,13 @@ export default function ShowtimeModal({
   };
 
   const handleCinemaChange = (cinemaId) => {
-    const cinema = cinemas.find(c => c.id == cinemaId);
+    const cinema = cinemas.find((c) => c.id == cinemaId);
     if (cinema) {
       const rooms = cinema.rooms || [];
-      
-      setForm({ 
+
+      setForm({
         ...form,
-        cinemaId, 
+        cinemaId,
         cinemaName: cinema?.name || "",
         roomId: "",
         roomName: "",
@@ -111,12 +113,12 @@ export default function ShowtimeModal({
   };
 
   const handleRoomChange = (roomId) => {
-    const cinema = cinemas.find(c => c.id == form.cinemaId);
-    const room = cinema?.rooms?.find(r => r.id == roomId);
+    const cinema = cinemas.find((c) => c.id == form.cinemaId);
+    const room = cinema?.rooms?.find((r) => r.id == roomId);
     if (room) {
-      setForm({ 
+      setForm({
         ...form,
-        roomId, 
+        roomId,
         roomName: room.name,
         type: room.type,
         totalSeats: room.capacity || room.totalSeats || 0,
@@ -128,18 +130,18 @@ export default function ShowtimeModal({
   // Tính giờ kết thúc dựa trên giờ bắt đầu và thời lượng phim
   const calculateEndTime = () => {
     if (!form?.time || !form?.movieDuration) return "";
-    const [hours, minutes] = form.time.split(':').map(Number);
+    const [hours, minutes] = form.time.split(":").map(Number);
     const totalMinutes = hours * 60 + minutes + form.movieDuration + 15; // +15 phút quảng cáo
     const endHours = Math.floor(totalMinutes / 60);
     const endMinutes = totalMinutes % 60;
-    
+
     // Nếu giờ kết thúc >= 24, hiển thị với định dạng "+1 ngày"
     if (endHours >= 24) {
       const nextDayHours = endHours - 24;
-      return `${String(nextDayHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')} (ngày hôm sau)`;
+      return `${String(nextDayHours).padStart(2, "0")}:${String(endMinutes).padStart(2, "0")} (ngày hôm sau)`;
     }
-    
-    return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+
+    return `${String(endHours).padStart(2, "0")}:${String(endMinutes).padStart(2, "0")}`;
   };
 
   // Khi giờ bắt đầu hoặc phim thay đổi, tự động tính giờ kết thúc
@@ -148,39 +150,40 @@ export default function ShowtimeModal({
       setForm({ ...form, time: time, endTime: "" });
       return;
     }
-    
-    const [hours, minutes] = time.split(':').map(Number);
+
+    const [hours, minutes] = time.split(":").map(Number);
     const totalMinutes = hours * 60 + minutes + form.movieDuration + 15;
     const endHours = Math.floor(totalMinutes / 60);
     const endMinutes = totalMinutes % 60;
-    
+
     let endTimeStr;
     if (endHours >= 24) {
       const nextDayHours = endHours - 24;
-      endTimeStr = `${String(nextDayHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')} (ngày hôm sau)`;
+      endTimeStr = `${String(nextDayHours).padStart(2, "0")}:${String(endMinutes).padStart(2, "0")} (ngày hôm sau)`;
     } else {
-      endTimeStr = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+      endTimeStr = `${String(endHours).padStart(2, "0")}:${String(endMinutes).padStart(2, "0")}`;
     }
-    
-    setForm({ 
-      ...form, 
+
+    setForm({
+      ...form,
       time: time,
-      endTime: endTimeStr
+      endTime: endTimeStr,
     });
   };
 
   // Xử lý thay đổi giá cho từng loại ghế
   const handlePriceChange = (seatType, value) => {
+    const numValue = value === "" ? 0 : Number(value);
     setForm({
       ...form,
       prices: {
-        ...form.prices,
-        [seatType]: Number(value)
-      }
+        ...(form.prices || { Thường: 0, VIP: 0, Couple: 0 }),
+        [seatType]: numValue,
+      },
     });
   };
 
-  const selectedCinema = cinemas.find(c => c.id == form?.cinemaId);
+  const selectedCinema = cinemas.find((c) => c.id == form?.cinemaId);
   const currentRoomCount = selectedCinema?.rooms?.length || 0;
   const maxRooms = selectedCinema?.maxRooms || 4;
 
@@ -189,9 +192,27 @@ export default function ShowtimeModal({
 
   // Danh sách loại ghế
   const seatTypes = [
-    { key: "Thường", label: "Ghế Thường", color: "text-gray-300", bg: "bg-gray-500/10", border: "border-gray-500/20" },
-    { key: "VIP", label: "Ghế VIP", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-    { key: "Couple", label: "Ghế Couple", color: "text-pink-400", bg: "bg-pink-500/10", border: "border-pink-500/20" }
+    {
+      key: "Thường",
+      label: "Ghế Thường",
+      color: "text-gray-300",
+      bg: "bg-gray-500/10",
+      border: "border-gray-500/20",
+    },
+    {
+      key: "VIP",
+      label: "Ghế VIP",
+      color: "text-amber-400",
+      bg: "bg-amber-500/10",
+      border: "border-amber-500/20",
+    },
+    {
+      key: "Couple",
+      label: "Ghế Couple",
+      color: "text-pink-400",
+      bg: "bg-pink-500/10",
+      border: "border-pink-500/20",
+    },
   ];
 
   return (
@@ -215,10 +236,15 @@ export default function ShowtimeModal({
           <div className="grid grid-cols-2 gap-4">
             {/* Phim - Autocomplete */}
             <div className="col-span-2 relative">
-              <label className="block text-xs text-white/55 mb-1.5">Phim *</label>
+              <label className="block text-xs text-white/55 mb-1.5">
+                Phim *
+              </label>
               <div className="relative">
                 <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35" />
+                  <Search
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35"
+                  />
                   <input
                     ref={movieInputRef}
                     type="text"
@@ -232,11 +258,19 @@ export default function ShowtimeModal({
                     <button
                       onClick={() => {
                         handleMovieSearchChange("");
-                        setForm({ ...form, movieId: "", movieTitle: "", movieDuration: null });
+                        setForm({
+                          ...form,
+                          movieId: "",
+                          movieTitle: "",
+                          movieDuration: null,
+                        });
                       }}
                       className="absolute right-3 top-1/2 -translate-y-1/2"
                     >
-                      <X size={14} className="text-white/35 hover:text-white/70" />
+                      <X
+                        size={14}
+                        className="text-white/35 hover:text-white/70"
+                      />
                     </button>
                   )}
                 </div>
@@ -246,15 +280,19 @@ export default function ShowtimeModal({
                     ref={dropdownRef}
                     className="absolute z-50 mt-1 w-full bg-[#1a1a2e] border border-white/10 rounded-lg shadow-xl max-h-64 overflow-y-auto"
                   >
-                    {filteredMovies.map(movie => (
+                    {filteredMovies.map((movie) => (
                       <button
                         key={movie.id}
                         onClick={() => handleMovieSelect(movie)}
                         className="w-full text-left px-4 py-2.5 hover:bg-white/10 transition border-b border-white/5 last:border-0"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-white font-medium">{movie.title}</span>
-                          <span className="text-xs text-white/40">{movie.duration} phút</span>
+                          <span className="text-sm text-white font-medium">
+                            {movie.title}
+                          </span>
+                          <span className="text-xs text-white/40">
+                            {movie.duration} phút
+                          </span>
                         </div>
                         {movie.rating && (
                           <div className="text-xs text-white/30 mt-0.5">
@@ -266,34 +304,47 @@ export default function ShowtimeModal({
                   </div>
                 )}
 
-                {showMovieDropdown && searchMovieTerm && filteredMovies.length === 0 && (
-                  <div className="absolute z-50 mt-1 w-full bg-[#1a1a2e] border border-white/10 rounded-lg shadow-xl p-4 text-center">
-                    <p className="text-sm text-white/40">Không tìm thấy phim "{searchMovieTerm}"</p>
-                  </div>
-                )}
+                {showMovieDropdown &&
+                  searchMovieTerm &&
+                  filteredMovies.length === 0 && (
+                    <div className="absolute z-50 mt-1 w-full bg-[#1a1a2e] border border-white/10 rounded-lg shadow-xl p-4 text-center">
+                      <p className="text-sm text-white/40">
+                        Không tìm thấy phim "{searchMovieTerm}"
+                      </p>
+                    </div>
+                  )}
               </div>
               {form?.movieId && (
                 <p className="text-[10px] text-green-400 mt-1">
-                  ✓ Đã chọn: {form.movieTitle} • Thời lượng: {form.movieDuration} phút
+                  ✓ Đã chọn: {form.movieTitle} • Thời lượng:{" "}
+                  {form.movieDuration} phút
                 </p>
               )}
             </div>
 
             {/* Rạp chiếu */}
             <div>
-              <label className="block text-xs text-white/55 mb-1.5">Rạp chiếu *</label>
+              <label className="block text-xs text-white/55 mb-1.5">
+                Rạp chiếu *
+              </label>
               <select
                 value={form?.cinemaId || ""}
-                onChange={e => handleCinemaChange(e.target.value)}
+                onChange={(e) => handleCinemaChange(e.target.value)}
                 className={selectClass}
                 required
               >
-                <option value="" className="bg-[#2d2d44] text-white/70">Chọn rạp</option>
-                {cinemas.map(cinema => {
+                <option value="" className="bg-[#2d2d44] text-white/70">
+                  Chọn rạp
+                </option>
+                {cinemas.map((cinema) => {
                   const roomCount = cinema.rooms?.length || 0;
                   const maxRoomLimit = cinema.maxRooms || 4;
                   return (
-                    <option key={cinema.id} value={cinema.id} className="bg-[#2d2d44] text-white">
+                    <option
+                      key={cinema.id}
+                      value={cinema.id}
+                      className="bg-[#2d2d44] text-white"
+                    >
                       {cinema.name} ({roomCount}/{maxRoomLimit} phòng)
                     </option>
                   );
@@ -308,25 +359,32 @@ export default function ShowtimeModal({
 
             {/* Phòng chiếu */}
             <div>
-              <label className="block text-xs text-white/55 mb-1.5">Phòng chiếu *</label>
+              <label className="block text-xs text-white/55 mb-1.5">
+                Phòng chiếu *
+              </label>
               <select
                 value={form?.roomId || ""}
-                onChange={e => handleRoomChange(e.target.value)}
+                onChange={(e) => handleRoomChange(e.target.value)}
                 className={selectClass}
                 disabled={isRoomDisabled}
                 required
                 style={{ opacity: isRoomDisabled ? 0.5 : 1 }}
               >
                 <option value="" className="bg-[#2d2d44] text-white/70">
-                  {!form?.cinemaId 
-                    ? "Chọn rạp trước" 
-                    : !hasRooms 
-                    ? "Rạp này chưa có phòng" 
-                    : "Chọn phòng"}
+                  {!form?.cinemaId
+                    ? "Chọn rạp trước"
+                    : !hasRooms
+                      ? "Rạp này chưa có phòng"
+                      : "Chọn phòng"}
                 </option>
-                {availableRooms.map(room => (
-                  <option key={room.id} value={room.id} className="bg-[#2d2d44] text-white">
-                    {room.name} ({room.type} - {room.capacity || room.totalSeats || 0} ghế)
+                {availableRooms.map((room) => (
+                  <option
+                    key={room.id}
+                    value={room.id}
+                    className="bg-[#2d2d44] text-white"
+                  >
+                    {room.name} ({room.type} -{" "}
+                    {room.capacity || room.totalSeats || 0} ghế)
                   </option>
                 ))}
               </select>
@@ -344,46 +402,59 @@ export default function ShowtimeModal({
 
             {/* Ngày chiếu */}
             <div>
-              <label className="block text-xs text-white/55 mb-1.5">Ngày chiếu *</label>
+              <label className="block text-xs text-white/55 mb-1.5">
+                Ngày chiếu *
+              </label>
               <input
                 type="date"
                 value={form?.date || ""}
-                onChange={e => setForm({ ...form, date: e.target.value })}
+                onChange={(e) => setForm({ ...form, date: e.target.value })}
                 className={inputClass}
-                min={new Date().toISOString().split('T')[0]}
+                min={new Date().toISOString().split("T")[0]}
                 required
-                style={{ colorScheme: 'dark' }}
+                style={{ colorScheme: "dark" }}
               />
             </div>
 
             {/* Giờ bắt đầu */}
             <div>
-              <label className="block text-xs text-white/55 mb-1.5">Giờ bắt đầu *</label>
+              <label className="block text-xs text-white/55 mb-1.5">
+                Giờ bắt đầu *
+              </label>
               <input
                 type="time"
                 value={form?.time || ""}
-                onChange={e => handleTimeChange(e.target.value)}
+                onChange={(e) => handleTimeChange(e.target.value)}
                 className={inputClass}
                 required
-                style={{ colorScheme: 'dark' }}
+                style={{ colorScheme: "dark" }}
               />
             </div>
 
             {/* Giờ kết thúc - Tự động tính */}
             <div>
-              <label className="block text-xs text-white/55 mb-1.5">Giờ kết thúc</label>
-              <div className={`w-full border rounded-lg px-3 py-2 text-sm ${
-                form?.endTime && form.endTime.includes('ngày hôm sau') 
-                  ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30' 
-                  : 'text-white bg-[#2d2d44] border-white/10'
-              }`}>
-                {form?.endTime || (form?.movieDuration ? calculateEndTime() : "Chọn phim và giờ bắt đầu")}
+              <label className="block text-xs text-white/55 mb-1.5">
+                Giờ kết thúc
+              </label>
+              <div
+                className={`w-full border rounded-lg px-3 py-2 text-sm ${
+                  form?.endTime && form.endTime.includes("ngày hôm sau")
+                    ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/30"
+                    : "text-white bg-[#2d2d44] border-white/10"
+                }`}
+              >
+                {form?.endTime ||
+                  (form?.movieDuration
+                    ? calculateEndTime()
+                    : "Chọn phim và giờ bắt đầu")}
               </div>
               {form?.movieDuration && (
                 <p className="text-[10px] text-blue-400 mt-1">
                   ⏱️ Thời lượng: {form.movieDuration} phút + 15 phút quảng cáo
-                  {form?.endTime && form.endTime.includes('ngày hôm sau') && (
-                    <span className="text-yellow-400 ml-2">📅 Kết thúc vào ngày hôm sau</span>
+                  {form?.endTime && form.endTime.includes("ngày hôm sau") && (
+                    <span className="text-yellow-400 ml-2">
+                      📅 Kết thúc vào ngày hôm sau
+                    </span>
                   )}
                 </p>
               )}
@@ -391,15 +462,21 @@ export default function ShowtimeModal({
 
             {/* Định dạng */}
             <div>
-              <label className="block text-xs text-white/55 mb-1.5">Định dạng</label>
-              <div className={`w-full border rounded-lg px-3 py-2 text-sm ${form?.type ? 'text-white' : 'text-white/40'} bg-[#2d2d44] border-white/10`}>
+              <label className="block text-xs text-white/55 mb-1.5">
+                Định dạng
+              </label>
+              <div
+                className={`w-full border rounded-lg px-3 py-2 text-sm ${form?.type ? "text-white" : "text-white/40"} bg-[#2d2d44] border-white/10`}
+              >
                 {form?.type || "Chưa chọn phòng"}
               </div>
             </div>
 
             {/* Tổng số ghế */}
             <div>
-              <label className="block text-xs text-white/55 mb-1.5">Số ghế</label>
+              <label className="block text-xs text-white/55 mb-1.5">
+                Số ghế
+              </label>
               <div className="w-full bg-[#2d2d44] border border-white/10 rounded-lg px-3 py-2 text-white text-sm">
                 {form?.totalSeats || 0} ghế
               </div>
@@ -412,25 +489,35 @@ export default function ShowtimeModal({
               Giá vé theo loại ghế
             </label>
             <div className="space-y-3">
-              {seatTypes.map(seat => (
-                <div key={seat.key} className={`p-3 rounded-lg border ${seat.bg} ${seat.border}`}>
+              {seatTypes.map((seat) => (
+                <div
+                  key={seat.key}
+                  className={`p-3 rounded-lg border ${seat.bg} ${seat.border}`}
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <label className={`block text-sm font-medium ${seat.color} mb-1`}>
+                      <label
+                        className={`block text-sm font-medium ${seat.color} mb-1`}
+                      >
                         {seat.label}
                       </label>
                       <p className="text-[10px] text-white/40">
-                        Giá áp dụng cho tất cả ghế {seat.key.toLowerCase()} trong phòng
+                        Giá áp dụng cho tất cả ghế {seat.key.toLowerCase()}{" "}
+                        trong phòng
                       </p>
                     </div>
                     <div className="w-40">
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">₫</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">
+                          ₫
+                        </span>
                         <input
                           type="number"
                           placeholder="0"
-                          value={form?.prices?.[seat.key] || ""}
-                          onChange={e => handlePriceChange(seat.key, e.target.value)}
+                          value={form?.prices?.[seat.key] ?? ""}
+                          onChange={(e) =>
+                            handlePriceChange(seat.key, e.target.value)
+                          }
                           className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition"
                           min="0"
                           step="1000"
@@ -442,22 +529,33 @@ export default function ShowtimeModal({
               ))}
             </div>
             <p className="text-[10px] text-blue-400 mt-3 flex items-center gap-1">
-              💡 Giá vé được tự động lấy từ bảng giá theo loại ghế và thời gian chiếu
+              💡 Giá vé được tự động lấy từ bảng giá theo loại ghế và thời gian
+              chiếu
             </p>
           </div>
 
           {/* Trạng thái */}
           <div>
-            <label className="block text-xs text-white/55 mb-1.5">Trạng thái</label>
+            <label className="block text-xs text-white/55 mb-1.5">
+              Trạng thái
+            </label>
             <select
               value={form?.status || "scheduled"}
-              onChange={e => setForm({ ...form, status: e.target.value })}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
               className={selectClass}
             >
-              <option value="scheduled" className="bg-[#2d2d44] text-green-400">Sắp chiếu</option>
-              <option value="ongoing" className="bg-[#2d2d44] text-yellow-400">Đang chiếu</option>
-              <option value="ended" className="bg-[#2d2d44] text-gray-400">Đã kết thúc</option>
-              <option value="cancelled" className="bg-[#2d2d44] text-red-400">Hủy</option>
+              <option value="scheduled" className="bg-[#2d2d44] text-green-400">
+                Sắp chiếu
+              </option>
+              <option value="ongoing" className="bg-[#2d2d44] text-yellow-400">
+                Đang chiếu
+              </option>
+              <option value="ended" className="bg-[#2d2d44] text-gray-400">
+                Đã kết thúc
+              </option>
+              <option value="cancelled" className="bg-[#2d2d44] text-red-400">
+                Hủy
+              </option>
             </select>
           </div>
 
@@ -501,10 +599,17 @@ export default function ShowtimeModal({
           </button>
           <button
             onClick={() => onSave(form)}
-            disabled={loading || !form?.movieId || !form?.cinemaId || !form?.roomId || !form?.date || !form?.time}
+            disabled={
+              loading ||
+              !form?.movieId ||
+              !form?.cinemaId ||
+              !form?.roomId ||
+              !form?.date ||
+              !form?.time
+            }
             className="flex-1 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Đang xử lý..." : (isEdit ? "Lưu thay đổi" : "Thêm suất")}
+            {loading ? "Đang xử lý..." : isEdit ? "Lưu thay đổi" : "Thêm suất"}
           </button>
         </div>
       </div>
