@@ -91,7 +91,7 @@ function Navbar() {
           </span>
         </Link>
 
-        <div className="hidden lg:flex flex-1 max-w-md w-full items-center">
+        <div className="hidden xl:flex flex-1 max-w-md w-full items-center">
           <div className="relative w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/70 drop-shadow-md" />
             <input
@@ -129,7 +129,7 @@ function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="relative block lg:hidden">
+          <div className="relative block xl:hidden">
             {searchOpen ? (
               <div className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 backdrop-blur-md px-3 py-1.5 h-10 w-48 sm:w-64 absolute right-0 top-1/2 -translate-y-1/2">
                 <Search className="h-4 w-4 shrink-0 text-white/70" />

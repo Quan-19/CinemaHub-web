@@ -941,8 +941,8 @@ export const MovieDetailPage = () => {
                 </div>
                 <div className="flex overflow-x-auto gap-4 pb-4 snap-x pointer-events-auto" style={{ scrollbarWidth: "none" }}>
                   {related.map((m) => (
-                    <div key={m.movie_id} className="min-w-[150px] sm:min-w-[180px] snap-start">
-                      <MovieCard movie={m} />
+                    <div key={m.movie_id} className="min-w-[140px] sm:min-w-[160px] snap-start">
+                      <MovieCard movie={m} size="sm" />
                     </div>
                   ))}
                 </div>
