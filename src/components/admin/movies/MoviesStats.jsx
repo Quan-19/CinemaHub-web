@@ -15,11 +15,12 @@ export default function MoviesStats({ movies }) {
 
   // Tính các chỉ số
   const totalMovies = movies.length;
-  const averageDuration = Math.round(
-    movies.reduce((sum, m) => sum + (m.duration || 0), 0) / totalMovies || 0
-  );
-  const averageRating = movies.reduce((sum, m) => sum + (m.ratingScore || 0), 0) / totalMovies || 0;
-  const totalTickets = movies.reduce((sum, m) => sum + (m.tickets || 0), 0);
+  const averageDuration = totalMovies > 0 
+    ? Math.round(movies.reduce((sum, m) => sum + (m.duration || 0), 0) / totalMovies) 
+    : 0;
+  const averageRating = totalMovies > 0 
+    ? movies.reduce((sum, m) => sum + (m.rating || 0), 0) / totalMovies 
+    : 0;
 
   const stats = [
     {
@@ -60,7 +61,7 @@ export default function MoviesStats({ movies }) {
   return (
     <div className="space-y-4">
       {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {stats.map((s) => {
           const IconComponent = s.icon;
           const percentage = totalMovies > 0 ? ((s.count / totalMovies) * 100).toFixed(0) : 0;
@@ -75,7 +76,7 @@ export default function MoviesStats({ movies }) {
               <div className="flex items-center gap-3">
                 {/* Thanh màu bên trái */}
                 <div 
-                  className="w-2 h-10 rounded-full transition-all group-hover:h-12 group-hover:w-3" 
+                  className="w-2 h-12 rounded-full transition-all group-hover:h-14 group-hover:w-3" 
                   style={{ background: s.color }} 
                 />
                 
@@ -100,7 +101,6 @@ export default function MoviesStats({ movies }) {
                           }}
                         />
                       </div>
-                      <div className="text-[10px] text-gray-500 mt-1">{percentage}% tổng số phim</div>
                     </div>
                   )}
                 </div>
@@ -120,34 +120,6 @@ export default function MoviesStats({ movies }) {
             </div>
           );
         })}
-      </div>
-      
-      {/* Thêm thông tin tổng quan */}
-      <div className="flex items-center justify-between text-xs text-gray-500 px-2">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <TrendingUp size={12} />
-            <span>Tổng số phim: {totalMovies}</span>
-          </div>
-          {averageDuration > 0 && (
-            <div className="flex items-center gap-1">
-              <Clock size={12} />
-              <span>TB thời lượng: {averageDuration} phút</span>
-            </div>
-          )}
-          {averageRating > 0 && (
-            <div className="flex items-center gap-1">
-              <Star size={12} />
-              <span>TB đánh giá: {averageRating.toFixed(1)}/10</span>
-            </div>
-          )}
-          {totalTickets > 0 && (
-            <div className="flex items-center gap-1">
-              <TrendingUp size={12} />
-              <span>Tổng vé: {totalTickets}</span>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
