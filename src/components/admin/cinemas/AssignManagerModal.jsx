@@ -38,13 +38,11 @@ export default function AssignManagerModal({
         if (!res.ok) throw new Error("Failed to fetch users");
         
         const data = await res.json();
-        // Lọc chỉ lấy nhân viên (staff) có thể làm quản lý
         const staffUsers = (Array.isArray(data) ? data : []).filter(
           u => u.role === "staff" && u.status === "active"
         );
         setUsers(staffUsers);
         
-        // Nếu cinema đã có manager, set selected là manager hiện tại
         if (cinema?.managerId) {
           const currentManager = staffUsers.find(u => u.id === cinema.managerId);
           if (currentManager) {
@@ -79,9 +77,10 @@ export default function AssignManagerModal({
       }
       
       const token = await user.getIdToken();
-
+      const cinemaId = cinema.id || cinema.cinema_id;
+      
       const res = await fetch(
-        `http://localhost:5000/api/cinemas/${cinema.id || cinema.cinema_id}/assign-manager`,
+        `http://localhost:5000/api/cinemas/${cinemaId}/assign-manager`,
         {
           method: "PUT",
           headers: {
@@ -90,10 +89,8 @@ export default function AssignManagerModal({
           },
           body: JSON.stringify({ 
             manager_id: selected?.id || null,
-            manager_name: selected?.name || null,
-            manager_email: selected?.email || null,
           }),
-        },
+        }
       );
 
       if (!res.ok) {
@@ -104,14 +101,14 @@ export default function AssignManagerModal({
       const data = await res.json();
 
       if (onAssigned) {
-        onAssigned(cinema.id || cinema.cinema_id, {
+        onAssigned(cinemaId, {
           id: selected?.id || null,
           name: selected?.name || null,
           email: selected?.email || null,
         });
       }
       
-      toast.success(selected ? "Phân quyền quản lý thành công!" : "Đã xóa quản lý");
+      toast.success(data.message || (selected ? "Phân quyền quản lý thành công!" : "Đã xóa quản lý"));
       onClose();
     } catch (err) {
       console.error("Assign error:", err);
@@ -144,7 +141,6 @@ export default function AssignManagerModal({
             </div>
           ) : (
             <div className="max-h-[300px] overflow-y-auto space-y-2">
-              {/* Option: Không phân quyền */}
               <div
                 onClick={() => setSelected(null)}
                 className={`p-3 rounded-lg border cursor-pointer transition ${
@@ -156,7 +152,6 @@ export default function AssignManagerModal({
                 <p className="text-sm">❌ Không phân quyền (Xóa quản lý hiện tại)</p>
               </div>
 
-              {/* Danh sách nhân viên */}
               {users.length === 0 ? (
                 <div className="text-center py-8 text-white/40 text-sm">
                   Không có nhân viên nào để phân quyền
@@ -209,7 +204,7 @@ export default function AssignManagerModal({
             {submitting && (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             )}
-            {selected ? selected.name : "Phân quyền / Xóa quản lý"}
+            {selected ? `Phân quyền cho ${selected.name}` : "Xóa quản lý"}
           </button>
         </div>
       </div>
