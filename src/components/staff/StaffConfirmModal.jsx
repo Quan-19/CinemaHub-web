@@ -40,7 +40,7 @@ export default function StaffConfirmModal({
             type="button"
             onClick={onCancel}
             className={[
-              "h-11 border border-zinc-800 bg-zinc-900/40 text-sm font-semibold text-zinc-200 hover:bg-zinc-900",
+              "h-11 border border-zinc-700 bg-zinc-900/40 text-sm font-semibold text-zinc-200 hover:bg-zinc-900",
               buttonRadiusClassName,
             ].join(" ")}
           >

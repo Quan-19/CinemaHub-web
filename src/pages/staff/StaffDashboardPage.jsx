@@ -1,7 +1,14 @@
 import { useOutletContext } from "react-router-dom";
 import { TrendingUp, Users, Ticket, Timer } from "lucide-react";
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-
+import {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+} from "react";
+import { getAuth } from "firebase/auth";
 function StatCard({
   icon: Icon,
   accentClassName,
@@ -20,24 +27,18 @@ function StatCard({
             accentClassName,
           ].join(" ")}
         >
-          <Icon className="h-5 w-5" aria-hidden="true" />
+          <Icon className="h-5 w-5" />
         </div>
 
-        {delta ? (
-          <div className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-400">
-            {delta}
-          </div>
-        ) : (
-          <div className="rounded-full bg-zinc-500/10 px-2 py-1 text-xs font-semibold text-zinc-400">
-            0%
-          </div>
-        )}
+        <div className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-400">
+          {delta || "0%"}
+        </div>
       </div>
 
       <div className="mt-4">
         <div className="text-3xl font-bold tracking-tight">{value}</div>
         <div className="mt-1 text-sm text-zinc-400">{title}</div>
-        <div className="mt-2 text-xs text-zinc-500">
+        <div className="mt-2 text-xs text-zinc-400">
           {sub1}
           {sub2 ? <span className="ml-2">{sub2}</span> : null}
         </div>
@@ -57,7 +58,7 @@ function ShowtimeRow({
   accent,
 }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/20 p-4">
+    <div className="rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -72,7 +73,7 @@ function ShowtimeRow({
           <div className="mt-0.5 text-xs text-zinc-400">{room}</div>
         </div>
 
-        <span className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-2 py-1 text-[11px] font-semibold text-zinc-300">
+        <span className="rounded-lg border border-zinc-700 bg-zinc-900/40 px-2 py-1 text-[11px] font-semibold text-zinc-300">
           {tag}
         </span>
       </div>
@@ -84,7 +85,7 @@ function ShowtimeRow({
             style={{ width: `${Math.min(100, Math.max(0, progressPct))}%` }}
           />
         </div>
-        <div className="mt-2 text-right text-xs text-zinc-500">
+        <div className="mt-2 text-right text-xs text-zinc-400">
           {progressText}
         </div>
       </div>
@@ -153,14 +154,14 @@ function HourlyTicketsChart({ items }) {
   return (
     <div className="mt-4">
       <div className="grid grid-cols-[40px_1fr] gap-3">
-        <div className="flex h-36 flex-col justify-between pb-6 text-right text-xs font-medium text-zinc-500 sm:h-40">
+        <div className="flex h-36 flex-col justify-between pb-6 text-right text-xs font-medium text-zinc-400 sm:h-40">
           {ticks.map((t) => (
             <div key={t}>{t}</div>
           ))}
         </div>
 
         <div>
-          <div className="relative h-36 border-b border-l border-zinc-800/70 sm:h-40">
+          <div className="relative h-36 border-b border-l border-zinc-700/70 sm:h-40">
             {ticks
               .filter((t) => t !== 0)
               .map((t) => {
@@ -168,7 +169,7 @@ function HourlyTicketsChart({ items }) {
                 return (
                   <div
                     key={t}
-                    className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-zinc-800/60"
+                    className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-zinc-700/60"
                     style={{ bottom: `${pct}%` }}
                   />
                 );
@@ -181,7 +182,7 @@ function HourlyTicketsChart({ items }) {
             >
               {hoveredIndex != null ? (
                 <div
-                  className="pointer-events-none absolute z-10 w-40 rounded-xl border border-zinc-800 bg-zinc-950/95 px-3 py-2 text-sm shadow-sm backdrop-blur transition-all duration-150 ease-out"
+                  className="pointer-events-none absolute z-10 w-40 rounded-xl border border-zinc-700 bg-zinc-950/95 px-3 py-2 text-sm shadow-sm backdrop-blur transition-all duration-150 ease-out"
                   style={{ left: tooltipPos.left, top: tooltipPos.top }}
                   role="status"
                 >
@@ -229,7 +230,7 @@ function HourlyTicketsChart({ items }) {
               })}
             </div>
 
-            <div className="absolute inset-x-0 bottom-0 grid auto-cols-fr grid-flow-col gap-3 px-2 pt-2 text-center text-[11px] font-medium text-zinc-500 sm:gap-4">
+            <div className="absolute inset-x-0 bottom-0 grid auto-cols-fr grid-flow-col gap-3 px-2 pt-2 text-center text-[11px] font-medium text-zinc-400 sm:gap-4">
               {items.map((item) => (
                 <div key={item.label}>{item.label}</div>
               ))}
@@ -243,25 +244,24 @@ function HourlyTicketsChart({ items }) {
 
 function RecentTicket({ initials, name, detail, seats, timeAgo, ok }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/20 p-4">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-xs font-bold text-zinc-200 ring-1 ring-zinc-700">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-xs font-bold text-zinc-200">
           {initials}
         </div>
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold">{name}</div>
           <div className="truncate text-xs text-zinc-400">{detail}</div>
-          <div className="mt-1 text-xs text-zinc-500">Ghế: {seats}</div>
+          <div className="mt-1 text-xs text-zinc-400">Ghế: {seats}</div>
         </div>
       </div>
 
       <div className="text-right">
-        <div className="text-xs text-zinc-500">{timeAgo}</div>
+        <div className="text-xs text-zinc-400">{timeAgo}</div>
         <div
-          className={[
-            "mt-2 text-xs font-semibold",
-            ok ? "text-emerald-400" : "text-zinc-400",
-          ].join(" ")}
+          className={`mt-2 text-xs font-semibold ${
+            ok ? "text-emerald-400" : "text-zinc-400"
+          }`}
         >
           {ok ? "✓ Xác nhận" : "Chờ"}
         </div>
@@ -273,6 +273,47 @@ function RecentTicket({ initials, name, detail, seats, timeAgo, ok }) {
 function StaffDashboardPage() {
   const { subtitle } = useOutletContext();
 
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // 🔥 CALL API
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+
+        if (!user) {
+          console.log("❌ No user logged in");
+          return;
+        }
+
+        const token = await user.getIdToken();
+
+        console.log("TOKEN:", token);
+
+        const res = await fetch("http://localhost:5000/api/dashboard", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const result = await res.json();
+        setData(result);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
+
+  if (loading) return <div className="text-white p-6">Loading...</div>;
+
+  const todayRevenue = data?.revenue?.slice(-1)[0]?.revenue || 0;
+
   return (
     <div className="space-y-5">
       <div>
@@ -280,136 +321,74 @@ function StaffDashboardPage() {
         <p className="mt-1 text-sm text-zinc-400">{subtitle}</p>
       </div>
 
+      {/* ================= STATS ================= */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={Ticket}
           accentClassName="bg-cinema-primary/15 text-cinema-primary"
-          value="374"
-          title="Vé bán hôm nay"
-          sub1="Mục tiêu: 400"
-          delta="+6%"
+          value={data?.tickets || 0}
+          title="Vé đã bán"
+          sub1="Tổng hệ thống"
+          delta="+5%"
         />
+
         <StatCard
           icon={TrendingUp}
           accentClassName="bg-emerald-500/15 text-emerald-400"
-          value="41.2M₫"
-          title="Doanh thu hôm nay"
-          sub1="Hôm qua: 38.7M₫"
-          delta="+6%"
+          value={Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+          }).format(todayRevenue)}
+          title="Doanh thu"
+          sub1="Tháng hiện tại"
         />
+
         <StatCard
           icon={Users}
           accentClassName="bg-violet-500/15 text-violet-300"
-          value="256"
-          title="Khách hàng"
-          sub1="Hôm nay"
-          delta="+3%"
+          value={data?.users || 0}
+          title="Người dùng"
         />
+
         <StatCard
           icon={Timer}
           accentClassName="bg-amber-500/15 text-amber-300"
-          value="5"
-          title="Suất chiếu hôm nay"
-          sub1="2 đang chiếu"
+          value={data?.movies || 0}
+          title="Phim đang chiếu"
         />
       </section>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="cinema-surface p-4 sm:p-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold">Suất chiếu hôm nay</h2>
-            <span className="rounded-full bg-cinema-primary/10 px-2 py-1 text-xs font-semibold text-cinema-primary">
-              5 suất
-            </span>
-          </div>
+      {/* ================= CHART ================= */}
+      <section className="cinema-surface p-4 sm:p-5">
+        <h2 className="text-base font-semibold">Vé bán theo giờ hôm nay</h2>
 
-          <div className="mt-4 space-y-3">
-            <ShowtimeRow
-              time="09:15"
-              live
-              title="Biệt Đội Chiến Thần"
-              room="Phòng P1"
-              tag="2D"
-              progressText="38/60"
-              progressPct={63}
-              accent="bg-amber-400"
-            />
-            <ShowtimeRow
-              time="11:45"
-              title="Hành Trình Vũ Trụ"
-              room="Phòng P2"
-              tag="3D"
-              progressText="45/60"
-              progressPct={75}
-              accent="bg-amber-400"
-            />
-            <ShowtimeRow
-              time="14:20"
-              title="Bóng Đêm Vĩnh Cửu"
-              room="Phòng P3"
-              tag="IMAX"
-              progressText="52/70"
-              progressPct={74}
-              accent="bg-amber-400"
-            />
+        <div className="mt-4">
+          {/* Nếu backend chưa có thì giữ fake */}
+          {/* Sau này thay bằng data.hourlyTickets */}
+          <div className="text-sm text-zinc-400">
+            (Chưa có API hourly → đang dùng dữ liệu mẫu)
           </div>
-        </div>
-
-        <div className="cinema-surface p-4 sm:p-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold">Vé bán theo giờ hôm nay</h2>
-          </div>
-          <HourlyTicketsChart
-            items={[
-              { label: "08:00", value: 12 },
-              { label: "10:00", value: 28 },
-              { label: "12:00", value: 46 },
-              { label: "14:00", value: 38 },
-              { label: "16:00", value: 52 },
-              { label: "18:00", value: 68 },
-              { label: "20:00", value: 88 },
-              { label: "22:00", value: 44 },
-            ]}
-          />
         </div>
       </section>
 
+      {/* ================= RECENT ================= */}
       <section className="cinema-surface p-4 sm:p-5">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold">Đặt vé gần đây</h2>
-          <button
-            type="button"
-            className="text-sm font-semibold text-cinema-primary hover:opacity-90"
-          >
-            Xem tất cả
-          </button>
         </div>
 
         <div className="mt-4 space-y-3">
-          <RecentTicket
-            initials="N"
-            name="Nguyễn Văn A"
-            detail="Hành Trình Vũ Trụ · 14:20 — Phòng P3"
-            seats="D5, D6"
-            timeAgo="5 phút trước"
-            ok
-          />
-          <RecentTicket
-            initials="T"
-            name="Trần Thị B"
-            detail="Biệt Đội Chiến Thần · 17:00 — Phòng P1"
-            seats="E3, E4"
-            timeAgo="12 phút trước"
-            ok
-          />
-          <RecentTicket
-            initials="L"
-            name="Lê Minh C"
-            detail="Rồng Bay Lên · 19:30 — Phòng P2"
-            seats="A1, A2"
-            timeAgo="18 phút trước"
-            ok={false}
-          />
+          {data?.recent?.map((b, i) => (
+            <RecentTicket
+              key={i}
+              initials={b.user?.charAt(0)}
+              name={b.user}
+              detail={`${b.movie}`}
+              seats={b.seats || "N/A"}
+              timeAgo="Vừa xong"
+              ok={true}
+            />
+          ))}
         </div>
       </section>
     </div>

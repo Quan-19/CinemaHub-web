@@ -37,7 +37,7 @@ function SidebarLink({ to, icon: Icon, label, collapsed, onNavigate }) {
               "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border transition-colors",
               isActive
                 ? "border-cinema-primary/30 bg-cinema-primary/15 text-cinema-primary"
-                : "border-zinc-800 bg-zinc-950/10 text-zinc-200 group-hover:border-zinc-700",
+                : "border-zinc-700 bg-zinc-950/10 text-zinc-200 group-hover:border-zinc-700",
             ].join(" ")}
           >
             <Icon className="h-5 w-5" aria-hidden="true" />
@@ -51,7 +51,7 @@ function SidebarLink({ to, icon: Icon, label, collapsed, onNavigate }) {
 
 function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const handleNavigate = () => {
     if (typeof onClose === "function") onClose();
@@ -68,7 +68,7 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
   return (
     <aside
       className={[
-        "fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col overflow-hidden border-r border-zinc-800 bg-indigo-950/20 backdrop-blur-xl transition-transform duration-200 lg:sticky lg:top-0 lg:translate-x-0 lg:bg-indigo-950/35 lg:backdrop-blur-none",
+        "fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col overflow-hidden border-r border-zinc-700 bg-indigo-950/20 backdrop-blur-xl transition-transform duration-200 lg:sticky lg:top-0 lg:translate-x-0 lg:bg-indigo-950/35 lg:backdrop-blur-none",
         mobileOpen ? "translate-x-0" : "-translate-x-full",
         "w-[86vw] max-w-[320px] sm:w-[320px]",
         collapsed ? "lg:w-[76px]" : "lg:w-[280px]",
@@ -95,7 +95,7 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-800 bg-cinema-surface text-zinc-200 hover:bg-zinc-900 lg:hidden"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-700 bg-cinema-surface text-zinc-200 hover:bg-zinc-900 lg:hidden"
           aria-label="Đóng menu"
         >
           <X className="h-4 w-4" />
@@ -105,7 +105,7 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
           type="button"
           onClick={onToggle}
           className={[
-            "absolute -right-3 top-6 hidden h-8 w-8 items-center justify-center rounded-full border border-zinc-800 bg-cinema-surface text-zinc-200 hover:bg-zinc-900 lg:inline-flex",
+            "absolute -right-3 top-6 hidden h-8 w-8 items-center justify-center rounded-full border border-zinc-700 bg-cinema-surface text-zinc-200 hover:bg-zinc-900 lg:inline-flex",
           ].join(" ")}
           aria-label={
             collapsed ? "Mở rộng thanh điều hướng" : "Thu gọn thanh điều hướng"
@@ -129,7 +129,7 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
         }}
       >
         {!collapsed && (
-          <div className="mb-3 rounded-2xl border border-zinc-800 bg-cinema-surface px-3 py-2 text-xs text-zinc-300">
+          <div className="mb-3 rounded-2xl border border-zinc-700 bg-cinema-surface px-3 py-2 text-xs text-zinc-300">
             <span className="inline-flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-cinema-primary" />
               Nhân viên rạp
@@ -138,7 +138,7 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
         )}
 
         {!collapsed && (
-          <div className="mb-2 px-2 text-[11px] font-semibold text-zinc-500">
+          <div className="mb-2 px-2 text-[11px] font-semibold text-zinc-400">
             TỔNG QUAN
           </div>
         )}
@@ -160,7 +160,7 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
         </nav>
 
         {!collapsed && (
-          <div className="mt-5 mb-2 px-2 text-[11px] font-semibold text-zinc-500">
+          <div className="mt-5 mb-2 px-2 text-[11px] font-semibold text-zinc-400">
             QUẢN LÝ
           </div>
         )}
@@ -213,7 +213,7 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
       <div className="mt-auto p-3">
         <div
           className={[
-            "rounded-2xl border border-zinc-800 bg-cinema-surface",
+            "rounded-2xl border border-zinc-700 bg-cinema-surface",
             collapsed ? "px-2 py-2" : "px-3 py-3",
           ].join(" ")}
         >
@@ -223,14 +223,24 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
               collapsed ? "justify-center" : "",
             ].join(" ")}
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-zinc-100 ring-1 ring-zinc-700">
-              NV
+            <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-zinc-900 text-xs font-semibold text-zinc-100 ring-1 ring-zinc-700">
+              {user?.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt={user.displayName || "User"}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                user?.displayName?.slice(0, 2).toUpperCase() || "NV"
+              )}
             </div>
             {!collapsed && (
-              <div className="min-w-0">
-                <div className="truncate text-sm font-semibold">Nhân viên</div>
-                <div className="truncate text-xs text-zinc-400">
-                  staff@CinemaHub.vn
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold">
+                  {user?.displayName || "Nhân viên"}
+                </div>
+                <div className="truncate text-[11px] text-zinc-400">
+                  {user?.email || "staff@CinemaHub.vn"}
                 </div>
               </div>
             )}
@@ -245,7 +255,7 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
               "inline-flex items-center justify-center transition",
               collapsed
                 ? "mx-auto mt-2 h-9 w-9 rounded-full border border-zinc-700/80 bg-zinc-900/60 text-zinc-300 hover:border-cinema-primary/40 hover:bg-cinema-primary/10 hover:text-white"
-                : "mt-3 w-full gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900",
+                : "mt-3 w-full gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900",
             ].join(" ")}
           >
             <LogOut className="h-4 w-4" />

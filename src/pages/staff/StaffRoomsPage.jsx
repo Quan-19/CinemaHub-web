@@ -13,7 +13,7 @@ import {
 import { StaffCenteredModalShell } from "../../components/staff/StaffModalShell.jsx";
 import StaffIconButton from "../../components/staff/StaffIconButton.jsx";
 import { makeId } from "../../components/staff/staffUtils.js";
-
+import { useEffect } from "react";
 function Badge({ children, className = "" }) {
   return (
     <span
@@ -29,7 +29,7 @@ function Badge({ children, className = "" }) {
 
 function StatPill({ count, label, colorClassName }) {
   return (
-    <div className="cinema-surface flex items-center gap-3 rounded-2xl border border-zinc-800 px-4 py-3">
+    <div className="cinema-surface flex items-center gap-3 rounded-2xl border border-zinc-700 px-4 py-3">
       <div
         className={[
           "inline-flex h-10 w-10 items-center justify-center rounded-2xl",
@@ -40,7 +40,7 @@ function StatPill({ count, label, colorClassName }) {
       </div>
       <div className="leading-tight">
         <div className="text-xl font-bold">{count}</div>
-        <div className="text-xs font-semibold text-zinc-500">{label}</div>
+        <div className="text-xs font-semibold text-zinc-400">{label}</div>
       </div>
     </div>
   );
@@ -51,7 +51,7 @@ function Field({ label, children, hint }) {
     <div className="space-y-2">
       <div className="text-xs font-semibold text-zinc-400">{label}</div>
       {children}
-      {hint ? <div className="text-xs text-zinc-500">{hint}</div> : null}
+      {hint ? <div className="text-xs text-zinc-400">{hint}</div> : null}
     </div>
   );
 }
@@ -63,7 +63,7 @@ function TextInput({ value, onChange, placeholder = "", disabled = false }) {
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       disabled={disabled}
-      className="h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/30 px-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30 disabled:opacity-60"
+      className="h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/30 px-3 text-sm text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30 disabled:opacity-60"
     />
   );
 }
@@ -73,7 +73,7 @@ function SelectInput({ value, onChange, options }) {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/30 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
+      className="h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/30 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
     >
       {options.map((opt) => (
         <option key={opt.value} value={opt.value}>
@@ -102,26 +102,39 @@ function buildSeatGrid({ rows, seatsPerRow, vipRows, coupleRow }) {
 
   for (let r = 1; r <= rows; r += 1) {
     const rowLabel = letters[r - 1] ?? String(r);
+    const isCoupleRow = coupleRow === r;
     const seats = [];
 
-    for (let c = 1; c <= seatsPerRow; c += 1) {
-      const isCouple = coupleRow === r;
-      const type = isCouple ? "couple" : vipSet.has(r) ? "vip" : "standard";
-
-      const maintenance = false;
-
-
-      seats.push({
-        id: `${rowLabel}${c}`,
-        label: `${rowLabel}${c}`,
-        row: r,
-        col: c,
-        type,
-        maintenance,
-      });
+    if (isCoupleRow) {
+      // Hàng Couple: mỗi ghế đại diện cho 1 cặp (2 chỗ ngồi)
+      const coupleSeatsCount = Math.ceil(seatsPerRow / 2);
+      for (let c = 1; c <= coupleSeatsCount; c += 1) {
+        seats.push({
+          id: `${rowLabel}${c}`,
+          label: `${rowLabel}${c}`,
+          row: r,
+          col: c,
+          type: "couple",
+          isCouple: true,
+          seatsCount: 2,
+        });
+      }
+    } else {
+      for (let c = 1; c <= seatsPerRow; c += 1) {
+        const type = vipSet.has(r) ? "vip" : "standard";
+        seats.push({
+          id: `${rowLabel}${c}`,
+          label: `${rowLabel}${c}`,
+          row: r,
+          col: c,
+          type,
+          isCouple: false,
+          seatsCount: 1,
+        });
+      }
     }
 
-    data.push({ row: r, label: rowLabel, seats });
+    data.push({ row: r, label: rowLabel, seats, isCoupleRow });
   }
 
   return data;
@@ -138,7 +151,13 @@ function SeatLegendItem({ colorClassName, label }) {
   );
 }
 
-function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMaintenance }) {
+function SeatMapModal({
+  room,
+  cinemaName,
+  onClose,
+  maintenanceSeats,
+  onToggleMaintenance,
+}) {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
 
   const seatRows = useMemo(() => {
@@ -150,12 +169,21 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
     });
   }, [room]);
 
+  const actualTotalSeats = useMemo(() => {
+    return seatRows.reduce((total, row) => {
+      return total + row.seats.reduce((rowTotal, seat) => rowTotal + (seat.seatsCount || 1), 0);
+    }, 0);
+  }, [seatRows]);
+
+  const standardSeatWidth = 28; // w-7 = 28px
+  const coupleSeatWidth = 56;   // w-14 = 56px
+
   const handleSeatClick = useCallback(
     (seatId) => {
       if (!maintenanceMode) return;
       onToggleMaintenance(room.id, seatId);
     },
-    [maintenanceMode, onToggleMaintenance, room.id]
+    [maintenanceMode, onToggleMaintenance, room.id],
   );
 
   return (
@@ -167,7 +195,7 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="text-xs text-zinc-400">
-            {cinemaName} · {room.type} · {room.rows * room.seatsPerRow} ghế
+            {cinemaName} · {room.type} · {actualTotalSeats} ghế {room.coupleRow && `(Hàng ${room.coupleRow} là Couple)`}
           </div>
 
           <button
@@ -187,11 +215,12 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
 
         {maintenanceMode && (
           <div className="rounded-xl border border-red-500/30 bg-red-500/5 px-4 py-2.5 text-xs text-red-300">
-            Nhấn vào ghế để đánh dấu / bỏ đánh dấu bảo trì. Ghế bảo trì sẽ không thể đặt được.
+            Nhấn vào ghế để đánh dấu / bỏ đánh dấu bảo trì. Ghế bảo trì sẽ không
+            thể đặt được.
           </div>
         )}
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/20 p-4 sm:p-5">
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4 sm:p-5">
           <div className="relative mb-6 flex items-center justify-center">
             <svg
               className="pointer-events-none absolute inset-x-0 top-0 h-14 w-full text-cyan-400"
@@ -246,89 +275,153 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
                 opacity="0.85"
               />
             </svg>
-            <div className="pt-6 text-[11px] font-semibold tracking-[0.55em] text-zinc-500">
+            <div className="pt-6 text-[11px] font-semibold tracking-[0.55em] text-zinc-400">
               SCREEN
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <div className="mx-auto w-fit">
-              <div className="inline-grid gap-2">
-                {seatRows.map((row) => (
-                  <div
-                    key={row.label}
-                    className="grid grid-cols-[28px_auto_28px] items-center gap-3"
-                  >
-                    <div className="text-center text-[11px] font-semibold text-zinc-500">
-                      {row.label}
-                    </div>
+            <div className="overflow-x-auto">
+              <div className="mx-auto w-fit">
+                <div className="inline-grid gap-2">
+                  {seatRows.map((row) => {
+                    const isCoupleRow = row.isCoupleRow;
+                    const rowSeatsCount = row.seats.length;
+                    const standardSeatsCount = room.seatsPerRow;
 
-                    <div className="grid auto-cols-max grid-flow-col gap-2">
-                      {row.seats.map((seat) => {
-                        const isMaintenance = maintenanceSeats.has(seat.id);
-                        const base =
-                          "h-7 w-7 rounded-[6px] border bg-zinc-950/10";
-                        const style = isMaintenance
-                          ? "border-red-500 bg-red-500/25"
-                          : seat.type === "vip"
-                            ? "border-amber-400"
-                            : seat.type === "couple"
-                              ? "border-fuchsia-400"
-                              : "border-zinc-700 bg-zinc-800/40";
-                        const cursor = maintenanceMode
-                          ? "cursor-pointer hover:ring-2 hover:ring-red-400/40"
-                          : "";
+                    let leftPadding = 0;
+                    if (isCoupleRow) {
+                      const standardWidth = standardSeatsCount * (standardSeatWidth + 8);
+                      const coupleWidth = rowSeatsCount * (coupleSeatWidth + 8);
+                      const diff = standardWidth - coupleWidth;
+                      leftPadding = Math.max(0, diff / 2);
+                    }
 
-                        return (
+                    return (
+                      <div
+                        key={row.label}
+                        className="grid grid-cols-[28px_auto_28px] items-center gap-3"
+                      >
+                        <div className="text-center text-[11px] font-semibold text-zinc-400">
+                          {row.label}
+                        </div>
+
+                        <div className="flex justify-center">
                           <div
-                            key={seat.id}
-                            className={[base, style, cursor].join(" ")}
-                            title={
-                              isMaintenance
-                                ? `${seat.label} (Bảo trì)`
-                                : seat.label
-                            }
-                            aria-label={seat.label}
-                            onClick={() => handleSeatClick(seat.id)}
-                          />
-                        );
-                      })}
-                    </div>
+                            className="grid auto-cols-max grid-flow-col gap-2"
+                            style={{
+                              paddingLeft: leftPadding > 0 ? `${leftPadding}px` : 0,
+                              paddingRight: leftPadding > 0 ? `${leftPadding}px` : 0,
+                            }}
+                          >
+                            {row.seats.map((seat) => {
+                              const isMaintenance = maintenanceSeats.has(seat.id);
+                              const base = seat.isCouple
+                                ? "h-7 w-14 rounded-[6px] border bg-zinc-950/10 flex items-center justify-center gap-1"
+                                : "h-7 w-7 rounded-[6px] border bg-zinc-950/10";
+                              
+                              let style = "";
+                              if (isMaintenance) {
+                                style = "border-red-500 bg-red-500/25";
+                              } else if (seat.type === "vip") {
+                                style = "border-amber-400";
+                              } else if (seat.type === "couple") {
+                                style = "border-fuchsia-400 bg-fuchsia-500/10";
+                              } else {
+                                style = "border-zinc-700 bg-zinc-800/40";
+                              }
 
-                    <div className="text-center text-[11px] font-semibold text-zinc-500">
-                      {row.label}
-                    </div>
-                  </div>
-                ))}
+                              const cursor = maintenanceMode
+                                ? "cursor-pointer hover:ring-2 hover:ring-red-400/40"
+                                : "";
 
-                <div className="grid grid-cols-[28px_auto_28px] items-center gap-3 pt-2">
-                  <div />
-                  <div className="grid auto-cols-max grid-flow-col gap-2 text-center text-[11px] font-semibold text-zinc-600">
-                    {Array.from({ length: room.seatsPerRow }, (_, i) => (
-                      <div key={i + 1} className="w-7">
-                        {i + 1}
+                              return (
+                                <div
+                                  key={seat.id}
+                                  className={[base, style, cursor].join(" ")}
+                                  title={
+                                    isMaintenance
+                                      ? `${seat.label} (Bảo trì)`
+                                      : seat.isCouple
+                                        ? `${seat.label} (Ghế Đôi - 2 chỗ)`
+                                        : seat.label
+                                  }
+                                  aria-label={seat.label}
+                                  onClick={() => handleSeatClick(seat.id)}
+                                >
+                                  {seat.isCouple && (
+                                    <>
+                                      <span className="text-[10px]">👥</span>
+                                      <span className="text-[8px] text-zinc-400">2</span>
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="text-center text-[11px] font-semibold text-zinc-400">
+                          {row.label}
+                        </div>
                       </div>
-                    ))}
+                    );
+                  })}
+
+                  {/* Column numbers */}
+                  <div className="grid grid-cols-[28px_auto_28px] items-center gap-3 pt-2">
+                    <div />
+                    <div className="flex justify-center">
+                      <div className="grid auto-cols-max grid-flow-col gap-2 text-center text-[11px] font-semibold text-zinc-400">
+                        {seatRows[0]?.isCoupleRow
+                          ? (() => {
+                              const firstRow = seatRows[0];
+                              const standardWidth = room.seatsPerRow * (standardSeatWidth + 8);
+                              const coupleWidth = firstRow.seats.length * (coupleSeatWidth + 8);
+                              const diff = standardWidth - coupleWidth;
+                              const leftPadding = Math.max(0, diff / 2);
+                              
+                              return (
+                                <div
+                                  className="grid auto-cols-max grid-flow-col gap-2"
+                                  style={{
+                                    paddingLeft: leftPadding > 0 ? `${leftPadding}px` : 0,
+                                    paddingRight: leftPadding > 0 ? `${leftPadding}px` : 0,
+                                  }}
+                                >
+                                  {Array.from({ length: firstRow.seats.length }, (_, i) => (
+                                    <div key={i + 1} className="w-14 text-center">
+                                      {i + 1}
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()
+                          : Array.from({ length: room.seatsPerRow }, (_, i) => (
+                              <div key={i + 1} className="w-7 text-center">
+                                {i + 1}
+                              </div>
+                            ))}
+                      </div>
+                    </div>
+                    <div />
                   </div>
-                  <div />
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="mt-5 flex items-center justify-between border-t border-zinc-800 pt-3">
+          <div className="mt-5 flex items-center justify-between border-t border-zinc-700 pt-3">
             <div className="flex flex-wrap items-center gap-5">
               <SeatLegendItem
                 colorClassName="border-zinc-700 bg-zinc-800/40"
-                label="Ghế thường"
+                label="Ghế thường (1 chỗ)"
               />
               <SeatLegendItem
                 colorClassName="border-amber-400 bg-transparent"
-                label="Ghế VIP"
+                label="Ghế VIP (1 chỗ)"
               />
               <SeatLegendItem
-                colorClassName="border-fuchsia-400 bg-transparent"
-                label="Ghế Couple"
+                colorClassName="border-fuchsia-400 bg-fuchsia-500/10"
+                label="Ghế Couple (2 chỗ/vé)"
               />
               <SeatLegendItem
                 colorClassName="border-red-500 bg-red-500/25"
@@ -340,8 +433,9 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
               <div className="text-[11px] font-semibold text-amber-400">
                 VIP
               </div>
-              <div className="text-[11px] font-semibold text-fuchsia-400">
-                CPL
+              <div className="flex items-center gap-1 text-[11px] font-semibold text-fuchsia-400">
+                <span>👥</span>
+                <span>CPL (2 ghế)</span>
               </div>
             </div>
           </div>
@@ -356,13 +450,13 @@ function RoomConfigModal({ mode, cinemaName, initialRoom, onClose, onSave }) {
   const [type, setType] = useState(initialRoom?.type ?? "2D");
   const [rows, setRows] = useState(String(initialRoom?.rows ?? 10));
   const [seatsPerRow, setSeatsPerRow] = useState(
-    String(initialRoom?.seatsPerRow ?? 12)
+    String(initialRoom?.seatsPerRow ?? 12),
   );
   const [vipRows, setVipRows] = useState(
-    (initialRoom?.vipRows ?? [5, 6]).join(",")
+    (initialRoom?.vipRows ?? [5, 6]).join(","),
   );
   const [coupleRow, setCoupleRow] = useState(
-    String(initialRoom?.coupleRow ?? 10)
+    String(initialRoom?.coupleRow ?? 10),
   );
   const [status, setStatus] = useState(initialRoom?.status ?? "active");
 
@@ -434,14 +528,14 @@ function RoomConfigModal({ mode, cinemaName, initialRoom, onClose, onSave }) {
             <TextInput value={coupleRow} onChange={setCoupleRow} />
           </Field>
 
-          <div className="rounded-2xl border border-zinc-800 bg-cinema-primary/10 p-4">
+          <div className="rounded-2xl border border-zinc-700 bg-cinema-primary/10 p-4">
             <div className="text-xs font-semibold text-zinc-400">
               Tổng ghế ước tính
             </div>
             <div className="mt-2 text-3xl font-black text-cinema-primary">
               {totalSeats}
             </div>
-            <div className="mt-1 text-xs text-zinc-500">{cinemaName}</div>
+            <div className="mt-1 text-xs text-zinc-400">{cinemaName}</div>
           </div>
         </div>
       </div>
@@ -450,7 +544,7 @@ function RoomConfigModal({ mode, cinemaName, initialRoom, onClose, onSave }) {
         <button
           type="button"
           onClick={onClose}
-          className="h-11 rounded-2xl border border-zinc-800 bg-zinc-900/40 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
+          className="h-11 rounded-2xl border border-zinc-700 bg-zinc-900/40 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
         >
           Hủy
         </button>
@@ -478,7 +572,13 @@ function RoomConfigModal({ mode, cinemaName, initialRoom, onClose, onSave }) {
   );
 }
 
-function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow, maintenanceSeats }) {
+function MiniSeatPreview({
+  rows,
+  seatsPerRow,
+  vipRows,
+  coupleRow,
+  maintenanceSeats,
+}) {
   const previewRows = Math.min(rows, 6);
   const remaining = Math.max(0, rows - previewRows);
   const grid = useMemo(() => {
@@ -491,30 +591,30 @@ function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow, maintenanceSea
   }, [previewRows, seatsPerRow, vipRows, coupleRow]);
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/15 p-3">
-      <div className="text-center text-[10px] font-semibold tracking-widest text-zinc-600">
+    <div className="rounded-2xl border border-zinc-700 bg-zinc-950/15 p-3">
+      <div className="text-center text-[10px] font-semibold tracking-widest text-zinc-400">
         — Màn hình —
       </div>
       <div className="mt-3 flex justify-center">
         <div className="inline-grid gap-1">
           {grid.map((row) => (
-            <div key={row.label} className="grid grid-flow-col gap-1">
+            <div key={row.label} className="flex justify-center gap-1 mb-1">
               {row.seats.map((seat) => {
-                const isMaint = maintenanceSeats && maintenanceSeats.has(seat.id);
+                const isMaint =
+                  maintenanceSeats && maintenanceSeats.has(seat.id);
                 const color = isMaint
                   ? "bg-red-500"
-                  : seat.reserved
-                    ? "bg-zinc-900/60"
-                    : seat.type === "vip"
-                      ? "bg-amber-500"
-                      : seat.type === "couple"
-                        ? "bg-red-600"
-                        : "bg-zinc-400/30";
+                  : seat.type === "vip"
+                    ? "bg-amber-500"
+                    : seat.type === "couple"
+                      ? "bg-fuchsia-500"
+                      : "bg-zinc-400/30";
                 return (
                   <div
                     key={seat.id}
                     className={[
-                      "h-2.5 w-2.5 rounded-[3px] border border-zinc-800",
+                      "h-2 rounded-[3px] border border-zinc-700/50",
+                      seat.isCouple ? "w-5" : "w-2.5",
                       color,
                     ].join(" ")}
                   />
@@ -525,7 +625,7 @@ function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow, maintenanceSea
         </div>
       </div>
       {remaining ? (
-        <div className="mt-2 text-center text-[10px] font-semibold text-zinc-600">
+        <div className="mt-2 text-center text-[10px] font-semibold text-zinc-400">
           ... {remaining} hàng nữa
         </div>
       ) : null}
@@ -533,7 +633,14 @@ function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow, maintenanceSea
   );
 }
 
-function RoomCard({ cinemaName, room, onView, onConfig, onDelete, maintenanceSeats }) {
+function RoomCard({
+  cinemaName,
+  room,
+  onView,
+  onConfig,
+  onDelete,
+  maintenanceSeats,
+}) {
   const total = room.rows * room.seatsPerRow;
   const vipCount = room.vipRows.length;
   const isInactive = room.status !== "active";
@@ -541,7 +648,7 @@ function RoomCard({ cinemaName, room, onView, onConfig, onDelete, maintenanceSea
   return (
     <div
       className={[
-        "cinema-surface rounded-2xl border border-zinc-800 p-4",
+        "cinema-surface rounded-2xl border border-zinc-700 p-4",
         isInactive ? "opacity-60" : "",
       ].join(" ")}
     >
@@ -549,18 +656,18 @@ function RoomCard({ cinemaName, room, onView, onConfig, onDelete, maintenanceSea
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <div className="truncate text-base font-bold">{room.name}</div>
-            <Badge className="border-zinc-800 bg-zinc-900/40 text-zinc-200">
+            <Badge className="border-zinc-700 bg-zinc-900/40 text-zinc-200">
               {room.type}
             </Badge>
           </div>
-          <div className="mt-1 truncate text-xs text-zinc-500">
+          <div className="mt-1 truncate text-xs text-zinc-400">
             {cinemaName}
           </div>
         </div>
 
         <Badge
           className={[
-            "border-zinc-800",
+            "border-zinc-700",
             room.status === "active"
               ? "bg-emerald-500/10 text-emerald-400"
               : "bg-red-500/10 text-red-400",
@@ -581,23 +688,23 @@ function RoomCard({ cinemaName, room, onView, onConfig, onDelete, maintenanceSea
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-3">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/10 p-3 text-center">
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/10 p-3 text-center">
           <div className="text-lg font-bold">{total}</div>
-          <div className="text-[11px] font-semibold text-zinc-500">
+          <div className="text-[11px] font-semibold text-zinc-400">
             Tổng ghế
           </div>
         </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/10 p-3 text-center">
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/10 p-3 text-center">
           <div className="text-lg font-bold">
             {room.rows}×{room.seatsPerRow}
           </div>
-          <div className="text-[11px] font-semibold text-zinc-500">
+          <div className="text-[11px] font-semibold text-zinc-400">
             Hàng × Cột
           </div>
         </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/10 p-3 text-center">
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/10 p-3 text-center">
           <div className="text-lg font-bold">{vipCount}</div>
-          <div className="text-[11px] font-semibold text-zinc-500">
+          <div className="text-[11px] font-semibold text-zinc-400">
             Hàng VIP
           </div>
         </div>
@@ -609,9 +716,9 @@ function RoomCard({ cinemaName, room, onView, onConfig, onDelete, maintenanceSea
           onClick={isInactive ? undefined : onView}
           disabled={isInactive}
           className={[
-            "inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-800 text-sm font-semibold",
+            "inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-700 text-sm font-semibold",
             isInactive
-              ? "cursor-not-allowed bg-zinc-800/30 text-zinc-600"
+              ? "cursor-not-allowed bg-zinc-800/30 text-zinc-400"
               : "bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/15",
           ].join(" ")}
           title={isInactive ? "Phòng đang tạm dừng — không thể xem sơ đồ" : ""}
@@ -623,7 +730,7 @@ function RoomCard({ cinemaName, room, onView, onConfig, onDelete, maintenanceSea
         <button
           type="button"
           onClick={onConfig}
-          className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-sky-500/10 text-sm font-semibold text-sky-300 hover:bg-sky-500/15"
+          className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-700 bg-sky-500/10 text-sm font-semibold text-sky-300 hover:bg-sky-500/15"
         >
           <Settings className="h-4 w-4" aria-hidden="true" />
           Cấu hình
@@ -644,7 +751,7 @@ function Pagination({ page, totalPages, onPrev, onNext }) {
         type="button"
         onClick={onPrev}
         disabled={page <= 1}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/30 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900/30 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
         aria-label="Trang trước"
       >
         <ChevronLeft className="h-4 w-4" />
@@ -656,7 +763,7 @@ function Pagination({ page, totalPages, onPrev, onNext }) {
         type="button"
         onClick={onNext}
         disabled={page >= totalPages}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/30 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900/30 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
         aria-label="Trang sau"
       >
         <ChevronRight className="h-4 w-4" />
@@ -666,86 +773,71 @@ function Pagination({ page, totalPages, onPrev, onNext }) {
 }
 
 function StaffRoomsPage() {
+  const [selectedCinemaId, setSelectedCinemaId] = useState("");
   const { subtitle } = useOutletContext();
 
-  const cinemaName = useMemo(() => {
-    const text = String(subtitle ?? "");
-    const parts = text.split("—");
-    return (parts[0] ?? "").trim() || "CGV Vincom Center Bà Triệu";
-  }, [subtitle]);
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  // const cinemaName = useMemo(() => {
+  //   if (rooms.length > 0) {
+  //     return rooms[0].cinemaName || "";
+  //   }
+  //   return "";
+  // }, [rooms]);
+  useEffect(() => {
+    loadRooms();
+  }, []);
+  const cinemaList = useMemo(() => {
+    const map = new Map();
 
-  const [rooms, setRooms] = useState(() => [
-    {
-      id: "r1",
-      cinemaName: "CGV Vincom Center Bà Triệu",
-      name: "Phòng 1",
-      type: "2D",
-      rows: 10,
-      seatsPerRow: 12,
-      vipRows: [5, 6],
-      coupleRow: 10,
-      status: "active",
-    },
-    {
-      id: "r2",
-      cinemaName: "CGV Vincom Center Bà Triệu",
-      name: "Phòng 2",
-      type: "3D",
-      rows: 9,
-      seatsPerRow: 10,
-      vipRows: [5, 6],
-      coupleRow: 9,
-      status: "active",
-    },
-    {
-      id: "r3",
-      cinemaName: "CGV Vincom Center Bà Triệu",
-      name: "IMAX 1",
-      type: "IMAX",
-      rows: 12,
-      seatsPerRow: 14,
-      vipRows: [6, 7, 8],
-      coupleRow: null,
-      status: "active",
-    },
-    {
-      id: "r4",
-      cinemaName: "CGV Vincom Center Bà Triệu",
-      name: "Phòng 3",
-      type: "2D",
-      rows: 10,
-      seatsPerRow: 12,
-      vipRows: [5, 6],
-      coupleRow: 10,
-      status: "inactive",
-    },
-    {
-      id: "r5",
-      cinemaName: "CGV Vincom Center Bà Triệu",
-      name: "Phòng 4",
-      type: "3D",
-      rows: 10,
-      seatsPerRow: 12,
-      vipRows: [5, 6],
-      coupleRow: 10,
-      status: "active",
-    },
-    {
-      id: "r6",
-      cinemaName: "CGV Vincom Center Bà Triệu",
-      name: "4DX 1",
-      type: "4DX",
-      rows: 8,
-      seatsPerRow: 10,
-      vipRows: [4, 5],
-      coupleRow: null,
-      status: "active",
-    },
-  ]);
+    rooms.forEach((r) => {
+      if (!map.has(r.cinemaId)) {
+        map.set(r.cinemaId, {
+          value: r.cinemaId,
+          label: r.cinemaName,
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [rooms]);
+
+  const loadRooms = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch("http://localhost:5000/api/rooms");
+      const data = await res.json();
+
+      const roomsData = Array.isArray(data) ? data : data.data || [];
+
+      // ✅ KHÔNG MAP LẠI SAI FIELD NỮA
+      const mapped = roomsData.map((r) => ({
+        id: r.id,
+        cinemaId: r.cinemaId,
+        cinemaName: r.cinemaName,
+        name: r.name,
+        type: r.type,
+        rows: r.rows,
+        seatsPerRow: r.cols, // 🔥 đổi từ cols
+        vipRows: r.vipRows || [],
+        coupleRow: r.coupleRow,
+        status: r.status,
+      }));
+
+      setRooms(mapped);
+    } catch (err) {
+      console.error("Load rooms error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const staffRooms = useMemo(() => {
-    return rooms.filter((r) => r.cinemaName === cinemaName);
-  }, [rooms, cinemaName]);
+    if (!selectedCinemaId) return rooms;
+
+    return rooms.filter((r) => String(r.cinemaId) === String(selectedCinemaId));
+  }, [rooms, selectedCinemaId]);
 
   const totals = useMemo(() => {
     const byType = { "2D": 0, "3D": 0, IMAX: 0, "4DX": 0 };
@@ -784,7 +876,9 @@ function StaffRoomsPage() {
       return next;
     });
   }, []);
-
+  if (loading) {
+    return <div className="text-white p-6">Loading...</div>;
+  }
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-4">
@@ -800,7 +894,7 @@ function StaffRoomsPage() {
           onClick={() => {
             setCreateDraft({
               id: makeId("room"),
-              cinemaName,
+              cinemaId: selectedCinemaId || cinemaList[0]?.value,
               name: "",
               type: "2D",
               rows: 10,
@@ -842,10 +936,15 @@ function StaffRoomsPage() {
       </section>
 
       <div className="max-w-xs">
-        <SelectInput
+        {/* <SelectInput
           value={cinemaName}
-          onChange={() => { }}
+          onChange={() => {}}
           options={[{ value: cinemaName, label: cinemaName }]}
+        /> */}
+        <SelectInput
+          value={selectedCinemaId}
+          onChange={setSelectedCinemaId}
+          options={[{ value: "", label: "Tất cả rạp" }, ...cinemaList]}
         />
       </div>
 
@@ -853,13 +952,24 @@ function StaffRoomsPage() {
         {pagedRooms.map((room) => (
           <RoomCard
             key={room.id}
-            cinemaName={cinemaName}
+            cinemaName={room.cinemaName} // ✅ FIX CHUẨN
             room={room}
             maintenanceSeats={maintenanceMap.get(room.id) ?? new Set()}
             onView={() => setSeatRoom(room)}
             onConfig={() => setConfigRoom(room)}
-            onDelete={() => {
-              setRooms((prev) => prev.filter((r) => r.id !== room.id));
+            onDelete={async () => {
+              try {
+                const res = await fetch(
+                  `http://localhost:5000/api/rooms/${room.id}`,
+                  { method: "DELETE" },
+                );
+
+                if (!res.ok) throw new Error("Delete failed");
+
+                await loadRooms();
+              } catch (err) {
+                console.error(err);
+              }
             }}
           />
         ))}
@@ -875,7 +985,7 @@ function StaffRoomsPage() {
       {seatRoom ? (
         <SeatMapModal
           room={seatRoom}
-          cinemaName={cinemaName}
+          cinemaName={seatRoom?.cinemaName}
           maintenanceSeats={maintenanceMap.get(seatRoom.id) ?? new Set()}
           onToggleMaintenance={handleToggleMaintenance}
           onClose={() => setSeatRoom(null)}
@@ -885,12 +995,12 @@ function StaffRoomsPage() {
       {configRoom ? (
         <RoomConfigModal
           mode="edit"
-          cinemaName={cinemaName}
+          cinemaName={configRoom?.cinemaName}
           initialRoom={configRoom}
           onClose={() => setConfigRoom(null)}
           onSave={(nextRoom) => {
             setRooms((prev) =>
-              prev.map((r) => (r.id === nextRoom.id ? nextRoom : r))
+              prev.map((r) => (r.id === nextRoom.id ? nextRoom : r)),
             );
             setConfigRoom(null);
           }}
@@ -900,16 +1010,41 @@ function StaffRoomsPage() {
       {createOpen && createDraft ? (
         <RoomConfigModal
           mode="create"
-          cinemaName={cinemaName}
+          cinemaName={
+            cinemaList.find((c) => c.value === selectedCinemaId)?.label || ""
+          }
           initialRoom={createDraft}
           onClose={() => {
             setCreateOpen(false);
             setCreateDraft(null);
           }}
-          onSave={(nextRoom) => {
-            setRooms((prev) => [nextRoom, ...prev]);
-            setCreateOpen(false);
-            setCreateDraft(null);
+          onSave={async (nextRoom) => {
+            try {
+              const res = await fetch("http://localhost:5000/api/rooms", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  cinema_id: nextRoom.cinemaId,
+                  name: nextRoom.name,
+                  type: nextRoom.type,
+                  seat_rows: nextRoom.rows,
+                  seat_cols: nextRoom.seatsPerRow,
+                  vip_rows: JSON.stringify(nextRoom.vipRows),
+                  couple_row: nextRoom.coupleRow,
+                  total_seats: nextRoom.rows * nextRoom.seatsPerRow,
+                  status: nextRoom.status,
+                }),
+              });
+
+              if (!res.ok) throw new Error("Create failed");
+
+              await loadRooms();
+              setCreateOpen(false);
+            } catch (err) {
+              console.error(err);
+            }
           }}
         />
       ) : null}

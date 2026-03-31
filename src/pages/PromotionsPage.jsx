@@ -64,7 +64,7 @@ export const PromotionsPage = () => {
     <div className="min-h-screen" style={{ background: "#0a0a0f" }}>
       {/* HEADER - Giữ nguyên từ cả 2 code */}
       <div
-        className="py-10 border-b border-zinc-800"
+        className="py-10 border-b border-zinc-700"
         style={{ background: "linear-gradient(to bottom, #12121f, #0a0a0f)" }}
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
@@ -85,7 +85,7 @@ export const PromotionsPage = () => {
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🎁</div>
             <p className="text-zinc-400 mb-2">Chưa có khuyến mãi</p>
-            <p className="text-zinc-500 text-sm">Hãy quay lại sau để xem ưu đãi mới nhất</p>
+            <p className="text-zinc-400 text-sm">Hãy quay lại sau để xem ưu đãi mới nhất</p>
           </div>
         )}
 
@@ -94,7 +94,7 @@ export const PromotionsPage = () => {
           {promotions.map((promo) => (
             <div
               key={promo.id}
-              className="group rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-all hover:-translate-y-1 duration-300"
+              className="group rounded-2xl overflow-hidden border border-zinc-700 hover:border-zinc-700 transition-all hover:-translate-y-1 duration-300"
               style={{ background: "#12121f" }}
             >
               {/* Image Section */}
@@ -128,7 +128,7 @@ export const PromotionsPage = () => {
                 </p>
 
                 {/* Expiry Date */}
-                <div className="flex items-center gap-2 mb-3 text-zinc-500 text-xs">
+                <div className="flex items-center gap-2 mb-3 text-zinc-400 text-xs">
                   <Clock className="w-3.5 h-3.5" />
                   <span>Hạn sử dụng: {promo.expiry}</span>
                 </div>
@@ -167,7 +167,7 @@ export const PromotionsPage = () => {
         {/* Optional: Show more promotions message */}
         {promotions.length > 0 && promotions.length >= 6 && (
           <div className="text-center mt-8">
-            <p className="text-zinc-500 text-sm">Còn nhiều ưu đãi hấp dẫn khác đang chờ bạn!</p>
+            <p className="text-zinc-400 text-sm">Còn nhiều ưu đãi hấp dẫn khác đang chờ bạn!</p>
           </div>
         )}
       </div>

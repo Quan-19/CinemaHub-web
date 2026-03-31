@@ -28,7 +28,7 @@ function PasswordInput({ value, onChange, placeholder, id }) {
   const [show, setShow] = useState(false);
   return (
     <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
         <Lock className="h-4 w-4" />
       </span>
       <input
@@ -37,12 +37,12 @@ function PasswordInput({ value, onChange, placeholder, id }) {
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-10 text-sm text-white placeholder:text-zinc-500 focus:border-cinema-primary focus:outline-none"
+        className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-10 text-sm text-white placeholder:text-zinc-400 focus:border-cinema-primary focus:outline-none"
       />
       <button
         type="button"
         onClick={() => setShow((s) => !s)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-300"
         tabIndex={-1}
       >
         {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -147,7 +147,7 @@ function LoginForm({ onSuccess, notice }) {
           Email
         </label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
             <Mail className="h-4 w-4" />
           </span>
           <input
@@ -155,7 +155,7 @@ function LoginForm({ onSuccess, notice }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500 focus:border-cinema-primary focus:outline-none"
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-400 focus:border-cinema-primary focus:outline-none"
           />
         </div>
       </div>
@@ -222,7 +222,7 @@ function LoginForm({ onSuccess, notice }) {
 
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-zinc-700" />
-        <span className="text-xs text-zinc-500">hoặc</span>
+        <span className="text-xs text-zinc-400">hoặc</span>
         <div className="h-px flex-1 bg-zinc-700" />
       </div>
 
@@ -302,7 +302,7 @@ function RegisterForm({ onSuccess }) {
           Họ và Tên
         </label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
             <User className="h-4 w-4" />
           </span>
           <input
@@ -310,7 +310,7 @@ function RegisterForm({ onSuccess }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Nguyễn Văn A"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500 focus:border-cinema-primary focus:outline-none"
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-400 focus:border-cinema-primary focus:outline-none"
           />
         </div>
       </div>
@@ -320,7 +320,7 @@ function RegisterForm({ onSuccess }) {
           Email
         </label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
             <Mail className="h-4 w-4" />
           </span>
           <input
@@ -328,7 +328,7 @@ function RegisterForm({ onSuccess }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500 focus:border-cinema-primary focus:outline-none"
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-400 focus:border-cinema-primary focus:outline-none"
           />
         </div>
       </div>
@@ -338,7 +338,7 @@ function RegisterForm({ onSuccess }) {
           Số điện thoại
         </label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
             <Phone className="h-4 w-4" />
           </span>
           <input
@@ -348,7 +348,7 @@ function RegisterForm({ onSuccess }) {
             inputMode="numeric"
             maxLength={10}
             placeholder="0901234567"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500 focus:border-cinema-primary focus:outline-none"
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-400 focus:border-cinema-primary focus:outline-none"
           />
         </div>
         {phoneError && (
@@ -441,7 +441,7 @@ function AuthPage() {
   return (
     <div className="relative mx-auto flex min-h-[70vh] max-w-5xl items-center justify-center px-3 py-10 sm:px-6 lg:px-10">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(229,9,20,0.12),transparent_45%),radial-gradient(circle_at_bottom,_rgba(255,255,255,0.05),transparent_35%)]" />
-      <div className="w-full max-w-xl rounded-2xl border border-zinc-800 bg-cinema-surface/90 p-8 shadow-2xl backdrop-blur">
+      <div className="w-full max-w-xl rounded-2xl border border-zinc-700 bg-cinema-surface/90 p-8 shadow-2xl backdrop-blur">
         <div className="mb-6 flex flex-col items-center gap-2 pt-2">
           <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-cinema-primary to-cinema-primary-dark shadow-lg">
             <Film className="h-6 w-6 text-white" />

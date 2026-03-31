@@ -30,7 +30,7 @@ function PasswordInput({ value, onChange, placeholder, id }) {
   const [show, setShow] = useState(false);
   return (
     <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
         <Lock className="h-4 w-4" />
       </span>
       <input
@@ -39,12 +39,12 @@ function PasswordInput({ value, onChange, placeholder, id }) {
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-10 text-sm text-white placeholder:text-zinc-500 focus:border-cinema-primary focus:outline-none"
+        className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-10 text-sm text-white placeholder:text-zinc-400 focus:border-cinema-primary focus:outline-none"
       />
       <button
         type="button"
         onClick={() => setShow((s) => !s)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-300"
         tabIndex={-1}
       >
         {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -100,7 +100,7 @@ function LoginForm({ onLogin }) {
           Email
         </label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
             <Mail className="h-4 w-4" />
           </span>
           <input
@@ -108,7 +108,7 @@ function LoginForm({ onLogin }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500 focus:border-cinema-primary focus:outline-none"
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-400 focus:border-cinema-primary focus:outline-none"
           />
         </div>
       </div>
@@ -161,7 +161,7 @@ function LoginForm({ onLogin }) {
       {/* Hoặc Google */}
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-zinc-700" />
-        <span className="text-xs text-zinc-500">hoặc</span>
+        <span className="text-xs text-zinc-400">hoặc</span>
         <div className="h-px flex-1 bg-zinc-700" />
       </div>
 
@@ -236,7 +236,7 @@ function RegisterForm({ onSuccess }) {
           Họ và Tên
         </label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
             <User className="h-4 w-4" />
           </span>
           <input
@@ -244,7 +244,7 @@ function RegisterForm({ onSuccess }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Nguyễn Văn A"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500 focus:border-cinema-primary focus:outline-none"
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-400 focus:border-cinema-primary focus:outline-none"
           />
         </div>
       </div>
@@ -255,7 +255,7 @@ function RegisterForm({ onSuccess }) {
           Email
         </label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
             <Mail className="h-4 w-4" />
           </span>
           <input
@@ -263,7 +263,7 @@ function RegisterForm({ onSuccess }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500 focus:border-cinema-primary focus:outline-none"
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-400 focus:border-cinema-primary focus:outline-none"
           />
         </div>
       </div>
@@ -274,7 +274,7 @@ function RegisterForm({ onSuccess }) {
           Số điện thoại
         </label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
             <Phone className="h-4 w-4" />
           </span>
           <input
@@ -284,7 +284,7 @@ function RegisterForm({ onSuccess }) {
             inputMode="numeric"
             maxLength={10}
             placeholder="0901234567"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-500 focus:border-cinema-primary focus:outline-none"
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-400 focus:border-cinema-primary focus:outline-none"
           />
         </div>
         {phoneError && (
@@ -389,7 +389,7 @@ function AuthModal({ onClose }) {
         backdropFilter: "blur(4px)",
       }}
     >
-      <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-zinc-800 bg-cinema-surface p-8 shadow-2xl">
+      <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-zinc-700 bg-cinema-surface p-8 shadow-2xl">
         <button
           onClick={onClose}
           className="absolute left-4 top-4 flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white"

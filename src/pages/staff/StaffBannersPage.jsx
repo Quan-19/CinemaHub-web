@@ -210,7 +210,7 @@ function EditBannerModal({
   };
 
   const inputBase =
-    "mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-sm text-white outline-none transition focus:border-cinema-primary";
+    "mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-sm text-white outline-none transition focus:border-cinema-primary";
   const labelBase = "text-xs font-semibold text-zinc-400";
   const errorText = "mt-1 text-xs font-semibold text-red-500";
 
@@ -230,7 +230,7 @@ function EditBannerModal({
                 "mt-1.5 relative flex aspect-[21/9] w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-all hover:border-cinema-primary/50 hover:bg-zinc-900/60",
                 errors.image
                   ? "border-red-500/50 bg-red-500/5"
-                  : "border-zinc-800 bg-zinc-900/40",
+                  : "border-zinc-700 bg-zinc-900/40",
               ].join(" ")}
             >
               {form.image ? (
@@ -356,7 +356,7 @@ function EditBannerModal({
             <button
               type="button"
               onClick={onCancel}
-              className="h-11 rounded-xl border border-zinc-800 bg-zinc-900/40 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
+              className="h-11 rounded-xl border border-zinc-700 bg-zinc-900/40 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
             >
               Huỷ
             </button>
@@ -383,10 +383,10 @@ function ViewBannerModal({ banner, onClose }) {
         onClick={onClose}
       />
       <div
-        className="relative w-full max-w-xl overflow-hidden rounded-[24px] border border-zinc-800 bg-[#12121A] shadow-2xl opacity-100"
+        className="relative w-full max-w-xl overflow-hidden rounded-[24px] border border-zinc-700 bg-[#12121A] shadow-2xl opacity-100"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative aspect-[21/9] w-full bg-zinc-900 border-b border-zinc-800/50">
+        <div className="relative aspect-[21/9] w-full bg-zinc-900 border-b border-zinc-700/50">
           {banner.image ? (
             <img
               src={banner.image}
@@ -402,7 +402,7 @@ function ViewBannerModal({ banner, onClose }) {
         <div className="flex items-center justify-between bg-[#08080A] p-6 opacity-100 relative z-20">
           <div className="space-y-1">
             <h3 className="text-lg font-bold text-white">{banner.title}</h3>
-            <p className="text-xs text-zinc-500 font-medium">{banner.placementLabel}</p>
+            <p className="text-xs text-zinc-400 font-medium">{banner.placementLabel}</p>
           </div>
           <button
             onClick={onClose}
@@ -418,7 +418,7 @@ function ViewBannerModal({ banner, onClose }) {
 
 function StatCard({ label, value, colorClass }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-zinc-800/80 bg-zinc-900/30 p-5">
+    <div className="flex items-center gap-4 rounded-2xl border border-zinc-700/80 bg-zinc-900/30 p-5">
       <div className={["h-8 w-1.5 rounded-full", colorClass].join(" ")} />
       <div>
         <div className="text-2xl font-bold text-white">{value}</div>
@@ -432,7 +432,7 @@ function BannerCard({ banner, onEdit, onDelete, onToggleStatus, onView }) {
   const isActive = banner.status === "active";
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-[#1A1A24] transition-all hover:border-zinc-700 hover:shadow-xl hover:shadow-black/20">
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-zinc-700 bg-[#1A1A24] transition-all hover:border-zinc-700 hover:shadow-xl hover:shadow-black/20">
       <div className="relative w-full overflow-hidden bg-zinc-900" style={{ height: 0, paddingBottom: "42.85%" }}>
         <div className="absolute inset-0">
           {banner.image ? (
@@ -449,7 +449,7 @@ function BannerCard({ banner, onEdit, onDelete, onToggleStatus, onView }) {
           ) : null}
           <div
             className={[
-              "image-fallback absolute inset-0 items-center justify-center bg-zinc-800 text-zinc-600",
+              "image-fallback absolute inset-0 items-center justify-center bg-zinc-800 text-zinc-400",
               banner.image ? "hidden" : "flex",
             ].join(" ")}
           >
@@ -515,22 +515,22 @@ function BannerCard({ banner, onEdit, onDelete, onToggleStatus, onView }) {
             <div className="font-bold text-white">
               {banner.views.toLocaleString("vi-VN")}
             </div>
-            <div className="text-[11px] font-medium text-zinc-500">Lượt xem</div>
+            <div className="text-[11px] font-medium text-zinc-400">Lượt xem</div>
           </div>
           <div className="rounded-xl bg-zinc-900/50 p-3 text-center">
             <div className="font-bold text-white">
               {banner.clicks.toLocaleString("vi-VN")}
             </div>
-            <div className="text-[11px] font-medium text-zinc-500">Lượt click</div>
+            <div className="text-[11px] font-medium text-zinc-400">Lượt click</div>
           </div>
           <div className="rounded-xl bg-zinc-900/50 p-3 text-center">
             <div className="font-bold text-white">{banner.ctr}%</div>
-            <div className="text-[11px] font-medium text-zinc-500">CTR</div>
+            <div className="text-[11px] font-medium text-zinc-400">CTR</div>
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-4">
-          <div className="text-xs text-zinc-500">
+        <div className="mt-4 flex items-center justify-between border-t border-zinc-700/80 pt-4">
+          <div className="text-xs text-zinc-400">
             Link: <span className="font-medium text-blue-400">{banner.link}</span>
           </div>
           <button
@@ -711,7 +711,7 @@ function StaffBannersPage() {
           />
         ))}
         {filteredBanners.length === 0 && (
-          <div className="col-span-full py-12 text-center text-zinc-500">
+          <div className="col-span-full py-12 text-center text-zinc-400">
             Không có banner nào ở mục này.
           </div>
         )}

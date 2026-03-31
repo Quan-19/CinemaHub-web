@@ -129,7 +129,7 @@ function ProfilePage() {
       <div className="w-full max-w-md space-y-4">
         {/* Avatar & Name */}
         <div
-          className="rounded-2xl border border-zinc-800 p-6 flex items-center gap-5"
+          className="rounded-2xl border border-zinc-700 p-6 flex items-center gap-5"
           style={{ background: "#12121f" }}
         >
           {user.photoURL ? (
@@ -156,31 +156,31 @@ function ProfilePage() {
 
         {/* Info rows */}
         <div
-          className="rounded-2xl border border-zinc-800 divide-y divide-zinc-800"
+          className="rounded-2xl border border-zinc-700 divide-y divide-zinc-800"
           style={{ background: "#12121f" }}
         >
           <div className="flex items-center gap-4 px-5 py-4">
-            <User className="h-4 w-4 text-zinc-500 shrink-0" />
+            <User className="h-4 w-4 text-zinc-400 shrink-0" />
             <div className="min-w-0">
-              <p className="text-zinc-500 text-xs mb-0.5">Tên hiển thị</p>
+              <p className="text-zinc-400 text-xs mb-0.5">Tên hiển thị</p>
               <p className="text-white text-sm font-medium truncate">
                 {user.displayName ?? "Chưa cập nhật"}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4 px-5 py-4">
-            <Mail className="h-4 w-4 text-zinc-500 shrink-0" />
+            <Mail className="h-4 w-4 text-zinc-400 shrink-0" />
             <div className="min-w-0">
-              <p className="text-zinc-500 text-xs mb-0.5">Email</p>
+              <p className="text-zinc-400 text-xs mb-0.5">Email</p>
               <p className="text-white text-sm font-medium truncate">
                 {user.email}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4 px-5 py-4">
-            <ShieldCheck className="h-4 w-4 text-zinc-500 shrink-0" />
+            <ShieldCheck className="h-4 w-4 text-zinc-400 shrink-0" />
             <div>
-              <p className="text-zinc-500 text-xs mb-0.5">
+              <p className="text-zinc-400 text-xs mb-0.5">
                 Phương thức đăng nhập
               </p>
               <p className="text-white text-sm font-medium">{providerLabel}</p>
@@ -190,7 +190,7 @@ function ProfilePage() {
 
         {/* Editable fields */}
         <div
-          className="rounded-2xl border border-zinc-800 divide-y divide-zinc-800"
+          className="rounded-2xl border border-zinc-700 divide-y divide-zinc-800"
           style={{ background: "#12121f" }}
         >
           {/* Phone */}
@@ -206,7 +206,7 @@ function ProfilePage() {
               onChange={handlePhoneChange}
               placeholder="0xxxxxxxxx"
               maxLength={10}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 px-4 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-cinema-primary focus:ring-1 focus:ring-cinema-primary/40 transition-colors"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 px-4 py-2.5 text-sm text-white outline-none placeholder:text-zinc-400 focus:border-cinema-primary focus:ring-1 focus:ring-cinema-primary/40 transition-colors"
             />
             {phoneError && (
               <p className="mt-1.5 text-xs text-red-400">{phoneError}</p>

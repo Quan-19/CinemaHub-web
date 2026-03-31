@@ -169,7 +169,7 @@ export const SeatSelectionPage = () => {
     <div className="min-h-screen pt-16" style={{ background: "#0a0a0f" }}>
       {/* ========== HEADER (Code 2) ========== */}
       <div
-        className="border-b border-zinc-800"
+        className="border-b border-zinc-700"
         style={{ background: "#12121f" }}
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
@@ -210,7 +210,7 @@ export const SeatSelectionPage = () => {
                         ? "bg-green-500 text-white"
                         : s.active
                         ? "bg-red-600 text-white"
-                        : "bg-zinc-800 text-zinc-500"
+                        : "bg-zinc-800 text-zinc-400"
                     }`}
                   >
                     {s.done ? "✓" : s.n}
@@ -224,7 +224,7 @@ export const SeatSelectionPage = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/20 p-4 sm:p-5">
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4 sm:p-5">
           <div className="relative mb-6 flex items-center justify-center">
             <svg
               className="pointer-events-none absolute inset-x-0 top-0 h-14 w-full text-cyan-400"
@@ -281,7 +281,7 @@ export const SeatSelectionPage = () => {
                 opacity="0.85"
               />
             </svg>
-            <div className="pt-6 text-[11px] font-semibold tracking-[0.55em] text-zinc-500">
+            <div className="pt-6 text-[11px] font-semibold tracking-[0.55em] text-zinc-400">
               SCREEN
             </div>
           </div>
@@ -294,7 +294,7 @@ export const SeatSelectionPage = () => {
                     key={row.label}
                     className="grid grid-cols-[28px_auto_28px] items-center gap-3"
                   >
-                    <div className="text-center text-[11px] font-semibold text-zinc-500">
+                    <div className="text-center text-[11px] font-semibold text-zinc-400">
                       {row.label}
                     </div>
 
@@ -305,7 +305,7 @@ export const SeatSelectionPage = () => {
                         const typeInfo = SEAT_TYPES[seat.type];
 
                         const className = isOccupied
-                          ? "border-zinc-800 bg-zinc-900/70 text-zinc-700 cursor-not-allowed"
+                          ? "border-zinc-700 bg-zinc-900/70 text-zinc-700 cursor-not-allowed"
                           : isSelected
                           ? "border-red-500 bg-red-500 text-white"
                           : seat.type === "vip"
@@ -337,7 +337,7 @@ export const SeatSelectionPage = () => {
                       })}
                     </div>
 
-                    <div className="text-center text-[11px] font-semibold text-zinc-500">
+                    <div className="text-center text-[11px] font-semibold text-zinc-400">
                       {row.label}
                     </div>
                   </div>
@@ -345,7 +345,7 @@ export const SeatSelectionPage = () => {
 
                 <div className="grid grid-cols-[28px_auto_28px] items-center gap-3 pt-2">
                   <div />
-                  <div className="grid auto-cols-max grid-flow-col gap-2 text-center text-[11px] font-semibold text-zinc-600">
+                  <div className="grid auto-cols-max grid-flow-col gap-2 text-center text-[11px] font-semibold text-zinc-400">
                     {Array.from({ length: COLS }, (_, i) => (
                       <div key={i + 1} className="w-7">
                         {i + 1}
@@ -358,10 +358,10 @@ export const SeatSelectionPage = () => {
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-800 pt-3">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-700 pt-3">
             <div className="flex flex-wrap items-center gap-5">
               <SeatLegendItem
-                colorClassName="border-zinc-800 bg-zinc-900/70"
+                colorClassName="border-zinc-700 bg-zinc-900/70"
                 label="Đã đặt"
               />
               <SeatLegendItem
@@ -386,7 +386,7 @@ export const SeatSelectionPage = () => {
 
         {/* ========== BOTTOM BAR (Kết hợp cả 2) ========== */}
         <div
-          className="fixed bottom-0 left-0 right-0 border-t border-zinc-800 px-4 py-3"
+          className="fixed bottom-0 left-0 right-0 border-t border-zinc-700 px-4 py-3"
           style={{ background: "#12121f" }}
         >
           <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
@@ -401,7 +401,7 @@ export const SeatSelectionPage = () => {
                   </p>
                 </>
               ) : (
-                <p className="text-zinc-500 text-sm">Chưa chọn ghế nào</p>
+                <p className="text-zinc-400 text-sm">Chưa chọn ghế nào</p>
               )}
             </div>
 
