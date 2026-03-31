@@ -605,6 +605,7 @@ export const MovieDetailPage = () => {
           language: data.language || "Tiếng Việt",
           country: data.country || "Việt Nam",
           status: data.status || "coming_soon",
+          trailer: data.trailer || "",
         };
 
         setMovie(movieData);
@@ -964,20 +965,44 @@ export const MovieDetailPage = () => {
               className="relative bg-zinc-900"
               style={{ paddingTop: "56.25%" }}
             >
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <Play
-                  className="w-16 h-16 text-red-500 mb-4"
-                  fill="currentColor"
-                />
-                <p className="text-zinc-400">Trailer: {movie.title}</p>
-                <p className="text-zinc-400 text-sm mt-1">
-                  (Demo - Trailer không khả dụng trong bản demo)
-                </p>
-              </div>
+              {(() => {
+                const extractYouTubeId = (url) => {
+                  if (!url) return null;
+                  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                  const match = url.match(regExp);
+                  return (match && match[2].length === 11) ? match[2] : null;
+                };
+                const youtubeId = extractYouTubeId(movie?.trailer);
+
+                if (youtubeId) {
+                  return (
+                    <iframe
+                      className="absolute inset-0 w-full h-full"
+                      src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
+                      title={`Trailer: ${movie.title}`}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    ></iframe>
+                  );
+                }
+                return (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <Play
+                      className="w-16 h-16 text-red-500 mb-4"
+                      fill="currentColor"
+                    />
+                    <p className="text-zinc-400">Trailer: {movie.title}</p>
+                    <p className="text-zinc-400 text-sm mt-1">
+                      (Phim chưa cập nhật trailer hợp lệ)
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
             <button
               onClick={() => setShowTrailer(false)}
-              className="absolute top-3 right-3 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center text-white hover:bg-black"
+              className="absolute top-3 right-3 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center text-white hover:bg-black z-10"
             >
               ✕
             </button>
