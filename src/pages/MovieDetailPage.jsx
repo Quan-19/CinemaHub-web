@@ -242,15 +242,14 @@ export const HomePage = () => {
                       {current?.duration} phút
                     </span>
                     <span
-                      className={`rounded px-2 py-0.5 text-xs font-bold text-white ${
-                        current?.rating === "T18"
-                          ? "bg-red-500"
-                          : current?.rating === "T16"
+                      className={`rounded px-2 py-0.5 text-xs font-bold text-white ${current?.rating === "T18"
+                        ? "bg-red-500"
+                        : current?.rating === "T16"
                           ? "bg-orange-500"
                           : current?.rating === "T13"
-                          ? "bg-amber-500"
-                          : "bg-green-500"
-                      }`}
+                            ? "bg-amber-500"
+                            : "bg-green-500"
+                        }`}
                     >
                       {current?.rating}
                     </span>
@@ -298,11 +297,10 @@ export const HomePage = () => {
             <button
               key={i}
               onClick={() => setHeroIndex(i)}
-              className={`rounded-full transition-all ${
-                i === heroIndex
-                  ? "w-8 h-2 bg-red-500"
-                  : "w-2 h-2 bg-white/30 hover:bg-white/60"
-              }`}
+              className={`rounded-full transition-all ${i === heroIndex
+                ? "w-8 h-2 bg-red-500"
+                : "w-2 h-2 bg-white/30 hover:bg-white/60"
+                }`}
             />
           ))}
         </div>
@@ -312,11 +310,10 @@ export const HomePage = () => {
             <button
               key={m.movie_id}
               onClick={() => setHeroIndex(i)}
-              className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${
-                i === heroIndex
-                  ? "border-red-500 opacity-100"
-                  : "border-transparent opacity-50 hover:opacity-75"
-              }`}
+              className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === heroIndex
+                ? "border-red-500 opacity-100"
+                : "border-transparent opacity-50 hover:opacity-75"
+                }`}
             >
               <img
                 src={m.poster}
@@ -429,8 +426,8 @@ export const HomePage = () => {
                     <span className="text-zinc-500 text-xs">
                       {movie.releaseDate
                         ? new Date(movie.releaseDate).toLocaleDateString(
-                            "vi-VN"
-                          )
+                          "vi-VN"
+                        )
                         : "Sắp ra mắt"}
                     </span>
                   </div>
@@ -723,213 +720,236 @@ export const MovieDetailPage = () => {
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: "#0a0a0f" }}>
-      <div className="relative h-[50vh] min-h-[400px] overflow-hidden">
-        <img
-          src={movie.backdrop}
-          alt={movie.title}
-          className="w-full h-full object-cover"
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to top, #0a0a0f 10%, rgba(10,10,15,0.4) 60%, rgba(10,10,15,0.2) 100%)",
-          }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to right, rgba(10,10,15,0.6) 0%, transparent 60%)",
-          }}
-        />
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 sm:left-6 flex items-center gap-2 text-white bg-black/40 hover:bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-sm transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" /> Quay lại
-        </button>
-        <div className="absolute top-4 right-4 sm:right-6 flex gap-2">
-          <button
-            onClick={() => setLiked(!liked)}
-            className={`w-9 h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center transition-colors ${
-              liked ? "text-red-500" : "text-white hover:text-red-400"
-            }`}
-          >
-            <Heart className="w-4 h-4" fill={liked ? "currentColor" : "none"} />
-          </button>
-          <button
-            onClick={handleShare}
-            className="w-9 h-9 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white hover:text-zinc-200 transition-colors"
-          >
-            <Share2 className="w-4 h-4" />
-          </button>
+    <div className="space-y-2 relative min-h-screen pb-16" style={{ background: "#0a0a0f" }}>
+      {/* Banner / Backdrop layer with masking */}
+      <div className="relative left-1/2 -translate-x-1/2 lg:mt-[-100px] xl:mt-[-160px] 2xl:mt-[-200px] w-screen max-w-none pointer-events-none">
+        <div className="aspect-[16/10] md:aspect-[2/1] xl:aspect-[21/9] w-full invisible pointer-events-none" />
+        <div className="absolute top-0 left-0 w-full h-[125%] z-0 pointer-events-none overflow-hidden" style={{ background: "#0a0a0f" }}>
+          <div className="absolute top-0 left-0 w-full h-full">
+            <img
+              src={movie.backdrop}
+              alt={movie.title}
+              className="w-full h-full object-cover object-[50%_10%]"
+            />
+            <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-[#0a0a0f]/80 via-[#0a0a0f]/40 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/80 to-transparent" />
+          </div>
         </div>
+        <div
+          className="absolute top-full bottom-[-25%] left-0 w-full backdrop-blur-[6px] z-0 pointer-events-none"
+          style={{
+            background: "rgba(10, 10, 15, 0.7)",
+            WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 30%)",
+            maskImage: "linear-gradient(to bottom, transparent 0%, black 30%)",
+          }}
+        />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10 pb-16">
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="flex-shrink-0">
-            <div className="w-44 md:w-52 mx-auto lg:mx-0">
+
+
+      <div className="relative z-10 flex flex-col space-y-8 lg:space-y-12">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-start md:-mt-32 lg:-mt-48 xl:-mt-64 relative z-20">
+            <div className="w-36 sm:w-44 md:w-48 lg:w-56 shrink-0 overflow-hidden rounded-2xl sm:rounded-3xl border-4 border-zinc-900 shadow-[0_20px_50px_rgba(0,0,0,0.8)] bg-zinc-900 aspect-[2/3] ring-1 ring-white/10 relative z-30">
               <img
                 src={movie.poster}
                 alt={movie.title}
-                className="w-full rounded-2xl shadow-2xl"
-                style={{ aspectRatio: "2/3", objectFit: "cover" }}
+                className="h-full w-full object-cover"
               />
             </div>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <span
-                className="px-2.5 py-1 rounded-lg text-xs text-white font-bold"
-                style={{
-                  background:
-                    movie.status === "now_showing" ? "#e50914" : "#f59e0b",
-                }}
-              >
-                {movie.status === "now_showing" ? "Đang chiếu" : "Sắp chiếu"}
-              </span>
-              <span
-                className="px-2.5 py-1 rounded-lg text-xs text-white font-bold"
-                style={{ background: ratingColors[movie.rating] }}
-              >
-                {movie.rating}
-              </span>
-              {movieGenres.map((g) => (
+
+            <div className="space-y-4 flex-1 md:pt-4 drop-shadow-2xl">
+              <div className="flex flex-wrap items-center gap-2">
                 <span
-                  key={g}
-                  className="px-2.5 py-1 rounded-lg text-xs bg-zinc-800 text-zinc-300 border border-zinc-700"
+                  className="px-2.5 py-1 rounded-lg text-xs text-white font-bold"
+                  style={{
+                    background: movie.status === "now_showing" ? "#e50914" : "#f59e0b",
+                  }}
                 >
-                  {g}
+                  {movie.status === "now_showing" ? "Đang chiếu" : "Sắp chiếu"}
                 </span>
-              ))}
-            </div>
-            <h1 className="text-white mb-1 text-2xl md:text-3xl font-extrabold leading-tight">
-              {movie.title}
-            </h1>
-            <p className="text-zinc-500 text-sm mb-4">{movie.originalTitle}</p>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex items-center gap-2">
-                <div className="flex">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-4 h-4"
-                      fill={i < stars ? "#facc15" : "none"}
-                      color={i < stars ? "#facc15" : "#52525b"}
-                    />
-                  ))}
-                </div>
-                <span className="text-yellow-400 text-sm font-bold">
-                  {movie.score}/10
-                </span>
-                <span className="text-zinc-500 text-xs">
-                  ({voteCount} lượt)
-                </span>
+
               </div>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-              {movieDetails.map((detail) => {
-                const IconComponent = detail.icon;
-                return (
-                  <div
-                    key={detail.label}
-                    className="bg-zinc-900 rounded-xl p-3 border border-zinc-800"
-                  >
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <IconComponent className="w-3.5 h-3.5 text-red-500" />
-                      <span className="text-zinc-500 text-xs">
-                        {detail.label}
-                      </span>
-                    </div>
-                    <p className="text-white text-sm font-semibold">
-                      {detail.value}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mb-5">
-              <h3 className="text-white mb-2 font-semibold">Nội dung phim</h3>
-              <p className="text-zinc-400 text-sm leading-relaxed">
-                {movie.description}
+
+              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,1)] leading-tight">
+                {movie.title}
+              </h1>
+
+              <p className="text-zinc-500 text-sm font-medium drop-shadow-md">
+                Tên gốc: {movie.originalTitle}
               </p>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4 mb-6">
-              <div>
-                <p className="text-zinc-500 text-xs mb-1.5 uppercase tracking-wider">
-                  Đạo diễn
-                </p>
+
+              <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
-                    <User className="w-4 h-4 text-zinc-400" />
+                  <div className="flex">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className="w-4 h-4"
+                        fill={i < stars ? "#facc15" : "none"}
+                        color={i < stars ? "#facc15" : "#52525b"}
+                      />
+                    ))}
                   </div>
-                  <span className="text-white text-sm font-semibold">
-                    {movie.director}
+                  <span className="text-yellow-400 text-sm font-bold">
+                    {movie.score}/10
+                  </span>
+                  <span className="text-zinc-500 text-xs">
+                    ({voteCount} lượt)
                   </span>
                 </div>
               </div>
-              <div>
-                <p className="text-zinc-500 text-xs mb-1.5 uppercase tracking-wider">
-                  Diễn viên
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {movieCast.length > 0 ? (
-                    movieCast.map((actor) => (
-                      <span
-                        key={actor}
-                        className="bg-zinc-800 text-zinc-300 text-xs px-2 py-1 rounded-lg border border-zinc-700"
-                      >
-                        {actor}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-zinc-400 text-sm">Đang cập nhật</span>
-                  )}
-                </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {movieGenres.map((g) => (
+                  <span
+                    key={g}
+                    className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700 shadow-sm"
+                  >
+                    {g}
+                  </span>
+                ))}
               </div>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {movie.status === "now_showing" && (
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3 pt-1 border-b border-zinc-800 pb-5">
+                {movie.status === "now_showing" && (
+                  <button
+                    onClick={handleBooking}
+                    className="flex items-center gap-2 px-7 py-3 rounded-full font-bold text-white transition-all hover:-translate-y-[1px] active:scale-[0.98] shadow-[0_0_20px_rgba(229,9,20,0.3)] hover:shadow-[0_0_25px_rgba(229,9,20,0.5)] z-30"
+                    style={{ background: "linear-gradient(135deg, #e50914, #b20710)" }}
+                  >
+                    <Ticket className="w-4 h-4" />
+                    Đặt vé ngay
+                  </button>
+                )}
+
                 <button
-                  onClick={handleBooking}
-                  className="flex items-center gap-2 px-8 py-3 rounded-xl text-white transition-all hover:opacity-90 active:scale-95"
-                  style={{
-                    background: "linear-gradient(135deg, #e50914, #b20710)",
-                  }}
+                  onClick={() => setShowTrailer(true)}
+                  className="flex items-center gap-2 px-7 py-3 rounded-full font-bold text-white border border-zinc-700 bg-zinc-800/80 hover:bg-zinc-700 backdrop-blur-sm transition-colors z-30"
                 >
-                  <Ticket className="w-4 h-4" />
-                  Đặt vé ngay
+                  <Play className="w-4 h-4" fill="white" />
+                  Xem trailer
                 </button>
-              )}
-              <button
-                onClick={() => setShowTrailer(true)}
-                className="flex items-center gap-2 px-8 py-3 rounded-xl text-white border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 transition-colors"
-              >
-                <Play className="w-4 h-4" fill="white" />
-                Xem trailer
-              </button>
+                
+                <button
+                  onClick={() => setLiked(!liked)}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold border transition-colors z-30 shadow-sm ${
+                    liked 
+                      ? "bg-red-500/10 border-red-500/50 text-red-500 hover:bg-red-500/20" 
+                      : "bg-zinc-800/80 border-zinc-700 text-white hover:bg-zinc-700"
+                  }`}
+                >
+                  <Heart className="w-4 h-4" fill={liked ? "currentColor" : "none"} />
+                  Yêu thích
+                </button>
+
+                <button
+                  onClick={handleShare}
+                  className="flex items-center justify-center p-3 rounded-full bg-zinc-800/80 border border-zinc-700 text-white hover:bg-zinc-700 transition-colors z-30 shadow-sm"
+                  title="Chia sẻ"
+                >
+                  <Share2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 pb-2">
+                {movieDetails.map((detail) => {
+                  const IconComponent = detail.icon;
+                  return (
+                    <div
+                      key={detail.label}
+                      className="bg-zinc-900/40 rounded-xl p-3 border border-zinc-800 shadow-sm"
+                    >
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <IconComponent className="w-3.5 h-3.5 text-red-500" />
+                        <span className="text-zinc-500 text-xs uppercase tracking-wide">
+                          {detail.label}
+                        </span>
+                      </div>
+                      <p className="text-white text-[13px] font-semibold">
+                        {detail.value}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
 
-        {related.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-white mb-6 text-xl font-bold">
-              Phim liên quan
-            </h2>
-            <div
-              className="flex gap-4 overflow-x-auto pb-2"
-              style={{ scrollbarWidth: "none" }}
-            >
-              {related.map((m) => (
-                <MovieCard key={m.movie_id} movie={m} />
-              ))}
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-x-6 gap-y-6 lg:grid-cols-[1fr,380px] xl:grid-cols-[1fr,420px] items-start">
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6 lg:p-8 space-y-4 shadow-xl">
+              <div className="flex items-center gap-3">
+                <p className="text-sm uppercase tracking-[0.14em] text-zinc-400 font-bold">
+                  Nội dung phim
+                </p>
+              </div>
+              <p className="text-zinc-300 leading-relaxed text-[15px]">
+                {movie.description}
+              </p>
             </div>
           </div>
-        )}
+
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6 lg:p-8 space-y-5 shadow-xl">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-zinc-500 text-xs mb-2 uppercase tracking-[0.14em] font-semibold">
+                    Đạo diễn
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
+                      <User className="w-4 h-4 text-zinc-400" />
+                    </div>
+                    <span className="text-white text-sm font-semibold">
+                      {movie.director}
+                    </span>
+                  </div>
+                </div>
+
+                {movieCast.length > 0 && (
+                  <div className="pt-2">
+                    <div className="flex items-center gap-3 mb-3">
+                      <p className="text-zinc-500 text-xs uppercase tracking-[0.14em] font-semibold">
+                        Diễn viên
+                      </p>
+                      <span className="text-xs font-semibold text-zinc-400 bg-black/40 px-2 py-0.5 rounded-full border border-zinc-800">
+                        {movieCast.length}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {movieCast.map((actor) => (
+                        <span
+                          key={actor}
+                          className="bg-zinc-800 border border-zinc-700 text-zinc-300 text-[13px] px-3 py-1.5 rounded-xl block truncate"
+                        >
+                          {actor}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {related.length > 0 && (
+              <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6 lg:p-8 space-y-5 shadow-xl">
+                <div className="flex items-center gap-3">
+                  <p className="text-sm uppercase tracking-[0.14em] text-zinc-400 font-bold">
+                    Phim liên quan
+                  </p>
+                </div>
+                <div className="flex overflow-x-auto gap-4 pb-4 snap-x pointer-events-auto" style={{ scrollbarWidth: "none" }}>
+                  {related.map((m) => (
+                    <div key={m.movie_id} className="min-w-[140px] sm:min-w-[160px] snap-start">
+                      <MovieCard movie={m} size="sm" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {showTrailer && (

@@ -135,7 +135,7 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-cinema-bg text-zinc-100">
-      
+
       {/* ========== HERO SECTION (Kết hợp UI Code 2 + Data Code 1) ========== */}
       <div className="relative h-[74vh] min-h-[460px] overflow-hidden sm:h-[70vh] sm:min-h-[500px]">
         <AnimatePresence mode="wait">
@@ -171,8 +171,8 @@ const HomePage = () => {
         </AnimatePresence>
 
         {/* Hero Content */}
-        <div className="absolute inset-0 flex items-end sm:items-center">
-          <div className="mx-auto w-full px-3 pb-20 sm:px-6 sm:pb-0 lg:px-10 2xl:px-14">
+        <div className="absolute inset-0 flex items-end sm:items-end">
+          <div className="mx-auto w-full px-3 pb-12 sm:px-6 sm:pb-16 lg:px-10 2xl:px-14">
             <div className="max-w-xl">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -187,14 +187,6 @@ const HomePage = () => {
                     <span className="rounded bg-cinema-primary px-2 py-0.5 text-xs font-semibold text-white">
                       Đang chiếu
                     </span>
-                    {current?.genre?.slice(0, 2).map((g) => (
-                      <span
-                        key={g}
-                        className="px-2 py-0.5 rounded text-xs text-zinc-300 bg-white/10 border border-white/20"
-                      >
-                        {g}
-                      </span>
-                    ))}
                   </div>
 
                   <h1 className="mb-2 text-3xl leading-tight font-extrabold text-white sm:text-5xl">
@@ -204,7 +196,7 @@ const HomePage = () => {
                     {current?.originalTitle}
                   </p>
 
-                  <div className="mb-4 flex flex-wrap items-center gap-3 sm:gap-4">
+                  <div className="mb-3 flex flex-wrap items-center gap-3 sm:gap-4">
                     <span className="flex items-center gap-1 text-yellow-400">
                       <Star className="w-4 h-4 fill-current" />
                       <span className="font-bold">{current?.rating}/10</span>
@@ -231,9 +223,23 @@ const HomePage = () => {
                     </span>
                   </div>
 
-                  <p className="text-zinc-400 text-sm mb-6 leading-relaxed line-clamp-3">
-                    {current?.description}
-                  </p>
+                  {current?.description && (
+                    <p className="text-zinc-400 text-sm mb-4 leading-relaxed line-clamp-3">
+                      {current?.description}
+                    </p>
+                  )}
+
+                  {/* Genre Badges (Moved here) */}
+                  <div className="mb-5 flex flex-wrap items-center gap-2">
+                    {current?.genre?.slice(0, 3).map((g) => (
+                      <span
+                        key={g}
+                        className="px-2.5 py-1 rounded-lg text-xs font-medium text-zinc-300 bg-white/5 border border-white/10 backdrop-blur-sm"
+                      >
+                        {g}
+                      </span>
+                    ))}
+                  </div>
 
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <button
@@ -277,11 +283,10 @@ const HomePage = () => {
             <button
               key={i}
               onClick={() => setHeroIndex(i)}
-              className={`rounded-full transition-all ${
-                i === heroIndex
-                  ? "w-8 h-2 bg-red-500"
-                  : "w-2 h-2 bg-white/30 hover:bg-white/60"
-              }`}
+              className={`rounded-full transition-all ${i === heroIndex
+                ? "w-8 h-2 bg-red-500"
+                : "w-2 h-2 bg-white/30 hover:bg-white/60"
+                }`}
             />
           ))}
         </div>
@@ -292,11 +297,10 @@ const HomePage = () => {
             <button
               key={m.movie_id}
               onClick={() => setHeroIndex(i)}
-              className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${
-                i === heroIndex
-                  ? "border-red-500 opacity-100"
-                  : "border-transparent opacity-50 hover:opacity-75"
-              }`}
+              className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === heroIndex
+                ? "border-red-500 opacity-100"
+                : "border-transparent opacity-50 hover:opacity-75"
+                }`}
             >
               <img
                 src={m.poster}
@@ -310,7 +314,7 @@ const HomePage = () => {
 
       {/* ========== MAIN CONTENT ========== */}
       <div className="mx-auto w-full px-3 pb-14 sm:px-6 sm:pb-16 lg:px-10 2xl:px-14">
-        
+
         {/* NOW SHOWING SECTION */}
         <section className="mt-10">
           <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
@@ -388,55 +392,17 @@ const HomePage = () => {
               Xem tất cả <ArrowRight className="w-4 h-4" />
             </button>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div
+            className="scrollbar-hide flex gap-4 overflow-x-auto pb-4"
+            style={{ scrollbarWidth: "none" }}
+          >
             {comingSoon.map((movie) => (
-              <div
-                key={movie.movie_id}
-                onClick={() => navigate(`/movies/${movie.movie_id}`)}
-                className="group flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 transition-all hover:border-zinc-700 hover:bg-zinc-900 cursor-pointer sm:flex-row sm:gap-4"
-              >
-                <img
-                  src={movie.poster}
-                  alt={movie.title}
-                  className="h-40 w-full rounded-lg object-cover sm:h-28 sm:w-20 sm:flex-shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="bg-yellow-500/20 text-yellow-400 text-xs px-2 py-0.5 rounded-full border border-yellow-500/30">
-                      Sắp chiếu
-                    </span>
-                    <span className="text-zinc-500 text-xs">
-                      {movie.releaseDate
-                        ? new Date(movie.releaseDate).toLocaleDateString("vi-VN")
-                        : "Sắp ra mắt"}
-                    </span>
-                  </div>
-                  <h3 className="mb-1 text-sm font-semibold text-white transition-colors group-hover:text-red-400">
-                    {movie.title}
-                  </h3>
-                  <p className="text-zinc-500 text-xs mb-2">
-                    {movie.originalTitle || ""}
-                  </p>
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {movie.genre?.slice(0, 2).map((g) => (
-                      <span
-                        key={g}
-                        className="text-xs px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400"
-                      >
-                        {g}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-zinc-400 text-xs line-clamp-2">
-                    {movie.description}
-                  </p>
-                </div>
-              </div>
+              <MovieCard key={movie.movie_id} movie={movie} size="md" />
             ))}
           </div>
         </section>
 
-        {/* PROMOTIONS SECTION (Code 2) */}
+        {/* PROMOTIONS SECTION */}
         {promotions.length > 0 && (
           <section className="mt-10">
             <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
@@ -447,41 +413,62 @@ const HomePage = () => {
                   Khuyến Mãi Nổi Bật
                 </h2>
               </div>
+              <button
+                onClick={() => navigate("/promotions")}
+                className="flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+              >
+                Xem tất cả <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {promotions.map((promo) => (
+            
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {promotions.slice(0, 4).map((promo) => (
                 <div
                   key={promo.id}
-                  className="cinema-surface cursor-pointer overflow-hidden rounded-xl transition-all hover:border-zinc-700"
+                  className="group rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-all hover:-translate-y-1 duration-300"
+                  style={{ background: "#12121f" }}
                 >
-                  <div className="relative h-36 overflow-hidden">
+                  <div className="relative h-44 overflow-hidden">
                     <img
                       src={promo.image}
                       alt={promo.title}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    <div className="absolute right-3 top-3 rounded-lg bg-cinema-primary px-2 py-1 text-xs font-bold text-white">
-                      -{promo.discount}
+                    <div
+                      className="absolute top-3 right-3 px-3 py-1.5 rounded-lg text-white text-sm font-bold shadow-lg"
+                      style={{ background: "#e50914" }}
+                    >
+                      -{promo.discount_percent || promo.discount}%
                     </div>
                   </div>
-                  <div className="p-4">
-                    <h3 className="mb-1 text-sm font-semibold text-white transition-colors hover:text-red-400">
+                  
+                  <div className="p-5">
+                    <h3 className="text-white mb-2 line-clamp-1 text-base font-bold group-hover:text-red-400 transition-colors">
                       {promo.title}
                     </h3>
-                    <p className="text-zinc-400 text-xs mb-3 line-clamp-2">
+                    <p className="text-zinc-400 text-sm mb-4 line-clamp-2 leading-relaxed">
                       {promo.description}
                     </p>
-                    <div className="flex items-center justify-between">
-                      <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1 flex items-center gap-2">
-                        <Tag className="w-3 h-3 text-red-500" />
-                        <span className="text-xs font-semibold text-zinc-300">
+
+                    <div className="flex items-center gap-2 mb-3 text-zinc-500 text-xs">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>Hạn sử dụng: {promo.expiry}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-zinc-900 border border-dashed border-zinc-600 rounded-xl px-4 py-2.5 flex items-center gap-2 group-hover:border-red-500/50 transition-colors">
+                        <Tag className="w-4 h-4 text-red-500 shrink-0" />
+                        <span className="text-white text-sm tracking-wider font-bold">
                           {promo.code}
                         </span>
                       </div>
-                      <span className="text-zinc-500 text-xs">
-                        HSD: {promo.expiry}
-                      </span>
+                      <button 
+                        onClick={() => navigate("/promotions")}
+                        className="w-10 h-10 rounded-xl bg-zinc-700 hover:bg-zinc-600 flex items-center justify-center transition-all"
+                      >
+                        <ArrowRight className="w-4 h-4 text-white" />
+                      </button>
                     </div>
                   </div>
                 </div>

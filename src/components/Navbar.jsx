@@ -28,6 +28,7 @@ const isLinkActive = (pathname, path) => {
 };
 
 function Navbar() {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,6 +37,14 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -65,8 +74,14 @@ function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-cinema-bg/90 backdrop-blur px-3 sm:px-4">
-      <div className="flex h-16 items-center justify-between gap-3">
+    <header
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+        isScrolled
+          ? "bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/10 py-2 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
+          : "bg-gradient-to-b from-black/80 via-black/40 to-transparent py-4 md:py-5"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-4 lg:gap-8 px-4 sm:px-6 lg:px-8 max-w-[1920px] mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-cinema-primary to-cinema-primary-dark">
             <Film className="h-4 w-4 text-white" />
@@ -76,8 +91,23 @@ function Navbar() {
           </span>
         </Link>
 
+        <div className="hidden xl:flex flex-1 max-w-md w-full items-center">
+          <div className="relative w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/70 drop-shadow-md" />
+            <input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") runSearch();
+              }}
+              placeholder="Tìm kiếm phim, diễn viên"
+              className="w-full h-[46px] bg-white/[0.08] hover:bg-white/[0.12] backdrop-blur-md border border-white/10 rounded-full pl-11 pr-4 text-sm text-white placeholder-white/60 outline-none focus:bg-white/[0.15] focus:border-white/30 transition-all shadow-input"
+            />
+          </div>
+        </div>
+
         <nav
-          className="hidden items-center gap-1 md:flex"
+          className="hidden items-center gap-1 xl:gap-2 md:flex"
           aria-label="Main navigation"
         >
           {navLinks.map((link) => {
@@ -88,8 +118,8 @@ function Navbar() {
                 to={link.path}
                 className={
                   active
-                    ? "rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white"
-                    : "rounded-lg px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
+                    ? "rounded-full bg-white/20 backdrop-blur-md px-4 py-2 text-[15px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] border border-white/10"
+                    : "rounded-full px-4 py-2 text-[15px] font-semibold text-white/90 transition-all hover:bg-white/10 hover:text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                 }
               >
                 {link.label}
@@ -98,11 +128,11 @@ function Navbar() {
           })}
         </nav>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <div className="relative hidden sm:block">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="relative block xl:hidden">
             {searchOpen ? (
-              <div className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5">
-                <Search className="h-4 w-4 shrink-0 text-zinc-400" />
+              <div className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 backdrop-blur-md px-3 py-1.5 h-10 w-48 sm:w-64 absolute right-0 top-1/2 -translate-y-1/2">
+                <Search className="h-4 w-4 shrink-0 text-white/70" />
                 <input
                   autoFocus
                   value={searchQuery}
@@ -111,12 +141,12 @@ function Navbar() {
                     if (event.key === "Enter") runSearch();
                     if (event.key === "Escape") setSearchOpen(false);
                   }}
-                  placeholder="Tìm kiếm phim..."
-                  className="w-44 bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
+                  placeholder="Tìm kiếm..."
+                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/60"
                 />
                 <button
                   onClick={() => setSearchOpen(false)}
-                  className="text-zinc-400 hover:text-white"
+                  className="text-white/70 hover:text-white"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -124,7 +154,7 @@ function Navbar() {
             ) : (
               <button
                 onClick={() => setSearchOpen(true)}
-                className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
+                className="rounded-full p-2.5 text-white/90 transition-colors hover:bg-white/10 hover:text-white drop-shadow-md"
                 aria-label="Mở tìm kiếm"
               >
                 <Search className="h-5 w-5" />
@@ -133,11 +163,11 @@ function Navbar() {
           </div>
 
           <button
-            className="relative rounded-lg p-2 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
+            className="relative rounded-full p-2.5 text-white/90 transition-colors hover:bg-white/10 hover:text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
             aria-label="Thông báo"
           >
             <Bell className="h-5 w-5" />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-cinema-primary" />
+            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
           </button>
 
           <Link
@@ -153,22 +183,22 @@ function Navbar() {
             <div className="relative hidden sm:block" ref={userMenuRef}>
               <button
                 onClick={() => setUserMenuOpen((o) => !o)}
-                className="flex items-center gap-1 rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
+                className="flex items-center gap-1 p-0.5 rounded-full ring-2 ring-transparent transition-all hover:ring-white/20 active:scale-95 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                 aria-label="Tài khoản"
               >
                 {user.photoURL ? (
                   <img
                     src={user.photoURL}
                     alt={user.displayName ?? "avatar"}
-                    className="h-8 w-8 rounded-full object-cover"
+                    className="h-9 w-9 xl:h-10 xl:w-10 rounded-full object-cover border border-white/10"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <span className="grid h-8 w-8 place-items-center rounded-full bg-cinema-primary/80">
-                    <User className="h-4 w-4 text-white" />
+                  <span className="grid h-9 w-9 xl:h-10 xl:w-10 place-items-center rounded-full bg-red-600/90 border border-white/10 text-white">
+                    <User className="h-5 w-5" />
                   </span>
                 )}
-                <ChevronDown className="h-3 w-3" />
+                <ChevronDown className="h-4 w-4 text-white ml-0.5 hidden sm:block" />
               </button>
               {userMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-zinc-700 bg-cinema-surface py-2 shadow-xl">
@@ -199,33 +229,30 @@ function Navbar() {
           ) : (
             <button
               onClick={() => navigate("/auth")}
-              className="hidden items-center gap-1 rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white sm:flex"
+              className="hidden items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white transition-all bg-red-600 hover:bg-red-700 shadow-[0_0_15px_rgba(220,38,38,0.4)] sm:flex drop-shadow-md"
               aria-label="Tài khoản"
             >
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-zinc-700/80">
-                <User className="h-4 w-4" />
-              </span>
-              <ChevronDown className="h-3 w-3" />
+              Đăng nhập
             </button>
           )}
 
           <button
             onClick={() => setMenuOpen((open) => !open)}
-            className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white md:hidden"
+            className="rounded-full p-2.5 text-white transition-colors hover:bg-white/10 md:hidden drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
             aria-label="Mở menu"
           >
             {menuOpen ? (
-              <X className="h-5 w-5" />
+              <X className="h-6 w-6" />
             ) : (
-              <Menu className="h-5 w-5" />
+              <Menu className="h-6 w-6" />
             )}
           </button>
         </div>
       </div>
 
       {menuOpen ? (
-        <div className="border-t border-zinc-800/80 py-3 md:hidden">
-          <div className="space-y-1">
+        <div className="absolute top-full left-0 w-full bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/10 md:hidden pb-4 shadow-xl">
+          <div className="space-y-1 px-4 sm:px-6 pt-2">
             {navLinks.map((link) => {
               const active = isLinkActive(location.pathname, link.path);
               return (
