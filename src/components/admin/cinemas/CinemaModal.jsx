@@ -35,7 +35,6 @@ export default function CinemaModal({
       if (!res.ok) throw new Error("Failed to fetch users");
       
       const data = await res.json();
-      // Lọc chỉ lấy nhân viên (staff) có thể làm quản lý
       const staff = (Array.isArray(data) ? data : []).filter(
         s => s.role === "staff" && s.status === "active"
       );
@@ -78,7 +77,6 @@ export default function CinemaModal({
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
       <div className="w-[520px] bg-[#0B1220] border border-white/10 rounded-xl overflow-hidden shadow-xl">
-        {/* HEADER */}
         <div className="flex justify-between items-center px-5 py-4 border-b border-white/10">
           <h2 className="text-white font-semibold text-lg">
             {isEdit ? "Chỉnh sửa rạp" : "Thêm rạp mới"}
@@ -89,9 +87,7 @@ export default function CinemaModal({
           />
         </div>
 
-        {/* BODY */}
         <div className="p-5 space-y-4">
-          {/* TÊN */}
           <div>
             <label className="text-sm text-white/60">Tên rạp</label>
             <input
@@ -102,7 +98,6 @@ export default function CinemaModal({
             />
           </div>
 
-          {/* BRAND + CITY */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-sm text-white/60">Thương hiệu</label>
@@ -129,7 +124,6 @@ export default function CinemaModal({
             </div>
           </div>
 
-          {/* ADDRESS */}
           <div>
             <label className="text-sm text-white/60">Địa chỉ</label>
             <input
@@ -140,7 +134,6 @@ export default function CinemaModal({
             />
           </div>
 
-          {/* PHONE + MAX ROOMS */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-sm text-white/60">Số điện thoại</label>
@@ -172,7 +165,6 @@ export default function CinemaModal({
             </div>
           </div>
 
-          {/* SỐ PHÒNG HIỆN TẠI - CHỈ HIỂN THỊ KHI EDIT */}
           {isEdit && (
             <div>
               <label className="text-sm text-white/60">Số phòng hiện tại</label>
@@ -185,7 +177,6 @@ export default function CinemaModal({
             </div>
           )}
 
-          {/* MANAGER */}
           <div>
             <label className="text-sm text-white/60">Quản lý chi nhánh</label>
             <select
@@ -216,7 +207,6 @@ export default function CinemaModal({
             )}
           </div>
 
-          {/* STATUS */}
           <div>
             <label className="text-sm text-white/60">Trạng thái</label>
             <select
@@ -230,7 +220,6 @@ export default function CinemaModal({
           </div>
         </div>
 
-        {/* FOOTER */}
         <div className="flex gap-3 p-5 border-t border-white/10">
           <button
             onClick={onClose}
