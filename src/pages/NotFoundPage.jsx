@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 function NotFoundPage() {
   return (
-    <section className="relative flex min-h-[68vh] items-center justify-center overflow-hidden rounded-3xl border border-zinc-800 bg-cinema-surface px-4 py-12 sm:px-8">
+    <section className="relative flex min-h-[68vh] items-center justify-center overflow-hidden rounded-3xl border border-zinc-700 bg-cinema-surface px-4 py-12 sm:px-8">
       <div className="pointer-events-none absolute -left-24 top-8 h-56 w-56 rounded-full bg-cinema-primary/15 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 bottom-0 h-64 w-64 rounded-full bg-indigo-500/15 blur-3xl" />
 

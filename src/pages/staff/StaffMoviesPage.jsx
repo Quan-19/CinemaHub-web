@@ -218,7 +218,7 @@ function EditMovieModal({
   };
 
   const inputBase =
-    "mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-sm text-white outline-none transition focus:border-cinema-primary";
+    "mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-sm text-white outline-none transition focus:border-cinema-primary";
   const labelBase = "text-xs font-semibold text-zinc-400";
   const errorText = "mt-1 text-xs font-semibold text-cinema-primary";
 
@@ -242,7 +242,7 @@ function EditMovieModal({
                   "relative mt-1.5 flex aspect-[2/3] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all hover:border-cinema-primary/50 hover:bg-zinc-900/60",
                   errors.poster
                     ? "border-cinema-primary/50 bg-cinema-primary/5"
-                    : "border-zinc-800 bg-zinc-900/40",
+                    : "border-zinc-700 bg-zinc-900/40",
                 ].join(" ")}
               >
                 {form.poster ? (
@@ -290,7 +290,7 @@ function EditMovieModal({
                   "relative mt-1.5 flex aspect-video w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all hover:border-cinema-primary/50 hover:bg-zinc-900/60",
                   errors.backdrop
                     ? "border-cinema-primary/50 bg-cinema-primary/5"
-                    : "border-zinc-800 bg-zinc-900/40",
+                    : "border-zinc-700 bg-zinc-900/40",
                 ].join(" ")}
               >
                 {form.backdrop ? (
@@ -380,7 +380,7 @@ function EditMovieModal({
                       "rounded-full px-3 py-1 text-xs font-semibold transition",
                       active
                         ? "bg-cinema-primary text-white"
-                        : "border border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700",
+                        : "border border-zinc-700 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700",
                     ].join(" ")}
                   >
                     {g}
@@ -539,12 +539,12 @@ function EditMovieModal({
           </div>
         </div>
 
-        <div className="shrink-0 border-t border-zinc-800 pt-4">
+        <div className="shrink-0 border-t border-zinc-700 pt-4">
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={onCancel}
-              className="h-11 rounded-xl border border-zinc-800 bg-zinc-900/40 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
+              className="h-11 rounded-xl border border-zinc-700 bg-zinc-900/40 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
             >
               Huỷ
             </button>
@@ -642,7 +642,7 @@ function StaffMovieCard({ movie, onEdit, onDelete }) {
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-blue-600 text-sm font-semibold text-white hover:bg-blue-500 active:scale-95"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-blue-600 text-sm font-semibold text-white hover:bg-blue-500 active:scale-95"
           >
             <Pencil className="h-4 w-4" />
             Sửa
@@ -650,7 +650,7 @@ function StaffMovieCard({ movie, onEdit, onDelete }) {
           <button
             type="button"
             onClick={onDelete}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-cinema-primary text-sm font-semibold text-white hover:opacity-95 active:scale-95"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-cinema-primary text-sm font-semibold text-white hover:opacity-95 active:scale-95"
           >
             <Trash2 className="h-4 w-4" />
             Xoá
@@ -664,9 +664,9 @@ function StaffMovieCard({ movie, onEdit, onDelete }) {
         </div>
         <div className="text-xs text-zinc-400">{movie.originalTitle}</div>
         {director ? (
-          <div className="mt-2 text-xs text-zinc-500">Đạo diễn: {director}</div>
+          <div className="mt-2 text-xs text-zinc-400">Đạo diễn: {director}</div>
         ) : null}
-        <div className="mt-2 flex items-center gap-2 text-xs text-zinc-500">
+        <div className="mt-2 flex items-center gap-2 text-xs text-zinc-400">
           <Calendar className="h-3.5 w-3.5" />
           {movie.releaseDate || "—"}
         </div>
@@ -867,12 +867,12 @@ function StaffMoviesPage() {
 
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Tìm tên phim, đạo diễn..."
-              className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/60 py-3 pl-11 pr-4 text-sm text-white outline-none transition focus:border-cinema-primary focus:bg-zinc-900"
+              className="w-full rounded-2xl border border-zinc-700 bg-zinc-900/60 py-3 pl-11 pr-4 text-sm text-white outline-none transition focus:border-cinema-primary focus:bg-zinc-900"
             />
           </div>
 
@@ -892,7 +892,7 @@ function StaffMoviesPage() {
                     "h-11 rounded-2xl px-4 text-sm font-semibold transition",
                     active
                       ? "bg-cinema-primary text-white"
-                      : "border border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700",
+                      : "border border-zinc-700 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700",
                   ].join(" ")}
                 >
                   {t.label}

@@ -172,7 +172,7 @@ export default function SeatMap({ room, onClose }) {
             </div>
           )}
 
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/20 p-4 sm:p-5">
+          <div className="rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4 sm:p-5">
             {/* Screen SVG */}
             <div className="relative mb-6 flex items-center justify-center">
               <svg
@@ -213,7 +213,7 @@ export default function SeatMap({ room, onClose }) {
                   opacity="0.85"
                 />
               </svg>
-              <div className="pt-6 text-[11px] font-semibold tracking-[0.55em] text-zinc-500">
+              <div className="pt-6 text-[11px] font-semibold tracking-[0.55em] text-zinc-400">
                 SCREEN
               </div>
             </div>
@@ -246,7 +246,7 @@ export default function SeatMap({ room, onClose }) {
                         key={row.label}
                         className="grid grid-cols-[28px_auto_28px] items-center gap-3"
                       >
-                        <div className="text-center text-[11px] font-semibold text-zinc-500">
+                        <div className="text-center text-[11px] font-semibold text-zinc-400">
                           {row.label}
                         </div>
 
@@ -315,7 +315,7 @@ export default function SeatMap({ room, onClose }) {
                           </div>
                         </div>
 
-                        <div className="text-center text-[11px] font-semibold text-zinc-500">
+                        <div className="text-center text-[11px] font-semibold text-zinc-400">
                           {row.label}
                         </div>
                       </div>
@@ -326,7 +326,7 @@ export default function SeatMap({ room, onClose }) {
                   <div className="grid grid-cols-[28px_auto_28px] items-center gap-3 pt-2">
                     <div />
                     <div className="flex justify-center">
-                      <div className="grid auto-cols-max grid-flow-col gap-2 text-center text-[11px] font-semibold text-zinc-600">
+                      <div className="grid auto-cols-max grid-flow-col gap-2 text-center text-[11px] font-semibold text-zinc-400">
                         {seatRows[0]?.isCoupleRow
                           ? // Nếu hàng đầu là hàng couple, hiển thị số cặp ghế và căn chỉnh
                             (() => {
@@ -367,7 +367,7 @@ export default function SeatMap({ room, onClose }) {
             </div>
 
             {/* Legend */}
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-800 pt-3">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-700 pt-3">
               <div className="flex flex-wrap items-center gap-5">
                 <SeatLegendItem
                   colorClassName="border-zinc-700 bg-zinc-800/40"

@@ -113,7 +113,7 @@ function FilterChip({ active, label, onClick }) {
         "rounded-xl border px-3 py-1 text-sm font-semibold transition",
         active
           ? "border-cinema-primary/40 bg-cinema-primary/10 text-white"
-          : "border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700",
+          : "border-zinc-700 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700",
       ].join(" ")}
     >
       {label}
@@ -262,7 +262,7 @@ function CalendarPicker({ selectedDate, onSelectDate, onClose }) {
 function ShowtimeCard({ showtime, onEdit, onDelete }) {
   const isPast = showtime.isPast;
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/30 p-4">
+    <div className="rounded-2xl border border-zinc-700 bg-zinc-950/30 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2 text-lg font-bold text-white">
@@ -293,7 +293,7 @@ function ShowtimeCard({ showtime, onEdit, onDelete }) {
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
           >
             <Pencil className="h-4 w-4" />
             Sửa
@@ -301,7 +301,7 @@ function ShowtimeCard({ showtime, onEdit, onDelete }) {
           <button
             type="button"
             onClick={onDelete}
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm font-semibold text-cinema-primary hover:bg-zinc-900"
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm font-semibold text-cinema-primary hover:bg-zinc-900"
           >
             <Trash2 className="h-4 w-4" />
             Xóa
@@ -407,8 +407,8 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <div className="text-xs font-semibold text-zinc-400">Phim</div>
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40">
-              <div className="flex items-center gap-2 border-b border-zinc-800 px-3 py-2 text-sm text-zinc-400">
+            <div className="rounded-2xl border border-zinc-700 bg-zinc-900/40">
+              <div className="flex items-center gap-2 border-b border-zinc-700 px-3 py-2 text-sm text-zinc-400">
                 <Search className="h-4 w-4" /> Chọn phim
               </div>
               <div className="max-h-56 overflow-auto">
@@ -444,7 +444,7 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
+                className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -456,7 +456,7 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
                   type="time"
                   value={start}
                   onChange={(e) => setStart(e.target.value)}
-                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
+                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100"
                 />
               </div>
               <div>
@@ -469,8 +469,8 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
                   max="480"
                   step="15"
                   value={duration}
-                  onChange={handleDurationChange}
-                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
+                  onChange={(e) => setDuration(e.target.value)}
+                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
                 />
               </div>
             </div>
@@ -480,7 +480,7 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
                 <select
                   value={room}
                   onChange={(e) => setRoom(e.target.value)}
-                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
+                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
                 >
                   {ROOM_OPTIONS.map((r) => (
                     <option key={r} value={r}>
@@ -496,7 +496,7 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
                 <select
                   value={format}
                   onChange={(e) => setFormat(e.target.value)}
-                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
+                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
                 >
                   {FORMAT_OPTIONS.map((f) => (
                     <option key={f} value={f}>
@@ -513,7 +513,7 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
+                className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
               >
                 {LANGUAGE_OPTIONS.map((l) => (
                   <option key={l} value={l}>
@@ -529,7 +529,7 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="mt-1 h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
+                className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
               >
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -545,7 +545,7 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
           <button
             type="button"
             onClick={onCancel}
-            className="h-11 rounded-2xl border border-zinc-800 bg-zinc-900/40 px-4 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
+            className="h-11 rounded-2xl border border-zinc-700 bg-zinc-900/40 px-4 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
           >
             Hủy
           </button>
@@ -810,30 +810,17 @@ function StaffShowtimesPage() {
         </button>
       </div>
 
-      {/* Calendar Section with Date Picker */}
-      <div className="relative calendar-container">
-        <div
-          className="flex flex-wrap items-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950/40 p-3 cursor-pointer hover:bg-zinc-900/40 transition"
-          onClick={() => setShowCalendar(!showCalendar)}
-        >
-          <CalendarDays className="h-4 w-4 text-zinc-400" />
-          <div className="flex flex-wrap gap-2 items-center">
-            {dates.map((d) => (
-              <FilterChip
-                key={d.value}
-                label={d.label}
-                active={d.value === selectedDate}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedDate(d.value);
-                  setShowCalendar(false);
-                }}
-              />
-            ))}
-          </div>
-          <div className="ml-auto text-sm text-zinc-400">
-            {formatDate(selectedDate)}
-          </div>
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-950/40 p-3">
+        <CalendarDays className="h-4 w-4 text-zinc-400" />
+        <div className="flex flex-wrap gap-2">
+          {dates.map((d) => (
+            <FilterChip
+              key={d.value}
+              label={d.label}
+              active={d.value === selectedDate}
+              onClick={() => setSelectedDate(d.value)}
+            />
+          ))}
         </div>
 
         {/* Calendar Picker */}
@@ -847,13 +834,13 @@ function StaffShowtimesPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-[2fr_1fr]">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-3">
-          <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-            <Search className="h-4 w-4 text-zinc-500" />
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/40 p-3">
+          <div className="flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-2">
+            <Search className="h-4 w-4 text-zinc-400" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-transparent text-sm text-white placeholder:text-zinc-500 focus:outline-none"
+              className="w-full bg-transparent text-sm text-white placeholder:text-zinc-400 focus:outline-none"
               placeholder="Tìm phim..."
             />
           </div>
@@ -861,7 +848,7 @@ function StaffShowtimesPage() {
             <select
               value={roomFilter}
               onChange={(e) => setRoomFilter(e.target.value)}
-              className="h-10 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
+              className="h-10 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
             >
               <option value="all">Tất cả phòng</option>
               {ROOM_OPTIONS.map((r) => (
@@ -873,7 +860,7 @@ function StaffShowtimesPage() {
             <select
               value={formatFilter}
               onChange={(e) => setFormatFilter(e.target.value)}
-              className="h-10 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
+              className="h-10 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
             >
               <option value="all">Tất cả định dạng</option>
               {FORMAT_OPTIONS.map((f) => (
@@ -885,7 +872,7 @@ function StaffShowtimesPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-10 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
+              className="h-10 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
             >
               <option value="all">Tất cả trạng thái</option>
               {STATUS_OPTIONS.map((s) => (
@@ -897,23 +884,23 @@ function StaffShowtimesPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-3">
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/40 p-3">
           <div className="flex items-center gap-2 text-sm text-zinc-400">
             <Film className="h-4 w-4" />
             <span>Suất chiếu / ngày</span>
           </div>
           <div className="mt-2 text-3xl font-bold text-white">
             {filtered.length}
-            <span className="ml-2 text-sm font-semibold text-zinc-500">
+            <span className="ml-2 text-sm font-semibold text-zinc-400">
               suất
             </span>
           </div>
-          <div className="mt-4 space-x-2 text-xs text-zinc-500">
-            <div className="inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+          <div className="mt-4 space-y-2 text-xs text-zinc-400">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-2">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
               Mở bán
             </div>
-            <div className="inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-2">
               <span className="h-2.5 w-2.5 rounded-full bg-zinc-500" />
               Khóa
             </div>
@@ -923,7 +910,7 @@ function StaffShowtimesPage() {
 
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-5 text-center text-sm text-zinc-400">
+          <div className="rounded-2xl border border-zinc-700 bg-zinc-950/40 p-5 text-center text-sm text-zinc-400">
             Không có suất chiếu trong ngày.
           </div>
         ) : (

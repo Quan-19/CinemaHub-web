@@ -56,7 +56,7 @@ function MoviesPage() {
   const [sortOpen, setSortOpen] = useState(false);
 
   const actionBtnBase =
-    "inline-flex h-11 items-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-900/80 px-4 text-sm font-semibold text-white transition hover:border-zinc-700";
+    "inline-flex h-11 items-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-900/80 px-4 text-sm font-semibold text-white transition hover:border-zinc-700";
 
   // ========== FETCH MOVIES FROM API (Code 1) ==========
   useEffect(() => {
@@ -190,7 +190,7 @@ function MoviesPage() {
           </div>
 
           <div className="flex items-center gap-3 text-xs text-zinc-400">
-            <div className="flex items-center gap-2 rounded-xl border border-zinc-800/80 bg-white/5 px-3 py-2">
+            <div className="flex items-center gap-2 rounded-xl border border-zinc-700/80 bg-white/5 px-3 py-2">
               <div className="grid h-8 w-8 place-items-center rounded-lg bg-cinema-primary/20 text-cinema-primary">
                 <Film className="h-4 w-4" />
               </div>
@@ -208,12 +208,12 @@ function MoviesPage() {
         <div className="relative mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
           {/* Search input với focus effect (Code 2) */}
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Tìm kiếm phim..."
-              className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/60 py-3 pl-11 pr-4 text-sm text-white outline-none transition focus:border-cinema-primary focus:bg-zinc-900"
+              className="w-full rounded-2xl border border-zinc-700 bg-zinc-900/60 py-3 pl-11 pr-4 text-sm text-white outline-none transition focus:border-cinema-primary focus:bg-zinc-900"
             />
           </div>
 
@@ -279,7 +279,7 @@ function MoviesPage() {
                 className={`h-11 rounded-full px-4 text-sm font-semibold transition ${
                   active
                     ? "bg-cinema-primary text-white shadow-[0_8px_30px_-12px_rgba(229,9,20,0.6)]"
-                    : "border border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:border-zinc-700"
+                    : "border border-zinc-700 bg-zinc-900/60 text-zinc-300 hover:border-zinc-700"
                 }`}
               >
                 {item.label}
@@ -298,7 +298,7 @@ function MoviesPage() {
               <div className="flex gap-2">
                 <button
                   onClick={resetFilters}
-                  className="inline-flex h-10 items-center rounded-xl border border-zinc-800 px-3 text-xs font-semibold text-zinc-300 transition hover:border-zinc-700"
+                  className="inline-flex h-10 items-center rounded-xl border border-zinc-700 px-3 text-xs font-semibold text-zinc-300 transition hover:border-zinc-700"
                 >
                   Đặt lại
                 </button>
@@ -324,7 +324,7 @@ function MoviesPage() {
                       className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                         active
                           ? "bg-cinema-primary text-white shadow-[0_8px_30px_-12px_rgba(229,9,20,0.6)]"
-                          : "border border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:border-zinc-700"
+                          : "border border-zinc-700 bg-zinc-900/60 text-zinc-300 hover:border-zinc-700"
                       }`}
                     >
                       {item}
@@ -348,7 +348,7 @@ function MoviesPage() {
                         className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                           active
                             ? "bg-cinema-primary text-white shadow-[0_8px_30px_-12px_rgba(229,9,20,0.6)]"
-                            : "border border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:border-zinc-700"
+                            : "border border-zinc-700 bg-zinc-900/60 text-zinc-300 hover:border-zinc-700"
                         }`}
                       >
                         {item}
@@ -371,7 +371,7 @@ function MoviesPage() {
                         className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                           active
                             ? "bg-cinema-primary text-white shadow-[0_8px_30px_-12px_rgba(229,9,20,0.6)]"
-                            : "border border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:border-zinc-700"
+                            : "border border-zinc-700 bg-zinc-900/60 text-zinc-300 hover:border-zinc-700"
                         }`}
                       >
                         {item}
@@ -395,7 +395,7 @@ function MoviesPage() {
 
         {/* EMPTY STATE - Enhanced from Code 2 */}
         {filteredMovies.length === 0 && (
-          <div className="mt-10 rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/50 p-8 text-center text-zinc-400">
+          <div className="mt-10 rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/50 p-8 text-center text-zinc-400">
             Không có phim phù hợp. Hãy thử điều chỉnh bộ lọc hoặc tìm kiếm khác.
           </div>
         )}

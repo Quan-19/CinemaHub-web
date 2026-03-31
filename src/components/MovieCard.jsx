@@ -54,7 +54,7 @@ export const MovieCard = ({ movie, size = "md" }) => {
         <h3 className="line-clamp-1 text-base font-bold text-white group-hover:text-cinema-primary transition-colors duration-300">
           {movie.title}
         </h3>
-        <p className="line-clamp-1 text-xs font-medium text-zinc-500 mt-[-2px]">
+        <p className="line-clamp-1 text-xs font-medium text-zinc-400 mt-[-2px]">
           {movie.originalTitle || movie.title}
         </p>
         
@@ -63,7 +63,7 @@ export const MovieCard = ({ movie, size = "md" }) => {
             <Star className="h-3 w-3 fill-current" />
             <span className="text-[11px] font-black">{movie.score || "8.5"}</span>
           </div>
-          <div className="flex items-center gap-1 text-zinc-500">
+          <div className="flex items-center gap-1 text-zinc-400">
             <Clock className="h-3 w-3" />
             <span className="text-[10px] font-bold uppercase tracking-tighter">{movie.duration} min</span>
           </div>
