@@ -6,6 +6,7 @@ import CinemasTable from "../../components/admin/cinemas/CinemasTable";
 import CinemaModal from "../../components/admin/cinemas/CinemaModal";
 import AssignManagerModal from "../../components/admin/cinemas/AssignManagerModal";
 import { toast } from "react-hot-toast";
+import { getAuth } from "firebase/auth";
 
 export default function CinemasPage() {
   const [cinemas, setCinemas] = useState([]);
@@ -35,13 +36,35 @@ export default function CinemasPage() {
 
   const [form, setForm] = useState(defaultForm);
 
+  // Hàm lấy token từ Firebase Auth
+  const getAuthToken = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      toast.error("Vui lòng đăng nhập lại");
+      return null;
+    }
+    try {
+      return await user.getIdToken();
+    } catch (error) {
+      console.error("Error getting token:", error);
+      toast.error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại");
+      return null;
+    }
+  };
+
   const fetchCinemas = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = await getAuthToken();
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
       const res = await fetch("http://localhost:5000/api/cinemas", {
         headers: {
-          Authorization: token ? `Bearer ${token}` : "",
+          Authorization: `Bearer ${token}`,
         },
       });
       
@@ -113,7 +136,9 @@ export default function CinemasPage() {
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = await getAuthToken();
+      if (!token) return;
+
       const requestData = {
         name: form.name,
         brand: form.brand,
@@ -130,12 +155,15 @@ export default function CinemasPage() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(requestData),
         });
         
-        if (!response.ok) throw new Error("Update failed");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Update failed");
+        }
         
         setCinemas(prev =>
           prev.map(c =>
@@ -148,12 +176,15 @@ export default function CinemasPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(requestData),
         });
         
-        if (!response.ok) throw new Error("Create failed");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Create failed");
+        }
         
         const newCinema = await response.json();
         
@@ -174,7 +205,7 @@ export default function CinemasPage() {
       setEditingCinema(null);
     } catch (err) {
       console.error("Save cinema error:", err);
-      toast.error("Có lỗi xảy ra. Vui lòng thử lại!");
+      toast.error(err.message || "Có lỗi xảy ra. Vui lòng thử lại!");
     }
   };
 
@@ -188,21 +219,26 @@ export default function CinemasPage() {
     
     if (window.confirm("Bạn có chắc chắn muốn xóa rạp này?")) {
       try {
-        const token = localStorage.getItem("token");
+        const token = await getAuthToken();
+        if (!token) return;
+        
         const response = await fetch(`http://localhost:5000/api/cinemas/${id}`, {
           method: "DELETE",
           headers: {
-            Authorization: token ? `Bearer ${token}` : "",
+            Authorization: `Bearer ${token}`,
           },
         });
         
-        if (!response.ok) throw new Error("Delete failed");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Delete failed");
+        }
         
         setCinemas(prev => prev.filter(c => c.id !== id));
         toast.success("Xóa rạp thành công!");
       } catch (err) {
         console.error("Delete error:", err);
-        toast.error("Không thể xóa rạp. Vui lòng thử lại!");
+        toast.error(err.message || "Không thể xóa rạp. Vui lòng thử lại!");
       }
     }
   };

@@ -27,137 +27,47 @@ export default function RoomsPage() {
   const [viewRoom, setViewRoom] = useState(null);
   const [deleteRoom, setDeleteRoom] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const perPage = 6;
 
-  // Load data từ localStorage
-  const loadData = () => {
+  const reloadData = async () => {
     setLoading(true);
     try {
-      const savedCinemas = localStorage.getItem("cinemas");
-      if (savedCinemas) {
-        let cinemaData = JSON.parse(savedCinemas);
+      const [roomsRes, cinemasRes] = await Promise.all([
+        fetch("http://localhost:5000/api/rooms"),
+        fetch("http://localhost:5000/api/cinemas"),
+      ]);
 
-        // Đảm bảo mỗi cinema đều có rooms array và ID duy nhất
-        cinemaData = cinemaData.map((cinema) => {
-          // Đảm bảo mỗi phòng có ID duy nhất bằng cách thêm timestamp nếu cần
-          const roomsWithUniqueIds = (cinema.rooms || []).map((room) => {
-            // Nếu ID đã tồn tại và là duy nhất, giữ nguyên
-            if (room.id && !room.id.includes("_dup")) {
-              return room;
-            }
-            // Tạo ID mới dựa trên cinema ID và tên phòng + timestamp
-            return {
-              ...room,
-              id: `${cinema.id}_${room.name?.replace(/\s/g, "_")}_${Date.now()}_${Math.random()}`,
-            };
-          });
+      const roomsJson = await roomsRes.json();
+      const cinemasJson = await cinemasRes.json();
 
-          return {
-            ...cinema,
-            rooms: roomsWithUniqueIds,
-            currentRooms: roomsWithUniqueIds.length,
-            maxRooms: cinema.maxRooms || 4,
-          };
-        });
+      const roomsData = Array.isArray(roomsJson)
+        ? roomsJson
+        : roomsJson.data || [];
 
-        // Kiểm tra và loại bỏ trùng lặp ID trong toàn bộ hệ thống
-        const allRoomIds = new Set();
-        cinemaData = cinemaData.map((cinema) => ({
-          ...cinema,
-          rooms: cinema.rooms.filter((room) => {
-            if (allRoomIds.has(room.id)) {
-              console.warn(
-                `Duplicate room ID found: ${room.id}, removing duplicate`,
-              );
-              return false;
-            }
-            allRoomIds.add(room.id);
-            return true;
-          }),
-        }));
+      const cinemasDataRaw = Array.isArray(cinemasJson)
+        ? cinemasJson
+        : cinemasJson.data || [];
 
-        // Cập nhật currentRooms sau khi lọc
-        cinemaData = cinemaData.map((cinema) => ({
-          ...cinema,
-          currentRooms: cinema.rooms.length,
-        }));
+      const cinemasData = cinemasDataRaw.map((cinema) => ({
+        ...cinema,
+        id: cinema.cinema_id,
+        currentRooms: cinema.currentRooms || 0,
+        maxRooms: cinema.maxRooms || 4,
+      }));
 
-        localStorage.setItem("cinemas", JSON.stringify(cinemaData));
-        setCinemas(cinemaData);
-
-        // Tạo danh sách rooms
-        const allRooms = [];
-        cinemaData.forEach((cinema) => {
-          if (cinema.rooms && cinema.rooms.length > 0) {
-            cinema.rooms.forEach((room) => {
-              allRooms.push({
-                ...room,
-                cinemaName: cinema.name,
-                cinemaId: cinema.id,
-              });
-            });
-          }
-        });
-        setRooms(allRooms);
-
-        console.log("Loaded cinemas:", cinemaData);
-        console.log("Loaded rooms:", allRooms);
-      } else {
-        setCinemas([]);
-        setRooms([]);
-      }
-    } catch (error) {
-      console.error("Failed to load rooms:", error);
+      setCinemas(cinemasData);
+      setRooms(roomsData);
+    } catch (err) {
+      console.error("Load rooms error:", err);
+      setRooms([]);
     } finally {
       setLoading(false);
     }
   };
-  const reloadData = async () => {
-    const res = await fetch("http://localhost:5000/api/rooms");
-    const data = await res.json();
-    setRooms(Array.isArray(data) ? data : data.data || []);
-  };
+
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const [roomsRes, cinemasRes] = await Promise.all([
-          fetch("http://localhost:5000/api/rooms"),
-          fetch("http://localhost:5000/api/cinemas"),
-        ]);
-
-        const roomsJson = await roomsRes.json();
-        const cinemasJson = await cinemasRes.json();
-
-        const roomsData = Array.isArray(roomsJson)
-          ? roomsJson
-          : roomsJson.data || [];
-
-        const cinemasDataRaw = Array.isArray(cinemasJson)
-          ? cinemasJson
-          : cinemasJson.data || [];
-
-        // ✅ Map cinemas (GIỮ ĐƠN GIẢN)
-        const cinemasData = cinemasDataRaw.map((cinema) => ({
-          ...cinema,
-          id: cinema.cinema_id, // dùng cho FE
-        }));
-
-        setCinemas(cinemasData);
-
-        // ✅ QUAN TRỌNG: KHÔNG MAP LẠI ROOMS
-        setRooms(roomsData);
-
-        console.log("roomsData:", roomsData); // debug nếu cần
-      } catch (err) {
-        console.error("Load rooms error:", err);
-        setRooms([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
+    reloadData();
   }, []);
 
   const types = [...new Set(rooms.map((r) => r.type))];
@@ -177,14 +87,28 @@ export default function RoomsPage() {
 
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
-  const token = localStorage.getItem("token");
+  
+  // Lấy token từ localStorage
+  const getToken = () => {
+    const token = localStorage.getItem("token");
+    console.log("Token:", token); // Debug: kiểm tra token
+    return token;
+  };
+
   const handleAdd = async (newRoom) => {
     try {
-      const res = await fetch("http://localhost:5000/api/rooms", {
+      const token = getToken();
+      
+      if (!token) {
+        alert("Vui lòng đăng nhập lại!");
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/api/rooms", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // 🔥 FIX
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
           cinema_id: newRoom.cinemaId,
@@ -199,26 +123,34 @@ export default function RoomsPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Add failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Add failed");
+      }
 
       alert("Thêm phòng thành công!");
       setShowModal(false);
-
-      // reload
       await reloadData();
     } catch (err) {
       console.error(err);
-      alert("Lỗi khi thêm phòng");
+      alert(err.message || "Lỗi khi thêm phòng");
     }
   };
 
   const handleUpdate = async (room) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/rooms/${room.id}`, {
+      const token = getToken();
+      
+      if (!token) {
+        alert("Vui lòng đăng nhập lại!");
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/rooms/${room.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // 🔥 FIX
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: room.name,
@@ -232,38 +164,56 @@ export default function RoomsPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Update failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Update failed");
+      }
 
       alert("Cập nhật thành công");
       setShowModal(false);
-
-      window.location.reload();
+      await reloadData();
     } catch (err) {
       console.error(err);
-      alert("Lỗi update");
+      alert(err.message || "Lỗi update");
     }
   };
 
   const handleDelete = async () => {
     if (!deleteRoom) return;
 
+    setDeleteLoading(true);
     try {
-      const res = await fetch(
+      const token = getToken();
+      
+      if (!token) {
+        alert("Vui lòng đăng nhập lại!");
+        setDeleteLoading(false);
+        return;
+      }
+
+      const response = await fetch(
         `http://localhost:5000/api/rooms/${deleteRoom.id}`,
         {
           method: "DELETE",
-        },
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        }
       );
 
-      if (!res.ok) throw new Error("Delete failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Delete failed");
+      }
 
-      alert("Xóa thành công");
+      alert("Xóa phòng thành công!");
       setDeleteRoom(null);
-
-      window.location.reload();
+      await reloadData();
     } catch (err) {
       console.error(err);
-      alert("Lỗi xóa");
+      alert(err.message || "Lỗi xóa phòng. Vui lòng thử lại!");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -271,24 +221,40 @@ export default function RoomsPage() {
     const newStatus = room.status === "active" ? "maintenance" : "active";
 
     try {
-      const res = await fetch(`http://localhost:5000/api/rooms/${room.id}`, {
+      const token = getToken();
+      
+      if (!token) {
+        alert("Vui lòng đăng nhập lại!");
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/rooms/${room.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
-          ...room,
-          status: newStatus,
+          name: room.name,
+          type: room.type,
           seat_rows: room.rows,
           seat_cols: room.cols,
+          vip_rows: JSON.stringify(room.vipRows || []),
+          couple_row: room.coupleRow,
+          total_seats: room.rows * room.cols,
+          status: newStatus,
         }),
       });
 
-      if (!res.ok) throw new Error("Toggle failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Toggle failed");
+      }
 
-      window.location.reload();
+      await reloadData();
     } catch (err) {
       console.error(err);
+      alert(err.message || "Lỗi cập nhật trạng thái!");
     }
   };
 
@@ -315,6 +281,10 @@ export default function RoomsPage() {
   const openEdit = (room) => {
     setEditRoom(room);
     setShowModal(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setDeleteRoom(null);
   };
 
   if (loading) {
@@ -426,7 +396,7 @@ export default function RoomsPage() {
                 <option value="all">Tất cả rạp</option>
                 {cinemas.map((cinema) => (
                   <option key={cinema.cinema_id} value={cinema.cinema_id}>
-                    {cinema.name} ({cinema.currentRooms}/{cinema.maxRooms})
+                    {cinema.name} ({cinema.currentRooms || 0}/{cinema.maxRooms || 4} phòng)
                   </option>
                 ))}
               </select>
@@ -490,7 +460,7 @@ export default function RoomsPage() {
           <span className="text-xs text-gray-400">Đang lọc:</span>
           {cinemaFilter !== "all" && (
             <span className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded-lg text-xs flex items-center gap-1">
-              Rạp: {cinemaFilter}
+              Rạp: {cinemas.find(c => c.cinema_id == cinemaFilter)?.name || cinemaFilter}
               <X
                 size={12}
                 className="cursor-pointer hover:text-white"
@@ -631,9 +601,12 @@ export default function RoomsPage() {
 
       <DeleteConfirmModal
         show={deleteRoom !== null}
-        onClose={() => setDeleteRoom(null)}
+        onClose={handleCloseDeleteModal}
         onConfirm={handleDelete}
+        loading={deleteLoading}
         roomName={deleteRoom?.name}
+        cinemaName={deleteRoom?.cinemaName}
+        roomType={deleteRoom?.type}
       />
     </div>
   );
