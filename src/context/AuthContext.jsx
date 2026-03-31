@@ -76,6 +76,8 @@ export function AuthProvider({ children }) {
           setUser({
             ...firebaseUser,
             role: data.role,
+            cinema_id: data.cinema_id,
+            cinema_name: data.cinema_name,
           });
         } else {
           // Nếu token không hợp lệ hoặc user không tồn tại ở backend
@@ -215,6 +217,8 @@ const loginWithEmail = async (email, password, remember) => {
       displayName: credential.user.displayName,
       photoURL: credential.user.photoURL,
       role: role,
+      cinema_id: data.cinema_id,
+      cinema_name: data.cinema_name,
     };
     setUser(userData);
 
@@ -327,6 +331,8 @@ const loginWithEmail = async (email, password, remember) => {
     displayName: credential.user.displayName,
     photoURL: credential.user.photoURL,
     role: data.role,
+    cinema_id: data.cinema_id,
+    cinema_name: data.cinema_name,
   };
   setUser(userData);
   return userData;

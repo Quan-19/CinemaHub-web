@@ -65,6 +65,7 @@ function StaffProfilePage() {
           const data = await res.json();
           if (data.phone) setPhone(normalizePhone(data.phone));
           if (data.cinema_id) setCinemaId(String(data.cinema_id));
+          if (data.cinema_name) setCinemaName(data.cinema_name);
           if (data.created_at) setJoinedDate(data.created_at);
         }
       } catch (err) {
@@ -235,12 +236,15 @@ function StaffProfilePage() {
                   <Building2 className="h-3.5 w-3.5 text-cinema-primary" />
                   Tên rạp quản lý
                 </label>
-                <input
-                  value={cinemaName}
-                  onChange={(e) => setCinemaName(e.target.value)}
-                  placeholder="Nhập tên rạp..."
-                  className="w-full bg-transparent text-sm font-medium text-white outline-none placeholder:text-zinc-400"
-                />
+                <div className="relative">
+                  <input
+                    readOnly
+                    value={cinemaName || "Chưa được phân quyền rạp"}
+                    placeholder="Tên rạp quản lý..."
+                    className="w-full bg-transparent text-sm font-medium text-white outline-none placeholder:text-zinc-400"
+                  />
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 rounded-md bg-zinc-900 px-1.5 py-0.5 text-[8px] font-bold text-zinc-400 uppercase tracking-tighter border border-zinc-800">Read Only</div>
+                </div>
               </div>
 
               <div className="rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4 transition-colors hover:border-zinc-600">
@@ -248,12 +252,15 @@ function StaffProfilePage() {
                   <Building2 className="h-3.5 w-3.5 text-cinema-primary" />
                   Mã số rạp (ID)
                 </label>
-                <input
-                  value={cinemaId}
-                  onChange={(e) => setCinemaId(e.target.value)}
-                  placeholder="Mã định danh rạp..."
-                  className="w-full bg-transparent text-sm font-medium text-white outline-none placeholder:text-zinc-400"
-                />
+                <div className="relative">
+                  <input
+                    readOnly
+                    value={cinemaId || "N/A"}
+                    placeholder="Mã định danh rạp..."
+                    className="w-full bg-transparent text-sm font-medium text-white outline-none placeholder:text-zinc-400"
+                  />
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 rounded-md bg-zinc-900 px-1.5 py-0.5 text-[8px] font-bold text-zinc-400 uppercase tracking-tighter border border-zinc-800">Read Only</div>
+                </div>
               </div>
             </div>
             <div className="mt-4 flex items-start gap-2 rounded-xl bg-indigo-500/5 p-3 ring-1 ring-inset ring-indigo-500/10">

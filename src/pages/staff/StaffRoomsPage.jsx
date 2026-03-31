@@ -1,6 +1,9 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
+import { getAuth } from "firebase/auth";
+import { useAuth } from "../../context/AuthContext";
 import {
+  Building2,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -13,7 +16,6 @@ import {
 import { StaffCenteredModalShell } from "../../components/staff/StaffModalShell.jsx";
 import StaffIconButton from "../../components/staff/StaffIconButton.jsx";
 import { makeId } from "../../components/staff/staffUtils.js";
-import { useEffect } from "react";
 function Badge({ children, className = "" }) {
   return (
     <span
@@ -773,7 +775,9 @@ function Pagination({ page, totalPages, onPrev, onNext }) {
 }
 
 function StaffRoomsPage() {
-  const [selectedCinemaId, setSelectedCinemaId] = useState("");
+  const { user } = useAuth();
+  // Cố định rạp theo phân quyền của admin
+  const selectedCinemaId = useMemo(() => String(user?.cinema_id || ""), [user?.cinema_id]);
   const { subtitle } = useOutletContext();
 
   const [rooms, setRooms] = useState([]);
@@ -935,17 +939,11 @@ function StaffRoomsPage() {
         />
       </section>
 
-      <div className="max-w-xs">
-        {/* <SelectInput
-          value={cinemaName}
-          onChange={() => {}}
-          options={[{ value: cinemaName, label: cinemaName }]}
-        /> */}
-        <SelectInput
-          value={selectedCinemaId}
-          onChange={setSelectedCinemaId}
-          options={[{ value: "", label: "Tất cả rạp" }, ...cinemaList]}
-        />
+      <div className="flex items-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-900/40 px-4 py-2.5 shadow-sm">
+        <Building2 className="h-4 w-4 text-cinema-primary" />
+        <span className="text-sm font-bold text-white">
+          Rạp: {user?.cinema_name || "Chưa được phân quyền quản lý"}
+        </span>
       </div>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -959,9 +957,15 @@ function StaffRoomsPage() {
             onConfig={() => setConfigRoom(room)}
             onDelete={async () => {
               try {
+                const token = await getAuth().currentUser?.getIdToken();
                 const res = await fetch(
                   `http://localhost:5000/api/rooms/${room.id}`,
-                  { method: "DELETE" },
+                  {
+                    method: "DELETE",
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  },
                 );
 
                 if (!res.ok) throw new Error("Delete failed");
@@ -998,11 +1002,37 @@ function StaffRoomsPage() {
           cinemaName={configRoom?.cinemaName}
           initialRoom={configRoom}
           onClose={() => setConfigRoom(null)}
-          onSave={(nextRoom) => {
-            setRooms((prev) =>
-              prev.map((r) => (r.id === nextRoom.id ? nextRoom : r)),
-            );
-            setConfigRoom(null);
+          onSave={async (nextRoom) => {
+            try {
+              const token = await getAuth().currentUser?.getIdToken();
+              const res = await fetch(
+                `http://localhost:5000/api/rooms/${nextRoom.id}`,
+                {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({
+                    name: nextRoom.name,
+                    type: nextRoom.type,
+                    seat_rows: nextRoom.rows,
+                    seat_cols: nextRoom.seatsPerRow,
+                    vip_rows: JSON.stringify(nextRoom.vipRows || []),
+                    couple_row: nextRoom.coupleRow,
+                    total_seats: nextRoom.rows * nextRoom.seatsPerRow,
+                    status: nextRoom.status,
+                  }),
+                },
+              );
+
+              if (!res.ok) throw new Error("Update failed");
+
+              await loadRooms();
+              setConfigRoom(null);
+            } catch (err) {
+              console.error(err);
+            }
           }}
         />
       ) : null}
@@ -1020,10 +1050,12 @@ function StaffRoomsPage() {
           }}
           onSave={async (nextRoom) => {
             try {
+              const token = await getAuth().currentUser?.getIdToken();
               const res = await fetch("http://localhost:5000/api/rooms", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                   cinema_id: nextRoom.cinemaId,

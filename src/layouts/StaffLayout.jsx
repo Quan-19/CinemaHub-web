@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { Bell, Menu, Search } from "lucide-react";
 import StaffSidebar from "../components/staff/StaffSidebar.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 function formatVietnamDate(date) {
   // Example: "Thứ 2, 16/03/2026"
@@ -11,7 +12,7 @@ function formatVietnamDate(date) {
     "Thứ 3",
     "Thứ 4",
     "Thứ 5",
-    "Thứ 6",
+    "Thứ 2",
     "Thứ 7",
   ];
   const dayName = days[date.getDay()];
@@ -22,13 +23,14 @@ function formatVietnamDate(date) {
 }
 
 function StaffLayout() {
+  const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const subtitle = useMemo(() => {
-    // Kept as UI placeholder like the screenshot.
-    return `CGV Vincom Center Bà Triệu — ${formatVietnamDate(new Date())}`;
-  }, []);
+    const cinemaName = user?.cinema_name || "Chưa gán rạp";
+    return `${cinemaName} — ${formatVietnamDate(new Date())}`;
+  }, [user?.cinema_name]);
 
   return (
     <div className="h-screen overflow-hidden bg-cinema-bg text-zinc-100">

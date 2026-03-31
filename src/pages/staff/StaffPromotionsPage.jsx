@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { getAuth } from "firebase/auth";
+import { useAuth } from "../../context/AuthContext";
 import {
   Calendar,
   Check,
@@ -10,12 +12,8 @@ import {
   Trash2,
 } from "lucide-react";
 
-import {
-  ddmmyyyyToInput,
-  inputToDdmmyyyy,
-  makeId,
-} from "../../components/staff/staffUtils.js";
-import { StaffScrollableModalShell } from "../../components/staff/StaffModalShell.jsx";
+import { makeId } from "../../components/staff/staffUtils.js";
+import { StaffCenteredModalShell } from "../../components/staff/StaffModalShell.jsx";
 import StaffIconButton from "../../components/staff/StaffIconButton.jsx";
 import StaffConfirmModal from "../../components/staff/StaffConfirmModal.jsx";
 
@@ -172,8 +170,8 @@ function PromotionFormModal({
       minOrder: p.minOrder ?? 0,
       code: p.code || "",
       usageLimit: p.usageLimit ?? 0,
-      startDate: ddmmyyyyToInput(p.startDate) || "",
-      endDate: ddmmyyyyToInput(p.endDate) || "",
+      startDate: p.startDate ? String(p.startDate).split("T")[0] : "",
+      endDate: p.endDate ? String(p.endDate).split("T")[0] : "",
       days: Array.isArray(p.days) ? [...p.days] : [],
     };
   });
@@ -201,8 +199,8 @@ function PromotionFormModal({
       minOrder: Number(form.minOrder || 0),
       code: form.code.trim().toUpperCase(),
       usageLimit: Number(form.usageLimit || 0),
-      startDate: inputToDdmmyyyy(form.startDate),
-      endDate: inputToDdmmyyyy(form.endDate),
+      startDate: form.startDate,
+      endDate: form.endDate,
       days: [...form.days].sort((a, b) => a - b),
     });
   };
@@ -221,7 +219,7 @@ function PromotionFormModal({
   };
 
   return (
-    <StaffScrollableModalShell
+    <StaffCenteredModalShell
       title={title}
       onClose={onCancel}
       maxWidthClassName="max-w-lg"
@@ -399,7 +397,7 @@ function PromotionFormModal({
           </button>
         </div>
       </form>
-    </StaffScrollableModalShell>
+    </StaffCenteredModalShell>
   );
 }
 
@@ -511,7 +509,8 @@ function PromotionCard({ promo, onEdit, onDelete, onCopy, copied }) {
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" aria-hidden="true" />
             <span>
-              {promo.startDate} — {promo.endDate}
+              {promo.startDate ? new Date(promo.startDate).toLocaleDateString("vi-VN") : "N/A"} —{" "}
+              {promo.endDate ? new Date(promo.endDate).toLocaleDateString("vi-VN") : "N/A"}
             </span>
           </div>
 
@@ -539,7 +538,8 @@ function PromotionCard({ promo, onEdit, onDelete, onCopy, copied }) {
 }
 
 function StaffPromotionsPage() {
-  const [promotions, setPromotions] = useState(() => [...EXTRA_PROMOTIONS]);
+  const { user } = useAuth();
+  const [promotions, setPromotions] = useState([]);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("all");
   const [adding, setAdding] = useState(false);
@@ -547,6 +547,38 @@ function StaffPromotionsPage() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
   const copiedTimeoutRef = useRef(null);
+
+  const loadPromotions = useCallback(async () => {
+    if (!user?.cinema_id) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/promotions/cinema/${user.cinema_id}`);
+      if (res.ok) {
+        const data = await res.json();
+        // Backend trả về mảng DB
+        setPromotions(data.map(p => ({
+          id: p.promotion_id,
+          name: p.title,
+          description: p.description,
+          code: p.code,
+          image: p.image,
+          discountValue: p.discount_percent,
+          startDate: p.start_date,
+          endDate: p.end_date,
+          status: p.status,
+          type: "percent",
+          usedCount: p.usedCount || 0,
+          usageLimit: p.usageLimit || 100,
+          days: [0,1,2,3,4,5,6]
+        })));
+      }
+    } catch(err) {
+      console.error(err);
+    }
+  }, [user?.cinema_id]);
+
+  useEffect(() => {
+    loadPromotions();
+  }, [loadPromotions]);
 
   useEffect(() => {
     return () => {
@@ -596,8 +628,8 @@ function StaffPromotionsPage() {
       code: "",
       usageLimit: 100,
       usedCount: 0,
-      startDate: "",
-      endDate: "",
+      startDate: new Date().toISOString().split("T")[0],
+      endDate: new Date().toISOString().split("T")[0],
       days: [0, 1, 2, 3, 4, 5, 6],
       status: "active",
       image:
@@ -627,21 +659,88 @@ function StaffPromotionsPage() {
     }
   };
 
-  const onAdd = (created) => {
-    setPromotions((prev) => [created, ...prev]);
-    setAdding(false);
+  const onAdd = async (created) => {
+    try {
+      const token = await getAuth().currentUser?.getIdToken();
+      const res = await fetch("http://localhost:5000/api/promotions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: created.name,
+          description: created.description,
+          code: created.code,
+          image: created.image,
+          discount_percent: created.discountValue,
+          start_date: created.startDate,
+          end_date: created.endDate,
+          status: created.status,
+          cinema_id: user?.cinema_id
+        })
+      });
+      if (res.ok) {
+        await loadPromotions();
+        setAdding(false);
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        alert("Lỗi thêm khuyến mãi: " + (errorData.error || errorData.message || "Unknown error"));
+      }
+    } catch(err) {
+      console.error(err);
+      alert("Network error: " + err.message);
+    }
   };
 
-  const onSave = (updated) => {
-    setPromotions((prev) =>
-      prev.map((p) => (p.id === updated.id ? updated : p))
-    );
-    setEditing(null);
+  const onSave = async (updated) => {
+    try {
+      const token = await getAuth().currentUser?.getIdToken();
+      const res = await fetch(`http://localhost:5000/api/promotions/${updated.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: updated.name,
+          description: updated.description,
+          code: updated.code,
+          image: updated.image,
+          discount_percent: updated.discountValue,
+          start_date: updated.startDate,
+          end_date: updated.endDate,
+          status: updated.status,
+          cinema_id: user?.cinema_id
+        })
+      });
+      if (res.ok) {
+        await loadPromotions();
+        setEditing(null);
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        alert("Lỗi cập nhật: " + (errorData.error || errorData.message || "Unknown error"));
+      }
+    } catch(err) {
+      console.error(err);
+      alert("Network error: " + err.message);
+    }
   };
 
-  const onDelete = (id) => {
-    setPromotions((prev) => prev.filter((p) => p.id !== id));
-    setConfirmDelete(null);
+  const onDelete = async (id) => {
+    try {
+      const token = await getAuth().currentUser?.getIdToken();
+      const res = await fetch(`http://localhost:5000/api/promotions/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        await loadPromotions();
+        setConfirmDelete(null);
+      }
+    } catch(err) {
+      console.error(err);
+    }
   };
 
   return (
