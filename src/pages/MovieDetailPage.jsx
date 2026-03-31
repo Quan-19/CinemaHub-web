@@ -374,7 +374,7 @@ export const HomePage = () => {
                       <span className="text-zinc-300 text-sm">{step}</span>
                     </div>
                     {i < 2 && (
-                      <ChevronRight className="w-4 h-4 text-zinc-600" />
+                      <ChevronRight className="w-4 h-4 text-zinc-400" />
                     )}
                   </div>
                 ))}
@@ -411,7 +411,7 @@ export const HomePage = () => {
               <div
                 key={movie.movie_id}
                 onClick={() => navigate(`/movies/${movie.movie_id}`)}
-                className="group flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 transition-all hover:border-zinc-700 hover:bg-zinc-900 cursor-pointer sm:flex-row sm:gap-4"
+                className="group flex flex-col gap-3 rounded-xl border border-zinc-700 bg-zinc-900/50 p-4 transition-all hover:border-zinc-700 hover:bg-zinc-900 cursor-pointer sm:flex-row sm:gap-4"
               >
                 <img
                   src={movie.poster}
@@ -423,7 +423,7 @@ export const HomePage = () => {
                     <span className="bg-yellow-500/20 text-yellow-400 text-xs px-2 py-0.5 rounded-full border border-yellow-500/30">
                       Sắp chiếu
                     </span>
-                    <span className="text-zinc-500 text-xs">
+                    <span className="text-zinc-400 text-xs">
                       {movie.releaseDate
                         ? new Date(movie.releaseDate).toLocaleDateString(
                           "vi-VN"
@@ -434,7 +434,7 @@ export const HomePage = () => {
                   <h3 className="mb-1 text-sm font-semibold text-white transition-colors group-hover:text-red-400">
                     {movie.title}
                   </h3>
-                  <p className="text-zinc-500 text-xs mb-2">
+                  <p className="text-zinc-400 text-xs mb-2">
                     {movie.originalTitle || ""}
                   </p>
                   <div className="flex flex-wrap gap-1 mb-2">
@@ -499,7 +499,7 @@ export const HomePage = () => {
                           {promo.code}
                         </span>
                       </div>
-                      <span className="text-zinc-500 text-xs">
+                      <span className="text-zinc-400 text-xs">
                         HSD: {promo.expiry}
                       </span>
                     </div>
@@ -775,7 +775,7 @@ export const MovieDetailPage = () => {
                 {movie.title}
               </h1>
 
-              <p className="text-zinc-500 text-sm font-medium drop-shadow-md">
+              <p className="text-zinc-400 text-sm font-medium drop-shadow-md">
                 Tên gốc: {movie.originalTitle}
               </p>
 
@@ -794,7 +794,7 @@ export const MovieDetailPage = () => {
                   <span className="text-yellow-400 text-sm font-bold">
                     {movie.score}/10
                   </span>
-                  <span className="text-zinc-500 text-xs">
+                  <span className="text-zinc-400 text-xs">
                     ({voteCount} lượt)
                   </span>
                 </div>
@@ -810,7 +810,7 @@ export const MovieDetailPage = () => {
                 ))}
               </div>
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-3 pt-1 border-b border-zinc-800 pb-5">
+              <div className="flex flex-wrap items-center gap-3 pt-1 border-b border-zinc-700 pb-5">
                 {movie.status === "now_showing" && (
                   <button
                     onClick={handleBooking}
@@ -829,14 +829,13 @@ export const MovieDetailPage = () => {
                   <Play className="w-4 h-4" fill="white" />
                   Xem trailer
                 </button>
-                
+
                 <button
                   onClick={() => setLiked(!liked)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold border transition-colors z-30 shadow-sm ${
-                    liked 
-                      ? "bg-red-500/10 border-red-500/50 text-red-500 hover:bg-red-500/20" 
+                  className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold border transition-colors z-30 shadow-sm ${liked
+                      ? "bg-red-500/10 border-red-500/50 text-red-500 hover:bg-red-500/20"
                       : "bg-zinc-800/80 border-zinc-700 text-white hover:bg-zinc-700"
-                  }`}
+                    }`}
                 >
                   <Heart className="w-4 h-4" fill={liked ? "currentColor" : "none"} />
                   Yêu thích
@@ -857,11 +856,11 @@ export const MovieDetailPage = () => {
                   return (
                     <div
                       key={detail.label}
-                      className="bg-zinc-900/40 rounded-xl p-3 border border-zinc-800 shadow-sm"
+                      className="bg-zinc-900/40 rounded-xl p-3 border border-zinc-700 shadow-sm"
                     >
                       <div className="flex items-center gap-1.5 mb-1">
                         <IconComponent className="w-3.5 h-3.5 text-red-500" />
-                        <span className="text-zinc-500 text-xs uppercase tracking-wide">
+                        <span className="text-zinc-400 text-xs uppercase tracking-wide">
                           {detail.label}
                         </span>
                       </div>
@@ -878,7 +877,7 @@ export const MovieDetailPage = () => {
 
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-x-6 gap-y-6 lg:grid-cols-[1fr,380px] xl:grid-cols-[1fr,420px] items-start">
           <div className="space-y-6">
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6 lg:p-8 space-y-4 shadow-xl">
+            <div className="rounded-3xl border border-zinc-700 bg-zinc-900/60 p-6 lg:p-8 space-y-4 shadow-xl">
               <div className="flex items-center gap-3">
                 <p className="text-sm uppercase tracking-[0.14em] text-zinc-400 font-bold">
                   Nội dung phim
@@ -891,10 +890,10 @@ export const MovieDetailPage = () => {
           </div>
 
           <div className="space-y-6">
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6 lg:p-8 space-y-5 shadow-xl">
+            <div className="rounded-3xl border border-zinc-700 bg-zinc-900/60 p-6 lg:p-8 space-y-5 shadow-xl">
               <div className="space-y-4">
                 <div>
-                  <p className="text-zinc-500 text-xs mb-2 uppercase tracking-[0.14em] font-semibold">
+                  <p className="text-zinc-400 text-xs mb-2 uppercase tracking-[0.14em] font-semibold">
                     Đạo diễn
                   </p>
                   <div className="flex items-center gap-2">
@@ -910,10 +909,10 @@ export const MovieDetailPage = () => {
                 {movieCast.length > 0 && (
                   <div className="pt-2">
                     <div className="flex items-center gap-3 mb-3">
-                      <p className="text-zinc-500 text-xs uppercase tracking-[0.14em] font-semibold">
+                      <p className="text-zinc-400 text-xs uppercase tracking-[0.14em] font-semibold">
                         Diễn viên
                       </p>
-                      <span className="text-xs font-semibold text-zinc-400 bg-black/40 px-2 py-0.5 rounded-full border border-zinc-800">
+                      <span className="text-xs font-semibold text-zinc-400 bg-black/40 px-2 py-0.5 rounded-full border border-zinc-700">
                         {movieCast.length}
                       </span>
                     </div>
@@ -933,7 +932,7 @@ export const MovieDetailPage = () => {
             </div>
 
             {related.length > 0 && (
-              <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6 lg:p-8 space-y-5 shadow-xl">
+              <div className="rounded-3xl border border-zinc-700 bg-zinc-900/60 p-6 lg:p-8 space-y-5 shadow-xl">
                 <div className="flex items-center gap-3">
                   <p className="text-sm uppercase tracking-[0.14em] text-zinc-400 font-bold">
                     Phim liên quan
@@ -971,7 +970,7 @@ export const MovieDetailPage = () => {
                   fill="currentColor"
                 />
                 <p className="text-zinc-400">Trailer: {movie.title}</p>
-                <p className="text-zinc-600 text-sm mt-1">
+                <p className="text-zinc-400 text-sm mt-1">
                   (Demo - Trailer không khả dụng trong bản demo)
                 </p>
               </div>

@@ -296,7 +296,7 @@ export default function BookingConfirmationPage() {
                   ].map((row) => (
                     <div key={row.label} className="flex items-center gap-2.5">
                       <row.icon size={12} style={{ color: "#e50914", opacity: 0.8 }} />
-                      <span className="text-zinc-500 text-xs min-w-[64px]">{row.label}</span>
+                      <span className="text-zinc-400 text-xs min-w-[64px]">{row.label}</span>
                       <span className="text-white text-xs font-semibold">{row.value}</span>
                     </div>
                   ))}
@@ -356,7 +356,7 @@ export default function BookingConfirmationPage() {
             {/* Right - QR Code */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
               <div className="rounded-2xl p-5 text-center" style={{ background: "#12121f", border: "1px solid rgba(255,255,255,0.07)" }}>
-                <p className="text-zinc-500 text-xs mb-1 uppercase tracking-widest">Mã đặt vé</p>
+                <p className="text-zinc-400 text-xs mb-1 uppercase tracking-widest">Mã đặt vé</p>
                 <div className="text-white text-3xl tracking-wider mb-1 font-mono font-black">{bookingCode}</div>
                 <div className="flex items-center justify-center gap-1.5">
                   <CheckCircle size={13} style={{ color: "#22c55e" }} />
@@ -427,7 +427,7 @@ export default function BookingConfirmationPage() {
                   <QRCodeSVG value={ticketUrl} size={240} bgColor="#ffffff" fgColor="#07070f" level="H" />
                 </div>
                 <p className="text-zinc-400 text-sm mb-1">{movie.title}</p>
-                <p className="text-zinc-500 text-xs mb-4">{new Date(showtime.start_time).toLocaleString()}</p>
+                <p className="text-zinc-400 text-xs mb-4">{new Date(showtime.start_time).toLocaleString()}</p>
                 <div className="text-white text-xl tracking-wider mb-4 font-mono font-black">{bookingCode}</div>
                 <button
                   onClick={() => setShowQRModal(false)}
@@ -447,7 +447,7 @@ export default function BookingConfirmationPage() {
   return (
     <div className="min-h-screen pt-16" style={{ background: "#0a0a0f" }}>
       {/* Header */}
-      <div className="border-b border-zinc-800 sticky top-0 z-10" style={{ background: "#12121f" }}>
+      <div className="border-b border-zinc-700 sticky top-0 z-10" style={{ background: "#12121f" }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm mb-3 transition">
             <ChevronLeft className="w-4 h-4" /> Quay lại
@@ -463,7 +463,7 @@ export default function BookingConfirmationPage() {
               ].map((s, i) => (
                 <div key={s.n} className="flex items-center gap-1.5">
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    s.done ? "bg-green-500 text-white" : s.active ? "bg-red-600 text-white" : "bg-zinc-800 text-zinc-500"
+                    s.done ? "bg-green-500 text-white" : s.active ? "bg-red-600 text-white" : "bg-zinc-800 text-zinc-400"
                   }`}>
                     {s.done ? "✓" : s.n}
                   </div>
@@ -491,25 +491,25 @@ export default function BookingConfirmationPage() {
                 <div className="flex-1 space-y-2">
                   <div>
                     <p className="text-white font-bold">{movie.title}</p>
-                    <p className="text-zinc-500 text-xs">{movie.originalTitle || ""}</p>
+                    <p className="text-zinc-400 text-xs">{movie.originalTitle || ""}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
-                      <p className="text-zinc-500 text-xs">Rạp chiếu</p>
+                      <p className="text-zinc-400 text-xs">Rạp chiếu</p>
                       <p className="text-zinc-200 text-xs font-semibold">{showtime.cinema_name || "CGV"}</p>
                     </div>
                     <div>
-                      <p className="text-zinc-500 text-xs">Suất chiếu</p>
+                      <p className="text-zinc-400 text-xs">Suất chiếu</p>
                       <p className="text-zinc-200 text-xs font-semibold">
                         {new Date(showtime.start_time).toLocaleTimeString("vi-VN")}
                       </p>
                     </div>
                     <div>
-                      <p className="text-zinc-500 text-xs">Phòng</p>
+                      <p className="text-zinc-400 text-xs">Phòng</p>
                       <p className="text-zinc-200 text-xs font-semibold">{showtime.room_id || "1"}</p>
                     </div>
                     <div>
-                      <p className="text-zinc-500 text-xs">Ghế</p>
+                      <p className="text-zinc-400 text-xs">Ghế</p>
                       <p className="text-zinc-200 text-xs font-semibold">{seats.map(s => s.id).join(", ")}</p>
                     </div>
                   </div>
@@ -524,7 +524,7 @@ export default function BookingConfirmationPage() {
                 {foods.map((food) => {
                   const count = comboCounts[food.food_id] || 0;
                   return (
-                    <div key={food.food_id} className="flex items-center justify-between p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+                    <div key={food.food_id} className="flex items-center justify-between p-3 rounded-xl bg-zinc-900 border border-zinc-700">
                       <div>
                         <p className="text-zinc-200 text-sm">{food.name}</p>
                         <p className="text-red-400 text-xs font-semibold mt-0.5">{food.price.toLocaleString()}₫</p>
@@ -577,7 +577,7 @@ export default function BookingConfirmationPage() {
                 </p>
               )}
               {promoError && <p className="text-red-400 text-xs mt-2">{promoError}</p>}
-              <p className="text-zinc-500 text-xs mt-2">Thử: WED30, CINE10, SPRING2026</p>
+              <p className="text-zinc-400 text-xs mt-2">Thử: WED30, CINE10, SPRING2026</p>
             </div>
 
             {/* Payment Methods - Từ Code 2 */}
@@ -601,7 +601,7 @@ export default function BookingConfirmationPage() {
                       <p className={`text-xs truncate font-semibold ${paymentMethod === method.id ? "text-white" : "text-zinc-300"}`}>
                         {method.label}
                       </p>
-                      <p className="text-zinc-500 text-xs">{method.desc}</p>
+                      <p className="text-zinc-400 text-xs">{method.desc}</p>
                     </div>
                     {paymentMethod === method.id && (
                       <div className="w-4 h-4 rounded-full flex items-center justify-center bg-red-600">
@@ -672,7 +672,7 @@ export default function BookingConfirmationPage() {
                 )}
               </motion.button>
               
-              <p className="text-zinc-500 text-xs text-center mt-3">
+              <p className="text-zinc-400 text-xs text-center mt-3">
                 Bằng cách nhấn thanh toán, bạn đồng ý với{" "}
                 <span className="text-red-500">điều khoản sử dụng</span>
               </p>

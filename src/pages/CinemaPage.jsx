@@ -96,7 +96,7 @@ function CinemaPage() {
   return (
     <div className="min-h-screen" style={{ background: "#0a0a0f" }}>
       <div
-        className="py-10 border-b border-zinc-800"
+        className="py-10 border-b border-zinc-700"
         style={{ background: "linear-gradient(to bottom, #12121f, #0a0a0f)" }}
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
@@ -116,7 +116,7 @@ function CinemaPage() {
               <button
                 key={region.id}
                 onClick={() => setSelectedRegion(region.id)}
-                className="text-left rounded-2xl border border-zinc-800 hover:border-zinc-700 transition-all p-5"
+                className="text-left rounded-2xl border border-zinc-700 hover:border-zinc-700 transition-all p-5"
                 style={{ background: "#12121f" }}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -166,7 +166,7 @@ function CinemaPage() {
                   className={`text-left rounded-2xl border transition-all p-5 ${
                     selectedCinemaId === cinema.cinema_id
                       ? "border-red-500"
-                      : "border-zinc-800 hover:border-zinc-700"
+                      : "border-zinc-700 hover:border-zinc-700"
                   }`}
                   style={{ background: "#12121f" }}
                 >
@@ -188,7 +188,7 @@ function CinemaPage() {
                         <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0" />
                         {cinema.address}
                       </p>
-                      <div className="flex items-center gap-4 text-zinc-500 text-xs">
+                      <div className="flex items-center gap-4 text-zinc-400 text-xs">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {/* ✅ THÊM showtimes info từ Code 2 */}
@@ -222,7 +222,7 @@ function CinemaPage() {
                   {nowShowingMovies.map((movie) => (
                     <div
                       key={movie.movie_id} // ✅ GIỮ movie_id từ Code 1
-                      className="rounded-2xl border border-zinc-800 p-4"
+                      className="rounded-2xl border border-zinc-700 p-4"
                       style={{ background: "#12121f" }}
                     >
                       <div className="flex gap-3">
@@ -238,7 +238,7 @@ function CinemaPage() {
                           >
                             {movie.title}
                           </h4>
-                          <p className="text-zinc-500 text-xs mb-2">
+                          <p className="text-zinc-400 text-xs mb-2">
                             {movie.duration} phút • {movie.rating}
                           </p>
                           <button

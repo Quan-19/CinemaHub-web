@@ -29,7 +29,7 @@ function Badge({ children, className = "" }) {
 
 function StatPill({ count, label, colorClassName }) {
   return (
-    <div className="cinema-surface flex items-center gap-3 rounded-2xl border border-zinc-800 px-4 py-3">
+    <div className="cinema-surface flex items-center gap-3 rounded-2xl border border-zinc-700 px-4 py-3">
       <div
         className={[
           "inline-flex h-10 w-10 items-center justify-center rounded-2xl",
@@ -40,7 +40,7 @@ function StatPill({ count, label, colorClassName }) {
       </div>
       <div className="leading-tight">
         <div className="text-xl font-bold">{count}</div>
-        <div className="text-xs font-semibold text-zinc-500">{label}</div>
+        <div className="text-xs font-semibold text-zinc-400">{label}</div>
       </div>
     </div>
   );
@@ -51,7 +51,7 @@ function Field({ label, children, hint }) {
     <div className="space-y-2">
       <div className="text-xs font-semibold text-zinc-400">{label}</div>
       {children}
-      {hint ? <div className="text-xs text-zinc-500">{hint}</div> : null}
+      {hint ? <div className="text-xs text-zinc-400">{hint}</div> : null}
     </div>
   );
 }
@@ -63,7 +63,7 @@ function TextInput({ value, onChange, placeholder = "", disabled = false }) {
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       disabled={disabled}
-      className="h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/30 px-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30 disabled:opacity-60"
+      className="h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/30 px-3 text-sm text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30 disabled:opacity-60"
     />
   );
 }
@@ -73,7 +73,7 @@ function SelectInput({ value, onChange, options }) {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-11 w-full rounded-2xl border border-zinc-800 bg-zinc-900/30 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
+      className="h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/30 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
     >
       {options.map((opt) => (
         <option key={opt.value} value={opt.value}>
@@ -191,7 +191,7 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
           </div>
         )}
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/20 p-4 sm:p-5">
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4 sm:p-5">
           <div className="relative mb-6 flex items-center justify-center">
             <svg
               className="pointer-events-none absolute inset-x-0 top-0 h-14 w-full text-cyan-400"
@@ -246,7 +246,7 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
                 opacity="0.85"
               />
             </svg>
-            <div className="pt-6 text-[11px] font-semibold tracking-[0.55em] text-zinc-500">
+            <div className="pt-6 text-[11px] font-semibold tracking-[0.55em] text-zinc-400">
               SCREEN
             </div>
           </div>
@@ -259,7 +259,7 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
                     key={row.label}
                     className="grid grid-cols-[28px_auto_28px] items-center gap-3"
                   >
-                    <div className="text-center text-[11px] font-semibold text-zinc-500">
+                    <div className="text-center text-[11px] font-semibold text-zinc-400">
                       {row.label}
                     </div>
 
@@ -295,7 +295,7 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
                       })}
                     </div>
 
-                    <div className="text-center text-[11px] font-semibold text-zinc-500">
+                    <div className="text-center text-[11px] font-semibold text-zinc-400">
                       {row.label}
                     </div>
                   </div>
@@ -303,7 +303,7 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
 
                 <div className="grid grid-cols-[28px_auto_28px] items-center gap-3 pt-2">
                   <div />
-                  <div className="grid auto-cols-max grid-flow-col gap-2 text-center text-[11px] font-semibold text-zinc-600">
+                  <div className="grid auto-cols-max grid-flow-col gap-2 text-center text-[11px] font-semibold text-zinc-400">
                     {Array.from({ length: room.seatsPerRow }, (_, i) => (
                       <div key={i + 1} className="w-7">
                         {i + 1}
@@ -316,7 +316,7 @@ function SeatMapModal({ room, cinemaName, onClose, maintenanceSeats, onToggleMai
             </div>
           </div>
 
-          <div className="mt-5 flex items-center justify-between border-t border-zinc-800 pt-3">
+          <div className="mt-5 flex items-center justify-between border-t border-zinc-700 pt-3">
             <div className="flex flex-wrap items-center gap-5">
               <SeatLegendItem
                 colorClassName="border-zinc-700 bg-zinc-800/40"
@@ -434,14 +434,14 @@ function RoomConfigModal({ mode, cinemaName, initialRoom, onClose, onSave }) {
             <TextInput value={coupleRow} onChange={setCoupleRow} />
           </Field>
 
-          <div className="rounded-2xl border border-zinc-800 bg-cinema-primary/10 p-4">
+          <div className="rounded-2xl border border-zinc-700 bg-cinema-primary/10 p-4">
             <div className="text-xs font-semibold text-zinc-400">
               Tổng ghế ước tính
             </div>
             <div className="mt-2 text-3xl font-black text-cinema-primary">
               {totalSeats}
             </div>
-            <div className="mt-1 text-xs text-zinc-500">{cinemaName}</div>
+            <div className="mt-1 text-xs text-zinc-400">{cinemaName}</div>
           </div>
         </div>
       </div>
@@ -450,7 +450,7 @@ function RoomConfigModal({ mode, cinemaName, initialRoom, onClose, onSave }) {
         <button
           type="button"
           onClick={onClose}
-          className="h-11 rounded-2xl border border-zinc-800 bg-zinc-900/40 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
+          className="h-11 rounded-2xl border border-zinc-700 bg-zinc-900/40 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
         >
           Hủy
         </button>
@@ -491,8 +491,8 @@ function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow, maintenanceSea
   }, [previewRows, seatsPerRow, vipRows, coupleRow]);
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/15 p-3">
-      <div className="text-center text-[10px] font-semibold tracking-widest text-zinc-600">
+    <div className="rounded-2xl border border-zinc-700 bg-zinc-950/15 p-3">
+      <div className="text-center text-[10px] font-semibold tracking-widest text-zinc-400">
         — Màn hình —
       </div>
       <div className="mt-3 flex justify-center">
@@ -514,7 +514,7 @@ function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow, maintenanceSea
                   <div
                     key={seat.id}
                     className={[
-                      "h-2.5 w-2.5 rounded-[3px] border border-zinc-800",
+                      "h-2.5 w-2.5 rounded-[3px] border border-zinc-700",
                       color,
                     ].join(" ")}
                   />
@@ -525,7 +525,7 @@ function MiniSeatPreview({ rows, seatsPerRow, vipRows, coupleRow, maintenanceSea
         </div>
       </div>
       {remaining ? (
-        <div className="mt-2 text-center text-[10px] font-semibold text-zinc-600">
+        <div className="mt-2 text-center text-[10px] font-semibold text-zinc-400">
           ... {remaining} hàng nữa
         </div>
       ) : null}
@@ -541,7 +541,7 @@ function RoomCard({ cinemaName, room, onView, onConfig, onDelete, maintenanceSea
   return (
     <div
       className={[
-        "cinema-surface rounded-2xl border border-zinc-800 p-4",
+        "cinema-surface rounded-2xl border border-zinc-700 p-4",
         isInactive ? "opacity-60" : "",
       ].join(" ")}
     >
@@ -549,18 +549,18 @@ function RoomCard({ cinemaName, room, onView, onConfig, onDelete, maintenanceSea
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <div className="truncate text-base font-bold">{room.name}</div>
-            <Badge className="border-zinc-800 bg-zinc-900/40 text-zinc-200">
+            <Badge className="border-zinc-700 bg-zinc-900/40 text-zinc-200">
               {room.type}
             </Badge>
           </div>
-          <div className="mt-1 truncate text-xs text-zinc-500">
+          <div className="mt-1 truncate text-xs text-zinc-400">
             {cinemaName}
           </div>
         </div>
 
         <Badge
           className={[
-            "border-zinc-800",
+            "border-zinc-700",
             room.status === "active"
               ? "bg-emerald-500/10 text-emerald-400"
               : "bg-red-500/10 text-red-400",
@@ -581,23 +581,23 @@ function RoomCard({ cinemaName, room, onView, onConfig, onDelete, maintenanceSea
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-3">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/10 p-3 text-center">
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/10 p-3 text-center">
           <div className="text-lg font-bold">{total}</div>
-          <div className="text-[11px] font-semibold text-zinc-500">
+          <div className="text-[11px] font-semibold text-zinc-400">
             Tổng ghế
           </div>
         </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/10 p-3 text-center">
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/10 p-3 text-center">
           <div className="text-lg font-bold">
             {room.rows}×{room.seatsPerRow}
           </div>
-          <div className="text-[11px] font-semibold text-zinc-500">
+          <div className="text-[11px] font-semibold text-zinc-400">
             Hàng × Cột
           </div>
         </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/10 p-3 text-center">
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/10 p-3 text-center">
           <div className="text-lg font-bold">{vipCount}</div>
-          <div className="text-[11px] font-semibold text-zinc-500">
+          <div className="text-[11px] font-semibold text-zinc-400">
             Hàng VIP
           </div>
         </div>
@@ -609,9 +609,9 @@ function RoomCard({ cinemaName, room, onView, onConfig, onDelete, maintenanceSea
           onClick={isInactive ? undefined : onView}
           disabled={isInactive}
           className={[
-            "inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-800 text-sm font-semibold",
+            "inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-700 text-sm font-semibold",
             isInactive
-              ? "cursor-not-allowed bg-zinc-800/30 text-zinc-600"
+              ? "cursor-not-allowed bg-zinc-800/30 text-zinc-400"
               : "bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/15",
           ].join(" ")}
           title={isInactive ? "Phòng đang tạm dừng — không thể xem sơ đồ" : ""}
@@ -623,7 +623,7 @@ function RoomCard({ cinemaName, room, onView, onConfig, onDelete, maintenanceSea
         <button
           type="button"
           onClick={onConfig}
-          className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-sky-500/10 text-sm font-semibold text-sky-300 hover:bg-sky-500/15"
+          className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-700 bg-sky-500/10 text-sm font-semibold text-sky-300 hover:bg-sky-500/15"
         >
           <Settings className="h-4 w-4" aria-hidden="true" />
           Cấu hình
@@ -644,7 +644,7 @@ function Pagination({ page, totalPages, onPrev, onNext }) {
         type="button"
         onClick={onPrev}
         disabled={page <= 1}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/30 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900/30 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
         aria-label="Trang trước"
       >
         <ChevronLeft className="h-4 w-4" />
@@ -656,7 +656,7 @@ function Pagination({ page, totalPages, onPrev, onNext }) {
         type="button"
         onClick={onNext}
         disabled={page >= totalPages}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/30 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900/30 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
         aria-label="Trang sau"
       >
         <ChevronRight className="h-4 w-4" />

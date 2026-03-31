@@ -424,7 +424,7 @@ export const CinemaSelectionPage = () => {
     <div className="min-h-screen pt-16" style={{ background: "#0a0a0f" }}>
       {/* Header */}
       <div
-        className="border-b border-zinc-800"
+        className="border-b border-zinc-700"
         style={{ background: "#12121f" }}
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
@@ -473,7 +473,7 @@ export const CinemaSelectionPage = () => {
                   {movie.rating}
                 </span>
                 {movie.genre.slice(0, 2).map((g) => (
-                  <span key={g} className="text-zinc-500 text-xs">
+                  <span key={g} className="text-zinc-400 text-xs">
                     {g}
                   </span>
                 ))}
@@ -500,7 +500,7 @@ export const CinemaSelectionPage = () => {
                       ? "bg-green-500 text-white"
                       : step.active
                       ? "bg-red-600 text-white"
-                      : "bg-zinc-800 text-zinc-500 border border-zinc-700"
+                      : "bg-zinc-800 text-zinc-400 border border-zinc-700"
                   }`}
                   style={{ fontWeight: 700 }}
                 >
@@ -512,7 +512,7 @@ export const CinemaSelectionPage = () => {
                       ? "text-white"
                       : step.done
                       ? "text-green-400"
-                      : "text-zinc-500"
+                      : "text-zinc-400"
                   }`}
                 >
                   {step.label}
@@ -555,7 +555,7 @@ export const CinemaSelectionPage = () => {
             ))}
           </div>
           {dateOptions.length === 0 && (
-            <p className="text-zinc-500 text-sm mt-3">
+            <p className="text-zinc-400 text-sm mt-3">
               Phim này hiện chưa có lịch chiếu.
             </p>
           )}
@@ -594,7 +594,7 @@ export const CinemaSelectionPage = () => {
               );
             })}
             {regionOptions.length === 0 && (
-              <div className="rounded-xl border border-zinc-800 px-4 py-5 text-zinc-500 text-sm">
+              <div className="rounded-xl border border-zinc-700 px-4 py-5 text-zinc-400 text-sm">
                 Chưa có khu vực khả dụng cho phim này.
               </div>
             )}
@@ -625,14 +625,14 @@ export const CinemaSelectionPage = () => {
 
             <div className="space-y-3">
               {orderedCinemas.length === 0 && (
-                <div className="rounded-xl border border-zinc-800 px-4 py-5 text-zinc-500 text-sm">
+                <div className="rounded-xl border border-zinc-700 px-4 py-5 text-zinc-400 text-sm">
                   Không có suất chiếu ở khu vực này cho ngày đã chọn.
                 </div>
               )}
               {orderedCinemas.map((cinema) => (
                 <div
                   key={cinema.id}
-                  className="rounded-xl border border-zinc-800 overflow-hidden"
+                  className="rounded-xl border border-zinc-700 overflow-hidden"
                   style={{ background: "#12121f" }}
                 >
                   {/* Cinema header */}
@@ -661,7 +661,7 @@ export const CinemaSelectionPage = () => {
                         >
                           {cinema.name}
                         </p>
-                        <p className="text-zinc-500 text-xs flex items-center gap-1">
+                        <p className="text-zinc-400 text-xs flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
                           {cinema.address}
                         </p>
@@ -679,7 +679,7 @@ export const CinemaSelectionPage = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-zinc-500 text-xs hidden sm:block">
+                      <span className="text-zinc-400 text-xs hidden sm:block">
                         {cinema.showtimes.length} suất chiếu
                       </span>
                       {expandedCinema === cinema.id ? (
@@ -692,7 +692,7 @@ export const CinemaSelectionPage = () => {
 
                   {/* Showtimes */}
                   {expandedCinema === cinema.id && (
-                    <div className="px-4 pb-4 border-t border-zinc-800">
+                    <div className="px-4 pb-4 border-t border-zinc-700">
                       <div className="flex flex-wrap gap-2 mt-4">
                         {cinema.showtimes.map((st) => {
                           const typeInfo = TYPE_LABELS[st.type];
@@ -712,7 +712,7 @@ export const CinemaSelectionPage = () => {
                               }
                               className={`group flex flex-col items-start p-3 rounded-xl border min-w-[110px] transition-all ${
                                 isFull
-                                  ? "border-zinc-800 opacity-40 cursor-not-allowed"
+                                  ? "border-zinc-700 opacity-40 cursor-not-allowed"
                                   : "border-zinc-700 hover:border-red-500 hover:bg-red-500/5 cursor-pointer"
                               }`}
                             >
@@ -737,14 +737,14 @@ export const CinemaSelectionPage = () => {
                                 {st.price.toLocaleString()}đ
                               </span>
                               <div className="flex items-center gap-1 mt-1">
-                                <Users className="w-3 h-3 text-zinc-500" />
+                                <Users className="w-3 h-3 text-zinc-400" />
                                 <span
                                   className={`text-xs ${
                                     isFull
-                                      ? "text-zinc-600"
+                                      ? "text-zinc-400"
                                       : isLow
                                       ? "text-orange-400"
-                                      : "text-zinc-500"
+                                      : "text-zinc-400"
                                   }`}
                                 >
                                   {isFull

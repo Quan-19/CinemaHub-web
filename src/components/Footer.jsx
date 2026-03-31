@@ -30,7 +30,7 @@ const paymentMethods = ['VISA', 'ZALO Pay', 'MOMO', 'VNPAY']
 
 function Footer() {
   return (
-    <footer className="mt-16 rounded-t-3xl border-t border-zinc-800 bg-zinc-950/80">
+    <footer className="mt-16 rounded-t-3xl border-t border-zinc-700 bg-zinc-950/80">
       <div className="px-4 py-12 sm:px-6 lg:px-10 2xl:px-14">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
@@ -51,7 +51,7 @@ function Footer() {
                 <a
                   key={i}
                   href="#"
-                  className="grid h-9 w-9 place-items-center rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 transition-colors hover:border-zinc-700 hover:text-white"
+                  className="grid h-9 w-9 place-items-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-400 transition-colors hover:border-zinc-700 hover:text-white"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
@@ -111,7 +111,7 @@ function Footer() {
               </li>
             </ul>
             <div className="mt-4">
-              <p className="mb-2 text-xs text-zinc-500">Tải ứng dụng</p>
+              <p className="mb-2 text-xs text-zinc-400">Tải ứng dụng</p>
               <div className="flex gap-2">
                 <div className="cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs text-zinc-300 hover:border-zinc-600">
                   App Store
@@ -124,10 +124,10 @@ function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-zinc-800 pt-6 sm:flex-row">
-          <p className="text-sm text-zinc-500">© 2026 CinemaHub. Tất cả quyền được bảo lưu.</p>
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-zinc-700 pt-6 sm:flex-row">
+          <p className="text-sm text-zinc-400">© 2026 CinemaHub. Tất cả quyền được bảo lưu.</p>
           <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
-            <span className="mr-1 text-xs text-zinc-500">Phương thức thanh toán</span>
+            <span className="mr-1 text-xs text-zinc-400">Phương thức thanh toán</span>
             {paymentMethods.map((pay) => (
               <span
                 key={pay}

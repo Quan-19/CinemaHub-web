@@ -208,7 +208,7 @@ function PromotionFormModal({
   };
 
   const inputCls =
-    "mt-1 w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-3 py-2.5 text-sm text-white outline-none transition focus:border-cinema-primary";
+    "mt-1 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 py-2.5 text-sm text-white outline-none transition focus:border-cinema-primary";
   const labelCls = "text-[11px] font-semibold text-zinc-400";
   const openPicker = (ref) => {
     const el = ref?.current;
@@ -329,7 +329,7 @@ function PromotionFormModal({
                 type="button"
                 onClick={() => openPicker(startDateRef)}
                 aria-label="Chọn ngày bắt đầu"
-                className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:bg-zinc-900"
+                className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900/40 text-zinc-200 hover:bg-zinc-900"
               >
                 <Calendar className="h-4 w-4" />
               </button>
@@ -351,7 +351,7 @@ function PromotionFormModal({
                 type="button"
                 onClick={() => openPicker(endDateRef)}
                 aria-label="Chọn ngày kết thúc"
-                className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:bg-zinc-900"
+                className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900/40 text-zinc-200 hover:bg-zinc-900"
               >
                 <Calendar className="h-4 w-4" />
               </button>
@@ -373,7 +373,7 @@ function PromotionFormModal({
                     "h-9 min-w-10 rounded-2xl px-3 text-xs font-semibold transition",
                     active
                       ? "bg-cinema-primary text-white"
-                      : "border border-zinc-800 bg-zinc-900/30 text-zinc-200 hover:bg-zinc-900",
+                      : "border border-zinc-700 bg-zinc-900/30 text-zinc-200 hover:bg-zinc-900",
                   ].join(" ")}
                 >
                   {lbl}
@@ -387,7 +387,7 @@ function PromotionFormModal({
           <button
             type="button"
             onClick={onCancel}
-            className="h-11 rounded-2xl border border-zinc-800 bg-zinc-900/40 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
+            className="h-11 rounded-2xl border border-zinc-700 bg-zinc-900/40 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
           >
             Hủy
           </button>
@@ -455,7 +455,7 @@ function PromotionCard({ promo, onEdit, onDelete, onCopy, copied }) {
           </div>
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl border border-zinc-800 bg-zinc-900/30 px-3 py-2">
+        <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl border border-zinc-700 bg-zinc-900/30 px-3 py-2">
           <div className="flex min-w-0 items-center gap-2">
             <Tag className="h-4 w-4 text-amber-300" aria-hidden="true" />
             <div className="truncate text-sm font-semibold tracking-wide text-white">
@@ -467,7 +467,7 @@ function PromotionCard({ promo, onEdit, onDelete, onCopy, copied }) {
             onClick={onCopy}
             aria-label="Copy"
             className={[
-              "relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/40 text-zinc-200 transition-colors duration-200 hover:bg-zinc-900",
+              "relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900/40 text-zinc-200 transition-colors duration-200 hover:bg-zinc-900",
               copied ? "ring-2 ring-emerald-500/10" : "",
             ].join(" ")}
           >
@@ -493,7 +493,7 @@ function PromotionCard({ promo, onEdit, onDelete, onCopy, copied }) {
         </div>
 
         <div className="mt-3">
-          <div className="flex items-center justify-between text-xs text-zinc-500">
+          <div className="flex items-center justify-between text-xs text-zinc-400">
             <span>Đã sử dụng</span>
             <span>
               {used}/{limit} ({safePct}%)
@@ -507,7 +507,7 @@ function PromotionCard({ promo, onEdit, onDelete, onCopy, copied }) {
           </div>
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-3 text-xs text-zinc-500">
+        <div className="mt-3 flex items-center justify-between gap-3 text-xs text-zinc-400">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" aria-hidden="true" />
             <span>
@@ -524,7 +524,7 @@ function PromotionCard({ promo, onEdit, onDelete, onCopy, copied }) {
                   key={lbl}
                   className={[
                     "text-[11px] font-semibold",
-                    active ? "text-cinema-primary" : "text-zinc-600",
+                    active ? "text-cinema-primary" : "text-zinc-400",
                   ].join(" ")}
                 >
                   {lbl}
@@ -689,12 +689,12 @@ function StaffPromotionsPage() {
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Tìm khuyến mãi, mã code..."
-            className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/60 py-3 pl-11 pr-4 text-sm text-white outline-none transition focus:border-cinema-primary focus:bg-zinc-900"
+            className="w-full rounded-2xl border border-zinc-700 bg-zinc-900/60 py-3 pl-11 pr-4 text-sm text-white outline-none transition focus:border-cinema-primary focus:bg-zinc-900"
           />
         </div>
 
@@ -710,7 +710,7 @@ function StaffPromotionsPage() {
                   "h-11 rounded-2xl px-5 text-sm font-semibold transition",
                   active
                     ? "bg-cinema-primary text-white"
-                    : "border border-zinc-800 bg-zinc-900/30 text-zinc-200 hover:bg-zinc-900",
+                    : "border border-zinc-700 bg-zinc-900/30 text-zinc-200 hover:bg-zinc-900",
                 ].join(" ")}
               >
                 {t.label}

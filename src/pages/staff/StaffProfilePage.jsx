@@ -152,7 +152,7 @@ function StaffProfilePage() {
         </div>
 
         <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/20 p-4">
+          <div className="rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4">
             <label className="flex items-center gap-2 text-zinc-400 text-xs font-medium mb-2">
               <User className="h-3.5 w-3.5 text-cinema-primary" />
               Tên hiển thị
@@ -162,7 +162,7 @@ function StaffProfilePage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/20 p-4">
+          <div className="rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4">
             <label className="flex items-center gap-2 text-zinc-400 text-xs font-medium mb-2">
               <Mail className="h-3.5 w-3.5 text-cinema-primary" />
               Email
@@ -170,7 +170,7 @@ function StaffProfilePage() {
             <div className="text-sm text-zinc-100">{user.email}</div>
           </div>
 
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/20 p-4">
+          <div className="rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4">
             <label className="flex items-center gap-2 text-zinc-400 text-xs font-medium mb-2">
               <Phone className="h-3.5 w-3.5 text-cinema-primary" />
               Số điện thoại
@@ -182,14 +182,14 @@ function StaffProfilePage() {
               onChange={handlePhoneChange}
               placeholder="0xxxxxxxxx"
               maxLength={10}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 px-4 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-cinema-primary focus:ring-1 focus:ring-cinema-primary/40 transition-colors"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 px-4 py-2.5 text-sm text-white outline-none placeholder:text-zinc-400 focus:border-cinema-primary focus:ring-1 focus:ring-cinema-primary/40 transition-colors"
             />
             {phoneError ? (
               <p className="mt-1.5 text-xs text-red-400">{phoneError}</p>
             ) : null}
           </div>
 
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/20 p-4">
+          <div className="rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4">
             <label className="flex items-center gap-2 text-zinc-400 text-xs font-medium mb-2">
               <Building2 className="h-3.5 w-3.5 text-cinema-primary" />
               Rạp
@@ -199,16 +199,16 @@ function StaffProfilePage() {
                 value={cinemaName}
                 onChange={(e) => setCinemaName(e.target.value)}
                 placeholder="Tên rạp"
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 px-4 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-cinema-primary focus:ring-1 focus:ring-cinema-primary/40 transition-colors"
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 px-4 py-2.5 text-sm text-white outline-none placeholder:text-zinc-400 focus:border-cinema-primary focus:ring-1 focus:ring-cinema-primary/40 transition-colors"
               />
               <input
                 value={cinemaId}
                 onChange={(e) => setCinemaId(e.target.value)}
                 placeholder="Mã rạp"
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 px-4 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-cinema-primary focus:ring-1 focus:ring-cinema-primary/40 transition-colors"
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 px-4 py-2.5 text-sm text-white outline-none placeholder:text-zinc-400 focus:border-cinema-primary focus:ring-1 focus:ring-cinema-primary/40 transition-colors"
               />
             </div>
-            <p className="mt-2 text-xs text-zinc-500">
+            <p className="mt-2 text-xs text-zinc-400">
               Thông tin này sẽ được lưu trong collection{" "}
               <span className="font-semibold text-zinc-300">staffs</span>.
             </p>

@@ -185,7 +185,7 @@ function EditArticleModal({
   };
 
   const inputBase =
-    "mt-1.5 w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 outline-none transition focus:border-red-500 focus:bg-zinc-900";
+    "mt-1.5 w-full rounded-xl border border-zinc-700 bg-zinc-900/50 px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 outline-none transition focus:border-red-500 focus:bg-zinc-900";
   const labelBase = "text-sm font-semibold text-zinc-300";
   const errorText = "mt-1.5 text-xs font-semibold text-red-500";
 
@@ -282,7 +282,7 @@ function EditArticleModal({
 
 function StatCard({ label, value, colorClass }) {
   return (
-    <div className="flex flex-col justify-between rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-5 p-6 transition-colors hover:border-zinc-700">
+    <div className="flex flex-col justify-between rounded-xl border border-zinc-700/80 bg-zinc-900/30 p-5 p-6 transition-colors hover:border-zinc-700">
       <div className={["text-3xl font-bold", colorClass].join(" ")}>{value}</div>
       <div className="mt-2 text-sm font-medium text-zinc-400">{label}</div>
     </div>
@@ -390,18 +390,18 @@ export default function StaffArticlesPage() {
 
       <div className="flex flex-col gap-3 rounded-2xl bg-[#12121A] p-4 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
           <input
             type="text"
             placeholder="Tìm tiêu đề, tác giả..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-11 w-full rounded-xl border border-zinc-800 bg-zinc-900/50 pl-10 pr-4 text-sm text-white placeholder-zinc-500 outline-none transition focus:border-cinema-primary"
+            className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900/50 pl-10 pr-4 text-sm text-white placeholder-zinc-500 outline-none transition focus:border-cinema-primary"
           />
         </div>
         <div className="flex shrink-0 items-center md:gap-3">
           <select
-            className="h-11 rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 text-sm text-white outline-none transition focus:border-cinema-primary"
+            className="h-11 rounded-xl border border-zinc-700 bg-zinc-900/50 px-4 text-sm text-white outline-none transition focus:border-cinema-primary"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
           >
@@ -413,7 +413,7 @@ export default function StaffArticlesPage() {
             ))}
           </select>
           <select
-            className="ml-3 h-11 rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 text-sm text-white outline-none transition focus:border-cinema-primary"
+            className="ml-3 h-11 rounded-xl border border-zinc-700 bg-zinc-900/50 px-4 text-sm text-white outline-none transition focus:border-cinema-primary"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -424,10 +424,10 @@ export default function StaffArticlesPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-[#12121A]">
+      <div className="overflow-hidden rounded-2xl border border-zinc-700 bg-[#12121A]">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-zinc-300">
-            <thead className="border-b border-zinc-800 bg-zinc-900/30 text-xs font-semibold text-zinc-400">
+            <thead className="border-b border-zinc-700 bg-zinc-900/30 text-xs font-semibold text-zinc-400">
               <tr>
                 <th className="px-5 py-4 font-semibold">Bài viết</th>
                 <th className="px-5 py-4 font-semibold">Danh mục</th>
@@ -454,7 +454,7 @@ export default function StaffArticlesPage() {
                           <div className="font-semibold text-white line-clamp-1 break-all">
                             {article.title}
                           </div>
-                          <div className="mt-0.5 text-xs text-zinc-500">
+                          <div className="mt-0.5 text-xs text-zinc-400">
                             {article.slug}
                           </div>
                         </div>
@@ -479,7 +479,7 @@ export default function StaffArticlesPage() {
                     </td>
                     <td className="px-5 py-4 text-zinc-300 font-medium">
                       <div className="flex items-center gap-1.5 h-full"> 
-                        <Eye className="h-3.5 w-3.5 text-zinc-500" />
+                        <Eye className="h-3.5 w-3.5 text-zinc-400" />
                         {article.views > 0 ? article.views.toLocaleString("vi-VN") : "—"}
                       </div>
                     </td>
@@ -514,7 +514,7 @@ export default function StaffArticlesPage() {
               })}
               {filteredArticles.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-sm text-zinc-500">
+                  <td colSpan={7} className="py-12 text-center text-sm text-zinc-400">
                     Không tìm thấy bài viết nào phù hợp.
                   </td>
                 </tr>

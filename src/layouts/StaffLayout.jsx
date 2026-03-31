@@ -54,25 +54,25 @@ function StaffLayout() {
             mobileOpen ? "pointer-events-none lg:pointer-events-auto" : "",
           ].join(" ")}
         >
-          <header className="z-10 shrink-0 border-b border-zinc-800 bg-cinema-bg/80 backdrop-blur">
+          <header className="z-10 shrink-0 border-b border-zinc-700 bg-cinema-bg/80 backdrop-blur">
             <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
               <div className="flex min-w-0 flex-1 items-center gap-3">
                 <button
                   type="button"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-800 bg-cinema-surface text-zinc-200 hover:bg-zinc-900 lg:hidden"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-700 bg-cinema-surface text-zinc-200 hover:bg-zinc-900 lg:hidden"
                   aria-label="Mở menu"
                   onClick={() => setMobileOpen(true)}
                 >
                   <Menu className="h-5 w-5" />
                 </button>
 
-                <div className="hidden w-full max-w-xl items-center gap-2 rounded-2xl border border-zinc-800 bg-cinema-surface px-3 py-2 sm:flex">
+                <div className="hidden w-full max-w-xl items-center gap-2 rounded-2xl border border-zinc-700 bg-cinema-surface px-3 py-2 sm:flex">
                   <Search
                     className="h-4 w-4 text-zinc-400"
                     aria-hidden="true"
                   />
                   <input
-                    className="w-full bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none"
+                    className="w-full bg-transparent text-sm text-zinc-100 placeholder:text-zinc-400 focus:outline-none"
                     placeholder="Tìm kiếm..."
                     type="search"
                   />
@@ -82,13 +82,13 @@ function StaffLayout() {
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-800 bg-cinema-surface text-zinc-200 hover:bg-zinc-900"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-700 bg-cinema-surface text-zinc-200 hover:bg-zinc-900"
                   aria-label="Thông báo"
                 >
                   <Bell className="h-5 w-5" />
                 </button>
                 {/* 
-                <div className="flex items-center gap-2 rounded-2xl border border-zinc-800 bg-cinema-surface px-3 py-2">
+                <div className="flex items-center gap-2 rounded-2xl border border-zinc-700 bg-cinema-surface px-3 py-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cinema-primary text-xs font-semibold">
                     NV
                   </div>

@@ -37,7 +37,7 @@ function StatCard({
       <div className="mt-4">
         <div className="text-3xl font-bold tracking-tight">{value}</div>
         <div className="mt-1 text-sm text-zinc-400">{title}</div>
-        <div className="mt-2 text-xs text-zinc-500">
+        <div className="mt-2 text-xs text-zinc-400">
           {sub1}
           {sub2 ? <span className="ml-2">{sub2}</span> : null}
         </div>
@@ -57,7 +57,7 @@ function ShowtimeRow({
   accent,
 }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/20 p-4">
+    <div className="rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -72,7 +72,7 @@ function ShowtimeRow({
           <div className="mt-0.5 text-xs text-zinc-400">{room}</div>
         </div>
 
-        <span className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-2 py-1 text-[11px] font-semibold text-zinc-300">
+        <span className="rounded-lg border border-zinc-700 bg-zinc-900/40 px-2 py-1 text-[11px] font-semibold text-zinc-300">
           {tag}
         </span>
       </div>
@@ -84,7 +84,7 @@ function ShowtimeRow({
             style={{ width: `${Math.min(100, Math.max(0, progressPct))}%` }}
           />
         </div>
-        <div className="mt-2 text-right text-xs text-zinc-500">
+        <div className="mt-2 text-right text-xs text-zinc-400">
           {progressText}
         </div>
       </div>
@@ -153,14 +153,14 @@ function HourlyTicketsChart({ items }) {
   return (
     <div className="mt-4">
       <div className="grid grid-cols-[40px_1fr] gap-3">
-        <div className="flex h-36 flex-col justify-between pb-6 text-right text-xs font-medium text-zinc-500 sm:h-40">
+        <div className="flex h-36 flex-col justify-between pb-6 text-right text-xs font-medium text-zinc-400 sm:h-40">
           {ticks.map((t) => (
             <div key={t}>{t}</div>
           ))}
         </div>
 
         <div>
-          <div className="relative h-36 border-b border-l border-zinc-800/70 sm:h-40">
+          <div className="relative h-36 border-b border-l border-zinc-700/70 sm:h-40">
             {ticks
               .filter((t) => t !== 0)
               .map((t) => {
@@ -168,7 +168,7 @@ function HourlyTicketsChart({ items }) {
                 return (
                   <div
                     key={t}
-                    className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-zinc-800/60"
+                    className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-zinc-700/60"
                     style={{ bottom: `${pct}%` }}
                   />
                 );
@@ -181,7 +181,7 @@ function HourlyTicketsChart({ items }) {
             >
               {hoveredIndex != null ? (
                 <div
-                  className="pointer-events-none absolute z-10 w-40 rounded-xl border border-zinc-800 bg-zinc-950/95 px-3 py-2 text-sm shadow-sm backdrop-blur transition-all duration-150 ease-out"
+                  className="pointer-events-none absolute z-10 w-40 rounded-xl border border-zinc-700 bg-zinc-950/95 px-3 py-2 text-sm shadow-sm backdrop-blur transition-all duration-150 ease-out"
                   style={{ left: tooltipPos.left, top: tooltipPos.top }}
                   role="status"
                 >
@@ -229,7 +229,7 @@ function HourlyTicketsChart({ items }) {
               })}
             </div>
 
-            <div className="absolute inset-x-0 bottom-0 grid auto-cols-fr grid-flow-col gap-3 px-2 pt-2 text-center text-[11px] font-medium text-zinc-500 sm:gap-4">
+            <div className="absolute inset-x-0 bottom-0 grid auto-cols-fr grid-flow-col gap-3 px-2 pt-2 text-center text-[11px] font-medium text-zinc-400 sm:gap-4">
               {items.map((item) => (
                 <div key={item.label}>{item.label}</div>
               ))}
@@ -243,7 +243,7 @@ function HourlyTicketsChart({ items }) {
 
 function RecentTicket({ initials, name, detail, seats, timeAgo, ok }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/20 p-4">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4">
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-xs font-bold text-zinc-200 ring-1 ring-zinc-700">
           {initials}
@@ -251,12 +251,12 @@ function RecentTicket({ initials, name, detail, seats, timeAgo, ok }) {
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold">{name}</div>
           <div className="truncate text-xs text-zinc-400">{detail}</div>
-          <div className="mt-1 text-xs text-zinc-500">Ghế: {seats}</div>
+          <div className="mt-1 text-xs text-zinc-400">Ghế: {seats}</div>
         </div>
       </div>
 
       <div className="text-right">
-        <div className="text-xs text-zinc-500">{timeAgo}</div>
+        <div className="text-xs text-zinc-400">{timeAgo}</div>
         <div
           className={[
             "mt-2 text-xs font-semibold",

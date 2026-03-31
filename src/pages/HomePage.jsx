@@ -361,7 +361,7 @@ const HomePage = () => {
                       </div>
                       <span className="text-zinc-300 text-sm">{step}</span>
                     </div>
-                    {i < 2 && <ChevronRight className="w-4 h-4 text-zinc-600" />}
+                    {i < 2 && <ChevronRight className="w-4 h-4 text-zinc-400" />}
                   </div>
                 ))}
                 <button
@@ -425,7 +425,7 @@ const HomePage = () => {
               {promotions.slice(0, 4).map((promo) => (
                 <div
                   key={promo.id}
-                  className="group rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-all hover:-translate-y-1 duration-300"
+                  className="group rounded-2xl overflow-hidden border border-zinc-700 hover:border-zinc-700 transition-all hover:-translate-y-1 duration-300"
                   style={{ background: "#12121f" }}
                 >
                   <div className="relative h-44 overflow-hidden">
@@ -451,7 +451,7 @@ const HomePage = () => {
                       {promo.description}
                     </p>
 
-                    <div className="flex items-center gap-2 mb-3 text-zinc-500 text-xs">
+                    <div className="flex items-center gap-2 mb-3 text-zinc-400 text-xs">
                       <Clock className="w-3.5 h-3.5" />
                       <span>Hạn sử dụng: {promo.expiry}</span>
                     </div>
