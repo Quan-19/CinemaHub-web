@@ -51,7 +51,7 @@ function SidebarLink({ to, icon: Icon, label, collapsed, onNavigate }) {
 
 function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const handleNavigate = () => {
     if (typeof onClose === "function") onClose();
@@ -223,14 +223,24 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
               collapsed ? "justify-center" : "",
             ].join(" ")}
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-zinc-100 ring-1 ring-zinc-700">
-              NV
+            <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-zinc-900 text-xs font-semibold text-zinc-100 ring-1 ring-zinc-700">
+              {user?.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt={user.displayName || "User"}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                user?.displayName?.slice(0, 2).toUpperCase() || "NV"
+              )}
             </div>
             {!collapsed && (
-              <div className="min-w-0">
-                <div className="truncate text-sm font-semibold">Nhân viên</div>
-                <div className="truncate text-xs text-zinc-400">
-                  staff@CinemaHub.vn
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold">
+                  {user?.displayName || "Nhân viên"}
+                </div>
+                <div className="truncate text-[11px] text-zinc-400">
+                  {user?.email || "staff@CinemaHub.vn"}
                 </div>
               </div>
             )}

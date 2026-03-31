@@ -102,25 +102,39 @@ function buildSeatGrid({ rows, seatsPerRow, vipRows, coupleRow }) {
 
   for (let r = 1; r <= rows; r += 1) {
     const rowLabel = letters[r - 1] ?? String(r);
+    const isCoupleRow = coupleRow === r;
     const seats = [];
 
-    for (let c = 1; c <= seatsPerRow; c += 1) {
-      const isCouple = coupleRow === r;
-      const type = isCouple ? "couple" : vipSet.has(r) ? "vip" : "standard";
-
-      const maintenance = false;
-
-      seats.push({
-        id: `${rowLabel}${c}`,
-        label: `${rowLabel}${c}`,
-        row: r,
-        col: c,
-        type,
-        maintenance,
-      });
+    if (isCoupleRow) {
+      // Hàng Couple: mỗi ghế đại diện cho 1 cặp (2 chỗ ngồi)
+      const coupleSeatsCount = Math.ceil(seatsPerRow / 2);
+      for (let c = 1; c <= coupleSeatsCount; c += 1) {
+        seats.push({
+          id: `${rowLabel}${c}`,
+          label: `${rowLabel}${c}`,
+          row: r,
+          col: c,
+          type: "couple",
+          isCouple: true,
+          seatsCount: 2,
+        });
+      }
+    } else {
+      for (let c = 1; c <= seatsPerRow; c += 1) {
+        const type = vipSet.has(r) ? "vip" : "standard";
+        seats.push({
+          id: `${rowLabel}${c}`,
+          label: `${rowLabel}${c}`,
+          row: r,
+          col: c,
+          type,
+          isCouple: false,
+          seatsCount: 1,
+        });
+      }
     }
 
-    data.push({ row: r, label: rowLabel, seats });
+    data.push({ row: r, label: rowLabel, seats, isCoupleRow });
   }
 
   return data;
@@ -155,6 +169,15 @@ function SeatMapModal({
     });
   }, [room]);
 
+  const actualTotalSeats = useMemo(() => {
+    return seatRows.reduce((total, row) => {
+      return total + row.seats.reduce((rowTotal, seat) => rowTotal + (seat.seatsCount || 1), 0);
+    }, 0);
+  }, [seatRows]);
+
+  const standardSeatWidth = 28; // w-7 = 28px
+  const coupleSeatWidth = 56;   // w-14 = 56px
+
   const handleSeatClick = useCallback(
     (seatId) => {
       if (!maintenanceMode) return;
@@ -172,7 +195,7 @@ function SeatMapModal({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="text-xs text-zinc-400">
-            {cinemaName} · {room.type} · {room.rows * room.seatsPerRow} ghế
+            {cinemaName} · {room.type} · {actualTotalSeats} ghế {room.coupleRow && `(Hàng ${room.coupleRow} là Couple)`}
           </div>
 
           <button
@@ -257,84 +280,148 @@ function SeatMapModal({
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <div className="mx-auto w-fit">
-              <div className="inline-grid gap-2">
-                {seatRows.map((row) => (
-                  <div
-                    key={row.label}
-                    className="grid grid-cols-[28px_auto_28px] items-center gap-3"
-                  >
-                    <div className="text-center text-[11px] font-semibold text-zinc-400">
-                      {row.label}
-                    </div>
+            <div className="overflow-x-auto">
+              <div className="mx-auto w-fit">
+                <div className="inline-grid gap-2">
+                  {seatRows.map((row) => {
+                    const isCoupleRow = row.isCoupleRow;
+                    const rowSeatsCount = row.seats.length;
+                    const standardSeatsCount = room.seatsPerRow;
 
-                    <div className="grid auto-cols-max grid-flow-col gap-2">
-                      {row.seats.map((seat) => {
-                        const isMaintenance = maintenanceSeats.has(seat.id);
-                        const base =
-                          "h-7 w-7 rounded-[6px] border bg-zinc-950/10";
-                        const style = isMaintenance
-                          ? "border-red-500 bg-red-500/25"
-                          : seat.type === "vip"
-                            ? "border-amber-400"
-                            : seat.type === "couple"
-                              ? "border-fuchsia-400"
-                              : "border-zinc-700 bg-zinc-800/40";
-                        const cursor = maintenanceMode
-                          ? "cursor-pointer hover:ring-2 hover:ring-red-400/40"
-                          : "";
+                    let leftPadding = 0;
+                    if (isCoupleRow) {
+                      const standardWidth = standardSeatsCount * (standardSeatWidth + 8);
+                      const coupleWidth = rowSeatsCount * (coupleSeatWidth + 8);
+                      const diff = standardWidth - coupleWidth;
+                      leftPadding = Math.max(0, diff / 2);
+                    }
 
-                        return (
+                    return (
+                      <div
+                        key={row.label}
+                        className="grid grid-cols-[28px_auto_28px] items-center gap-3"
+                      >
+                        <div className="text-center text-[11px] font-semibold text-zinc-400">
+                          {row.label}
+                        </div>
+
+                        <div className="flex justify-center">
                           <div
-                            key={seat.id}
-                            className={[base, style, cursor].join(" ")}
-                            title={
-                              isMaintenance
-                                ? `${seat.label} (Bảo trì)`
-                                : seat.label
-                            }
-                            aria-label={seat.label}
-                            onClick={() => handleSeatClick(seat.id)}
-                          />
-                        );
-                      })}
-                    </div>
+                            className="grid auto-cols-max grid-flow-col gap-2"
+                            style={{
+                              paddingLeft: leftPadding > 0 ? `${leftPadding}px` : 0,
+                              paddingRight: leftPadding > 0 ? `${leftPadding}px` : 0,
+                            }}
+                          >
+                            {row.seats.map((seat) => {
+                              const isMaintenance = maintenanceSeats.has(seat.id);
+                              const base = seat.isCouple
+                                ? "h-7 w-14 rounded-[6px] border bg-zinc-950/10 flex items-center justify-center gap-1"
+                                : "h-7 w-7 rounded-[6px] border bg-zinc-950/10";
+                              
+                              let style = "";
+                              if (isMaintenance) {
+                                style = "border-red-500 bg-red-500/25";
+                              } else if (seat.type === "vip") {
+                                style = "border-amber-400";
+                              } else if (seat.type === "couple") {
+                                style = "border-fuchsia-400 bg-fuchsia-500/10";
+                              } else {
+                                style = "border-zinc-700 bg-zinc-800/40";
+                              }
 
-                    <div className="text-center text-[11px] font-semibold text-zinc-400">
-                      {row.label}
-                    </div>
-                  </div>
-                ))}
+                              const cursor = maintenanceMode
+                                ? "cursor-pointer hover:ring-2 hover:ring-red-400/40"
+                                : "";
 
-                <div className="grid grid-cols-[28px_auto_28px] items-center gap-3 pt-2">
-                  <div />
-                  <div className="grid auto-cols-max grid-flow-col gap-2 text-center text-[11px] font-semibold text-zinc-400">
-                    {Array.from({ length: room.seatsPerRow }, (_, i) => (
-                      <div key={i + 1} className="w-7">
-                        {i + 1}
+                              return (
+                                <div
+                                  key={seat.id}
+                                  className={[base, style, cursor].join(" ")}
+                                  title={
+                                    isMaintenance
+                                      ? `${seat.label} (Bảo trì)`
+                                      : seat.isCouple
+                                        ? `${seat.label} (Ghế Đôi - 2 chỗ)`
+                                        : seat.label
+                                  }
+                                  aria-label={seat.label}
+                                  onClick={() => handleSeatClick(seat.id)}
+                                >
+                                  {seat.isCouple && (
+                                    <>
+                                      <span className="text-[10px]">👥</span>
+                                      <span className="text-[8px] text-zinc-400">2</span>
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="text-center text-[11px] font-semibold text-zinc-400">
+                          {row.label}
+                        </div>
                       </div>
-                    ))}
+                    );
+                  })}
+
+                  {/* Column numbers */}
+                  <div className="grid grid-cols-[28px_auto_28px] items-center gap-3 pt-2">
+                    <div />
+                    <div className="flex justify-center">
+                      <div className="grid auto-cols-max grid-flow-col gap-2 text-center text-[11px] font-semibold text-zinc-400">
+                        {seatRows[0]?.isCoupleRow
+                          ? (() => {
+                              const firstRow = seatRows[0];
+                              const standardWidth = room.seatsPerRow * (standardSeatWidth + 8);
+                              const coupleWidth = firstRow.seats.length * (coupleSeatWidth + 8);
+                              const diff = standardWidth - coupleWidth;
+                              const leftPadding = Math.max(0, diff / 2);
+                              
+                              return (
+                                <div
+                                  className="grid auto-cols-max grid-flow-col gap-2"
+                                  style={{
+                                    paddingLeft: leftPadding > 0 ? `${leftPadding}px` : 0,
+                                    paddingRight: leftPadding > 0 ? `${leftPadding}px` : 0,
+                                  }}
+                                >
+                                  {Array.from({ length: firstRow.seats.length }, (_, i) => (
+                                    <div key={i + 1} className="w-14 text-center">
+                                      {i + 1}
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()
+                          : Array.from({ length: room.seatsPerRow }, (_, i) => (
+                              <div key={i + 1} className="w-7 text-center">
+                                {i + 1}
+                              </div>
+                            ))}
+                      </div>
+                    </div>
+                    <div />
                   </div>
-                  <div />
                 </div>
               </div>
             </div>
-          </div>
 
           <div className="mt-5 flex items-center justify-between border-t border-zinc-700 pt-3">
             <div className="flex flex-wrap items-center gap-5">
               <SeatLegendItem
                 colorClassName="border-zinc-700 bg-zinc-800/40"
-                label="Ghế thường"
+                label="Ghế thường (1 chỗ)"
               />
               <SeatLegendItem
                 colorClassName="border-amber-400 bg-transparent"
-                label="Ghế VIP"
+                label="Ghế VIP (1 chỗ)"
               />
               <SeatLegendItem
-                colorClassName="border-fuchsia-400 bg-transparent"
-                label="Ghế Couple"
+                colorClassName="border-fuchsia-400 bg-fuchsia-500/10"
+                label="Ghế Couple (2 chỗ/vé)"
               />
               <SeatLegendItem
                 colorClassName="border-red-500 bg-red-500/25"
@@ -346,8 +433,9 @@ function SeatMapModal({
               <div className="text-[11px] font-semibold text-amber-400">
                 VIP
               </div>
-              <div className="text-[11px] font-semibold text-fuchsia-400">
-                CPL
+              <div className="flex items-center gap-1 text-[11px] font-semibold text-fuchsia-400">
+                <span>👥</span>
+                <span>CPL (2 ghế)</span>
               </div>
             </div>
           </div>
@@ -510,24 +598,23 @@ function MiniSeatPreview({
       <div className="mt-3 flex justify-center">
         <div className="inline-grid gap-1">
           {grid.map((row) => (
-            <div key={row.label} className="grid grid-flow-col gap-1">
+            <div key={row.label} className="flex justify-center gap-1 mb-1">
               {row.seats.map((seat) => {
                 const isMaint =
                   maintenanceSeats && maintenanceSeats.has(seat.id);
                 const color = isMaint
                   ? "bg-red-500"
-                  : seat.reserved
-                    ? "bg-zinc-900/60"
-                    : seat.type === "vip"
-                      ? "bg-amber-500"
-                      : seat.type === "couple"
-                        ? "bg-red-600"
-                        : "bg-zinc-400/30";
+                  : seat.type === "vip"
+                    ? "bg-amber-500"
+                    : seat.type === "couple"
+                      ? "bg-fuchsia-500"
+                      : "bg-zinc-400/30";
                 return (
                   <div
                     key={seat.id}
                     className={[
-                      "h-2.5 w-2.5 rounded-[3px] border border-zinc-700",
+                      "h-2 rounded-[3px] border border-zinc-700/50",
+                      seat.isCouple ? "w-5" : "w-2.5",
                       color,
                     ].join(" ")}
                   />

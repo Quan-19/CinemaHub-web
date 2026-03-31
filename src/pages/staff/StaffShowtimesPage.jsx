@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext.jsx";
 import { MOVIES } from "../../data/mockData.js";
 import { makeId } from "../../components/staff/staffUtils.js";
 import { StaffCenteredModalShell } from "../../components/staff/StaffModalShell.jsx";
@@ -312,7 +313,7 @@ function ShowtimeCard({ showtime, onEdit, onDelete }) {
   );
 }
 
-function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
+function EditShowtimeModal({ mode = "create", initial, movies = [], onSave, onCancel }) {
   const [movieId, setMovieId] = useState(initial.movieId);
   const [date, setDate] = useState(initial.date);
   const [start, setStart] = useState(initial.startTime);
@@ -324,12 +325,12 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
   const [error, setError] = useState(null);
 
   const movieOptions = useMemo(() => {
-    return MOVIES.map((m) => ({
+    return movies.map((m) => ({
       id: m.id,
       title: m.title,
       duration: m.duration,
     }));
-  }, []);
+  }, [movies]);
 
   const selectedMovie = movieOptions.find((m) => m.id === movieId);
   const durationNumber = Number(duration) || (selectedMovie?.duration ?? 0);
@@ -564,6 +565,7 @@ function EditShowtimeModal({ mode = "create", initial, onSave, onCancel }) {
 
 function StaffShowtimesPage() {
   const { subtitle } = useOutletContext();
+  const { token, user } = useAuth();
   const cinemaName = useMemo(() => {
     const parts = String(subtitle ?? "").split("—");
     return (parts[0] ?? "").trim() || "CGV Vincom Center Bà Triệu";
@@ -578,6 +580,7 @@ function StaffShowtimesPage() {
   const [showCalendar, setShowCalendar] = useState(false);
 
   const [showtimes, setShowtimes] = useState([]);
+  const [moviesList, setMoviesList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -587,11 +590,27 @@ function StaffShowtimesPage() {
   const loadShowtimes = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/showtimes");
-      const data = await res.json();
+      const [showtimesRes, moviesRes] = await Promise.all([
+        fetch("http://localhost:5000/api/showtimes"),
+        fetch("http://localhost:5000/api/movies")
+      ]);
+      const data = await showtimesRes.json();
+      const moviesData = await moviesRes.json();
+
+      const normalizedMovies = moviesData.map((m) => ({
+        id: m.movie_id || m.id,
+        title: m.title,
+        duration: m.duration || 120
+      }));
+      setMoviesList(normalizedMovies);
 
       const mapped = data.map((s) => {
-        const formattedDate = s.date.slice(0, 10);
+        const dObj = new Date(s.date);
+        const yyyy = dObj.getFullYear();
+        const mm = String(dObj.getMonth() + 1).padStart(2, "0");
+        const dd = String(dObj.getDate()).padStart(2, "0");
+        const formattedDate = `${yyyy}-${mm}-${dd}`;
+
         const formattedTime = s.time?.slice(0, 5);
         const formattedEndTime = s.endTime?.slice(0, 5);
 
@@ -675,18 +694,19 @@ function StaffShowtimesPage() {
   }, [showtimes, selectedDate, search, roomFilter, formatFilter, statusFilter]);
 
   const openCreate = () => {
+    const firstMovie = moviesList[0];
     const initial = {
       id: makeId("st"),
-      movieId: MOVIES[0]?.id || "",
-      movieTitle: MOVIES[0]?.title || "",
+      movieId: firstMovie?.id || "",
+      movieTitle: firstMovie?.title || "",
       date: selectedDate,
       startTime: "09:00",
       start: `${selectedDate}T09:00:00`,
       end: durationToEnd(
         `${selectedDate}T09:00:00`,
-        MOVIES[0]?.duration || 120,
+        firstMovie?.duration || 120,
       ),
-      duration: MOVIES[0]?.duration || 120,
+      duration: firstMovie?.duration || 120,
       room: ROOM_OPTIONS[0],
       format: FORMAT_OPTIONS[0],
       language: LANGUAGE_OPTIONS[0],
@@ -708,10 +728,15 @@ function StaffShowtimesPage() {
 
   const handleSave = async (next) => {
     try {
-      const token = localStorage.getItem("token");
+      const auth = getAuth();
+      const currentToken = await auth.currentUser?.getIdToken();
+      if (!currentToken) {
+        throw new Error("Không lấy được token xác thực. Vui lòng thử tải lại trang hoặc đăng nhập lại.");
+      }
+
       const payload = {
         movieId: next.movieId,
-        cinemaId: next.cinemaId || 1,
+        cinemaId: user?.cinema_id || next.cinemaId || 1,
         roomId: next.roomId || 1,
         date: next.date,
         time: `${next.startTime}:00`,
@@ -731,46 +756,67 @@ function StaffShowtimesPage() {
 
       console.log("PAYLOAD:", payload);
 
+      let res;
       if (editModal.mode === "create") {
-        await fetch("http://localhost:5000/api/showtimes", {
+        res = await fetch("http://localhost:5000/api/showtimes", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${currentToken}`,
           },
           body: JSON.stringify(payload),
         });
       } else {
-        await fetch(`http://localhost:5000/api/showtimes/${next.id}`, {
+        res = await fetch(`http://localhost:5000/api/showtimes/${next.id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${currentToken}`,
           },
           body: JSON.stringify(payload),
         });
       }
 
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.message || `Lỗi từ hệ thống: ${res.status}`);
+      }
+
       await loadShowtimes();
       setEditModal(null);
-      setToast({ type: "success", message: "Đã lưu suất chiếu" });
+      setToast({ type: "success", message: "Đã lưu suất chiếu thành công" });
     } catch (err) {
       console.error(err);
-      setToast({ type: "error", message: "Lỗi khi lưu suất chiếu" });
+      setToast({ type: "error", message: err.message || "Lỗi khi lưu suất chiếu" });
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/showtimes/${id}`, {
+      const auth = getAuth();
+      const currentToken = await auth.currentUser?.getIdToken();
+      if (!currentToken) {
+        throw new Error("Không lấy được token xác thực. Vui lòng đăng nhập lại.");
+      }
+
+      const res = await fetch(`http://localhost:5000/api/showtimes/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${currentToken}`,
+        },
       });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.message || `Lỗi từ hệ thống: ${res.status}`);
+      }
+
       await loadShowtimes();
       setDeleteTarget(null);
       setToast({ type: "success", message: "Đã xóa suất chiếu" });
     } catch (err) {
       console.error(err);
-      setToast({ type: "error", message: "Lỗi khi xóa suất chiếu" });
+      setToast({ type: "error", message: err.message || "Lỗi khi xóa suất chiếu" });
     }
   };
 
@@ -810,8 +856,10 @@ function StaffShowtimesPage() {
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-950/40 p-3">
-        <CalendarDays className="h-4 w-4 text-zinc-400" />
+      <div className="calendar-container relative flex flex-wrap items-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-950/40 p-3">
+        <button type="button" onClick={() => setShowCalendar(!showCalendar)} className="p-1 hover:bg-zinc-800 rounded-lg transition" title="Chọn ngày">
+          <CalendarDays className="h-5 w-5 text-zinc-400 hover:text-white" />
+        </button>
         <div className="flex flex-wrap gap-2">
           {dates.map((d) => (
             <FilterChip
@@ -932,6 +980,7 @@ function StaffShowtimesPage() {
         <EditShowtimeModal
           mode={editModal.mode}
           initial={editModal.data}
+          movies={moviesList}
           onCancel={() => setEditModal(null)}
           onSave={handleSave}
         />
@@ -959,6 +1008,7 @@ function StaffShowtimesPage() {
       {toast ? (
         <StaffSuccessToast
           message={toast.message}
+          type={toast.type}
           onClose={() => setToast(null)}
         />
       ) : null}
