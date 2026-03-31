@@ -20,12 +20,24 @@ export default function ShowtimeModal({
   const movieInputRef = useRef(null);
   const dropdownRef = useRef(null);
 
+  // Debug log để kiểm tra dữ liệu nhận được
+  useEffect(() => {
+    console.log("🔍 ShowtimeModal - cinemas received:", cinemas);
+    console.log("🔍 ShowtimeModal - cinemas length:", cinemas?.length);
+    if (cinemas && cinemas.length > 0) {
+      console.log("🔍 First cinema:", cinemas[0]);
+      console.log("🔍 First cinema rooms:", cinemas[0]?.rooms);
+    }
+  }, [cinemas]);
+
   // Cập nhật danh sách phòng khi chọn rạp
   useEffect(() => {
     if (form?.cinemaId) {
-      const cinema = cinemas.find((c) => c.id == form.cinemaId);
+      const cinema = cinemas?.find((c) => c.id == form.cinemaId);
+      console.log("🔍 Selected cinema:", cinema);
       if (cinema) {
         const rooms = cinema.rooms || [];
+        console.log("🔍 Available rooms:", rooms);
         setAvailableRooms(rooms);
       } else {
         setAvailableRooms([]);
@@ -95,10 +107,12 @@ export default function ShowtimeModal({
   };
 
   const handleCinemaChange = (cinemaId) => {
-    const cinema = cinemas.find((c) => c.id == cinemaId);
+    const cinema = cinemas?.find((c) => c.id == cinemaId);
+    console.log("🎬 Cinema changed to:", cinemaId, cinema);
     if (cinema) {
       const rooms = cinema.rooms || [];
-
+      console.log("📺 Rooms in this cinema:", rooms);
+      
       setForm({
         ...form,
         cinemaId,
@@ -109,20 +123,34 @@ export default function ShowtimeModal({
         totalSeats: 0,
         availableSeats: 0,
       });
+      setAvailableRooms(rooms);
+    } else {
+      setAvailableRooms([]);
+      setForm({
+        ...form,
+        cinemaId,
+        cinemaName: "",
+        roomId: "",
+        roomName: "",
+        type: "",
+        totalSeats: 0,
+        availableSeats: 0,
+      });
     }
   };
 
   const handleRoomChange = (roomId) => {
-    const cinema = cinemas.find((c) => c.id == form.cinemaId);
+    const cinema = cinemas?.find((c) => c.id == form.cinemaId);
     const room = cinema?.rooms?.find((r) => r.id == roomId);
+    console.log("🎬 Room changed to:", roomId, room);
     if (room) {
       setForm({
         ...form,
         roomId,
         roomName: room.name,
         type: room.type,
-        totalSeats: room.capacity || room.totalSeats || 0,
-        availableSeats: room.capacity || room.totalSeats || 0,
+        totalSeats: room.capacity || 100,
+        availableSeats: room.capacity || 100,
       });
     }
   };
@@ -131,11 +159,10 @@ export default function ShowtimeModal({
   const calculateEndTime = () => {
     if (!form?.time || !form?.movieDuration) return "";
     const [hours, minutes] = form.time.split(":").map(Number);
-    const totalMinutes = hours * 60 + minutes + form.movieDuration + 15; // +15 phút quảng cáo
+    const totalMinutes = hours * 60 + minutes + form.movieDuration + 15;
     const endHours = Math.floor(totalMinutes / 60);
     const endMinutes = totalMinutes % 60;
 
-    // Nếu giờ kết thúc >= 24, hiển thị với định dạng "+1 ngày"
     if (endHours >= 24) {
       const nextDayHours = endHours - 24;
       return `${String(nextDayHours).padStart(2, "0")}:${String(endMinutes).padStart(2, "0")} (ngày hôm sau)`;
@@ -183,7 +210,7 @@ export default function ShowtimeModal({
     });
   };
 
-  const selectedCinema = cinemas.find((c) => c.id == form?.cinemaId);
+  const selectedCinema = cinemas?.find((c) => c.id == form?.cinemaId);
   const currentRoomCount = selectedCinema?.rooms?.length || 0;
   const maxRooms = selectedCinema?.maxRooms || 4;
 
@@ -336,7 +363,7 @@ export default function ShowtimeModal({
                 <option value="" className="bg-[#2d2d44] text-white/70">
                   Chọn rạp
                 </option>
-                {cinemas.map((cinema) => {
+                {cinemas && cinemas.map((cinema) => {
                   const roomCount = cinema.rooms?.length || 0;
                   const maxRoomLimit = cinema.maxRooms || 4;
                   return (
@@ -384,7 +411,7 @@ export default function ShowtimeModal({
                     className="bg-[#2d2d44] text-white"
                   >
                     {room.name} ({room.type} -{" "}
-                    {room.capacity || room.totalSeats || 0} ghế)
+                    {room.capacity || 100} ghế)
                   </option>
                 ))}
               </select>

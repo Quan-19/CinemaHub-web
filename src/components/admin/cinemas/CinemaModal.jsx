@@ -47,6 +47,20 @@ export default function CinemaModal({
     }
   };
 
+  // Hàm xử lý thay đổi số phòng tối đa
+  const handleMaxRoomsChange = (e) => {
+    const newMaxRooms = Number(e.target.value);
+    const currentRooms = form.currentRooms || 0;
+    
+    // Nếu đang ở chế độ chỉnh sửa và giá trị mới nhỏ hơn số phòng hiện tại
+    if (isEdit && newMaxRooms < currentRooms) {
+      toast.error(`Không thể giảm số phòng tối đa xuống dưới ${currentRooms} phòng (hiện có ${currentRooms} phòng)`);
+      return;
+    }
+    
+    setForm(p => ({ ...p, maxRooms: newMaxRooms }));
+  };
+
   if (!show) return null;
 
   const inputClass =
@@ -84,6 +98,7 @@ export default function CinemaModal({
           <X
             onClick={onClose}
             className="cursor-pointer text-white/40 hover:text-white"
+            size={20}
           />
         </div>
 
@@ -151,17 +166,20 @@ export default function CinemaModal({
               </label>
               <input
                 type="number"
-                min="1"
+                min={isEdit ? (form.currentRooms || 1) : 1}
                 max="20"
                 value={form.maxRooms || 4}
-                onChange={e =>
-                  setForm(p => ({ ...p, maxRooms: Number(e.target.value) }))
-                }
+                onChange={handleMaxRoomsChange}
                 className={inputClass}
               />
               <p className="text-xs text-white/30 mt-1">
                 Số lượng phòng chiếu tối đa của rạp này
               </p>
+              {isEdit && form.maxRooms < (form.currentRooms || 0) && (
+                <p className="text-xs text-red-400 mt-1">
+                  ⚠️ Không thể giảm số phòng tối đa xuống dưới số phòng hiện có ({form.currentRooms} phòng)
+                </p>
+              )}
             </div>
           </div>
 
