@@ -1,5 +1,6 @@
 import { Search, Calendar, Filter, X } from "lucide-react";
 import { useState } from "react";
+import { formatDateToDisplay, getTodayDisplay } from "../../../utils/dateUtils";
 
 const statusOptions = [
   { value: "all", label: "Tất cả trạng thái" },
@@ -60,7 +61,7 @@ export default function ShowtimesFilter({
                   : "bg-[#1a1a2e] text-white/70 hover:bg-[#2d2d44] border border-white/10"
               }`}
             >
-              Hôm nay
+              Hôm nay ({getTodayDisplay()})
             </button>
             <button
               onClick={() => setDateFilter("tomorrow")}
@@ -124,12 +125,12 @@ export default function ShowtimesFilter({
               style={{ backgroundColor: '#1a1a2e' }}
             >
               <option value="all" className="bg-[#2d2d44] text-white">Tất cả ngày</option>
-              <option value="today" className="bg-[#2d2d44] text-white">Hôm nay</option>
+              <option value="today" className="bg-[#2d2d44] text-white">Hôm nay ({getTodayDisplay()})</option>
               <option value="tomorrow" className="bg-[#2d2d44] text-white">Ngày mai</option>
               <option value="week" className="bg-[#2d2d44] text-white">Trong tuần</option>
               {availableDates.map(date => (
                 <option key={date} value={date} className="bg-[#2d2d44] text-white">
-                  {new Date(date).toLocaleDateString('vi-VN')}
+                  {formatDateToDisplay(date)}
                 </option>
               ))}
             </select>
@@ -176,10 +177,10 @@ export default function ShowtimesFilter({
           {dateFilter !== "all" && (
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#2d2d44] rounded text-xs text-white border border-white/10">
               <Calendar size={10} className="text-white/40" />
-              {dateFilter === "today" ? "Hôm nay" : 
+              {dateFilter === "today" ? `Hôm nay (${getTodayDisplay()})` : 
                dateFilter === "tomorrow" ? "Ngày mai" : 
                dateFilter === "week" ? "Trong tuần" : 
-               new Date(dateFilter).toLocaleDateString('vi-VN')}
+               formatDateToDisplay(dateFilter)}
               <X 
                 size={12} 
                 className="cursor-pointer hover:text-red-400 ml-1" 

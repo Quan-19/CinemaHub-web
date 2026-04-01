@@ -1,6 +1,7 @@
 // ShowtimeModal.jsx - Full version with end time handling
 import { X, Search } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { getTodayDate } from "../../../utils/dateUtils";
 
 export default function ShowtimeModal({
   show,
@@ -435,9 +436,12 @@ export default function ShowtimeModal({
               <input
                 type="date"
                 value={form?.date || ""}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  setForm({ ...form, date: newDate });
+                }}
                 className={inputClass}
-                min={new Date().toISOString().split("T")[0]}
+                min={getTodayDate()}
                 required
                 style={{ colorScheme: "dark" }}
               />

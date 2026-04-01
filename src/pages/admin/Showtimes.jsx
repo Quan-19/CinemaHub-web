@@ -1,4 +1,4 @@
-// Showtimes.jsx - Complete corrected file
+// Showtimes.jsx - Complete file with date handling
 import { useState, useEffect } from "react";
 import ShowtimesHeader from "../../components/admin/showtimes/ShowtimesHeader";
 import ShowtimesStats from "../../components/admin/showtimes/ShowtimesStats";
@@ -8,6 +8,7 @@ import ShowtimeModal from "../../components/admin/showtimes/ShowtimeModal";
 import BulkActionBar from "../../components/admin/showtimes/BulkActionBar";
 import QuickEditModal from "../../components/admin/showtimes/QuickEditModal";
 import { toast } from "react-hot-toast";
+import { getTodayDate, getTomorrowDate, getWeekLaterDate, formatDateToDisplay, getTodayDisplay } from "../../utils/dateUtils";
 
 export const statusConfig = {
   scheduled: {
@@ -329,7 +330,7 @@ export default function ShowtimesPage() {
       roomId: "",
       roomName: "",
       type: "",
-      date: new Date().toISOString().split("T")[0],
+      date: getTodayDate(),
       time: "14:00",
       endTime: "",
       prices: {
@@ -593,7 +594,7 @@ export default function ShowtimesPage() {
     const newShowtime = {
       ...showtime,
       id: `ST${Date.now()}`,
-      date: new Date().toISOString().split("T")[0],
+      date: getTodayDate(),
       status: "scheduled",
       bookedCount: 0,
       revenue: 0,
@@ -654,7 +655,7 @@ export default function ShowtimesPage() {
       "Tên phim": s.movieTitle,
       Rạp: s.cinemaName,
       Phòng: s.roomName,
-      Ngày: s.date,
+      Ngày: formatDateToDisplay(s.date),
       Giờ: s.time,
       "Định dạng": s.type,
       "Loại suất": s.special ? "Đặc biệt" : "Thường",
@@ -679,7 +680,7 @@ export default function ShowtimesPage() {
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `suat-chieu-${new Date().toISOString().split("T")[0]}.csv`,
+      `suat-chieu-${getTodayDate()}.csv`,
     );
     document.body.appendChild(link);
     link.click();
@@ -699,7 +700,7 @@ export default function ShowtimesPage() {
     }
 
     const printWindow = window.open("", "_blank");
-    const today = new Date().toLocaleDateString("vi-VN");
+    const today = getTodayDisplay();
 
     printWindow.document.write(`
       <html><head><title>Lịch chiếu phim - ${today}</title>
@@ -737,7 +738,7 @@ export default function ShowtimesPage() {
                 <td>${s.movieTitle || ""}</td>
                 <td>${s.cinemaName || ""}</td>
                 <td>${s.roomName || ""}</td>
-                <td>${new Date(s.date).toLocaleDateString("vi-VN")}</td>
+                <td>${formatDateToDisplay(s.date)}</td>
                 <td>${s.time || ""}</td>
                 <td>${s.endTime || ""}</td>
                 <td>${s.type || ""}</td>
@@ -792,13 +793,9 @@ export default function ShowtimesPage() {
         specialFilter !== "all" &&
         s.specialType === specialFilter);
 
-    const today = new Date().toISOString().split("T")[0];
-    const tomorrow = new Date(Date.now() + 86400000)
-      .toISOString()
-      .split("T")[0];
-    const weekLater = new Date(Date.now() + 7 * 86400000)
-      .toISOString()
-      .split("T")[0];
+    const today = getTodayDate();
+    const tomorrow = getTomorrowDate();
+    const weekLater = getWeekLaterDate();
 
     let matchDate = true;
     if (dateFilter === "today") {
@@ -824,28 +821,35 @@ export default function ShowtimesPage() {
       setShowtimes((prev) =>
         prev.map((showtime) => {
           const now = new Date();
-          const showDate = new Date(`${showtime.date}T${showtime.time}`);
-
-          let endDate = showtime.date;
-          let endTimeRaw = showtime.endTime;
-          if (endTimeRaw && endTimeRaw.includes("ngày hôm sau")) {
-            endTimeRaw = endTimeRaw.replace(" (ngày hôm sau)", "");
-            endDate = new Date(new Date(showtime.date).getTime() + 86400000)
-              .toISOString()
-              .split("T")[0];
-          }
-          const endDateObj = new Date(`${endDate}T${endTimeRaw || "23:59"}`);
-
+          const nowDate = getTodayDate();
+          const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+          
           let newStatus = showtime.status;
+          
           if (showtime.status !== "cancelled") {
-            if (now > endDateObj) {
+            if (showtime.date < nowDate) {
               newStatus = "ended";
-            } else if (now >= showDate && now <= endDateObj) {
-              newStatus = "ongoing";
-            } else if (now < showDate) {
+            } else if (showtime.date === nowDate) {
+              if (showtime.time > nowTime) {
+                newStatus = "scheduled";
+              } else if (showtime.time <= nowTime) {
+                let endTimeRaw = showtime.endTime;
+                if (endTimeRaw && endTimeRaw.includes("ngày hôm sau")) {
+                  endTimeRaw = endTimeRaw.replace(" (ngày hôm sau)", "");
+                  newStatus = "ongoing";
+                } else if (endTimeRaw && endTimeRaw >= nowTime) {
+                  newStatus = "ongoing";
+                } else if (endTimeRaw && endTimeRaw < nowTime) {
+                  newStatus = "ended";
+                } else {
+                  newStatus = "ongoing";
+                }
+              }
+            } else if (showtime.date > nowDate) {
               newStatus = "scheduled";
             }
           }
+          
           return { ...showtime, status: newStatus };
         }),
       );
@@ -867,6 +871,7 @@ export default function ShowtimesPage() {
     <div className="p-6 space-y-5">
       <ShowtimesHeader
         total={showtimes.length}
+        specialCount={showtimes.filter(s => s.special).length}
         onAdd={handleAdd}
         onExport={handleExport}
       />
