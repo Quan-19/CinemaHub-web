@@ -54,7 +54,11 @@ function CinemaPage() {
           return city === "hanoi" || address.includes("ha noi");
         }
         if (region.id === "hcm") {
-          return city === "hcm" || address.includes("hcm") || address.includes("tp.hcm");
+          return (
+            city === "hcm" ||
+            address.includes("hcm") ||
+            address.includes("tp.hcm")
+          );
         }
         if (region.id === "haiphong") {
           return address.includes("hai phong");
@@ -71,20 +75,24 @@ function CinemaPage() {
 
   const activeRegion = regions.find((r) => r.id === selectedRegion);
   const displayedCinemas = activeRegion ? activeRegion.cinemas : [];
-  
+
   // ✅ GIỮ ID naming từ Code 1
-  const selectedCinema = displayedCinemas.find((c) => c.cinema_id === selectedCinemaId) || null;
-  
+  const selectedCinema =
+    displayedCinemas.find((c) => c.cinema_id === selectedCinemaId) || null;
+
   // ✅ GIỮ movie status từ Code 1 (underscore)
   const nowShowingMovies = useMemo(
     () => movies.filter((m) => m.status === "now_showing"),
-    [movies]
+    [movies],
   );
 
   // ✅ THÊM loading indicator
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0f" }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "#0a0a0f" }}
+      >
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-zinc-400">Đang tải dữ liệu...</p>
@@ -100,7 +108,10 @@ function CinemaPage() {
         style={{ background: "linear-gradient(to bottom, #12121f, #0a0a0f)" }}
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <h1 className="text-white mb-1" style={{ fontSize: "2rem", fontWeight: 800 }}>
+          <h1
+            className="text-white mb-1"
+            style={{ fontSize: "2rem", fontWeight: 800 }}
+          >
             Chọn khu vực rạp chiếu
           </h1>
           <p className="text-zinc-400 text-sm">
@@ -133,7 +144,8 @@ function CinemaPage() {
                         color: "#f87171",
                       }}
                     >
-                      {region.cinemas.length} rạp {region.cinemas.length > 0 ? "khả dụng" : ""}
+                      {region.cinemas.length} rạp{" "}
+                      {region.cinemas.length > 0 ? "khả dụng" : ""}
                     </span>
                   </div>
                   <MapPin className="w-5 h-5 text-red-500 shrink-0" />
@@ -181,7 +193,10 @@ function CinemaPage() {
                       {cinema.brand}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white mb-1" style={{ fontWeight: 700 }}>
+                      <h3
+                        className="text-white mb-1"
+                        style={{ fontWeight: 700 }}
+                      >
                         {cinema.name}
                       </h3>
                       <p className="text-zinc-400 text-sm flex items-center gap-1.5 mb-2">
@@ -244,7 +259,7 @@ function CinemaPage() {
                           <button
                             onClick={() =>
                               navigate(
-                                `/booking/${movie.movie_id}?cinemaId=${selectedCinema.cinema_id}`
+                                `/booking/${movie.id || movie.movie_id}?cinemaId=${selectedCinema.cinema_id}`,
                               )
                             }
                             className="w-full py-2 rounded-lg text-xs text-white hover:opacity-90 transition-opacity"
