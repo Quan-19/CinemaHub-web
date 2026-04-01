@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getAuth } from "firebase/auth";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -18,11 +18,37 @@ import StaffIconButton from "../../components/staff/StaffIconButton.jsx";
 import StaffConfirmModal from "../../components/staff/StaffConfirmModal.jsx";
 
 const DAY_LABELS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+const DEFAULT_DAYS = [0, 1, 2, 3, 4, 5, 6];
 
-const PROMOTION_TYPES = [
-  { label: "Phần trăm", value: "percent" },
-  { label: "Giảm tiền", value: "fixed" },
-];
+function normalizeDays(raw) {
+  if (Array.isArray(raw)) {
+    const cleaned = raw
+      .map((d) => Number(d))
+      .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
+    return cleaned.length ? [...new Set(cleaned)].sort((a, b) => a - b) : DEFAULT_DAYS;
+  }
+  if (typeof raw === "string" && raw.trim()) {
+    try {
+      return normalizeDays(JSON.parse(raw));
+    } catch {
+      const split = raw.split(",").map((x) => Number(x.trim()));
+      return normalizeDays(split);
+    }
+  }
+  return DEFAULT_DAYS;
+}
+
+function toDateInputValue(raw) {
+  if (!raw) return "";
+  const dt = new Date(raw);
+  if (Number.isNaN(dt.getTime())) {
+    return String(raw).split("T")[0] || "";
+  }
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, "0");
+  const d = String(dt.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
 const EXTRA_PROMOTIONS = [
   {
@@ -104,10 +130,7 @@ function formatMoneyVnd(value) {
 }
 
 function formatDiscount(promo) {
-  if (promo.type === "percent") return `${Number(promo.discountValue || 0)}%`;
-  const amount = Number(promo.discountValue || 0);
-  if (amount >= 1000) return `${Math.round(amount / 1000)}K`;
-  return formatMoneyVnd(amount);
+  return formatMoneyVnd(Number(promo.discountValue || 0));
 }
 
 function StatusPill({ status }) {
@@ -157,21 +180,18 @@ function PromotionFormModal({
   onCancel,
   onSubmit,
 }) {
-  const startDateRef = useRef(null);
-  const endDateRef = useRef(null);
-
   const [form, setForm] = useState(() => {
     const p = promotion;
     return {
       name: p.name || "",
       description: p.description || "",
-      type: p.type || "percent",
+      type: "fixed",
       discountValue: p.discountValue ?? 0,
       minOrder: p.minOrder ?? 0,
       code: p.code || "",
       usageLimit: p.usageLimit ?? 0,
-      startDate: p.startDate ? String(p.startDate).split("T")[0] : "",
-      endDate: p.endDate ? String(p.endDate).split("T")[0] : "",
+      startDate: toDateInputValue(p.startDate),
+      endDate: toDateInputValue(p.endDate),
       days: Array.isArray(p.days) ? [...p.days] : [],
     };
   });
@@ -208,15 +228,6 @@ function PromotionFormModal({
   const inputCls =
     "mt-1 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 py-2.5 text-sm text-white outline-none transition focus:border-cinema-primary";
   const labelCls = "text-[11px] font-semibold text-zinc-400";
-  const openPicker = (ref) => {
-    const el = ref?.current;
-    if (!el) return;
-    if (typeof el.showPicker === "function") {
-      el.showPicker();
-      return;
-    }
-    el.focus();
-  };
 
   return (
     <StaffCenteredModalShell
@@ -248,29 +259,17 @@ function PromotionFormModal({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div>
-            <div className={labelCls}>Loại KM</div>
-            <select
-              value={form.type}
-              onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
-              className={inputCls}
-            >
-              {PROMOTION_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <div className={labelCls}>Mức giảm (%)</div>
+            <div className={labelCls}>Mức giảm (đ)</div>
             <input
               type="number"
+              min="0"
               value={form.discountValue}
               onChange={(e) =>
                 setForm((p) => ({ ...p, discountValue: e.target.value }))
               }
+              placeholder="VD: 30000"
               className={inputCls}
             />
           </div>
@@ -313,47 +312,25 @@ function PromotionFormModal({
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div>
             <div className={labelCls}>Ngày bắt đầu</div>
-            <div className="relative">
-              <input
-                ref={startDateRef}
-                type="date"
-                value={form.startDate}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, startDate: e.target.value }))
-                }
-                className={[inputCls, "pr-12"].join(" ")}
-              />
-              <button
-                type="button"
-                onClick={() => openPicker(startDateRef)}
-                aria-label="Chọn ngày bắt đầu"
-                className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900/40 text-zinc-200 hover:bg-zinc-900"
-              >
-                <Calendar className="h-4 w-4" />
-              </button>
-            </div>
+            <input
+              type="date"
+              value={form.startDate}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, startDate: e.target.value }))
+              }
+              className={inputCls}
+            />
           </div>
           <div>
             <div className={labelCls}>Ngày kết thúc</div>
-            <div className="relative">
-              <input
-                ref={endDateRef}
-                type="date"
-                value={form.endDate}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, endDate: e.target.value }))
-                }
-                className={[inputCls, "pr-12"].join(" ")}
-              />
-              <button
-                type="button"
-                onClick={() => openPicker(endDateRef)}
-                aria-label="Chọn ngày kết thúc"
-                className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900/40 text-zinc-200 hover:bg-zinc-900"
-              >
-                <Calendar className="h-4 w-4" />
-              </button>
-            </div>
+            <input
+              type="date"
+              value={form.endDate}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, endDate: e.target.value }))
+              }
+              className={inputCls}
+            />
           </div>
         </div>
 
@@ -409,7 +386,7 @@ function PromotionCard({ promo, onEdit, onDelete, onCopy, copied }) {
 
   return (
     <div className="cinema-surface overflow-hidden">
-      <div className="relative h-36 sm:h-40">
+      <div className="relative h-28 sm:h-32 lg:h-36">
         <img
           src={promo.image}
           alt={promo.name}
@@ -418,32 +395,32 @@ function PromotionCard({ promo, onEdit, onDelete, onCopy, copied }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-cinema-bg/90 via-cinema-bg/30 to-transparent" />
 
-        <div className="absolute left-4 top-6">
-          <div className="text-4xl font-black tracking-tight sm:text-5xl">
+        <div className="absolute left-3 top-3 sm:left-4 sm:top-4">
+          <div className="text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
             {formatDiscount(promo)}
           </div>
-          <div className="mt-1 text-sm font-semibold text-zinc-300">
-            {promo.type === "percent" ? "Phần trăm" : "Combo"}
+          <div className="mt-0.5 text-xs font-semibold text-zinc-300 sm:text-sm">
+            Giảm tiền trực tiếp
           </div>
         </div>
 
-        <div className="absolute right-4 top-4">
+        <div className="absolute right-3 top-3 sm:right-4 sm:top-4">
           <StatusPill status={promo.status} />
         </div>
       </div>
 
-      <div className="p-3 sm:p-4">
-        <div className="flex items-start justify-between gap-3">
+      <div className="space-y-2.5 p-3 sm:space-y-3 sm:p-4">
+        <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <div className="truncate text-base font-semibold text-white">
+            <div className="truncate text-sm font-semibold text-white sm:text-base">
               {promo.name}
             </div>
-            <div className="mt-1 text-sm text-zinc-400 line-clamp-2">
+            <div className="mt-0.5 text-xs text-zinc-400 line-clamp-2 sm:text-sm">
               {promo.description}
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <StaffIconButton label="Chỉnh sửa" onClick={onEdit}>
               <Pencil className="h-4 w-4" />
             </StaffIconButton>
@@ -453,7 +430,7 @@ function PromotionCard({ promo, onEdit, onDelete, onCopy, copied }) {
           </div>
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl border border-zinc-700 bg-zinc-900/30 px-3 py-2">
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-zinc-700 bg-zinc-900/30 px-2.5 py-2 sm:px-3">
           <div className="flex min-w-0 items-center gap-2">
             <Tag className="h-4 w-4 text-amber-300" aria-hidden="true" />
             <div className="truncate text-sm font-semibold tracking-wide text-white">
@@ -465,7 +442,7 @@ function PromotionCard({ promo, onEdit, onDelete, onCopy, copied }) {
             onClick={onCopy}
             aria-label="Copy"
             className={[
-              "relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900/40 text-zinc-200 transition-colors duration-200 hover:bg-zinc-900",
+              "relative inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900/40 text-zinc-200 transition-colors duration-200 hover:bg-zinc-900 sm:h-9 sm:w-9",
               copied ? "ring-2 ring-emerald-500/10" : "",
             ].join(" ")}
           >
@@ -490,31 +467,29 @@ function PromotionCard({ promo, onEdit, onDelete, onCopy, copied }) {
           </button>
         </div>
 
-        <div className="mt-3">
+        <div>
           <div className="flex items-center justify-between text-xs text-zinc-400">
             <span>Đã sử dụng</span>
-            <span>
-              {used}/{limit} ({safePct}%)
-            </span>
+            <span>{safePct}/100%</span>
           </div>
-          <div className="mt-2 h-2 w-full rounded-full bg-zinc-900">
+          <div className="mt-1.5 h-1.5 w-full rounded-full bg-zinc-900 sm:mt-2 sm:h-2">
             <div
-              className="h-2 rounded-full bg-emerald-500"
+              className="h-1.5 rounded-full bg-emerald-500 sm:h-2"
               style={{ width: `${safePct}%` }}
             />
           </div>
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-3 text-xs text-zinc-400">
+        <div className="flex flex-col gap-2 text-xs text-zinc-400 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" aria-hidden="true" />
             <span>
-              {promo.startDate ? new Date(promo.startDate).toLocaleDateString("vi-VN") : "N/A"} —{" "}
+              {promo.startDate ? new Date(promo.startDate).toLocaleDateString("vi-VN") : "N/A"} -{" "}
               {promo.endDate ? new Date(promo.endDate).toLocaleDateString("vi-VN") : "N/A"}
             </span>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 sm:justify-end">
             {DAY_LABELS.map((lbl, idx) => {
               const active =
                 Array.isArray(promo.days) && promo.days.includes(idx);
@@ -548,37 +523,59 @@ function StaffPromotionsPage() {
   const [copiedId, setCopiedId] = useState(null);
   const copiedTimeoutRef = useRef(null);
 
-  const loadPromotions = useCallback(async () => {
-    if (!user?.cinema_id) return;
+  const mapPromotionFromApi = (p) => ({
+    id: p.promotion_id,
+    name: p.title,
+    description: p.description,
+    code: p.code,
+    image: p.image,
+    discountValue: Number(p.discount_value ?? p.discount_percent ?? 0),
+    minOrder: Number(p.min_order || 0),
+    startDate: p.start_date,
+    endDate: p.end_date,
+    status: p.status,
+    type: "fixed",
+    usedCount: Number(p.used_count ?? p.usedCount ?? 0),
+    usageLimit: Number(p.usage_limit ?? p.usageLimit ?? 0),
+    days: normalizeDays(p.days ?? p.apply_days),
+  });
+
+  const loadPromotions = async (cinemaId) => {
+    if (!cinemaId) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/promotions/cinema/${user.cinema_id}`);
-      if (res.ok) {
-        const data = await res.json();
-        // Backend trả về mảng DB
-        setPromotions(data.map(p => ({
-          id: p.promotion_id,
-          name: p.title,
-          description: p.description,
-          code: p.code,
-          image: p.image,
-          discountValue: p.discount_percent,
-          startDate: p.start_date,
-          endDate: p.end_date,
-          status: p.status,
-          type: "percent",
-          usedCount: p.usedCount || 0,
-          usageLimit: p.usageLimit || 100,
-          days: [0,1,2,3,4,5,6]
-        })));
-      }
-    } catch(err) {
+      const res = await fetch(`http://localhost:5000/api/promotions/cinema/${cinemaId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setPromotions(data.map(mapPromotionFromApi));
+    } catch (err) {
       console.error(err);
     }
-  }, [user?.cinema_id]);
+  };
 
   useEffect(() => {
-    loadPromotions();
-  }, [loadPromotions]);
+    let cancelled = false;
+
+    const fetchPromotions = async () => {
+      const cinemaId = user?.cinema_id;
+      if (!cinemaId) return;
+      try {
+        const res = await fetch(`http://localhost:5000/api/promotions/cinema/${cinemaId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) {
+          setPromotions(data.map(mapPromotionFromApi));
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchPromotions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   useEffect(() => {
     return () => {
@@ -622,14 +619,14 @@ function StaffPromotionsPage() {
       id: makeId(),
       name: "",
       description: "",
-      type: "percent",
-      discountValue: 10,
+      type: "fixed",
+      discountValue: 10000,
       minOrder: 0,
       code: "",
       usageLimit: 100,
       usedCount: 0,
-      startDate: new Date().toISOString().split("T")[0],
-      endDate: new Date().toISOString().split("T")[0],
+      startDate: toDateInputValue(new Date()),
+      endDate: toDateInputValue(new Date()),
       days: [0, 1, 2, 3, 4, 5, 6],
       status: "active",
       image:
@@ -673,15 +670,20 @@ function StaffPromotionsPage() {
           description: created.description,
           code: created.code,
           image: created.image,
-          discount_percent: created.discountValue,
+          discount_value: created.discountValue,
+          min_order: created.minOrder,
+          usage_limit: created.usageLimit,
+          usageLimit: created.usageLimit,
           start_date: created.startDate,
           end_date: created.endDate,
           status: created.status,
-          cinema_id: user?.cinema_id
+          cinema_id: user?.cinema_id,
+          days: created.days,
+          apply_days: created.days
         })
       });
       if (res.ok) {
-        await loadPromotions();
+        await loadPromotions(user?.cinema_id);
         setAdding(false);
       } else {
         const errorData = await res.json().catch(() => ({}));
@@ -707,15 +709,20 @@ function StaffPromotionsPage() {
           description: updated.description,
           code: updated.code,
           image: updated.image,
-          discount_percent: updated.discountValue,
+          discount_value: updated.discountValue,
+          min_order: updated.minOrder,
+          usage_limit: updated.usageLimit,
+          usageLimit: updated.usageLimit,
           start_date: updated.startDate,
           end_date: updated.endDate,
           status: updated.status,
-          cinema_id: user?.cinema_id
+          cinema_id: user?.cinema_id,
+          days: updated.days,
+          apply_days: updated.days
         })
       });
       if (res.ok) {
-        await loadPromotions();
+        await loadPromotions(user?.cinema_id);
         setEditing(null);
       } else {
         const errorData = await res.json().catch(() => ({}));
@@ -735,7 +742,7 @@ function StaffPromotionsPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
-        await loadPromotions();
+        await loadPromotions(user?.cinema_id);
         setConfirmDelete(null);
       }
     } catch(err) {
@@ -819,7 +826,7 @@ function StaffPromotionsPage() {
         </div>
       </div>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {filtered.map((promo) => (
           <PromotionCard
             key={promo.id}
