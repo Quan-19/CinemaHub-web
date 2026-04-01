@@ -1,8 +1,10 @@
 import { Plus, Download, Calendar as CalendarIcon, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { getTodayDisplay } from "../../../utils/dateUtils";
 
 export default function ShowtimesHeader({ total, specialCount, onAdd, onExport }) {
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const todayDisplay = getTodayDisplay();
 
   return (
     <div className="flex justify-between items-center">
@@ -13,7 +15,7 @@ export default function ShowtimesHeader({ total, specialCount, onAdd, onExport }
         </h1>
         <div className="flex items-center gap-3 mt-1">
           <p className="text-sm text-white/40">
-            Tổng: {total} suất chiếu • {new Date().toLocaleDateString('vi-VN')}
+            Tổng: {total} suất chiếu • {todayDisplay}
           </p>
           {specialCount > 0 && (
             <div className="flex items-center gap-1 text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">

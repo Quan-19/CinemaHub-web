@@ -1,5 +1,5 @@
-// ShowtimesTable.jsx - Add end time column
-import { Edit2, Trash2, Eye, Copy, Zap } from "lucide-react";
+import { Edit2, Trash2, Copy, Zap } from "lucide-react";
+import { formatDateToDisplay } from "../../../utils/dateUtils";
 
 export default function ShowtimesTable({
   showtimes,
@@ -94,7 +94,7 @@ export default function ShowtimesTable({
               <th className="p-4 text-left">Phim</th>
               <th className="p-4 text-left">Rạp</th>
               <th className="p-4 text-left">Phòng</th>
-              <th className="p-4 text-left">Ngày</th>
+              <th className="p-4 text-left">Ngày chiếu</th>
               <th className="p-4 text-left">Giờ bắt đầu</th>
               <th className="p-4 text-left">Giờ kết thúc</th>
               <th className="p-4 text-left">Định dạng</th>
@@ -128,7 +128,7 @@ export default function ShowtimesTable({
                   <td className="p-4 text-gray-300">{item.cinemaName}</td>
                   <td className="p-4 text-gray-300">{item.roomName}</td>
                   <td className="p-4 text-gray-300">
-                    {new Date(item.date).toLocaleDateString("vi-VN")}
+                    {formatDateToDisplay(item.date)}
                   </td>
                   <td className="p-4 text-gray-300 font-medium">{item.time}</td>
                   <td className="p-4 text-gray-400">{item.endTime || "---"}</td>

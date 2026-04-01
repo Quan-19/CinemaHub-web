@@ -1,7 +1,9 @@
 import { TrendingUp, TrendingDown, Calendar, DollarSign, Sparkles } from "lucide-react";
+import { getTodayDate, formatDateToDisplay, getTodayDisplay } from "../../../utils/dateUtils";
 
 export default function ShowtimesStats({ showtimes, onDateChange, specialTypes }) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayDate();
+  const todayDisplay = getTodayDisplay();
   
   const stats = {
     today: showtimes.filter(s => s.date === today).length,
@@ -22,7 +24,7 @@ export default function ShowtimesStats({ showtimes, onDateChange, specialTypes }
       >
         <div className="flex items-center justify-between">
           <Calendar size={18} className="text-blue-400" />
-          <span className="text-xs text-white/40">Hôm nay</span>
+          <span className="text-xs text-white/40">Hôm nay ({todayDisplay})</span>
         </div>
         <div className="text-2xl font-bold text-white mt-2">{stats.today}</div>
         <div className="text-xs text-white/40">suất chiếu</div>
