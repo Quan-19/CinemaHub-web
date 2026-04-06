@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { useBooking } from "../context/BookingContext";
+import { calculateShowtimeTotal } from "../utils/showtimePricing";
 
 const ROWS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 const COLS = 10;
@@ -138,12 +139,7 @@ export const SeatSelectionPage = () => {
   };
 
   // ========== CALCULATE TOTAL PRICE ==========
-  const basePrice = showtime?.base_price || selectedShowtime?.price || 85000;
-  const total = picked.reduce((sum, s) => {
-    const typeInfo = SEAT_TYPES[s.type];
-    const multiplier = typeInfo?.multiplier || 1;
-    return sum + basePrice * multiplier;
-  }, 0);
+  const total = calculateShowtimeTotal(showtime || selectedShowtime, picked);
 
   // ========== GET MOVIE INFO ==========
   const movieInfo = selectedMovie || showtime?.movie;

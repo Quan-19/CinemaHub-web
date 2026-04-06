@@ -22,7 +22,8 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getAuth } from "firebase/auth";
+import { calculateShowtimeTotal } from "../utils/showtimePricing";
+
 // Constants từ Code 2
 const PAYMENT_METHODS = [
   { id: "momo", label: "Ví MoMo", icon: "💜", desc: "Thanh toán qua ví MoMo" },
@@ -128,12 +129,7 @@ export default function BookingConfirmationPage() {
   }, []);
 
   // ========== TÍNH TOÁN GIÁ (Kết hợp) ==========
-  const ticketTotal = seats.reduce((sum, seat) => {
-    const basePrice = showtime?.base_price || 0;
-    const multiplier =
-      seat.type === "vip" ? 1.3 : seat.type === "couple" ? 1.5 : 1;
-    return sum + basePrice * multiplier;
-  }, 0);
+  const ticketTotal = calculateShowtimeTotal(showtime, seats);
 
   const comboTotal = foods.reduce((sum, f) => {
     return sum + f.price * (comboCounts[f.food_id] || 0);

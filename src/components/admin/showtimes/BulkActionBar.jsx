@@ -7,7 +7,6 @@ export default function BulkActionBar({
   onDelete, 
   onStatusChange,
   onSpecialChange,
-  onQuickEdit,
   specialTypes 
 }) {
   const [showSpecialMenu, setShowSpecialMenu] = useState(false);
@@ -28,14 +27,6 @@ export default function BulkActionBar({
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
-        <button
-          onClick={onQuickEdit}
-          className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition"
-        >
-          <Edit3 size={14} />
-          Chỉnh sửa nhanh
-        </button>
-
         <div className="relative">
           <button
             onClick={() => setShowSpecialMenu(!showSpecialMenu)}

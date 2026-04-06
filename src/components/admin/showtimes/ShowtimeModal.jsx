@@ -1,7 +1,9 @@
-// ShowtimeModal.jsx - Full version with end time handling
-import { X, Search } from "lucide-react";
+// ShowtimeModal.jsx - Sửa phần fetch promotions
+
+import { X, Search, Sparkles } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { getTodayDate } from "../../../utils/dateUtils";
+import { DEFAULT_REGULAR_PRICES, normalizePriceMap } from "../../../utils/showtimePricing";
 
 export default function ShowtimeModal({
   show,
@@ -18,10 +20,82 @@ export default function ShowtimeModal({
   const [searchMovieTerm, setSearchMovieTerm] = useState("");
   const [showMovieDropdown, setShowMovieDropdown] = useState(false);
   const [filteredMovies, setFilteredMovies] = useState([]);
+  const [pricingLoading, setPricingLoading] = useState(false);
+  const [holidayPricingRules, setHolidayPricingRules] = useState([]);
+  const [holidayPricingLoading, setHolidayPricingLoading] = useState(false);
   const movieInputRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // Debug log để kiểm tra dữ liệu nhận được
+  // API URLs
+  const PRICING_API_URL = "http://localhost:5000/api/pricing";
+
+  const buildSeatPriceMapFromHolidayRule = (rule) => {
+    const prices = {};
+    const list = Array.isArray(rule?.holiday_prices) ? rule.holiday_prices : [];
+    for (const item of list) {
+      const seatType = item?.seat_type;
+      const price = Number(item?.price);
+      if (seatType && Number.isFinite(price) && price > 0) {
+        prices[seatType] = price;
+      }
+    }
+    return normalizePriceMap(prices, DEFAULT_REGULAR_PRICES);
+  };
+
+  const isHolidayRuleApplicable = (rule) => {
+    const isHoliday = rule?.pricing_type === 'HOLIDAY' || rule?.type === 'HOLIDAY';
+    if (!rule || !isHoliday) return false;
+    if (!(rule.active ?? rule.is_active ?? false)) return false;
+
+    if (form?.type && rule.holiday_room_type && rule.holiday_room_type !== form.type) {
+      return false;
+    }
+
+    if (form?.date && rule.start_date && rule.end_date) {
+      const showDate = new Date(form.date);
+      const start = new Date(rule.start_date);
+      const end = new Date(rule.end_date);
+      if (showDate < start || showDate > end) return false;
+
+      if (Array.isArray(rule.apply_days)) {
+        const day = showDate.getDay();
+        if (!rule.apply_days.includes(day)) return false;
+      }
+    }
+
+    return true;
+  };
+
+  useEffect(() => {
+    const fetchHolidayPricingRules = async () => {
+      if (!show || !form?.isSpecial) return;
+
+      setHolidayPricingLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${PRICING_API_URL}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        const result = await res.json();
+
+        const rules = result?.success && Array.isArray(result?.data) ? result.data : [];
+        setHolidayPricingRules(
+          rules.filter((r) => r?.pricing_type === 'HOLIDAY' || r?.type === 'HOLIDAY'),
+        );
+      } catch (error) {
+        console.error("Error fetching holiday pricing rules:", error);
+        setHolidayPricingRules([]);
+      } finally {
+        setHolidayPricingLoading(false);
+      }
+    };
+
+    fetchHolidayPricingRules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show, form?.isSpecial]);
+
   useEffect(() => {
     console.log("🔍 ShowtimeModal - cinemas received:", cinemas);
     console.log("🔍 ShowtimeModal - cinemas length:", cinemas?.length);
@@ -31,7 +105,6 @@ export default function ShowtimeModal({
     }
   }, [cinemas]);
 
-  // Cập nhật danh sách phòng khi chọn rạp
   useEffect(() => {
     if (form?.cinemaId) {
       const cinema = cinemas?.find((c) => c.id == form.cinemaId);
@@ -79,6 +152,92 @@ export default function ShowtimeModal({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Ensure specialPrices exists when editing an existing special showtime
+  useEffect(() => {
+    if (!form?.isSpecial) return;
+    if (form?.specialPrices) return;
+
+    const seed = form?.prices || form?.regularPrices || DEFAULT_REGULAR_PRICES;
+    setForm({
+      ...form,
+      specialPrices: normalizePriceMap(seed, DEFAULT_REGULAR_PRICES),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form?.isSpecial]);
+
+  // Auto fetch regular prices for regular showtimes only
+  useEffect(() => {
+    const fetchRegularPrices = async () => {
+      // Only fetch if regular showtime is selected
+      if (form?.isSpecial || !form?.type || !form?.date || !form?.time) return;
+      
+      console.log("💰 Fetching regular prices with params:", {
+        type: form.type,
+        date: form.date,
+        time: form.time,
+      });
+      
+      setPricingLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `${PRICING_API_URL}/preview-prices?type=${form.type}&date=${form.date}&time=${form.time}`,
+          {
+            headers: {
+              "Authorization": `Bearer ${token}`,
+            },
+          }
+        );
+        
+        const result = await response.json();
+        console.log("💰 Regular prices from pricing API:", result);
+
+        if (!response.ok || !result?.success || !result?.data) {
+          const errorMessage =
+            result?.message ||
+            result?.error ||
+            "Chưa có quy tắc giá vé cho loại phòng này. Vui lòng vào trang Giá vé để thêm quy tắc.";
+
+          const zeros = { Thường: 0, VIP: 0, Couple: 0 };
+          setForm({
+            ...form,
+            regularPricingError: errorMessage,
+            regularPrices: zeros,
+            prices: zeros,
+            base_price: 0,
+            priceSource: "regular",
+          });
+          return;
+        }
+
+        const regularPrices = normalizePriceMap(result.data, { Thường: 0, VIP: 0, Couple: 0 });
+        setForm({
+          ...form,
+          regularPricingError: null,
+          regularPrices,
+          prices: regularPrices,
+          base_price: regularPrices.Thường || 0,
+          priceSource: "regular",
+        });
+      } catch (error) {
+        console.error("Error fetching regular prices:", error);
+        const zeros = { Thường: 0, VIP: 0, Couple: 0 };
+        setForm({
+          ...form,
+          regularPricingError: "Không thể lấy giá vé. Vui lòng kiểm tra quy tắc giá vé ở trang Giá vé.",
+          regularPrices: zeros,
+          prices: zeros,
+          base_price: 0,
+          priceSource: "regular",
+        });
+      } finally {
+        setPricingLoading(false);
+      }
+    };
+    
+    fetchRegularPrices();
+  }, [form?.type, form?.date, form?.time, form?.isSpecial]);
 
   if (!show) return null;
 
@@ -156,7 +315,104 @@ export default function ShowtimeModal({
     }
   };
 
-  // Tính giờ kết thúc dựa trên giờ bắt đầu và thời lượng phim
+  const handlePriceChange = (seatType, value) => {
+    const nextPrices = {
+      ...(form?.prices || DEFAULT_REGULAR_PRICES),
+      [seatType]: Number(value) || 0,
+    };
+
+    setForm({
+      ...form,
+      regularPrices: nextPrices,
+      prices: form?.isSpecial ? (form.specialPrices || nextPrices) : nextPrices,
+      base_price: nextPrices.Thường || 90000,
+    });
+  };
+
+  const handleSpecialPriceChange = (seatType, value) => {
+    const nextSpecialPrices = {
+      ...(form?.specialPrices || form?.prices || DEFAULT_REGULAR_PRICES),
+      [seatType]: Number(value) || 0,
+    };
+
+    setForm({
+      ...form,
+      specialPrices: nextSpecialPrices,
+      prices: form?.isSpecial ? nextSpecialPrices : (form?.regularPrices || nextSpecialPrices),
+      base_price: nextSpecialPrices.Thường || form?.base_price || 90000,
+    });
+  };
+
+  const handleSpecialToggle = (isSpecial) => {
+    if (isSpecial) {
+      // Switching to special - initialize special prices from current regular pricing
+      const seed = normalizePriceMap(
+        form?.specialPrices || form?.prices || form?.regularPrices || DEFAULT_REGULAR_PRICES,
+        DEFAULT_REGULAR_PRICES,
+      );
+      setForm({
+        ...form,
+        isSpecial: true,
+        specialPrices: seed,
+        specialPromotionId: null,
+        specialPricingRuleId: null,
+        prices: seed,
+        base_price: seed.Thường || 90000,
+        priceSource: "special",
+      });
+    } else {
+      // Switching back to regular
+      const regularPrices = normalizePriceMap(
+        form?.regularPrices || DEFAULT_REGULAR_PRICES,
+        DEFAULT_REGULAR_PRICES,
+      );
+      setForm({
+        ...form,
+        isSpecial: false,
+        specialPrices: null,
+        specialPromotionId: null,
+        specialPricingRuleId: null,
+        prices: regularPrices,
+        base_price: regularPrices.Thường || 90000,
+        priceSource: "regular",
+      });
+    }
+  };
+
+  const applicableHolidayRules = holidayPricingRules.filter(isHolidayRuleApplicable);
+  const selectedHolidayRule = holidayPricingRules.find(
+    (r) => Number(r?.id) === Number(form?.specialPricingRuleId),
+  );
+  const holidayRuleOptions = selectedHolidayRule
+    ? [selectedHolidayRule, ...applicableHolidayRules].filter(
+        (rule, index, list) =>
+          list.findIndex((r) => Number(r?.id) === Number(rule?.id)) === index,
+      )
+    : applicableHolidayRules;
+
+  const handleHolidayRuleSelect = (ruleId) => {
+    const parsedId = ruleId ? Number(ruleId) : null;
+    const selectedRule = holidayPricingRules.find((r) => Number(r?.id) === parsedId) || null;
+
+    if (!parsedId || !selectedRule) {
+      setForm({
+        ...form,
+        specialPricingRuleId: null,
+      });
+      return;
+    }
+
+    const nextSpecialPrices = buildSeatPriceMapFromHolidayRule(selectedRule);
+    setForm({
+      ...form,
+      specialPricingRuleId: parsedId,
+      specialPrices: nextSpecialPrices,
+      prices: form?.isSpecial ? nextSpecialPrices : (form?.regularPrices || nextSpecialPrices),
+      base_price: nextSpecialPrices.Thường || 90000,
+      priceSource: "special",
+    });
+  };
+
   const calculateEndTime = () => {
     if (!form?.time || !form?.movieDuration) return "";
     const [hours, minutes] = form.time.split(":").map(Number);
@@ -172,7 +428,6 @@ export default function ShowtimeModal({
     return `${String(endHours).padStart(2, "0")}:${String(endMinutes).padStart(2, "0")}`;
   };
 
-  // Khi giờ bắt đầu hoặc phim thay đổi, tự động tính giờ kết thúc
   const handleTimeChange = (time) => {
     if (!form?.movieDuration) {
       setForm({ ...form, time: time, endTime: "" });
@@ -199,18 +454,6 @@ export default function ShowtimeModal({
     });
   };
 
-  // Xử lý thay đổi giá cho từng loại ghế
-  const handlePriceChange = (seatType, value) => {
-    const numValue = value === "" ? 0 : Number(value);
-    setForm({
-      ...form,
-      prices: {
-        ...(form.prices || { Thường: 0, VIP: 0, Couple: 0 }),
-        [seatType]: numValue,
-      },
-    });
-  };
-
   const selectedCinema = cinemas?.find((c) => c.id == form?.cinemaId);
   const currentRoomCount = selectedCinema?.rooms?.length || 0;
   const maxRooms = selectedCinema?.maxRooms || 4;
@@ -218,7 +461,6 @@ export default function ShowtimeModal({
   const hasRooms = availableRooms.length > 0;
   const isRoomDisabled = !form?.cinemaId || !hasRooms;
 
-  // Danh sách loại ghế
   const seatTypes = [
     {
       key: "Thường",
@@ -243,10 +485,56 @@ export default function ShowtimeModal({
     },
   ];
 
+  const renderPriceSection = (title, subtitle, priceMap, onChange, toneClasses, disabled = false) => (
+    <div className={`p-4 rounded-xl border ${toneClasses.border} ${toneClasses.bg}`}>
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <h3 className={`text-sm font-semibold ${toneClasses.title}`}>{title}</h3>
+          <p className="text-[10px] text-white/40 mt-1">{subtitle}</p>
+        </div>
+        {disabled && (
+          <span className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-white/45 border border-white/10">
+            Chưa chọn giá
+          </span>
+        )}
+      </div>
+      <div className="space-y-3">
+        {seatTypes.map((seat) => (
+          <div key={`${title}-${seat.key}`} className="flex items-center justify-between gap-3">
+            <div className="flex-1">
+              <label className={`block text-sm font-medium ${seat.color} mb-0.5`}>
+                {seat.label}
+              </label>
+              <p className="text-[10px] text-white/35">
+                {seat.key === "Thường" ? "Giá chuẩn" : seat.key === "VIP" ? "Giá cho ghế cao cấp" : "Giá cho ghế đôi"}
+              </p>
+            </div>
+            <div className="w-40">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">
+                  ₫
+                </span>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={priceMap?.[seat.key] ?? ""}
+                  onChange={(e) => onChange(seat.key, e.target.value)}
+                  disabled={disabled}
+                  className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  min="0"
+                  step="1000"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="w-full max-w-lg bg-[#0d0d1a] border border-white/10 rounded-2xl max-h-[90vh] flex flex-col">
-        {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10 flex-shrink-0">
           <h2 className="text-lg font-bold text-white">
             {isEdit ? "Chỉnh sửa suất chiếu" : "Thêm suất chiếu"}
@@ -259,10 +547,8 @@ export default function ShowtimeModal({
           </button>
         </div>
 
-        {/* Body - Scrollable */}
         <div className="p-6 space-y-4 overflow-y-auto flex-1">
           <div className="grid grid-cols-2 gap-4">
-            {/* Phim - Autocomplete */}
             <div className="col-span-2 relative">
               <label className="block text-xs text-white/55 mb-1.5">
                 Phim *
@@ -350,7 +636,6 @@ export default function ShowtimeModal({
               )}
             </div>
 
-            {/* Rạp chiếu */}
             <div>
               <label className="block text-xs text-white/55 mb-1.5">
                 Rạp chiếu *
@@ -385,7 +670,6 @@ export default function ShowtimeModal({
               )}
             </div>
 
-            {/* Phòng chiếu */}
             <div>
               <label className="block text-xs text-white/55 mb-1.5">
                 Phòng chiếu *
@@ -428,7 +712,6 @@ export default function ShowtimeModal({
               )}
             </div>
 
-            {/* Ngày chiếu */}
             <div>
               <label className="block text-xs text-white/55 mb-1.5">
                 Ngày chiếu *
@@ -447,7 +730,6 @@ export default function ShowtimeModal({
               />
             </div>
 
-            {/* Giờ bắt đầu */}
             <div>
               <label className="block text-xs text-white/55 mb-1.5">
                 Giờ bắt đầu *
@@ -462,7 +744,6 @@ export default function ShowtimeModal({
               />
             </div>
 
-            {/* Giờ kết thúc - Tự động tính */}
             <div>
               <label className="block text-xs text-white/55 mb-1.5">
                 Giờ kết thúc
@@ -491,7 +772,6 @@ export default function ShowtimeModal({
               )}
             </div>
 
-            {/* Định dạng */}
             <div>
               <label className="block text-xs text-white/55 mb-1.5">
                 Định dạng
@@ -503,7 +783,6 @@ export default function ShowtimeModal({
               </div>
             </div>
 
-            {/* Tổng số ghế */}
             <div>
               <label className="block text-xs text-white/55 mb-1.5">
                 Số ghế
@@ -514,58 +793,156 @@ export default function ShowtimeModal({
             </div>
           </div>
 
-          {/* GIÁ VÉ THEO LOẠI GHẾ */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-white/80 mb-3">
-              Giá vé theo loại ghế
+          {/* Tùy chọn suất chiếu đặc biệt */}
+          <div className="col-span-2">
+            <label className="block text-xs text-white/55 mb-1.5">
+              <Sparkles size={12} className="inline mr-1 text-yellow-400" />
+              Loại suất chiếu *
             </label>
-            <div className="space-y-3">
-              {seatTypes.map((seat) => (
-                <div
-                  key={seat.key}
-                  className={`p-3 rounded-lg border ${seat.bg} ${seat.border}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <label
-                        className={`block text-sm font-medium ${seat.color} mb-1`}
-                      >
-                        {seat.label}
-                      </label>
-                      <p className="text-[10px] text-white/40">
-                        Giá áp dụng cho tất cả ghế {seat.key.toLowerCase()}{" "}
-                        trong phòng
-                      </p>
-                    </div>
-                    <div className="w-40">
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">
-                          ₫
-                        </span>
+            <div className="flex gap-3 mb-3">
+              <button
+                type="button"
+                onClick={() => {
+                  handleSpecialToggle(false);
+                }}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  !form?.isSpecial
+                    ? 'bg-green-600 text-white shadow-lg shadow-green-600/30'
+                    : 'bg-[#1a1a2e] text-gray-400 hover:text-white border border-white/10'
+                }`}
+              >
+                Suất chiếu thường
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleSpecialToggle(true);
+                }}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  form?.isSpecial
+                    ? 'bg-yellow-600 text-white shadow-lg shadow-yellow-600/30'
+                    : 'bg-[#1a1a2e] text-gray-400 hover:text-white border border-white/10'
+                }`}
+              >
+                <Sparkles size={12} className="inline mr-1" />
+                Suất chiếu đặc biệt
+              </button>
+            </div>
+
+            {!form?.isSpecial && (
+              <p className="text-[10px] text-green-400 flex items-center gap-1">
+                ✓ Giá vé sẽ tự động áp dụng theo bảng giá có sẵn (loại ghế, loại rạp, giờ chiếu)
+              </p>
+            )}
+
+            {!form?.isSpecial && form?.regularPricingError && (
+              <p className="text-[10px] text-red-400 flex items-center gap-1">
+                ✕ {form.regularPricingError}
+              </p>
+            )}
+
+            {form?.isSpecial && (
+              <div className="space-y-3">
+                <p className="text-[10px] text-yellow-400 flex items-center gap-1">
+                  <Sparkles size={10} />
+                  Nhập giá vé đặc biệt cho từng loại ghế (sẽ được lưu trực tiếp theo suất chiếu)
+                </p>
+
+                <div>
+                  <label className="block text-xs text-white/55 mb-1.5">
+                    Loại giá vé (từ trang Giá vé)
+                  </label>
+                  <select
+                    value={form?.specialPricingRuleId || ""}
+                    onChange={(e) => handleHolidayRuleSelect(e.target.value)}
+                    className={selectClass}
+                    disabled={holidayPricingLoading}
+                  >
+                    <option value="" className="bg-[#2d2d44] text-white/70">
+                      {holidayPricingLoading ? "Đang tải..." : "Tự nhập / Không chọn"}
+                    </option>
+                    {holidayRuleOptions.map((rule) => (
+                      <option key={rule.id} value={rule.id} className="bg-[#2d2d44] text-white">
+                        {rule.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-white/35 mt-1">
+                    Chọn để tự đổ giá vào ô bên dưới; bạn vẫn có thể chỉnh tay.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-1 col-span-2">
+            {!form?.isSpecial && renderPriceSection(
+              "Giá suất chiếu thường",
+              "Tự động áp dụng từ bảng giá có sẵn",
+              form?.regularPrices || form?.prices || DEFAULT_REGULAR_PRICES,
+              handlePriceChange,
+              {
+                bg: "bg-green-500/5",
+                border: "border-green-500/15",
+                title: "text-green-300",
+              },
+              false,
+            )}
+
+            {form?.isSpecial ? (
+              renderPriceSection(
+                "Giá suất chiếu đặc biệt",
+                "Nhập trực tiếp giá vé đặc biệt",
+                form?.specialPrices || form?.prices || DEFAULT_REGULAR_PRICES,
+                handleSpecialPriceChange,
+                {
+                  bg: "bg-yellow-500/5",
+                  border: "border-yellow-500/15",
+                  title: "text-yellow-300",
+                },
+                !form?.specialPrices,
+              )
+            ) : (
+              <div className="p-4 rounded-xl border border-gray-500/15 bg-gray-500/5 opacity-60">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-300">Giá suất chiếu đặc biệt</h3>
+                    <p className="text-[10px] text-white/40 mt-1">Khóa - Chọn "Suất chiếu đặc biệt" để bật</p>
+                  </div>
+                  <span className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-white/45 border border-white/10">
+                    Đã khóa
+                  </span>
+                </div>
+                <div className="space-y-3 opacity-50">
+                  {[
+                    { key: "Thường", label: "Ghế Thường" },
+                    { key: "VIP", label: "Ghế VIP" },
+                    { key: "Couple", label: "Ghế Couple" },
+                  ].map((seat) => (
+                    <div key={`locked-${seat.key}`} className="flex items-center justify-between gap-3">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-400 mb-0.5">
+                          {seat.label}
+                        </label>
+                      </div>
+                      <div className="w-40">
                         <input
                           type="number"
-                          placeholder="0"
-                          value={form?.prices?.[seat.key] ?? ""}
-                          onChange={(e) =>
-                            handlePriceChange(seat.key, e.target.value)
-                          }
-                          className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition"
-                          min="0"
-                          step="1000"
+                          disabled
+                          className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white/40 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                         />
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <p className="text-[10px] text-blue-400 mt-3 flex items-center gap-1">
-              💡 Giá vé được tự động lấy từ bảng giá theo loại ghế và thời gian
-              chiếu
-            </p>
+              </div>
+            )}
           </div>
 
-          {/* Trạng thái */}
+          <p className="text-[10px] text-blue-400 mt-1 flex items-center gap-1 col-span-2">
+            💡 Giá thường và giá đặc biệt được lưu riêng để tránh trộn dữ liệu khi vận hành thực tế.
+          </p>
+
           <div>
             <label className="block text-xs text-white/55 mb-1.5">
               Trạng thái
@@ -590,7 +967,6 @@ export default function ShowtimeModal({
             </select>
           </div>
 
-          {/* Thông tin phòng chiếu đã chọn */}
           {form?.roomId && form?.type && form?.totalSeats > 0 && (
             <div className="mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
               <div className="flex items-center gap-2 text-xs text-blue-400 mb-1">
@@ -619,7 +995,6 @@ export default function ShowtimeModal({
           )}
         </div>
 
-        {/* Footer */}
         <div className="flex gap-3 p-6 pt-4 border-t border-white/10 flex-shrink-0">
           <button
             onClick={onClose}
@@ -636,9 +1011,31 @@ export default function ShowtimeModal({
               !form?.cinemaId ||
               !form?.roomId ||
               !form?.date ||
-              !form?.time
+              !form?.time ||
+              (!form?.isSpecial && Boolean(form?.regularPricingError)) ||
+              (form?.isSpecial && !form?.specialPrices)
             }
-            className="flex-1 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`flex-1 py-2.5 rounded-lg text-white text-sm font-medium transition ${
+              loading ||
+              !form?.movieId ||
+              !form?.cinemaId ||
+              !form?.roomId ||
+              !form?.date ||
+              !form?.time ||
+              (!form?.isSpecial && Boolean(form?.regularPricingError)) ||
+              (form?.isSpecial && !form?.specialPrices)
+                ? 'bg-gray-600 cursor-not-allowed opacity-50'
+                : 'bg-red-600 hover:bg-red-700'
+            }`}
+            title={
+              form?.isSpecial && !form?.specialPrices
+                ? "Vui lòng chọn giá ngày lễ trước khi thêm"
+                : !form?.isSpecial && form?.regularPricingError
+                  ? form.regularPricingError
+                : !form?.isSpecial && !form?.regularPrices
+                  ? "Đang tải giá..."
+                  : ""
+            }
           >
             {loading ? "Đang xử lý..." : isEdit ? "Lưu thay đổi" : "Thêm suất"}
           </button>
