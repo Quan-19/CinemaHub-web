@@ -1,12 +1,10 @@
-import { Edit2, Trash2, Copy, Zap } from "lucide-react";
+import { Edit2, Trash2, Sparkles } from "lucide-react";
 import { formatDateToDisplay } from "../../../utils/dateUtils";
 
 export default function ShowtimesTable({
   showtimes,
   onEdit,
   onDelete,
-  onCopy,
-  onQuickEdit,
   onSelect,
   selectedIds,
   currentPage,
@@ -14,6 +12,11 @@ export default function ShowtimesTable({
   itemsPerPage,
   loading,
 }) {
+  const formatMoney = (value) => {
+    const amount = Number(value);
+    if (!Number.isFinite(amount) || amount <= 0) return "—";
+    return `${amount.toLocaleString()}₫`;
+  };
   
   const totalPages = Math.ceil(showtimes.length / itemsPerPage);
 
@@ -98,20 +101,23 @@ export default function ShowtimesTable({
               <th className="p-4 text-left">Giờ bắt đầu</th>
               <th className="p-4 text-left">Giờ kết thúc</th>
               <th className="p-4 text-left">Định dạng</th>
-              <th className="p-4 text-left">Ghế Thường</th>
-              <th className="p-4 text-left">Ghế VIP</th>
-              <th className="p-4 text-left">Ghế Couple</th>
+              <th className="p-4 text-left">Loại suất</th>
+              <th className="p-4 text-left">Giá thường</th>
+              <th className="p-4 text-left">Giá đặc biệt</th>
               <th className="p-4 text-left">Trạng thái</th>
               <th className="p-4 text-left">Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {paginatedData.length > 0 ? (
-              paginatedData.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                >
+              paginatedData.map((item) => {
+                const isSpecialShowtime = Boolean(item.isSpecial || item.special);
+
+                return (
+                  <tr
+                    key={item.id}
+                    className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                  >
                   <td className="p-4">
                     <input
                       type="checkbox"
@@ -139,14 +145,43 @@ export default function ShowtimesTable({
                       {item.type}
                     </span>
                   </td>
-                  <td className="p-4 font-bold text-green-400">
-                    {item.prices?.Thường?.toLocaleString() || 0}₫
+                  <td className="p-4">
+                    {isSpecialShowtime ? (
+                      <span className="px-2 py-1 rounded-lg text-xs font-medium bg-yellow-500/20 text-yellow-400 flex items-center gap-1 w-fit">
+                        <Sparkles size={10} />
+                        Đặc biệt
+                      </span>
+                    ) : (
+                      <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-500/20 text-gray-400">
+                        Thường
+                      </span>
+                    )}
+                  </td>
+                  <td className={isSpecialShowtime ? "p-4 text-gray-500" : "p-4 font-bold text-green-400"}>
+                    {isSpecialShowtime ? (
+                      <div className="text-gray-500 text-xs">---</div>
+                    ) : (
+                      <div className="space-y-1 text-xs leading-5">
+                        <div>
+                          Thường: {formatMoney(item.regularPrices?.Thường ?? item.prices?.Thường)}
+                        </div>
+                        <div>VIP: {formatMoney(item.regularPrices?.VIP ?? item.prices?.VIP)}</div>
+                        <div>
+                          Couple: {formatMoney(item.regularPrices?.Couple ?? item.prices?.Couple)}
+                        </div>
+                      </div>
+                    )}
                   </td>
                   <td className="p-4 font-bold text-amber-400">
-                    {item.prices?.VIP?.toLocaleString() || 0}₫
-                  </td>
-                  <td className="p-4 font-bold text-pink-400">
-                    {item.prices?.Couple?.toLocaleString() || 0}₫
+                    {isSpecialShowtime && item.specialPrices ? (
+                      <div className="space-y-1 text-xs leading-5">
+                        <div>Thường: {formatMoney(item.specialPrices?.Thường)}</div>
+                        <div>VIP: {formatMoney(item.specialPrices?.VIP)}</div>
+                        <div>Couple: {formatMoney(item.specialPrices?.Couple)}</div>
+                      </div>
+                    ) : (
+                      <div className="text-gray-500 text-xs">---</div>
+                    )}
                   </td>
                   <td className="p-4">
                     <span
@@ -168,26 +203,6 @@ export default function ShowtimesTable({
                         />
                       </button>
                       <button
-                        onClick={() => onCopy(item)}
-                        className="p-1.5 hover:bg-blue-500/20 rounded-lg transition-colors group"
-                        title="Nhân bản"
-                      >
-                        <Copy
-                          size={16}
-                          className="text-gray-400 group-hover:text-blue-400"
-                        />
-                      </button>
-                      <button
-                        onClick={() => onQuickEdit(item)}
-                        className="p-1.5 hover:bg-purple-500/20 rounded-lg transition-colors group"
-                        title="Chỉnh sửa nhanh"
-                      >
-                        <Zap
-                          size={16}
-                          className="text-gray-400 group-hover:text-purple-400"
-                        />
-                      </button>
-                      <button
                         onClick={() => onDelete(item.id)}
                         className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors group"
                         title="Xóa"
@@ -199,8 +214,9 @@ export default function ShowtimesTable({
                       </button>
                     </div>
                   </td>
-                </tr>
-              ))
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan="13" className="p-8 text-center text-gray-400">
@@ -212,7 +228,6 @@ export default function ShowtimesTable({
         </table>
       </div>
 
-      {/* Pagination */}
       {showtimes.length > 0 && (
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-4 py-3 border-t border-white/10">
           <div className="text-sm text-gray-400">

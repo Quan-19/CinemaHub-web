@@ -30,6 +30,7 @@ import Revenue from "../pages/admin/Revenue.jsx";
 import AdminPricingPage from "../pages/admin/AdminPricingPage.jsx";
 import Cinemas from "../pages/admin/Cinemas.jsx";
 import AccountsPage from "../pages/admin/AccountsPage.jsx";
+import AdminPromotionsPage from "../pages/admin/AdminPromotionsPage";
 
 // Staff pages
 import StaffDashboardPage from "../pages/staff/StaffDashboardPage.jsx";
@@ -119,6 +120,7 @@ export const router = createBrowserRouter([
       { path: "revenue", element: <Revenue /> },
       { path: "prices", element: <AdminPricingPage /> },
       { path: "accounts", element: <AccountsPage /> },
+      { path: "promotions", element: <AdminPromotionsPage /> }
     ],
   },
   {

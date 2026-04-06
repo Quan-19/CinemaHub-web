@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import { calculateShowtimeTotal } from "../utils/showtimePricing";
 
 const BookingContext = createContext(null);
 
@@ -10,8 +11,7 @@ export const BookingProvider = ({ children }) => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [selectedComboIds, setSelectedComboIds] = useState([]);
 
-  const totalPrice =
-    (selectedShowtime?.price ?? 0) * selectedSeats.length;
+  const totalPrice = calculateShowtimeTotal(selectedShowtime, selectedSeats);
 
   const clearBooking = () => {
     setSelectedMovie(null);

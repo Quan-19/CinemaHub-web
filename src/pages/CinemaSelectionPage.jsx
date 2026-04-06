@@ -9,6 +9,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useBooking } from "../context/BookingContext";
+import { normalizeShowtimePricing } from "../utils/showtimePricing";
 
 const BRAND_COLORS = {
   CGV: "#e50914",
@@ -201,14 +202,20 @@ export const CinemaSelectionPage = () => {
         groupedShowtimes.set(cinemaKey, []);
       }
 
+      const pricing = normalizeShowtimePricing(showtime);
+
       groupedShowtimes.get(cinemaKey).push({
         ...showtime,
         id: String(showtime.id),
         showtime_id: showtime.id,
         time: showtime.time?.slice(0, 5),
         type: showtime.type || "2D",
-        price: Number(showtime.base_price) || 0,
-        base_price: Number(showtime.base_price) || 0,
+        price: pricing.basePrice,
+        base_price: Number(showtime.base_price) || pricing.basePrice,
+        regularPrices: pricing.regularPrices,
+        specialPrices: pricing.specialPrices,
+        prices: pricing.prices,
+        isSpecial: pricing.isSpecial,
         availableSeats: null,
       });
     });
