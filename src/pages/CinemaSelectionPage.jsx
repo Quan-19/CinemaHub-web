@@ -246,7 +246,37 @@ export const CinemaSelectionPage = () => {
     );
     return regionIds.map(createRegionOption);
   }, [cinemasWithShowtimes]);
+  // Thêm useEffect này vào trong component BookingConfirmationPage
+  useEffect(() => {
+    // Kiểm tra xem có phải đang redirect từ VNPay không
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("status");
+    const code = params.get("code");
+    const paymentId = params.get("paymentId");
 
+    console.log("🔍 VNPay Return Params:", { status, code, paymentId });
+
+    if (status && window.location.search.includes("status")) {
+      // Đang ở trang payment result
+      if (status === "paid") {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 5000);
+
+        // Tạo booking code tạm thời nếu chưa có
+        if (!bookingCode) {
+          setBookingCode(`VN${Date.now().toString().slice(-8)}`);
+        }
+        setStep("success");
+      } else {
+        // Thanh toán thất bại, quay lại trang thanh toán
+        alert(`Thanh toán thất bại! Mã lỗi: ${code}`);
+        navigate(-1);
+      }
+
+      // Xóa params khỏi URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [window.location.search]);
   useEffect(() => {
     console.log("DATE OPTIONS:", dateOptions);
     if (selectedDateIdx <= dateOptions.length - 1) return;

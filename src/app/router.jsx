@@ -18,7 +18,7 @@ import CinemaSelectionPage from "../pages/CinemaSelectionPage.jsx";
 import SeatSelectionPage from "../pages/SeatSelectionPage.jsx";
 import BookingConfirmationPage from "../pages/BookingConfirmationPage.jsx";
 import TicketPage from "../pages/TicketPage.jsx";
-
+import PaymentResultPage from "../pages/PaymentResult.jsx";
 // Admin pages
 import Dashboard from "../pages/admin/Dashboard.jsx";
 import Movies from "../pages/admin/Movies.jsx";
@@ -91,6 +91,7 @@ export const router = createBrowserRouter([
         element: <SeatSelectionPage />,
       },
       { path: "booking/confirm", element: <BookingConfirmationPage /> },
+      { path: "payment-result", element: <PaymentResultPage /> },
       { path: "booking/:movieId", element: <CinemaSelectionPage /> },
       { path: "seats/:showtimeId", element: <SeatSelectionPage /> },
       { path: "ticket/:bookingCode", element: <TicketPage /> },
