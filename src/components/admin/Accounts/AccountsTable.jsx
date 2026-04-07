@@ -10,7 +10,7 @@ export default function AccountsTable({ data, onEdit, onDelete }) {
       label: "Nhân viên",
       className: "bg-yellow-500/20 text-yellow-400",
     },
-    user: {
+    customer: {
       label: "Khách hàng",
       className: "bg-cyan-500/20 text-cyan-400",
     },
@@ -21,11 +21,7 @@ export default function AccountsTable({ data, onEdit, onDelete }) {
       label: "Hoạt động",
       className: "text-green-400",
     },
-    inactive: {
-      label: "Tạm ngưng",
-      className: "text-yellow-400",
-    },
-    banned: {
+    locked: {
       label: "Bị khoá",
       className: "text-red-400",
     },
@@ -37,20 +33,21 @@ export default function AccountsTable({ data, onEdit, onDelete }) {
         <thead>
           <tr className="border-b border-white/10">
             <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">ID</th>
-            <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">Tên tài khoản</th>
-            <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">Email</th>
+            <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">Tài khoản</th>
             <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">SĐT</th>
             <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">Vai trò</th>
+            <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">Rạp</th>
             <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">Trạng thái</th>
             <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">Đặt vé</th>
-            <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">Đăng nhập cuối</th>
+            <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">Ngày tạo</th>
+            <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">Ngày sinh</th>
             <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">Thao tác</th>
           </tr>
         </thead>
 
         <tbody>
           {data.map((a) => {
-            const role = roleMap[a.role] || roleMap.user;
+            const role = roleMap[a.role] || roleMap.customer;
             const status = statusMap[a.status?.toLowerCase()] || statusMap.active;
 
             return (
@@ -62,18 +59,28 @@ export default function AccountsTable({ data, onEdit, onDelete }) {
                 
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${role.className}`}
-                    >
-                      {a.name?.charAt(0)}
+                    {a.avatar ? (
+                      <img
+                        src={a.avatar}
+                        alt={a.name}
+                        className="w-8 h-8 rounded-full object-cover border border-white/10"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${role.className}`}
+                      >
+                        {String(a.name || "?").charAt(0)}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <div className="text-white text-sm font-medium truncate">
+                        {a.name}
+                      </div>
+                      <div className="text-white/50 text-xs truncate">{a.email}</div>
                     </div>
-                    <span className="text-white text-sm font-medium">
-                      {a.name}
-                    </span>
                   </div>
                 </td>
-
-                <td className="px-4 py-3 text-white/60 text-sm">{a.email}</td>
                 <td className="px-4 py-3 text-white/60 text-sm">{a.phone}</td>
 
                 <td className="px-4 py-3">
@@ -84,6 +91,8 @@ export default function AccountsTable({ data, onEdit, onDelete }) {
                   </span>
                 </td>
 
+                <td className="px-4 py-3 text-white/60 text-sm">{a.cinemaName || "-"}</td>
+
                 <td className="px-4 py-3">
                   <span className={`text-sm font-medium ${status.className}`}>
                     {status.label}
@@ -91,7 +100,8 @@ export default function AccountsTable({ data, onEdit, onDelete }) {
                 </td>
 
                 <td className="px-4 py-3 text-white/60 text-sm">{a.bookings}</td>
-                <td className="px-4 py-3 text-white/60 text-sm">{a.lastLogin}</td>
+                <td className="px-4 py-3 text-white/60 text-sm">{a.createdAt}</td>
+                <td className="px-4 py-3 text-white/60 text-sm">{a.dob}</td>
 
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">

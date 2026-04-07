@@ -1,35 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
 
 export default function AccountModal({ data, onClose, onSave }) {
-  // ✅ Kết hợp: Khởi tạo state từ data (giống Code 2)
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    role: "customer", // ✅ GIỮ customer từ Code 1
-    status: "active",
+  const getInitialFormData = (payload) => ({
+    name: payload?.name && payload.name !== "-" ? payload.name : "",
+    email: payload?.email && payload.email !== "-" ? payload.email : "",
+    phone: payload?.phone && payload.phone !== "-" ? payload.phone : "",
+    role: payload?.role || "customer",
+    status: payload?.status || "active",
   });
 
-  // ✅ GIỮ useEffect từ Code 1 để đồng bộ khi data thay đổi
-  useEffect(() => {
-    if (data) {
-      setFormData({
-        name: data.name || "",
-        email: data.email || "",
-        phone: data.phone || "",
-        role: data.role || "customer",
-        status: data.status || "active",
-      });
-    }
-  }, [data]);
+  const [formData, setFormData] = useState(() => getInitialFormData(data));
 
   // ✅ THÊM validation từ Code 1
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.email || !formData.phone) {
-      alert("Vui lòng nhập đầy đủ thông tin");
+    if (!formData.name || !formData.email) {
+      alert("Vui lòng nhập tên và email");
       return;
     }
     
@@ -40,11 +28,14 @@ export default function AccountModal({ data, onClose, onSave }) {
       return;
     }
     
-    // ✅ THÊM phone format validation
-    const phoneRegex = /^[0-9]{10,11}$/;
-    if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
-      alert("Số điện thoại không hợp lệ (10-11 số)");
-      return;
+    // Phone optional; validate only when user provided
+    const normalizedPhone = String(formData.phone || "").replace(/\s/g, "").trim();
+    if (normalizedPhone) {
+      const phoneRegex = /^[0-9]{8,11}$/;
+      if (!phoneRegex.test(normalizedPhone)) {
+        alert("Số điện thoại không hợp lệ (8-11 số)");
+        return;
+      }
     }
     
     onSave(formData);
@@ -110,7 +101,6 @@ export default function AccountModal({ data, onClose, onSave }) {
                 placeholder="0912 345 678" // ✅ THÊM placeholder
                 value={formData.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
-                required
                 className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
               />
             </div>
@@ -139,8 +129,7 @@ export default function AccountModal({ data, onClose, onSave }) {
                   className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition appearance-none cursor-pointer"
                 >
                   <option value="active">Hoạt động</option>
-                  <option value="inactive">Tạm ngưng</option>
-                  <option value="banned">Bị khoá</option>
+                  <option value="locked">Bị khoá</option>
                 </select>
               </div>
             )}

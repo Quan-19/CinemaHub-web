@@ -1,6 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 
-export default function DeleteConfirmModal({ account, onClose, onConfirm }) {
+export default function DeleteConfirmModal({ account, onClose, onConfirm, loading = false }) {
   if (!account) return null;
 
   return (
@@ -21,15 +21,17 @@ export default function DeleteConfirmModal({ account, onClose, onConfirm }) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2.5 rounded-lg font-medium transition"
+            disabled={loading}
+            className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
           >
             Huỷ
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg font-medium transition"
+            disabled={loading}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg font-medium transition disabled:opacity-50"
           >
-            Xoá tài khoản
+            {loading ? "Đang xoá..." : "Xoá tài khoản"}
           </button>
         </div>
       </div>

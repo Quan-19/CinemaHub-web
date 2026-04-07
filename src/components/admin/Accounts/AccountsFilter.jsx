@@ -30,7 +30,7 @@ export default function AccountsFilter({
         <option value="all" className="bg-zinc-900 text-white">Tất cả vai trò</option>
         <option value="admin" className="bg-zinc-900 text-white">Admin</option>
         <option value="staff" className="bg-zinc-900 text-white">Nhân viên</option>
-        <option value="user" className="bg-zinc-900 text-white">Khách hàng</option>
+        <option value="customer" className="bg-zinc-900 text-white">Khách hàng</option>
       </select>
 
       <select
@@ -40,8 +40,7 @@ export default function AccountsFilter({
       >
         <option value="all" className="bg-zinc-900 text-white">Tất cả trạng thái</option>
         <option value="active" className="bg-zinc-900 text-white">Hoạt động</option>
-        <option value="inactive" className="bg-zinc-900 text-white">Tạm ngưng</option>
-        <option value="banned" className="bg-zinc-900 text-white">Bị khoá</option>
+        <option value="locked" className="bg-zinc-900 text-white">Bị khoá</option>
       </select>
     </div>
   );
