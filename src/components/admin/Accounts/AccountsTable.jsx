@@ -28,8 +28,8 @@ export default function AccountsTable({ data, onEdit, onDelete }) {
   };
 
   return (
-    <div className="bg-cinema-surface border border-white/10 rounded-xl overflow-hidden mb-6">
-      <table className="w-full">
+    <div className="bg-cinema-surface border border-white/10 rounded-xl overflow-x-auto overscroll-x-contain mb-6">
+      <table className="w-full min-w-[980px]">
         <thead>
           <tr className="border-b border-white/10">
             <th className="px-4 py-3 text-left text-white/50 text-xs font-medium uppercase tracking-wider">ID</th>

@@ -139,8 +139,8 @@ export default function PromotionModal({ show, onClose, onSave, editingItem }) {
   const textareaClass = "w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30 resize-none";
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="w-[720px] bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-[720px] bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-5 border-b border-white/10 sticky top-0 bg-cinema-surface">
           <div>

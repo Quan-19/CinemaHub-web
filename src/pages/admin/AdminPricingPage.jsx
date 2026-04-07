@@ -308,7 +308,7 @@ export default function AdminPricingPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
           <p className="text-gray-400">Đang tải dữ liệu...</p>
@@ -318,7 +318,7 @@ export default function AdminPricingPage() {
   }
 
   return (
-    <div className="p-6">
+    <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-white">Quản lý giá vé</h1>
@@ -609,8 +609,8 @@ function ViewDetailModal({ item, onClose, onEdit }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="w-[500px] bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl max-h-[80vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-[500px] bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl max-h-[80vh] overflow-y-auto">
         <div className="px-6 py-5 border-b border-white/10 sticky top-0 bg-cinema-surface">
           <h3 className="text-lg font-semibold text-white">Chi tiết quy tắc giá</h3>
         </div>

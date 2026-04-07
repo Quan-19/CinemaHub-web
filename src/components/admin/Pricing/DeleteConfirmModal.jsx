@@ -4,8 +4,8 @@ export default function DeleteConfirmModal({ show, onClose, onConfirm, item }) {
   if (!show || !item) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="w-[400px] bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-[400px] bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl">
         <div className="flex justify-between items-center px-6 py-4 border-b border-white/10">
           <h3 className="text-lg font-semibold text-white flex items-center gap-2">
             <AlertTriangle size={20} className="text-red-500" />

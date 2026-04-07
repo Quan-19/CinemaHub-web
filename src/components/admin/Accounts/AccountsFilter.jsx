@@ -9,7 +9,7 @@ export default function AccountsFilter({
   setStatusFilter,
 }) {
   return (
-    <div className="flex gap-3 mb-6">
+    <div className="flex flex-col lg:flex-row gap-3 mb-6">
       {/* Search */}
       <div className="flex-1 relative">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
@@ -25,7 +25,7 @@ export default function AccountsFilter({
       <select
         value={roleFilter}
         onChange={(e) => setRoleFilter(e.target.value)}
-        className="bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm outline-none min-w-[140px] focus:border-red-500/50 transition appearance-none cursor-pointer"
+        className="bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm outline-none w-full lg:w-auto min-w-[140px] focus:border-red-500/50 transition appearance-none cursor-pointer"
       >
         <option value="all" className="bg-zinc-900 text-white">Tất cả vai trò</option>
         <option value="admin" className="bg-zinc-900 text-white">Admin</option>
@@ -36,7 +36,7 @@ export default function AccountsFilter({
       <select
         value={statusFilter}
         onChange={(e) => setStatusFilter(e.target.value)}
-        className="bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm outline-none min-w-[140px] focus:border-red-500/50 transition appearance-none cursor-pointer"
+        className="bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm outline-none w-full lg:w-auto min-w-[140px] focus:border-red-500/50 transition appearance-none cursor-pointer"
       >
         <option value="all" className="bg-zinc-900 text-white">Tất cả trạng thái</option>
         <option value="active" className="bg-zinc-900 text-white">Hoạt động</option>

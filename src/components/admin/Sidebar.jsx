@@ -29,6 +29,7 @@ export default function Sidebar(props) {
   // Nhận props từ AdminLayout
   const expanded = props?.expanded ?? true;
   const setExpanded = props?.setExpanded ?? (() => {});
+  const onNavigate = props?.onNavigate;
 
   const adminName = user?.displayName || user?.email?.split("@")[0] || "Admin";
   const adminEmail = user?.email || "";
@@ -144,6 +145,7 @@ export default function Sidebar(props) {
                   <NavLink
                     key={index}
                     to={item.path}
+                    onClick={() => onNavigate?.()}
                     className={({ isActive }) =>
                       `flex items-center
                        ${expanded ? "gap-3 px-3" : "justify-center"}

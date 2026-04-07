@@ -207,8 +207,8 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="w-[560px] bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-[560px] bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center px-6 py-5 border-b border-white/10 sticky top-0 bg-cinema-surface">
           <div>
             <h2 className="text-xl font-semibold text-white">

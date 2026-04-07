@@ -49,21 +49,22 @@ export default function CinemasTable({
   return (
     <>
       <div className="bg-cinema-surface border border-white/5 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="text-white/40 text-xs border-b border-white/5 bg-white/[0.02]">
-            <tr>
-              <th className="p-4 text-left">Tên rạp</th>
-              <th className="text-left">Thương hiệu</th>
-              <th className="text-left">Thành phố</th>
-              <th className="text-left">Địa chỉ</th>
-              <th className="text-center">Phòng chiếu</th>
-              <th className="text-left">Trạng thái</th>
-              <th className="text-left">Quản lý chi nhánh</th>
-              <th className="text-center">Thao tác</th>
-            </tr>
-          </thead>
+        <div className="overflow-x-auto">
+          <table className="min-w-[1100px] w-full text-sm">
+            <thead className="text-white/40 text-xs border-b border-white/5 bg-white/[0.02]">
+              <tr>
+                <th className="p-4 text-left">Tên rạp</th>
+                <th className="text-left">Thương hiệu</th>
+                <th className="text-left">Thành phố</th>
+                <th className="text-left">Địa chỉ</th>
+                <th className="text-center">Phòng chiếu</th>
+                <th className="text-left">Trạng thái</th>
+                <th className="text-left">Quản lý chi nhánh</th>
+                <th className="text-center">Thao tác</th>
+              </tr>
+            </thead>
 
-          <tbody>
+            <tbody>
             {currentCinemas.length > 0 ? (
               currentCinemas.map(c => (
                 <tr
@@ -149,8 +150,9 @@ export default function CinemasTable({
                 </td>
               </tr>
             )}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
 
         {/* PHÂN TRANG */}
         {totalPages > 1 && (
@@ -242,8 +244,8 @@ function ViewCinemaModal({ cinema, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
-      <div className="w-[500px] bg-cinema-surface border border-white/10 rounded-xl overflow-hidden">
+    <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 p-4">
+      <div className="w-full max-w-[500px] bg-cinema-surface border border-white/10 rounded-xl overflow-y-auto max-h-[90vh]">
         <div className="flex justify-between items-center px-5 py-4 border-b border-white/10">
           <h2 className="text-white font-semibold text-lg">Chi tiết rạp</h2>
           <button onClick={onClose} className="text-white/40 hover:text-white">✕</button>

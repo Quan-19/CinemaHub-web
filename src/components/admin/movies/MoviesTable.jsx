@@ -106,7 +106,7 @@ export default function MoviesTable({ movies, onEdit, onDelete }) {
     <>
       <div className="bg-cinema-surface border border-white/10 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-gray-300">
+          <table className="min-w-[1100px] w-full text-sm text-left text-gray-300">
             {/* HEADER */}
             <thead className="bg-cinema-bg text-gray-400 sticky top-0">
               <tr>

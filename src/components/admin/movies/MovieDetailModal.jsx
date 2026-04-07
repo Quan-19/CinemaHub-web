@@ -82,7 +82,7 @@ export default function MovieDetailModal({ show, onClose, movie }) {
 
   return (
     <div className="fixed inset-0 bg-black/90 flex justify-center items-center z-50 p-4">
-      <div className="w-[900px] max-h-[90vh] overflow-y-auto bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl">
+      <div className="w-full max-w-[900px] max-h-[90vh] overflow-y-auto bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl">
         {/* HEADER */}
         <div className="sticky top-0 bg-cinema-surface flex justify-between items-center px-6 py-5 border-b border-white/10 z-10">
           <h2 className="text-white text-xl font-semibold flex items-center gap-2">

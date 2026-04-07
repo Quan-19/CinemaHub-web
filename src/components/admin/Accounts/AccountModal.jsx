@@ -51,7 +51,7 @@ export default function AccountModal({ data, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-cinema-surface border border-white/10 rounded-xl w-[480px] relative">
+      <div className="bg-cinema-surface border border-white/10 rounded-xl w-full max-w-[480px] relative">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className="text-white font-semibold text-lg">

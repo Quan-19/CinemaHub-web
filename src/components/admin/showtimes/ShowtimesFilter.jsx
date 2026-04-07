@@ -53,7 +53,7 @@ export default function ShowtimesFilter({
           </div>
 
           {/* Quick date filters */}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setDateFilter("today")}
               className={`px-3 py-2 rounded-lg text-sm transition ${

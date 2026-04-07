@@ -244,7 +244,7 @@ export default function AccountsPage() {
   };
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto">
+    <div className="max-w-[1400px] mx-auto">
       <AccountsHeader total={accounts.length} onAdd={handleAddAccount} />
 
       <AccountsStats data={accounts} />

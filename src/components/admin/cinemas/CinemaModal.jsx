@@ -89,8 +89,8 @@ export default function CinemaModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
-      <div className="w-[520px] bg-cinema-surface border border-white/10 rounded-xl overflow-hidden shadow-xl">
+    <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 p-4">
+      <div className="w-full max-w-[520px] bg-cinema-surface border border-white/10 rounded-xl overflow-hidden shadow-xl">
         <div className="flex justify-between items-center px-5 py-4 border-b border-white/10">
           <h2 className="text-white font-semibold text-lg">
             {isEdit ? "Chỉnh sửa rạp" : "Thêm rạp mới"}

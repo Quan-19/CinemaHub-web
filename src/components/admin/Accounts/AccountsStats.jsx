@@ -26,7 +26,7 @@ export default function AccountsStats({ data }) {
   ];
 
   return (
-    <div className="flex gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       {stats.map((s) => (
         <div
           key={s.label}

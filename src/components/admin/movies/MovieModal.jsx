@@ -110,7 +110,7 @@ export default function MovieModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 p-4">
-      <div className="w-[800px] max-h-[90vh] bg-cinema-surface rounded-2xl border border-white/10 flex flex-col">
+      <div className="w-full max-w-[800px] max-h-[90vh] bg-cinema-surface rounded-2xl border border-white/10 flex flex-col">
         
         {/* HEADER */}
         <div className="flex justify-between items-center px-6 py-5 border-b border-white/10">

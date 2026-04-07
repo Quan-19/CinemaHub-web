@@ -91,7 +91,7 @@ export default function Dashboard() {
     fetchDashboard();
   }, []);
 
-  if (loading) return <div className="p-6 text-white">Loading...</div>;
+  if (loading) return <div className="text-white">Loading...</div>;
 
   /* ===================== MAP DATA ===================== */
 
@@ -107,7 +107,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-6 space-y-6 text-white">
+    <div className="space-y-6 text-white">
       {/* HEADER */}
       <div>
         <h1 className="text-2xl font-bold">Dashboard Admin</h1>

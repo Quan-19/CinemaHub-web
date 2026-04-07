@@ -169,14 +169,14 @@ export default function AdminPromotionsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 flex justify-center items-center min-h-[400px]">
+      <div className="flex justify-center items-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
