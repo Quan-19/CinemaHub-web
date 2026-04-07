@@ -19,22 +19,31 @@ import {
 } from "lucide-react";
 
 // expanded, setExpanded sẽ nhận từ props
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext.jsx";
 
-export default function Sidebar() {
+export default function Sidebar(props) {
+  const navigate = useNavigate();
+  const { logout, user } = useAuth();
+
   // Nhận props từ AdminLayout
-  // eslint-disable-next-line react/prop-types
-  const expanded =
-    typeof arguments[0] === "object" &&
-    arguments[0] &&
-    arguments[0].expanded !== undefined
-      ? arguments[0].expanded
-      : true;
-  // eslint-disable-next-line react/prop-types
-  const setExpanded =
-    typeof arguments[0] === "object" && arguments[0] && arguments[0].setExpanded
-      ? arguments[0].setExpanded
-      : () => {};
+  const expanded = props?.expanded ?? true;
+  const setExpanded = props?.setExpanded ?? (() => {});
+  const onNavigate = props?.onNavigate;
+
+  const adminName = user?.displayName || user?.email?.split("@")[0] || "Admin";
+  const adminEmail = user?.email || "";
+  const adminInitial = String(adminName || "A").trim().charAt(0).toUpperCase() || "A";
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      navigate("/auth");
+    }
+  };
 
   const sections = [
     {
@@ -79,7 +88,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`h-screen bg-[#020617] border-r border-white/10 text-gray-200 flex flex-col transition-all duration-300
+      className={`h-screen bg-cinema-bg border-r border-white/10 text-gray-200 flex flex-col transition-all duration-300
       ${expanded ? "w-64" : "w-20"}`}
     >
       {/* HEADER */}
@@ -112,7 +121,7 @@ export default function Sidebar() {
         <div className="px-4 py-3">
           <div className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
             <div className="w-2 h-2 bg-red-500 rounded-full" />
-            Quản trị viên
+            {user?.role === "admin" ? "Quản trị viên" : "Đang đăng nhập"}
           </div>
         </div>
       )}
@@ -136,6 +145,7 @@ export default function Sidebar() {
                   <NavLink
                     key={index}
                     to={item.path}
+                    onClick={() => onNavigate?.()}
                     className={({ isActive }) =>
                       `flex items-center
                        ${expanded ? "gap-3 px-3" : "justify-center"}
@@ -163,19 +173,32 @@ export default function Sidebar() {
       <div className="border-t border-white/10 p-3">
         {expanded && (
           <div className="bg-white/5 rounded-lg p-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-sm font-bold">
-              A
-            </div>
+            {user?.photoURL ? (
+              <img
+                src={user.photoURL}
+                alt="Avatar"
+                className="w-8 h-8 rounded-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-sm font-bold">
+                {adminInitial}
+              </div>
+            )}
 
             <div className="flex-1">
-              <div className="text-sm font-semibold">Admin</div>
+              <div className="text-sm font-semibold truncate">{adminName}</div>
 
-              <div className="text-xs text-gray-400">admin@cinestar.vn</div>
+              <div className="text-xs text-gray-400 truncate">{adminEmail}</div>
             </div>
           </div>
         )}
 
-        <button className="flex items-center gap-2 mt-3 text-sm text-gray-400 hover:text-white">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex items-center gap-2 mt-3 text-sm text-gray-400 hover:text-white"
+        >
           <LogOut size={16} />
           {expanded && "Đăng xuất"}
         </button>

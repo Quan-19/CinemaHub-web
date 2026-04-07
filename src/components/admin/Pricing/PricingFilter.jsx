@@ -21,7 +21,7 @@ export default function PricingFilter({ filter, setFilter, data }) {
           className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all
             ${filter === f.id 
               ? `bg-${f.color}-600 text-white shadow-lg shadow-${f.color}-600/30` 
-              : "bg-[#0d0d1a] text-gray-400 hover:text-white border border-white/5 hover:border-white/20"
+              : "bg-zinc-900 hover:bg-zinc-800 text-gray-400 hover:text-white border border-white/5 hover:border-white/20"
             }`}
         >
           <span>{f.label}</span>

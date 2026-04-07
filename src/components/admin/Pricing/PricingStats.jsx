@@ -92,18 +92,18 @@ export default function PricingStats({ data, filterCategory = "all" }) {
     return (
       <div className="space-y-4 mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-[#0d0d1a] p-4 rounded-xl border border-white/10">
+          <div className="bg-cinema-surface p-4 rounded-xl border border-white/10">
             <div className="text-2xl font-bold text-yellow-400">{displayHolidayData.length}</div>
             <div className="text-xs text-gray-400 mt-1">Tổng quy tắc ngày lễ</div>
             <div className="text-[10px] text-gray-500">{activeHolidayCount} đang áp dụng</div>
           </div>
-          <div className="bg-[#0d0d1a] p-4 rounded-xl border border-white/10">
+          <div className="bg-cinema-surface p-4 rounded-xl border border-white/10">
             <div className="text-2xl font-bold text-white">
               {displayHolidayData.filter((d) => getPricingRuleRoomType(d) === "2D").length}
             </div>
             <div className="text-xs text-gray-400 mt-1">Quy tắc cho 2D</div>
           </div>
-          <div className="bg-[#0d0d1a] p-4 rounded-xl border border-white/10">
+          <div className="bg-cinema-surface p-4 rounded-xl border border-white/10">
             <div className="text-2xl font-bold text-white">
               {displayHolidayData.filter((d) => getPricingRuleRoomType(d) !== "2D").length}
             </div>
@@ -117,30 +117,30 @@ export default function PricingStats({ data, filterCategory = "all" }) {
   return (
     <div className="space-y-4 mb-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-[#0d0d1a] p-4 rounded-xl border border-white/10">
+        <div className="bg-cinema-surface p-4 rounded-xl border border-white/10">
           <div className="text-2xl font-bold text-white">{displayRegularData.length}</div>
           <div className="text-xs text-gray-400 mt-1">Tổng quy tắc thường</div>
           <div className="text-[10px] text-gray-500">{activeCount} đang áp dụng</div>
         </div>
         
-        <div className="bg-[#0d0d1a] p-4 rounded-xl border border-white/10">
+        <div className="bg-cinema-surface p-4 rounded-xl border border-white/10">
           <div className="text-2xl font-bold text-red-400">{displayHolidayData.length}</div>
           <div className="text-xs text-gray-400 mt-1">Quy tắc ngày lễ</div>
         </div>
         
-        <div className="bg-[#0d0d1a] p-4 rounded-xl border border-white/10">
+        <div className="bg-cinema-surface p-4 rounded-xl border border-white/10">
           <div className="text-2xl font-bold text-yellow-400">{formatPrice(avgPrice)}</div>
           <div className="text-xs text-gray-400 mt-1">Giá trung bình (đang áp dụng)</div>
         </div>
         
-        <div className="bg-[#0d0d1a] p-4 rounded-xl border border-white/10">
+        <div className="bg-cinema-surface p-4 rounded-xl border border-white/10">
           <div className="text-2xl font-bold text-blue-400">
             {[...new Set(displayRegularData.map(item => item.seat))].length}
           </div>
           <div className="text-xs text-gray-400 mt-1">Loại ghế</div>
         </div>
         
-        <div className="bg-[#0d0d1a] p-4 rounded-xl border border-white/10">
+        <div className="bg-cinema-surface p-4 rounded-xl border border-white/10">
           <div className="text-sm font-bold text-white">
             <span className="text-green-400">{formatPrice(minPrice)}</span>
             {" → "}
@@ -150,7 +150,7 @@ export default function PricingStats({ data, filterCategory = "all" }) {
         </div>
       </div>
 
-      <div className="bg-[#0d0d1a] rounded-xl border border-white/10 p-5">
+      <div className="bg-cinema-surface rounded-xl border border-white/10 p-5">
         <h3 className="text-sm font-semibold text-white mb-4">Giá vé theo loại ghế</h3>
         <p className="text-xs text-gray-500 -mt-3 mb-4">Tổng hợp từ các quy tắc thường đang áp dụng.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

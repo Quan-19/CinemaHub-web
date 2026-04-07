@@ -23,7 +23,7 @@ export default function PromotionsStats({ promotions }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-      <div className="bg-[#0d0d1a] p-4 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
+      <div className="bg-cinema-surface p-4 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
         <div className="flex items-center justify-between">
           <Tag size={20} className="text-purple-400" />
           <span className="text-xs text-gray-500">Tổng số</span>
@@ -32,7 +32,7 @@ export default function PromotionsStats({ promotions }) {
         <div className="text-xs text-gray-400">khuyến mãi</div>
       </div>
 
-      <div className="bg-[#0d0d1a] p-4 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
+      <div className="bg-cinema-surface p-4 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
         <div className="flex items-center justify-between">
           <TrendingUp size={20} className="text-green-400" />
           <span className="text-xs text-gray-500">Đang áp dụng</span>
@@ -43,7 +43,7 @@ export default function PromotionsStats({ promotions }) {
         </div>
       </div>
 
-      <div className="bg-[#0d0d1a] p-4 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
+      <div className="bg-cinema-surface p-4 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
         <div className="flex items-center justify-between">
           <Percent size={20} className="text-yellow-400" />
           <span className="text-xs text-gray-500">Mã giảm giá</span>
@@ -52,7 +52,7 @@ export default function PromotionsStats({ promotions }) {
         <div className="text-xs text-gray-400">khuyến mãi</div>
       </div>
 
-      <div className="bg-[#0d0d1a] p-4 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
+      <div className="bg-cinema-surface p-4 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
         <div className="flex items-center justify-between">
           <Calendar size={20} className="text-red-400" />
           <span className="text-xs text-gray-500">Giá ngày lễ</span>
@@ -61,7 +61,7 @@ export default function PromotionsStats({ promotions }) {
         <div className="text-xs text-gray-400">chương trình</div>
       </div>
 
-      <div className="bg-[#0d0d1a] p-4 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
+      <div className="bg-cinema-surface p-4 rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
         <div className="flex items-center justify-between">
           <Clock size={20} className="text-blue-400" />
           <span className="text-xs text-gray-500">Giảm TB</span>

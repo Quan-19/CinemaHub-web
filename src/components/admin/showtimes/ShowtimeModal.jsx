@@ -29,6 +29,20 @@ export default function ShowtimeModal({
   // API URLs
   const PRICING_API_URL = "http://localhost:5000/api/pricing";
 
+  const formatVndWithCommas = (value) => {
+    if (value === null || value === undefined || value === "") return "";
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) return "";
+    return Math.round(numericValue).toLocaleString("en-US");
+  };
+
+  const parseVndInput = (text) => {
+    const cleaned = String(text ?? "").replace(/[^0-9]/g, "");
+    if (!cleaned) return 0;
+    const numericValue = Number(cleaned);
+    return Number.isFinite(numericValue) ? numericValue : 0;
+  };
+
   const buildSeatPriceMapFromHolidayRule = (rule) => {
     const prices = {};
     const list = Array.isArray(rule?.holiday_prices) ? rule.holiday_prices : [];
@@ -155,6 +169,7 @@ export default function ShowtimeModal({
 
   // Ensure specialPrices exists when editing an existing special showtime
   useEffect(() => {
+    if (!isEdit) return;
     if (!form?.isSpecial) return;
     if (form?.specialPrices) return;
 
@@ -199,12 +214,11 @@ export default function ShowtimeModal({
             result?.error ||
             "Chưa có quy tắc giá vé cho loại phòng này. Vui lòng vào trang Giá vé để thêm quy tắc.";
 
-          const zeros = { Thường: 0, VIP: 0, Couple: 0 };
           setForm({
             ...form,
             regularPricingError: errorMessage,
-            regularPrices: zeros,
-            prices: zeros,
+            regularPrices: null,
+            prices: null,
             base_price: 0,
             priceSource: "regular",
           });
@@ -222,12 +236,11 @@ export default function ShowtimeModal({
         });
       } catch (error) {
         console.error("Error fetching regular prices:", error);
-        const zeros = { Thường: 0, VIP: 0, Couple: 0 };
         setForm({
           ...form,
           regularPricingError: "Không thể lấy giá vé. Vui lòng kiểm tra quy tắc giá vé ở trang Giá vé.",
-          regularPrices: zeros,
-          prices: zeros,
+          regularPrices: null,
+          prices: null,
           base_price: 0,
           priceSource: "regular",
         });
@@ -242,10 +255,10 @@ export default function ShowtimeModal({
   if (!show) return null;
 
   const inputClass =
-    "w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30";
+    "w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30";
 
   const selectClass =
-    "w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition [&>option]:bg-[#2d2d44] [&>option]:text-white";
+    "w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition [&>option]:bg-zinc-900 [&>option]:text-white";
 
   const handleMovieSelect = (movie) => {
     setForm({
@@ -316,9 +329,10 @@ export default function ShowtimeModal({
   };
 
   const handlePriceChange = (seatType, value) => {
+    const nextValue = typeof value === "number" ? value : parseVndInput(value);
     const nextPrices = {
       ...(form?.prices || DEFAULT_REGULAR_PRICES),
-      [seatType]: Number(value) || 0,
+      [seatType]: nextValue,
     };
 
     setForm({
@@ -330,9 +344,10 @@ export default function ShowtimeModal({
   };
 
   const handleSpecialPriceChange = (seatType, value) => {
+    const nextValue = typeof value === "number" ? value : parseVndInput(value);
     const nextSpecialPrices = {
       ...(form?.specialPrices || form?.prices || DEFAULT_REGULAR_PRICES),
-      [seatType]: Number(value) || 0,
+      [seatType]: nextValue,
     };
 
     setForm({
@@ -345,35 +360,27 @@ export default function ShowtimeModal({
 
   const handleSpecialToggle = (isSpecial) => {
     if (isSpecial) {
-      // Switching to special - initialize special prices from current regular pricing
-      const seed = normalizePriceMap(
-        form?.specialPrices || form?.prices || form?.regularPrices || DEFAULT_REGULAR_PRICES,
-        DEFAULT_REGULAR_PRICES,
-      );
+      // Switching to special - require selecting a pricing rule to populate prices
       setForm({
         ...form,
         isSpecial: true,
-        specialPrices: seed,
+        specialPrices: null,
         specialPromotionId: null,
         specialPricingRuleId: null,
-        prices: seed,
-        base_price: seed.Thường || 90000,
+        prices: null,
+        base_price: 0,
         priceSource: "special",
       });
     } else {
       // Switching back to regular
-      const regularPrices = normalizePriceMap(
-        form?.regularPrices || DEFAULT_REGULAR_PRICES,
-        DEFAULT_REGULAR_PRICES,
-      );
       setForm({
         ...form,
         isSpecial: false,
         specialPrices: null,
         specialPromotionId: null,
         specialPricingRuleId: null,
-        prices: regularPrices,
-        base_price: regularPrices.Thường || 90000,
+        prices: form?.regularPrices || null,
+        base_price: form?.regularPrices?.Thường || 0,
         priceSource: "regular",
       });
     }
@@ -398,6 +405,9 @@ export default function ShowtimeModal({
       setForm({
         ...form,
         specialPricingRuleId: null,
+        specialPrices: null,
+        prices: form?.isSpecial ? null : form?.prices,
+        base_price: 0,
       });
       return;
     }
@@ -485,46 +495,69 @@ export default function ShowtimeModal({
     },
   ];
 
-  const renderPriceSection = (title, subtitle, priceMap, onChange, toneClasses, disabled = false) => (
+  const renderPriceSection = (
+    title,
+    subtitle,
+    priceMap,
+    onChange,
+    toneClasses,
+    locked = false,
+    lockedBadgeText = "Không chỉnh tay",
+  ) => (
     <div className={`p-4 rounded-xl border ${toneClasses.border} ${toneClasses.bg}`}>
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
           <h3 className={`text-sm font-semibold ${toneClasses.title}`}>{title}</h3>
           <p className="text-[10px] text-white/40 mt-1">{subtitle}</p>
         </div>
-        {disabled && (
+        {locked && (
           <span className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-white/45 border border-white/10">
-            Chưa chọn giá
+            {lockedBadgeText}
           </span>
         )}
       </div>
-      <div className="space-y-3">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
         {seatTypes.map((seat) => (
-          <div key={`${title}-${seat.key}`} className="flex items-center justify-between gap-3">
-            <div className="flex-1">
-              <label className={`block text-sm font-medium ${seat.color} mb-0.5`}>
-                {seat.label}
-              </label>
-              <p className="text-[10px] text-white/35">
-                {seat.key === "Thường" ? "Giá chuẩn" : seat.key === "VIP" ? "Giá cho ghế cao cấp" : "Giá cho ghế đôi"}
-              </p>
-            </div>
-            <div className="w-40">
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">
-                  ₫
-                </span>
-                <input
-                  type="number"
-                  placeholder="0"
-                  value={priceMap?.[seat.key] ?? ""}
-                  onChange={(e) => onChange(seat.key, e.target.value)}
-                  disabled={disabled}
-                  className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                  min="0"
-                  step="1000"
-                />
+          <div
+            key={`${title}-${seat.key}`}
+            className={`rounded-xl border ${seat.border} ${seat.bg} p-3`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <label className={`block text-sm font-medium ${seat.color} leading-5`}>
+                  {seat.label}
+                </label>
+                <p className="text-[10px] text-white/35 mt-0.5">
+                  {seat.key === "Thường"
+                    ? "Giá chuẩn"
+                    : seat.key === "VIP"
+                      ? "Ghế cao cấp"
+                      : "Ghế đôi"}
+                </p>
               </div>
+            </div>
+
+            <div className="relative mt-2">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">
+                ₫
+              </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9,]*"
+                placeholder="0"
+                  value={formatVndWithCommas(priceMap?.[seat.key])}
+                onChange={
+                  locked
+                    ? undefined
+                    : (e) => onChange(seat.key, parseVndInput(e.target.value))
+                }
+                readOnly={locked}
+                className={`w-full bg-zinc-900 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition text-right tabular-nums ${
+                  locked ? "cursor-not-allowed" : ""
+                }`}
+              />
             </div>
           </div>
         ))}
@@ -534,7 +567,7 @@ export default function ShowtimeModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="w-full max-w-lg bg-[#0d0d1a] border border-white/10 rounded-2xl max-h-[90vh] flex flex-col">
+      <div className="w-full max-w-lg sm:max-w-2xl lg:max-w-5xl bg-cinema-surface border border-white/10 rounded-2xl max-h-[92vh] flex flex-col">
         <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10 flex-shrink-0">
           <h2 className="text-lg font-bold text-white">
             {isEdit ? "Chỉnh sửa suất chiếu" : "Thêm suất chiếu"}
@@ -547,452 +580,419 @@ export default function ShowtimeModal({
           </button>
         </div>
 
-        <div className="p-6 space-y-4 overflow-y-auto flex-1">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 relative">
-              <label className="block text-xs text-white/55 mb-1.5">
-                Phim *
-              </label>
-              <div className="relative">
-                <div className="relative">
-                  <Search
-                    size={16}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35"
-                  />
-                  <input
-                    ref={movieInputRef}
-                    type="text"
-                    value={searchMovieTerm}
-                    onChange={(e) => handleMovieSearchChange(e.target.value)}
-                    onFocus={() => setShowMovieDropdown(true)}
-                    placeholder="Gõ tên phim để tìm kiếm..."
-                    className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
-                  />
-                  {searchMovieTerm && (
-                    <button
-                      onClick={() => {
-                        handleMovieSearchChange("");
-                        setForm({
-                          ...form,
-                          movieId: "",
-                          movieTitle: "",
-                          movieDuration: null,
-                        });
-                      }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
+        <div className="p-5 overflow-y-auto flex-1">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <div className="lg:col-span-6 space-y-4">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="text-xs font-semibold text-white/70 mb-3">Thông tin suất chiếu</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2 relative">
+                    <label className="block text-xs text-white/55 mb-1.5">Phim *</label>
+                    <div className="relative">
+                      <div className="relative">
+                        <Search
+                          size={16}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35"
+                        />
+                        <input
+                          ref={movieInputRef}
+                          type="text"
+                          value={searchMovieTerm}
+                          onChange={(e) => handleMovieSearchChange(e.target.value)}
+                          onFocus={() => setShowMovieDropdown(true)}
+                          placeholder="Gõ tên phim để tìm kiếm..."
+                          className="w-full bg-zinc-900 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
+                        />
+                        {searchMovieTerm && (
+                          <button
+                            onClick={() => {
+                              handleMovieSearchChange("");
+                              setForm({
+                                ...form,
+                                movieId: "",
+                                movieTitle: "",
+                                movieDuration: null,
+                              });
+                            }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2"
+                          >
+                            <X size={14} className="text-white/35 hover:text-white/70" />
+                          </button>
+                        )}
+                      </div>
+
+                      {showMovieDropdown && filteredMovies.length > 0 && (
+                        <div
+                          ref={dropdownRef}
+                          className="absolute z-50 mt-1 w-full bg-zinc-900 border border-white/10 rounded-lg shadow-xl max-h-64 overflow-y-auto"
+                        >
+                          {filteredMovies.map((movie) => (
+                            <button
+                              key={movie.id}
+                              onClick={() => handleMovieSelect(movie)}
+                              className="w-full text-left px-4 py-2.5 hover:bg-white/10 transition border-b border-white/5 last:border-0"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-white font-medium">{movie.title}</span>
+                                <span className="text-xs text-white/40">{movie.duration} phút</span>
+                              </div>
+                              {movie.rating && (
+                                <div className="text-xs text-white/30 mt-0.5">
+                                  {movie.rating} • {movie.language || "Phụ đề"}
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {showMovieDropdown && searchMovieTerm && filteredMovies.length === 0 && (
+                        <div className="absolute z-50 mt-1 w-full bg-zinc-900 border border-white/10 rounded-lg shadow-xl p-4 text-center">
+                          <p className="text-sm text-white/40">Không tìm thấy phim "{searchMovieTerm}"</p>
+                        </div>
+                      )}
+                    </div>
+                    {form?.movieId && (
+                      <p className="text-[10px] text-green-400 mt-1">
+                        ✓ Đã chọn: {form.movieTitle} • Thời lượng: {form.movieDuration} phút
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-white/55 mb-1.5">Rạp chiếu *</label>
+                    <select
+                      value={form?.cinemaId || ""}
+                      onChange={(e) => handleCinemaChange(e.target.value)}
+                      className={selectClass}
+                      required
                     >
-                      <X
-                        size={14}
-                        className="text-white/35 hover:text-white/70"
-                      />
-                    </button>
-                  )}
+                      <option value="" className="bg-zinc-900 text-white/70">
+                        Chọn rạp
+                      </option>
+                      {cinemas &&
+                        cinemas.map((cinema) => {
+                          const roomCount = cinema.rooms?.length || 0;
+                          const maxRoomLimit = cinema.maxRooms || 4;
+                          return (
+                            <option key={cinema.id} value={cinema.id} className="bg-zinc-900 text-white">
+                              {cinema.name} ({roomCount}/{maxRoomLimit} phòng)
+                            </option>
+                          );
+                        })}
+                    </select>
+                    {form?.cinemaId && selectedCinema && (
+                      <p className="text-[10px] text-white/40 mt-1">
+                        Rạp có {currentRoomCount}/{maxRooms} phòng
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-white/55 mb-1.5">Phòng chiếu *</label>
+                    <select
+                      value={form?.roomId || ""}
+                      onChange={(e) => handleRoomChange(e.target.value)}
+                      className={selectClass}
+                      disabled={isRoomDisabled}
+                      required
+                      style={{ opacity: isRoomDisabled ? 0.5 : 1 }}
+                    >
+                      <option value="" className="bg-zinc-900 text-white/70">
+                        {!form?.cinemaId
+                          ? "Chọn rạp trước"
+                          : !hasRooms
+                            ? "Rạp này chưa có phòng"
+                            : "Chọn phòng"}
+                      </option>
+                      {availableRooms.map((room) => (
+                        <option key={room.id} value={room.id} className="bg-zinc-900 text-white">
+                          {room.name} ({room.type} - {room.capacity || 100} ghế)
+                        </option>
+                      ))}
+                    </select>
+                    {form?.cinemaId && !hasRooms && (
+                      <p className="text-[10px] text-yellow-400 mt-1">
+                        ⚠️ Rạp này chưa có phòng chiếu. Vui lòng thêm phòng trước.
+                      </p>
+                    )}
+                    {form?.roomId && form?.type && (
+                      <p className="text-[10px] text-blue-400 mt-1">
+                        📍 Định dạng: {form.type} • Sức chứa: {form.totalSeats} ghế
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="text-xs font-semibold text-white/70 mb-3">Lịch chiếu</div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs text-white/55 mb-1.5">Ngày chiếu *</label>
+                    <input
+                      type="date"
+                      value={form?.date || ""}
+                      onChange={(e) => {
+                        const newDate = e.target.value;
+                        setForm({ ...form, date: newDate });
+                      }}
+                      className={inputClass}
+                      min={getTodayDate()}
+                      required
+                      style={{ colorScheme: "dark" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-white/55 mb-1.5">Giờ bắt đầu *</label>
+                    <input
+                      type="time"
+                      value={form?.time || ""}
+                      onChange={(e) => handleTimeChange(e.target.value)}
+                      className={inputClass}
+                      required
+                      style={{ colorScheme: "dark" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-white/55 mb-1.5">Giờ kết thúc</label>
+                    <div
+                      className={`w-full border rounded-lg px-3 py-2 text-sm ${
+                        form?.endTime && form.endTime.includes("ngày hôm sau")
+                          ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/30"
+                          : "text-white bg-zinc-900 border-white/10"
+                      }`}
+                    >
+                      {form?.endTime ||
+                        (form?.movieDuration ? calculateEndTime() : "Chọn phim và giờ bắt đầu")}
+                    </div>
+                    {form?.movieDuration && (
+                      <p className="text-[10px] text-blue-400 mt-1">
+                        ⏱️ {form.movieDuration} phút + 15 phút quảng cáo
+                        {form?.endTime && form.endTime.includes("ngày hôm sau") && (
+                          <span className="text-yellow-400 ml-2">📅 Qua ngày</span>
+                        )}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {showMovieDropdown && filteredMovies.length > 0 && (
-                  <div
-                    ref={dropdownRef}
-                    className="absolute z-50 mt-1 w-full bg-[#1a1a2e] border border-white/10 rounded-lg shadow-xl max-h-64 overflow-y-auto"
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-xs text-white/55 mb-1.5">Định dạng</label>
+                    <div
+                      className={`w-full border rounded-lg px-3 py-2 text-sm ${
+                        form?.type ? "text-white" : "text-white/40"
+                      } bg-zinc-900 border-white/10`}
+                    >
+                      {form?.type || "Chưa chọn phòng"}
+                    </div>
+                    {!form?.isSpecial && form?.type && form?.regularPricingError && (
+                      <p className="text-[10px] text-yellow-400 mt-1">
+                        ⚠️ Định dạng này chưa có quy tắc giá vé.
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-white/55 mb-1.5">Số ghế</label>
+                    <div className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm">
+                      {form?.totalSeats || 0} ghế
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-6 space-y-4">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="text-xs font-semibold text-white/70 mb-3">Loại & giá vé</div>
+
+                <label className="block text-xs text-white/55 mb-1.5">
+                  <Sparkles size={12} className="inline mr-1 text-yellow-400" />
+                  Loại suất chiếu *
+                </label>
+                <div className="flex gap-3 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSpecialToggle(false);
+                    }}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      !form?.isSpecial
+                        ? "bg-green-600 text-white shadow-lg shadow-green-600/30"
+                        : "bg-zinc-900 text-gray-400 hover:text-white border border-white/10 hover:bg-zinc-800"
+                    }`}
                   >
-                    {filteredMovies.map((movie) => (
-                      <button
-                        key={movie.id}
-                        onClick={() => handleMovieSelect(movie)}
-                        className="w-full text-left px-4 py-2.5 hover:bg-white/10 transition border-b border-white/5 last:border-0"
+                    Suất chiếu thường
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSpecialToggle(true);
+                    }}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      form?.isSpecial
+                        ? "bg-yellow-600 text-white shadow-lg shadow-yellow-600/30"
+                        : "bg-zinc-900 text-gray-400 hover:text-white border border-white/10 hover:bg-zinc-800"
+                    }`}
+                  >
+                    <Sparkles size={12} className="inline mr-1" />
+                    Suất chiếu đặc biệt
+                  </button>
+                </div>
+
+                {!form?.isSpecial && (
+                  <p className="text-[10px] text-green-400 flex items-center gap-1 mb-2">
+                    ✓ Giá vé tự động theo bảng giá (loại ghế, loại rạp, giờ chiếu)
+                  </p>
+                )}
+
+                {!form?.isSpecial && form?.regularPricingError && (
+                  <p className="text-[10px] text-red-400 flex items-center gap-1 mb-2">
+                    ✕ {form.regularPricingError}
+                  </p>
+                )}
+
+                {form?.isSpecial && (
+                  <div className="space-y-3 mb-3">
+                    <p className="text-[10px] text-yellow-400 flex items-center gap-1">
+                      <Sparkles size={10} />
+                      Nhập giá vé đặc biệt theo từng loại ghế
+                    </p>
+
+                    <div>
+                      <label className="block text-xs text-white/55 mb-1.5">Loại giá vé (từ trang Giá vé)</label>
+                      <select
+                        value={form?.specialPricingRuleId || ""}
+                        onChange={(e) => handleHolidayRuleSelect(e.target.value)}
+                        className={selectClass}
+                        disabled={holidayPricingLoading}
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-white font-medium">
-                            {movie.title}
-                          </span>
-                          <span className="text-xs text-white/40">
-                            {movie.duration} phút
-                          </span>
-                        </div>
-                        {movie.rating && (
-                          <div className="text-xs text-white/30 mt-0.5">
-                            {movie.rating} • {movie.language || "Phụ đề"}
-                          </div>
-                        )}
-                      </button>
-                    ))}
+                        <option value="" className="bg-zinc-900 text-white/70">
+                          {holidayPricingLoading ? "Đang tải..." : "Chọn loại giá vé đặc biệt"}
+                        </option>
+                        {holidayRuleOptions.map((rule) => (
+                          <option key={rule.id} value={rule.id} className="bg-zinc-900 text-white">
+                            {rule.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-white/35 mt-1">
+                          Chọn để tự đổ giá vào mục bên dưới.
+                      </p>
+                    </div>
                   </div>
                 )}
 
-                {showMovieDropdown &&
-                  searchMovieTerm &&
-                  filteredMovies.length === 0 && (
-                    <div className="absolute z-50 mt-1 w-full bg-[#1a1a2e] border border-white/10 rounded-lg shadow-xl p-4 text-center">
-                      <p className="text-sm text-white/40">
-                        Không tìm thấy phim "{searchMovieTerm}"
-                      </p>
-                    </div>
+                {!form?.isSpecial &&
+                  renderPriceSection(
+                    "Giá suất chiếu thường",
+                    "Tự động áp dụng từ bảng giá (không chỉnh tay)",
+                    pricingLoading || form?.regularPricingError ? null : form?.regularPrices,
+                    handlePriceChange,
+                    {
+                      bg: "bg-green-500/5",
+                      border: "border-green-500/15",
+                      title: "text-green-300",
+                    },
+                    true,
+                    pricingLoading
+                      ? "Đang tải..."
+                      : form?.regularPricingError
+                        ? "Chưa có quy tắc"
+                        : "Tự động",
                   )}
-              </div>
-              {form?.movieId && (
-                <p className="text-[10px] text-green-400 mt-1">
-                  ✓ Đã chọn: {form.movieTitle} • Thời lượng:{" "}
-                  {form.movieDuration} phút
-                </p>
-              )}
-            </div>
 
-            <div>
-              <label className="block text-xs text-white/55 mb-1.5">
-                Rạp chiếu *
-              </label>
-              <select
-                value={form?.cinemaId || ""}
-                onChange={(e) => handleCinemaChange(e.target.value)}
-                className={selectClass}
-                required
-              >
-                <option value="" className="bg-[#2d2d44] text-white/70">
-                  Chọn rạp
-                </option>
-                {cinemas && cinemas.map((cinema) => {
-                  const roomCount = cinema.rooms?.length || 0;
-                  const maxRoomLimit = cinema.maxRooms || 4;
-                  return (
-                    <option
-                      key={cinema.id}
-                      value={cinema.id}
-                      className="bg-[#2d2d44] text-white"
-                    >
-                      {cinema.name} ({roomCount}/{maxRoomLimit} phòng)
-                    </option>
-                  );
-                })}
-              </select>
-              {form?.cinemaId && selectedCinema && (
-                <p className="text-[10px] text-white/40 mt-1">
-                  Rạp có {currentRoomCount}/{maxRooms} phòng
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-xs text-white/55 mb-1.5">
-                Phòng chiếu *
-              </label>
-              <select
-                value={form?.roomId || ""}
-                onChange={(e) => handleRoomChange(e.target.value)}
-                className={selectClass}
-                disabled={isRoomDisabled}
-                required
-                style={{ opacity: isRoomDisabled ? 0.5 : 1 }}
-              >
-                <option value="" className="bg-[#2d2d44] text-white/70">
-                  {!form?.cinemaId
-                    ? "Chọn rạp trước"
-                    : !hasRooms
-                      ? "Rạp này chưa có phòng"
-                      : "Chọn phòng"}
-                </option>
-                {availableRooms.map((room) => (
-                  <option
-                    key={room.id}
-                    value={room.id}
-                    className="bg-[#2d2d44] text-white"
-                  >
-                    {room.name} ({room.type} -{" "}
-                    {room.capacity || 100} ghế)
-                  </option>
-                ))}
-              </select>
-              {form?.cinemaId && !hasRooms && (
-                <p className="text-[10px] text-yellow-400 mt-1">
-                  ⚠️ Rạp này chưa có phòng chiếu. Vui lòng thêm phòng trước.
-                </p>
-              )}
-              {form?.roomId && form?.type && (
-                <p className="text-[10px] text-blue-400 mt-1">
-                  📍 Định dạng: {form.type} • Sức chứa: {form.totalSeats} ghế
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-xs text-white/55 mb-1.5">
-                Ngày chiếu *
-              </label>
-              <input
-                type="date"
-                value={form?.date || ""}
-                onChange={(e) => {
-                  const newDate = e.target.value;
-                  setForm({ ...form, date: newDate });
-                }}
-                className={inputClass}
-                min={getTodayDate()}
-                required
-                style={{ colorScheme: "dark" }}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-white/55 mb-1.5">
-                Giờ bắt đầu *
-              </label>
-              <input
-                type="time"
-                value={form?.time || ""}
-                onChange={(e) => handleTimeChange(e.target.value)}
-                className={inputClass}
-                required
-                style={{ colorScheme: "dark" }}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-white/55 mb-1.5">
-                Giờ kết thúc
-              </label>
-              <div
-                className={`w-full border rounded-lg px-3 py-2 text-sm ${
-                  form?.endTime && form.endTime.includes("ngày hôm sau")
-                    ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/30"
-                    : "text-white bg-[#2d2d44] border-white/10"
-                }`}
-              >
-                {form?.endTime ||
-                  (form?.movieDuration
-                    ? calculateEndTime()
-                    : "Chọn phim và giờ bắt đầu")}
-              </div>
-              {form?.movieDuration && (
-                <p className="text-[10px] text-blue-400 mt-1">
-                  ⏱️ Thời lượng: {form.movieDuration} phút + 15 phút quảng cáo
-                  {form?.endTime && form.endTime.includes("ngày hôm sau") && (
-                    <span className="text-yellow-400 ml-2">
-                      📅 Kết thúc vào ngày hôm sau
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-xs text-white/55 mb-1.5">
-                Định dạng
-              </label>
-              <div
-                className={`w-full border rounded-lg px-3 py-2 text-sm ${form?.type ? "text-white" : "text-white/40"} bg-[#2d2d44] border-white/10`}
-              >
-                {form?.type || "Chưa chọn phòng"}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs text-white/55 mb-1.5">
-                Số ghế
-              </label>
-              <div className="w-full bg-[#2d2d44] border border-white/10 rounded-lg px-3 py-2 text-white text-sm">
-                {form?.totalSeats || 0} ghế
-              </div>
-            </div>
-          </div>
-
-          {/* Tùy chọn suất chiếu đặc biệt */}
-          <div className="col-span-2">
-            <label className="block text-xs text-white/55 mb-1.5">
-              <Sparkles size={12} className="inline mr-1 text-yellow-400" />
-              Loại suất chiếu *
-            </label>
-            <div className="flex gap-3 mb-3">
-              <button
-                type="button"
-                onClick={() => {
-                  handleSpecialToggle(false);
-                }}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  !form?.isSpecial
-                    ? 'bg-green-600 text-white shadow-lg shadow-green-600/30'
-                    : 'bg-[#1a1a2e] text-gray-400 hover:text-white border border-white/10'
-                }`}
-              >
-                Suất chiếu thường
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  handleSpecialToggle(true);
-                }}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  form?.isSpecial
-                    ? 'bg-yellow-600 text-white shadow-lg shadow-yellow-600/30'
-                    : 'bg-[#1a1a2e] text-gray-400 hover:text-white border border-white/10'
-                }`}
-              >
-                <Sparkles size={12} className="inline mr-1" />
-                Suất chiếu đặc biệt
-              </button>
-            </div>
-
-            {!form?.isSpecial && (
-              <p className="text-[10px] text-green-400 flex items-center gap-1">
-                ✓ Giá vé sẽ tự động áp dụng theo bảng giá có sẵn (loại ghế, loại rạp, giờ chiếu)
-              </p>
-            )}
-
-            {!form?.isSpecial && form?.regularPricingError && (
-              <p className="text-[10px] text-red-400 flex items-center gap-1">
-                ✕ {form.regularPricingError}
-              </p>
-            )}
-
-            {form?.isSpecial && (
-              <div className="space-y-3">
-                <p className="text-[10px] text-yellow-400 flex items-center gap-1">
-                  <Sparkles size={10} />
-                  Nhập giá vé đặc biệt cho từng loại ghế (sẽ được lưu trực tiếp theo suất chiếu)
-                </p>
-
-                <div>
-                  <label className="block text-xs text-white/55 mb-1.5">
-                    Loại giá vé (từ trang Giá vé)
-                  </label>
-                  <select
-                    value={form?.specialPricingRuleId || ""}
-                    onChange={(e) => handleHolidayRuleSelect(e.target.value)}
-                    className={selectClass}
-                    disabled={holidayPricingLoading}
-                  >
-                    <option value="" className="bg-[#2d2d44] text-white/70">
-                      {holidayPricingLoading ? "Đang tải..." : "Tự nhập / Không chọn"}
-                    </option>
-                    {holidayRuleOptions.map((rule) => (
-                      <option key={rule.id} value={rule.id} className="bg-[#2d2d44] text-white">
-                        {rule.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-white/35 mt-1">
-                    Chọn để tự đổ giá vào ô bên dưới; bạn vẫn có thể chỉnh tay.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-1 col-span-2">
-            {!form?.isSpecial && renderPriceSection(
-              "Giá suất chiếu thường",
-              "Tự động áp dụng từ bảng giá có sẵn",
-              form?.regularPrices || form?.prices || DEFAULT_REGULAR_PRICES,
-              handlePriceChange,
-              {
-                bg: "bg-green-500/5",
-                border: "border-green-500/15",
-                title: "text-green-300",
-              },
-              false,
-            )}
-
-            {form?.isSpecial ? (
-              renderPriceSection(
-                "Giá suất chiếu đặc biệt",
-                "Nhập trực tiếp giá vé đặc biệt",
-                form?.specialPrices || form?.prices || DEFAULT_REGULAR_PRICES,
-                handleSpecialPriceChange,
-                {
-                  bg: "bg-yellow-500/5",
-                  border: "border-yellow-500/15",
-                  title: "text-yellow-300",
-                },
-                !form?.specialPrices,
-              )
-            ) : (
-              <div className="p-4 rounded-xl border border-gray-500/15 bg-gray-500/5 opacity-60">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-300">Giá suất chiếu đặc biệt</h3>
-                    <p className="text-[10px] text-white/40 mt-1">Khóa - Chọn "Suất chiếu đặc biệt" để bật</p>
+                {form?.isSpecial ? (
+                  <div className="mt-4">
+                    {renderPriceSection(
+                      "Giá suất chiếu đặc biệt",
+                      "Tự động theo loại giá vé đã chọn (không chỉnh tay)",
+                      form?.specialPrices || null,
+                      handleSpecialPriceChange,
+                      {
+                        bg: "bg-yellow-500/5",
+                        border: "border-yellow-500/15",
+                        title: "text-yellow-300",
+                      },
+                      true,
+                      form?.specialPrices
+                        ? (form?.specialPricingRuleId ? "Tự động" : "Đã có giá")
+                        : (form?.specialPricingRuleId ? "Chưa có giá" : "Chưa chọn loại giá"),
+                    )}
                   </div>
-                  <span className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-white/45 border border-white/10">
-                    Đã khóa
-                  </span>
-                </div>
-                <div className="space-y-3 opacity-50">
-                  {[
-                    { key: "Thường", label: "Ghế Thường" },
-                    { key: "VIP", label: "Ghế VIP" },
-                    { key: "Couple", label: "Ghế Couple" },
-                  ].map((seat) => (
-                    <div key={`locked-${seat.key}`} className="flex items-center justify-between gap-3">
-                      <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-400 mb-0.5">
-                          {seat.label}
-                        </label>
+                ) : (
+                  <div className="mt-4 p-3 rounded-xl border border-gray-500/15 bg-gray-500/5 opacity-70">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-300">Giá suất chiếu đặc biệt</h3>
+                        <p className="text-[10px] text-white/40 mt-0.5">Chọn "Suất chiếu đặc biệt" để bật</p>
                       </div>
-                      <div className="w-40">
-                        <input
-                          type="number"
-                          disabled
-                          className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white/40 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                        />
+                      <span className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-white/45 border border-white/10">Đã khóa</span>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[10px] text-blue-400 mt-3 flex items-center gap-1">
+                  💡 Giá thường và giá đặc biệt được lưu riêng để tránh trộn dữ liệu.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="text-xs font-semibold text-white/70 mb-3">Trạng thái</div>
+                <label className="block text-xs text-white/55 mb-1.5">Trạng thái</label>
+                <select
+                  value={form?.status || "scheduled"}
+                  onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  className={selectClass}
+                >
+                  <option value="scheduled" className="bg-zinc-900 text-green-400">
+                    Sắp chiếu
+                  </option>
+                  <option value="ongoing" className="bg-zinc-900 text-yellow-400">
+                    Đang chiếu
+                  </option>
+                  <option value="ended" className="bg-zinc-900 text-gray-400">
+                    Đã kết thúc
+                  </option>
+                  <option value="cancelled" className="bg-zinc-900 text-red-400">
+                    Hủy
+                  </option>
+                </select>
+
+                {form?.roomId && form?.type && form?.totalSeats > 0 && (
+                  <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <div className="flex items-center gap-2 text-xs text-blue-400 mb-1">
+                      <span>🎬</span>
+                      <span>Thông tin phòng chiếu</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-white/50">Phòng:</span>
+                        <span className="text-white ml-2">{form.roomName}</span>
+                      </div>
+                      <div>
+                        <span className="text-white/50">Định dạng:</span>
+                        <span className="text-white ml-2">{form.type}</span>
+                      </div>
+                      <div>
+                        <span className="text-white/50">Sức chứa:</span>
+                        <span className="text-white ml-2">{form.totalSeats} ghế</span>
+                      </div>
+                      <div>
+                        <span className="text-white/50">Rạp:</span>
+                        <span className="text-white ml-2">{form.cinemaName}</span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <p className="text-[10px] text-blue-400 mt-1 flex items-center gap-1 col-span-2">
-            💡 Giá thường và giá đặc biệt được lưu riêng để tránh trộn dữ liệu khi vận hành thực tế.
-          </p>
-
-          <div>
-            <label className="block text-xs text-white/55 mb-1.5">
-              Trạng thái
-            </label>
-            <select
-              value={form?.status || "scheduled"}
-              onChange={(e) => setForm({ ...form, status: e.target.value })}
-              className={selectClass}
-            >
-              <option value="scheduled" className="bg-[#2d2d44] text-green-400">
-                Sắp chiếu
-              </option>
-              <option value="ongoing" className="bg-[#2d2d44] text-yellow-400">
-                Đang chiếu
-              </option>
-              <option value="ended" className="bg-[#2d2d44] text-gray-400">
-                Đã kết thúc
-              </option>
-              <option value="cancelled" className="bg-[#2d2d44] text-red-400">
-                Hủy
-              </option>
-            </select>
-          </div>
-
-          {form?.roomId && form?.type && form?.totalSeats > 0 && (
-            <div className="mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <div className="flex items-center gap-2 text-xs text-blue-400 mb-1">
-                <span>🎬</span>
-                <span>Thông tin phòng chiếu</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <span className="text-white/50">Phòng:</span>
-                  <span className="text-white ml-2">{form.roomName}</span>
-                </div>
-                <div>
-                  <span className="text-white/50">Định dạng:</span>
-                  <span className="text-white ml-2">{form.type}</span>
-                </div>
-                <div>
-                  <span className="text-white/50">Sức chứa:</span>
-                  <span className="text-white ml-2">{form.totalSeats} ghế</span>
-                </div>
-                <div>
-                  <span className="text-white/50">Rạp:</span>
-                  <span className="text-white ml-2">{form.cinemaName}</span>
-                </div>
+                  </div>
+                )}
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         <div className="flex gap-3 p-6 pt-4 border-t border-white/10 flex-shrink-0">

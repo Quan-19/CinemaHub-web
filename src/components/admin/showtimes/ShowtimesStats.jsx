@@ -16,7 +16,7 @@ export default function ShowtimesStats({ showtimes, onDateChange, specialTypes }
     <div className="grid grid-cols-4 gap-3">
       <div 
         onClick={() => onDateChange('today')}
-        className="bg-[#0d0d1a] border border-white/10 rounded-xl p-4 cursor-pointer hover:bg-white/5 transition"
+        className="bg-cinema-surface border border-white/10 rounded-xl p-4 cursor-pointer hover:bg-white/5 transition"
       >
         <div className="flex items-center justify-between">
           <Calendar size={18} className="text-blue-400" />
@@ -26,7 +26,7 @@ export default function ShowtimesStats({ showtimes, onDateChange, specialTypes }
         <div className="text-xs text-white/40">suất chiếu</div>
       </div>
 
-      <div className="bg-[#0d0d1a] border border-white/10 rounded-xl p-4">
+      <div className="bg-cinema-surface border border-white/10 rounded-xl p-4">
         <div className="flex items-center justify-between">
           <TrendingUp size={18} className="text-green-400" />
           <span className="text-xs text-white/40">Sắp tới</span>
@@ -35,7 +35,7 @@ export default function ShowtimesStats({ showtimes, onDateChange, specialTypes }
         <div className="text-xs text-white/40">suất chiếu</div>
       </div>
 
-      <div className="bg-[#0d0d1a] border border-white/10 rounded-xl p-4">
+      <div className="bg-cinema-surface border border-white/10 rounded-xl p-4">
         <div className="flex items-center justify-between">
           <TrendingDown size={18} className="text-yellow-400" />
           <span className="text-xs text-white/40">Đang chiếu</span>
@@ -44,7 +44,7 @@ export default function ShowtimesStats({ showtimes, onDateChange, specialTypes }
         <div className="text-xs text-white/40">suất chiếu</div>
       </div>
 
-      <div className="bg-[#0d0d1a] border border-white/10 rounded-xl p-4">
+      <div className="bg-cinema-surface border border-white/10 rounded-xl p-4">
         <div className="flex items-center justify-between">
           <Sparkles size={18} className="text-purple-400" />
           <span className="text-xs text-white/40">Suất đặc biệt</span>

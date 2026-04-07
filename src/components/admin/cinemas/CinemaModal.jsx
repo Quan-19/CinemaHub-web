@@ -64,7 +64,7 @@ export default function CinemaModal({
   if (!show) return null;
 
   const inputClass =
-    "mt-1 w-full bg-[#020617] border border-white/10 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-white/20";
+    "mt-1 w-full bg-zinc-900 text-white border border-white/10 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-white/20";
 
   const handleManagerChange = (e) => {
     const managerId = e.target.value;
@@ -89,8 +89,8 @@ export default function CinemaModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
-      <div className="w-[520px] bg-[#0B1220] border border-white/10 rounded-xl overflow-hidden shadow-xl">
+    <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 p-4">
+      <div className="w-full max-w-[520px] bg-cinema-surface border border-white/10 rounded-xl overflow-hidden shadow-xl">
         <div className="flex justify-between items-center px-5 py-4 border-b border-white/10">
           <h2 className="text-white font-semibold text-lg">
             {isEdit ? "Chỉnh sửa rạp" : "Thêm rạp mới"}
@@ -186,7 +186,7 @@ export default function CinemaModal({
           {isEdit && (
             <div>
               <label className="text-sm text-white/60">Số phòng hiện tại</label>
-              <div className="mt-1 px-3 py-2 bg-[#020617] border border-white/10 rounded-lg text-sm text-white/70">
+              <div className="mt-1 px-3 py-2 bg-zinc-900 border border-white/10 rounded-lg text-sm text-white/70">
                 {form.currentRooms || 0} / {form.maxRooms || 4} phòng
               </div>
               <p className="text-xs text-yellow-400/70 mt-1">

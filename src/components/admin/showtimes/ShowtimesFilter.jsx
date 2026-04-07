@@ -24,16 +24,17 @@ export default function ShowtimesFilter({
 }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const selectClass = "bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition [&>option]:bg-[#2d2d44] [&>option]:text-white";
+  const selectClass =
+    "bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition [&>option]:bg-zinc-900 [&>option]:text-white";
 
   return (
     <div className="space-y-3">
       {/* Filter cơ bản */}
-      <div className="bg-[#0d0d1a] border border-white/10 rounded-xl p-4">
+      <div className="bg-cinema-surface border border-white/10 rounded-xl p-4">
         <div className="flex flex-wrap gap-3">
           {/* Search */}
           <div className="flex-1 min-w-[250px]">
-            <div className="flex items-center gap-2 bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-2 focus-within:border-red-500/50 transition">
+            <div className="flex items-center gap-2 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 focus-within:border-red-500/50 transition">
               <Search size={16} className="text-white/35" />
               <input
                 placeholder="Tìm theo tên phim, rạp, phòng..."
@@ -52,13 +53,13 @@ export default function ShowtimesFilter({
           </div>
 
           {/* Quick date filters */}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setDateFilter("today")}
               className={`px-3 py-2 rounded-lg text-sm transition ${
                 dateFilter === "today"
                   ? "bg-red-600 text-white"
-                  : "bg-[#1a1a2e] text-white/70 hover:bg-[#2d2d44] border border-white/10"
+                  : "bg-zinc-900 text-white/70 hover:bg-zinc-800 border border-white/10"
               }`}
             >
               Hôm nay ({getTodayDisplay()})
@@ -68,7 +69,7 @@ export default function ShowtimesFilter({
               className={`px-3 py-2 rounded-lg text-sm transition ${
                 dateFilter === "tomorrow"
                   ? "bg-red-600 text-white"
-                  : "bg-[#1a1a2e] text-white/70 hover:bg-[#2d2d44] border border-white/10"
+                  : "bg-zinc-900 text-white/70 hover:bg-zinc-800 border border-white/10"
               }`}
             >
               Ngày mai
@@ -78,7 +79,7 @@ export default function ShowtimesFilter({
               className={`px-3 py-2 rounded-lg text-sm transition ${
                 dateFilter === "week"
                   ? "bg-red-600 text-white"
-                  : "bg-[#1a1a2e] text-white/70 hover:bg-[#2d2d44] border border-white/10"
+                  : "bg-zinc-900 text-white/70 hover:bg-zinc-800 border border-white/10"
               }`}
             >
               Trong tuần
@@ -91,7 +92,7 @@ export default function ShowtimesFilter({
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition border ${
               showAdvanced 
                 ? "bg-red-600 text-white border-red-600" 
-                : "bg-[#1a1a2e] text-white/70 hover:bg-[#2d2d44] border-white/10"
+                : "bg-zinc-900 text-white/70 hover:bg-zinc-800 border-white/10"
             }`}
           >
             <Filter size={14} />
@@ -107,11 +108,10 @@ export default function ShowtimesFilter({
               value={cinemaFilter}
               onChange={e => setCinemaFilter(e.target.value)}
               className={selectClass}
-              style={{ backgroundColor: '#1a1a2e' }}
             >
-              <option value="all" className="bg-[#2d2d44] text-white">Tất cả rạp</option>
+              <option value="all" className="bg-zinc-900 text-white">Tất cả rạp</option>
               {cinemas.map(cinema => (
-                <option key={cinema.id} value={cinema.id} className="bg-[#2d2d44] text-white">
+                <option key={cinema.id} value={cinema.id} className="bg-zinc-900 text-white">
                   {cinema.name}
                 </option>
               ))}
@@ -122,14 +122,13 @@ export default function ShowtimesFilter({
               value={dateFilter}
               onChange={e => setDateFilter(e.target.value)}
               className={selectClass}
-              style={{ backgroundColor: '#1a1a2e' }}
             >
-              <option value="all" className="bg-[#2d2d44] text-white">Tất cả ngày</option>
-              <option value="today" className="bg-[#2d2d44] text-white">Hôm nay ({getTodayDisplay()})</option>
-              <option value="tomorrow" className="bg-[#2d2d44] text-white">Ngày mai</option>
-              <option value="week" className="bg-[#2d2d44] text-white">Trong tuần</option>
+              <option value="all" className="bg-zinc-900 text-white">Tất cả ngày</option>
+              <option value="today" className="bg-zinc-900 text-white">Hôm nay ({getTodayDisplay()})</option>
+              <option value="tomorrow" className="bg-zinc-900 text-white">Ngày mai</option>
+              <option value="week" className="bg-zinc-900 text-white">Trong tuần</option>
               {availableDates.map(date => (
-                <option key={date} value={date} className="bg-[#2d2d44] text-white">
+                <option key={date} value={date} className="bg-zinc-900 text-white">
                   {formatDateToDisplay(date)}
                 </option>
               ))}
@@ -140,13 +139,12 @@ export default function ShowtimesFilter({
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
               className={selectClass}
-              style={{ backgroundColor: '#1a1a2e' }}
             >
               {statusOptions.map(option => (
                 <option 
                   key={option.value} 
                   value={option.value} 
-                  className="bg-[#2d2d44] text-white"
+                  className="bg-zinc-900 text-white"
                   style={option.color ? { color: option.color } : {}}
                 >
                   {option.label}
@@ -159,11 +157,11 @@ export default function ShowtimesFilter({
 
       {/* Active filters */}
       {(search || dateFilter !== "all" || statusFilter !== "all" || cinemaFilter !== "all") && (
-        <div className="flex items-center gap-2 flex-wrap bg-[#0d0d1a] border border-white/10 rounded-lg p-2">
+        <div className="flex items-center gap-2 flex-wrap bg-cinema-surface border border-white/10 rounded-lg p-2">
           <span className="text-xs text-white/40 px-1">Bộ lọc đang áp dụng:</span>
           
           {search && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#2d2d44] rounded text-xs text-white border border-white/10">
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-900 rounded text-xs text-white border border-white/10">
               <Search size={10} className="text-white/40" />
               "{search}"
               <X 
@@ -175,7 +173,7 @@ export default function ShowtimesFilter({
           )}
           
           {dateFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#2d2d44] rounded text-xs text-white border border-white/10">
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-900 rounded text-xs text-white border border-white/10">
               <Calendar size={10} className="text-white/40" />
               {dateFilter === "today" ? `Hôm nay (${getTodayDisplay()})` : 
                dateFilter === "tomorrow" ? "Ngày mai" : 
@@ -190,7 +188,7 @@ export default function ShowtimesFilter({
           )}
           
           {statusFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#2d2d44] rounded text-xs border border-white/10"
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-900 rounded text-xs border border-white/10"
               style={{ color: statusOptions.find(o => o.value === statusFilter)?.color || '#fff' }}
             >
               {statusOptions.find(o => o.value === statusFilter)?.label}
@@ -203,7 +201,7 @@ export default function ShowtimesFilter({
           )}
           
           {cinemaFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#2d2d44] rounded text-xs text-white border border-white/10">
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-900 rounded text-xs text-white border border-white/10">
               {cinemas.find(c => c.id === cinemaFilter)?.name}
               <X 
                 size={12} 

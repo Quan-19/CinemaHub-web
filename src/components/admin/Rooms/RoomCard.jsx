@@ -18,11 +18,7 @@ export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatu
 
   return (
     <div
-      className="rounded-xl p-5 hover:transform hover:scale-[1.02] transition-all duration-200"
-      style={{
-        background: "#0d0d1a",
-        border: "1px solid rgba(255,255,255,0.07)",
-      }}
+      className="rounded-xl p-5 bg-cinema-surface border border-white/10 hover:transform hover:scale-[1.02] transition-all duration-200"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">

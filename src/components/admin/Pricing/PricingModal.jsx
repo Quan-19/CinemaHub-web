@@ -207,9 +207,9 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="w-[560px] bg-[#0b0f1f] rounded-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center px-6 py-5 border-b border-white/10 sticky top-0 bg-[#0b0f1f]">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-[560px] bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center px-6 py-5 border-b border-white/10 sticky top-0 bg-cinema-surface">
           <div>
             <h2 className="text-xl font-semibold text-white">
               {editingItem ? 'Chỉnh sửa bảng giá' : 'Thêm bảng giá mới'}
@@ -224,7 +224,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
         </div>
 
         <div className="px-6 py-5 space-y-5">
-          <div className="bg-[#020617] rounded-xl p-4">
+          <div className="bg-cinema-bg rounded-xl p-4">
             <label className="text-sm font-medium text-gray-300 mb-3 block">Loại giá</label>
             <div className="flex gap-3">
               <button
@@ -233,7 +233,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                 className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   !form.isHolyday
                     ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                    : 'bg-[#1f2937] text-gray-400 hover:text-white'
+                    : 'bg-zinc-900 text-gray-400 hover:text-white hover:bg-zinc-800'
                 }`}
               >
                 Giá thường
@@ -244,7 +244,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                 className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   form.isHolyday
                     ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                    : 'bg-[#1f2937] text-gray-400 hover:text-white'
+                    : 'bg-zinc-900 text-gray-400 hover:text-white hover:bg-zinc-800'
                 }`}
               >
                 <Calendar size={16} className="inline mr-2" />
@@ -261,7 +261,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
               placeholder={form.isHolyday ? "VD: Tết Nguyên Đán 2025" : "VD: 2D Thường - Ngày thường - Sáng"}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className={`w-full h-[45px] px-4 rounded-xl bg-[#020617] border ${
+              className={`w-full h-[45px] px-4 rounded-xl bg-zinc-900 border ${
                 errors.name ? 'border-red-500/50' : 'border-white/10'
               } text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all`}
             />
@@ -276,7 +276,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                   <select
                     value={form.type}
                     onChange={(e) => setForm({ ...form, type: e.target.value })}
-                    className="w-full h-[45px] px-4 rounded-xl bg-[#020617] border border-white/10 text-white focus:outline-none focus:border-red-500/50"
+                    className="w-full h-[45px] px-4 rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-red-500/50"
                   >
                     <option value="2D">2D</option>
                     <option value="3D">3D</option>
@@ -291,7 +291,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                   <select
                     value={form.seat}
                     onChange={(e) => setForm({ ...form, seat: e.target.value })}
-                    className="w-full h-[45px] px-4 rounded-xl bg-[#020617] border border-white/10 text-white focus:outline-none focus:border-red-500/50"
+                    className="w-full h-[45px] px-4 rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-red-500/50"
                   >
                     <option value="Thường">Thường</option>
                     <option value="VIP">VIP</option>
@@ -305,7 +305,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                   <select
                     value={form.day}
                     onChange={(e) => setForm({ ...form, day: e.target.value })}
-                    className="w-full h-[45px] px-4 rounded-xl bg-[#020617] border border-white/10 text-white focus:outline-none focus:border-red-500/50"
+                    className="w-full h-[45px] px-4 rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-red-500/50"
                   >
                     <option value="Ngày thường">Ngày thường</option>
                     <option value="Cuối tuần">Cuối tuần</option>
@@ -320,7 +320,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                 <select
                   value={form.time}
                   onChange={(e) => setForm({ ...form, time: e.target.value })}
-                  className="w-full h-[45px] px-4 rounded-xl bg-[#020617] border border-white/10 text-white focus:outline-none focus:border-red-500/50"
+                  className="w-full h-[45px] px-4 rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-red-500/50"
                 >
                   <option value="Sáng (trước 12h)">Sáng (trước 12h)</option>
                   <option value="Chiều (12h-18h)">Chiều (12h-18h)</option>
@@ -337,7 +337,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                     value={form.base}
                     onChange={(e) => setForm({ ...form, base: e.target.value })}
                     placeholder="85000"
-                    className="w-full h-[45px] px-4 rounded-xl bg-[#020617] border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50"
+                    className="w-full h-[45px] px-4 rounded-xl bg-zinc-900 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50"
                   />
                   {errors.base && <p className="text-red-400 text-xs mt-1">{errors.base}</p>}
                 </div>
@@ -349,7 +349,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                     value={form.final}
                     onChange={(e) => setForm({ ...form, final: e.target.value })}
                     placeholder="85000"
-                    className="w-full h-[45px] px-4 rounded-xl bg-[#020617] border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50"
+                    className="w-full h-[45px] px-4 rounded-xl bg-zinc-900 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50"
                   />
                   <p className="text-[10px] text-gray-500 mt-1">Để trống nếu bằng giá gốc</p>
                   {errors.final && <p className="text-red-400 text-xs mt-1">{errors.final}</p>}
@@ -363,7 +363,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                 <select
                   value={form.holiday_room_type}
                   onChange={(e) => setForm({ ...form, holiday_room_type: e.target.value })}
-                  className="w-full h-[45px] px-4 rounded-xl bg-[#020617] border border-white/10 text-white focus:outline-none focus:border-red-500/50"
+                  className="w-full h-[45px] px-4 rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-red-500/50"
                 >
                   {roomTypes.map(room => (
                     <option key={room.value} value={room.value}>{room.label}</option>
@@ -379,7 +379,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                     type="date"
                     value={form.start_date}
                     onChange={(e) => setForm({ ...form, start_date: e.target.value })}
-                    className="w-full h-[45px] px-4 rounded-xl bg-[#020617] border border-white/10 text-white focus:outline-none focus:border-red-500/50"
+                    className="w-full h-[45px] px-4 rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-red-500/50"
                   />
                   {errors.start_date && <p className="text-red-400 text-xs mt-1">{errors.start_date}</p>}
                 </div>
@@ -390,7 +390,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                     type="date"
                     value={form.end_date}
                     onChange={(e) => setForm({ ...form, end_date: e.target.value })}
-                    className="w-full h-[45px] px-4 rounded-xl bg-[#020617] border border-white/10 text-white focus:outline-none focus:border-red-500/50"
+                    className="w-full h-[45px] px-4 rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-red-500/50"
                   />
                   {errors.end_date && <p className="text-red-400 text-xs mt-1">{errors.end_date}</p>}
                 </div>
@@ -410,7 +410,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                       className={`w-12 py-2 rounded-lg text-sm font-medium transition-all ${
                         form.apply_days.includes(day.value)
                           ? 'bg-red-600 text-white'
-                          : 'bg-[#1a1a2e] text-gray-400 hover:text-white border border-white/10'
+                          : 'bg-zinc-900 text-gray-400 hover:text-white border border-white/10 hover:bg-zinc-800'
                       }`}
                     >
                       {day.label}
@@ -419,7 +419,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                 </div>
               </div>
 
-              <div className="bg-[#020617] rounded-xl p-4 border border-yellow-500/30">
+              <div className="bg-cinema-bg rounded-xl p-4 border border-yellow-500/30">
                 <label className="text-sm font-medium text-yellow-400 mb-3 block">
                   <Sparkles size={14} className="inline mr-2" />
                   Giá vé ngày lễ đặc biệt <span className="text-red-400">*</span>
@@ -437,7 +437,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                           placeholder="Giá vé"
                           value={form.holiday_prices.find(hp => hp.seat_type === seat.value)?.price || ""}
                           onChange={(e) => updateHolidayPrice(seat.value, e.target.value)}
-                          className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg pl-8 pr-4 py-2.5 text-white text-sm outline-none focus:border-yellow-500/50"
+                          className="w-full bg-zinc-900 border border-white/10 rounded-lg pl-8 pr-4 py-2.5 text-white text-sm outline-none focus:border-yellow-500/50"
                         />
                       </div>
                     </div>
@@ -475,8 +475,8 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
           )}
         </div>
 
-        <div className="flex gap-4 px-6 py-5 border-t border-white/10 sticky bottom-0 bg-[#0b0f1f]">
-          <button onClick={onClose} className="flex-1 h-[48px] bg-[#1f2937] hover:bg-[#374151] rounded-xl text-gray-300 font-medium transition-colors">
+        <div className="flex gap-4 px-6 py-5 border-t border-white/10 sticky bottom-0 bg-cinema-surface">
+          <button onClick={onClose} className="flex-1 h-[48px] bg-zinc-900 hover:bg-zinc-800 rounded-xl text-gray-300 font-medium transition-colors">
             Hủy bỏ
           </button>
           <button onClick={handleSubmit} className="flex-1 h-[48px] bg-red-600 hover:bg-red-700 rounded-xl font-semibold transition-colors shadow-lg shadow-red-600/30">

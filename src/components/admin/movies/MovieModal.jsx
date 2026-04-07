@@ -17,10 +17,10 @@ export default function MovieModal({
   const [inputGenre, setInputGenre] = useState("");
 
   const inputClass =
-    "w-full h-[42px] px-3 rounded-lg bg-[#020617] border border-white/10 text-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all";
+    "w-full h-[42px] px-3 rounded-lg bg-zinc-900 border border-white/10 text-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all";
   
   const textareaClass =
-    "w-full px-3 py-2 rounded-lg bg-[#020617] border border-white/10 text-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 resize-none";
+    "w-full px-3 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 resize-none";
 
   const labelClass = "text-[13px] text-gray-400 mb-1.5 block font-medium";
 
@@ -110,7 +110,7 @@ export default function MovieModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 p-4">
-      <div className="w-[800px] max-h-[90vh] bg-[#0b0f1f] rounded-2xl border border-white/10 flex flex-col">
+      <div className="w-full max-w-[800px] max-h-[90vh] bg-cinema-surface rounded-2xl border border-white/10 flex flex-col">
         
         {/* HEADER */}
         <div className="flex justify-between items-center px-6 py-5 border-b border-white/10">

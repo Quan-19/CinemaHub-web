@@ -1,35 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
 
 export default function AccountModal({ data, onClose, onSave }) {
-  // ✅ Kết hợp: Khởi tạo state từ data (giống Code 2)
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    role: "customer", // ✅ GIỮ customer từ Code 1
-    status: "active",
+  const getInitialFormData = (payload) => ({
+    name: payload?.name && payload.name !== "-" ? payload.name : "",
+    email: payload?.email && payload.email !== "-" ? payload.email : "",
+    phone: payload?.phone && payload.phone !== "-" ? payload.phone : "",
+    role: payload?.role || "customer",
+    status: payload?.status || "active",
   });
 
-  // ✅ GIỮ useEffect từ Code 1 để đồng bộ khi data thay đổi
-  useEffect(() => {
-    if (data) {
-      setFormData({
-        name: data.name || "",
-        email: data.email || "",
-        phone: data.phone || "",
-        role: data.role || "customer",
-        status: data.status || "active",
-      });
-    }
-  }, [data]);
+  const [formData, setFormData] = useState(() => getInitialFormData(data));
 
   // ✅ THÊM validation từ Code 1
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.email || !formData.phone) {
-      alert("Vui lòng nhập đầy đủ thông tin");
+    if (!formData.name || !formData.email) {
+      alert("Vui lòng nhập tên và email");
       return;
     }
     
@@ -40,11 +28,14 @@ export default function AccountModal({ data, onClose, onSave }) {
       return;
     }
     
-    // ✅ THÊM phone format validation
-    const phoneRegex = /^[0-9]{10,11}$/;
-    if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
-      alert("Số điện thoại không hợp lệ (10-11 số)");
-      return;
+    // Phone optional; validate only when user provided
+    const normalizedPhone = String(formData.phone || "").replace(/\s/g, "").trim();
+    if (normalizedPhone) {
+      const phoneRegex = /^[0-9]{8,11}$/;
+      if (!phoneRegex.test(normalizedPhone)) {
+        alert("Số điện thoại không hợp lệ (8-11 số)");
+        return;
+      }
     }
     
     onSave(formData);
@@ -60,7 +51,7 @@ export default function AccountModal({ data, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-[#0d0d1a] border border-white/10 rounded-xl w-[480px] relative">
+      <div className="bg-cinema-surface border border-white/10 rounded-xl w-full max-w-[480px] relative">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className="text-white font-semibold text-lg">
@@ -85,7 +76,7 @@ export default function AccountModal({ data, onClose, onSave }) {
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30" // ✅ THÊM styling từ Code 2
+                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30" // ✅ THÊM styling từ Code 2
               />
             </div>
 
@@ -98,7 +89,7 @@ export default function AccountModal({ data, onClose, onSave }) {
                 value={formData.email}
                 onChange={(e) => handleChange("email", e.target.value)}
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
+                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
               />
             </div>
 
@@ -110,8 +101,7 @@ export default function AccountModal({ data, onClose, onSave }) {
                 placeholder="0912 345 678" // ✅ THÊM placeholder
                 value={formData.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
-                required
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
+                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
               />
             </div>
 
@@ -121,7 +111,7 @@ export default function AccountModal({ data, onClose, onSave }) {
               <select
                 value={formData.role}
                 onChange={(e) => handleChange("role", e.target.value)}
-                className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition appearance-none cursor-pointer"
+                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition appearance-none cursor-pointer"
               >
                 <option value="admin">Admin</option>
                 <option value="staff">Nhân viên</option>
@@ -136,11 +126,10 @@ export default function AccountModal({ data, onClose, onSave }) {
                 <select
                   value={formData.status}
                   onChange={(e) => handleChange("status", e.target.value)}
-                  className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition appearance-none cursor-pointer"
+                  className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition appearance-none cursor-pointer"
                 >
                   <option value="active">Hoạt động</option>
-                  <option value="inactive">Tạm ngưng</option>
-                  <option value="banned">Bị khoá</option>
+                  <option value="locked">Bị khoá</option>
                 </select>
               </div>
             )}

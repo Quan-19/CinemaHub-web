@@ -18,7 +18,7 @@ function Card({ icon, title, value, green, yellow, blue }) {
   const displayValue = typeof value === 'object' ? 0 : value;
   
   return (
-    <div className="bg-[#0B1220] border border-white/5 rounded-xl px-6 py-5 flex items-center gap-4">
+    <div className="bg-cinema-surface border border-white/5 rounded-xl px-6 py-5 flex items-center gap-4">
       <div className={`
         p-2 rounded-lg
         ${green && "bg-green-500/10 text-green-400"}

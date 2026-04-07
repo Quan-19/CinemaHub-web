@@ -325,7 +325,7 @@ export default function AdminPricingPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
           <p className="text-gray-400">Đang tải dữ liệu...</p>
@@ -335,7 +335,7 @@ export default function AdminPricingPage() {
   }
 
   return (
-    <div className="p-6">
+    <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-white">Quản lý giá vé</h1>
@@ -352,7 +352,7 @@ export default function AdminPricingPage() {
               placeholder="Tìm theo tên, loại phòng, loại ghế, ngày/giờ áp dụng..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-10 px-4 rounded-lg bg-[#0d0d1a] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
+              className="w-full h-10 px-4 rounded-lg bg-zinc-900 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
             />
           </div>
 
@@ -429,7 +429,7 @@ export default function AdminPricingPage() {
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
             filterCategory === "all"
               ? "bg-red-600 text-white"
-              : "bg-[#0d0d1a] text-gray-400 hover:text-white"
+              : "bg-zinc-900 text-gray-400 hover:text-white hover:bg-zinc-800"
           }`}
         >
           <Ticket size={16} />
@@ -442,7 +442,7 @@ export default function AdminPricingPage() {
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
             filterCategory === "regular"
               ? "bg-blue-600 text-white"
-              : "bg-[#0d0d1a] text-gray-400 hover:text-white"
+              : "bg-zinc-900 text-gray-400 hover:text-white hover:bg-zinc-800"
           }`}
         >
           🎬 Quy tắc thường ({regularCount})
@@ -455,7 +455,7 @@ export default function AdminPricingPage() {
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
             filterCategory === "holiday"
               ? "bg-yellow-600 text-white"
-              : "bg-[#0d0d1a] text-gray-400 hover:text-white"
+              : "bg-zinc-900 text-gray-400 hover:text-white hover:bg-zinc-800"
           }`}
         >
           <Calendar size={16} />
@@ -473,13 +473,13 @@ export default function AdminPricingPage() {
           giá vé theo điều kiện áp dụng.
         </div>
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="bg-[#050816] p-3 rounded-lg border border-white/10">
+          <div className="bg-cinema-bg p-3 rounded-lg border border-white/10">
             <div className="text-xs text-gray-400 mb-1">Quy tắc thường</div>
             <div className="text-sm text-gray-300">
               Loại phòng + loại ghế + loại ngày + khung giờ → giá áp dụng.
             </div>
           </div>
-          <div className="bg-[#050816] p-3 rounded-lg border border-white/10">
+          <div className="bg-cinema-bg p-3 rounded-lg border border-white/10">
             <div className="text-xs text-gray-400 mb-1">Quy tắc ngày lễ</div>
             <div className="text-sm text-gray-300">
               Loại phòng + khoảng ngày + các thứ áp dụng → giá theo từng loại
@@ -490,7 +490,7 @@ export default function AdminPricingPage() {
       </div>
 
       {showFilters && (
-        <div className="mb-6 p-4 bg-[#0d0d1a] rounded-xl border border-white/10">
+        <div className="mb-6 p-4 bg-cinema-surface rounded-xl border border-white/10">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-sm font-medium text-white flex items-center gap-2">
               <Filter size={14} />
@@ -685,14 +685,14 @@ function ViewDetailModal({ item, onClose, onEdit }) {
         </div>
 
         <div className="px-6 py-5 space-y-4">
-          <div className="bg-[#020617] p-4 rounded-xl">
+          <div className="bg-cinema-bg p-4 rounded-xl">
             <p className="text-sm text-gray-400 mb-1">Tên quy tắc</p>
             <p className="text-white font-medium">{item.name}</p>
           </div>
 
           {isHoliday ? (
             <>
-              <div className="bg-[#020617] p-4 rounded-xl">
+              <div className="bg-cinema-bg p-4 rounded-xl">
                 <p className="text-sm text-gray-400 mb-1">Loại phòng</p>
                 <span
                   className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getTypeColor(
@@ -704,17 +704,17 @@ function ViewDetailModal({ item, onClose, onEdit }) {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Ngày bắt đầu</p>
                   <p className="text-white">{item.start_date}</p>
                 </div>
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Ngày kết thúc</p>
                   <p className="text-white">{item.end_date}</p>
                 </div>
               </div>
 
-              <div className="bg-[#020617] p-4 rounded-xl">
+              <div className="bg-cinema-bg p-4 rounded-xl">
                 <p className="text-sm text-gray-400 mb-1">Áp dụng các ngày</p>
                 <div className="flex flex-wrap gap-1">
                   {item.apply_days?.map((d) => {
@@ -763,7 +763,7 @@ function ViewDetailModal({ item, onClose, onEdit }) {
           ) : (
             <>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Loại phòng</p>
                   <span
                     className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getTypeColor(
@@ -773,7 +773,7 @@ function ViewDetailModal({ item, onClose, onEdit }) {
                     {roomType}
                   </span>
                 </div>
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Loại ghế</p>
                   <span
                     className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getSeatColor(
@@ -786,24 +786,24 @@ function ViewDetailModal({ item, onClose, onEdit }) {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Loại ngày</p>
                   <p className="text-white">{item.day}</p>
                 </div>
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Khung giờ</p>
                   <p className="text-white">{item.time}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Giá gốc</p>
                   <p className="text-white line-through">
                     {formatPrice(item.base)}
                   </p>
                 </div>
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Giá áp dụng</p>
                   <p className="text-yellow-400 font-bold text-lg">
                     {formatPrice(item.final)}
@@ -813,7 +813,7 @@ function ViewDetailModal({ item, onClose, onEdit }) {
             </>
           )}
 
-          <div className="bg-[#020617] p-4 rounded-xl">
+          <div className="bg-cinema-bg p-4 rounded-xl">
             <p className="text-sm text-gray-400 mb-1">Trạng thái</p>
             <span
               className={`flex items-center gap-1 w-fit px-2 py-1 rounded-lg text-xs ${

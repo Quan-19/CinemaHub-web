@@ -37,7 +37,7 @@ export default function BulkActionBar({
           </button>
           
           {showSpecialMenu && (
-            <div className="absolute right-0 mt-2 w-56 bg-[#1a1a2e] border border-white/10 rounded-lg shadow-xl z-20">
+            <div className="absolute right-0 mt-2 w-56 bg-zinc-900 border border-white/10 rounded-lg shadow-xl z-20">
               <button
                 onClick={() => {
                   onSpecialChange('none');

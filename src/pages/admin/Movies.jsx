@@ -190,7 +190,7 @@ export default function MoviesPage() {
   };
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="space-y-5">
       <MoviesHeader total={movies.length} onAdd={handleAdd} />
       <MoviesStats movies={movies} />
 

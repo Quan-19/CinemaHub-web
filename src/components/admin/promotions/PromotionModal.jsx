@@ -135,14 +135,14 @@ export default function PromotionModal({ show, onClose, onSave, editingItem }) {
     }));
   };
 
-  const inputClass = "w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30";
-  const textareaClass = "w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30 resize-none";
+  const inputClass = "w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30";
+  const textareaClass = "w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30 resize-none";
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="w-[720px] bg-[#0b0f1f] rounded-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-[720px] bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex justify-between items-center px-6 py-5 border-b border-white/10 sticky top-0 bg-[#0b0f1f]">
+        <div className="flex justify-between items-center px-6 py-5 border-b border-white/10 sticky top-0 bg-cinema-surface">
           <div>
             <h2 className="text-xl font-semibold text-white">
               {editingItem ? 'Chỉnh sửa khuyến mãi' : 'Thêm khuyến mãi mới'}
@@ -275,7 +275,7 @@ export default function PromotionModal({ show, onClose, onSave, editingItem }) {
                   className={`w-12 py-2 rounded-lg text-sm font-medium transition-all ${
                     form.apply_days.includes(day.value)
                       ? 'bg-red-600 text-white'
-                      : 'bg-[#1a1a2e] text-gray-400 hover:text-white border border-white/10'
+                      : 'bg-zinc-900 hover:bg-zinc-800 text-gray-400 hover:text-white border border-white/10'
                   }`}
                 >
                   {day.label}
@@ -299,7 +299,7 @@ export default function PromotionModal({ show, onClose, onSave, editingItem }) {
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     form.apply_seat_types.includes(seat.value)
                       ? `${seat.color} bg-white/10 border border-current`
-                      : 'text-gray-500 bg-[#1a1a2e] border border-white/10 hover:text-white'
+                      : 'text-gray-500 bg-zinc-900 hover:bg-zinc-800 border border-white/10 hover:text-white'
                   }`}
                 >
                   {seat.label}
@@ -348,7 +348,7 @@ export default function PromotionModal({ show, onClose, onSave, editingItem }) {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   form.status === "active"
                     ? 'bg-green-600 text-white'
-                    : 'bg-[#1a1a2e] text-gray-400 hover:text-white'
+                    : 'bg-zinc-900 hover:bg-zinc-800 text-gray-400 hover:text-white'
                 }`}
               >
                 Đang áp dụng
@@ -359,7 +359,7 @@ export default function PromotionModal({ show, onClose, onSave, editingItem }) {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   form.status === "inactive"
                     ? 'bg-gray-600 text-white'
-                    : 'bg-[#1a1a2e] text-gray-400 hover:text-white'
+                    : 'bg-zinc-900 hover:bg-zinc-800 text-gray-400 hover:text-white'
                 }`}
               >
                 Ngưng áp dụng
@@ -369,10 +369,10 @@ export default function PromotionModal({ show, onClose, onSave, editingItem }) {
         </div>
 
         {/* Footer */}
-        <div className="flex gap-4 px-6 py-5 border-t border-white/10 sticky bottom-0 bg-[#0b0f1f]">
+        <div className="flex gap-4 px-6 py-5 border-t border-white/10 sticky bottom-0 bg-cinema-surface">
           <button
             onClick={onClose}
-            className="flex-1 h-[48px] bg-[#1f2937] hover:bg-[#374151] rounded-xl text-gray-300 font-medium transition-colors"
+            className="flex-1 h-[48px] bg-zinc-900 hover:bg-zinc-800 rounded-xl text-gray-300 font-medium transition-colors"
           >
             Hủy bỏ
           </button>

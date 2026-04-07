@@ -78,10 +78,10 @@ export default function ShowtimesTable({
   };
 
   return (
-    <div className="bg-[#0d0d1a] rounded-xl border border-white/10 overflow-hidden">
+    <div className="bg-cinema-surface rounded-xl border border-white/10 overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-[#050816] text-gray-400 border-b border-white/10">
+        <table className="min-w-[1200px] w-full text-sm">
+          <thead className="bg-cinema-bg text-gray-400 border-b border-white/10">
             <tr>
               <th className="p-4 text-left w-10">
                 <input

@@ -883,14 +883,14 @@ export default function ShowtimesPage() {
 
   if (dataLoading) {
     return (
-      <div className="p-6 flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="space-y-5">
       <ShowtimesHeader
         total={showtimes.length}
         specialCount={showtimes.filter(s => s.isSpecial || s.special).length}
