@@ -8,6 +8,13 @@ const ROWS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 const COLS = 10;
 const MAX_SEATS = 8;
 
+const isBlockedShowtimeStatus = (status) => {
+  const normalized = String(status ?? "")
+    .trim()
+    .toLowerCase();
+  return normalized === "cancelled" || normalized === "locked";
+};
+
 const SEAT_TYPES = {
   standard: {
     label: "Thường",
@@ -76,7 +83,7 @@ export const SeatSelectionPage = () => {
           };
         }),
       })),
-    [],
+    []
   );
 
   // ========== FETCH DATA FROM API (Code 1) ==========
@@ -86,28 +93,37 @@ export const SeatSelectionPage = () => {
       try {
         // Fetch showtime data
         const resShowtime = await fetch(
-          `http://localhost:5000/api/showtimes/${showtimeId}`,
+          `http://localhost:5000/api/showtimes/${showtimeId}`
         );
         if (!resShowtime.ok) throw new Error("Failed to fetch showtime");
         const showtimeData = await resShowtime.json();
+
+        if (isBlockedShowtimeStatus(showtimeData?.status)) {
+          throw new Error("Suất chiếu này đang tạm khóa");
+        }
+
         setShowtime(showtimeData);
 
         // Fetch occupied seats
         const resSeats = await fetch(
-          `http://localhost:5000/api/seats/showtime/${showtimeId}`,
+          `http://localhost:5000/api/seats/showtime/${showtimeId}`
         );
         if (!resSeats.ok) throw new Error("Failed to fetch seats");
         const seatData = await resSeats.json();
         setOccupiedSeats(new Set(seatData.occupied));
       } catch (err) {
         console.error("Error loading seat data:", err);
+        if (String(err?.message || "").includes("tạm khóa")) {
+          alert("Suất chiếu này đang tạm khóa và không thể đặt vé.");
+          navigate(-1);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     if (showtimeId) fetchData();
-  }, [showtimeId]);
+  }, [showtimeId, navigate]);
 
   // ========== TOGGLE SEAT ==========
   const toggleSeat = (id, type) => {
@@ -183,7 +199,7 @@ export const SeatSelectionPage = () => {
                   {movieInfo.title} ·{" "}
                   {showtimeInfo?.start_time
                     ? new Date(showtimeInfo.start_time).toLocaleTimeString(
-                        "vi-VN",
+                        "vi-VN"
                       )
                     : showtimeInfo?.time}{" "}
                   · {cinemaInfo?.name}
@@ -205,8 +221,8 @@ export const SeatSelectionPage = () => {
                       s.done
                         ? "bg-green-500 text-white"
                         : s.active
-                          ? "bg-red-600 text-white"
-                          : "bg-zinc-800 text-zinc-400"
+                        ? "bg-red-600 text-white"
+                        : "bg-zinc-800 text-zinc-400"
                     }`}
                   >
                     {s.done ? "✓" : s.n}
@@ -303,12 +319,12 @@ export const SeatSelectionPage = () => {
                         const className = isOccupied
                           ? "border-zinc-700 bg-zinc-900/70 text-zinc-700 cursor-not-allowed"
                           : isSelected
-                            ? "border-red-500 bg-red-500 text-white"
-                            : seat.type === "vip"
-                              ? "border-amber-400 bg-amber-500/10 text-amber-300"
-                              : seat.type === "couple"
-                                ? "border-fuchsia-400 bg-fuchsia-500/10 text-fuchsia-300"
-                                : "border-zinc-700 bg-zinc-800/40 text-zinc-300";
+                          ? "border-red-500 bg-red-500 text-white"
+                          : seat.type === "vip"
+                          ? "border-amber-400 bg-amber-500/10 text-amber-300"
+                          : seat.type === "couple"
+                          ? "border-fuchsia-400 bg-fuchsia-500/10 text-fuchsia-300"
+                          : "border-zinc-700 bg-zinc-800/40 text-zinc-300";
 
                         return (
                           <button

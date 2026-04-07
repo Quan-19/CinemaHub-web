@@ -127,6 +127,15 @@ const normalizeCinema = (cinema) => ({
   showtimes: [],
 });
 
+const isUserVisibleShowtimeStatus = (status) => {
+  const normalized = String(status ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (!normalized) return true;
+  return normalized !== "cancelled" && normalized !== "locked";
+};
+
 export const CinemaSelectionPage = () => {
   const { movieId } = useParams();
   const navigate = useNavigate();
@@ -145,11 +154,11 @@ export const CinemaSelectionPage = () => {
   const preferredCinemaId = searchParams.get("cinemaId");
   const hasPreferredCinema = Boolean(
     preferredCinemaId &&
-    apiCinemas.some((c) => String(c.id) === String(preferredCinemaId)),
+      apiCinemas.some((c) => String(c.id) === String(preferredCinemaId))
   );
   const preferredCinema = hasPreferredCinema
     ? apiCinemas.find(
-        (cinema) => String(cinema.id) === String(preferredCinemaId),
+        (cinema) => String(cinema.id) === String(preferredCinemaId)
       )
     : null;
 
@@ -159,8 +168,8 @@ export const CinemaSelectionPage = () => {
       new Set(
         apiShowtimes
           .map((showtime) => formatDateKey(showtime.date))
-          .filter(Boolean),
-      ),
+          .filter(Boolean)
+      )
     ).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
     return uniqueDateKeys.map((value) => {
@@ -187,7 +196,7 @@ export const CinemaSelectionPage = () => {
 
   const cinemasWithShowtimes = useMemo(() => {
     const byCinema = new Map(
-      apiCinemas.map((cinema) => [String(cinema.id), cinema]),
+      apiCinemas.map((cinema) => [String(cinema.id), cinema])
     );
     const groupedShowtimes = new Map();
 
@@ -229,7 +238,7 @@ export const CinemaSelectionPage = () => {
         return {
           ...cinema,
           showtimes: showtimes.sort(
-            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
           ),
         };
       })
@@ -237,10 +246,10 @@ export const CinemaSelectionPage = () => {
   }, [apiCinemas, apiShowtimes, selectedDateValue]);
 
   const [selectedRegion, setSelectedRegion] = useState(
-    preferredCinema ? getRegionIdFromCinema(preferredCinema) : "",
+    preferredCinema ? getRegionIdFromCinema(preferredCinema) : ""
   );
   const [expandedCinema, setExpandedCinema] = useState(
-    hasPreferredCinema ? preferredCinemaId : null,
+    hasPreferredCinema ? preferredCinemaId : null
   );
 
   const regionOptions = useMemo(() => {
@@ -248,8 +257,8 @@ export const CinemaSelectionPage = () => {
       new Set(
         cinemasWithShowtimes
           .map((cinema) => getRegionIdFromCinema(cinema))
-          .filter(Boolean),
-      ),
+          .filter(Boolean)
+      )
     );
     return regionIds.map(createRegionOption);
   }, [cinemasWithShowtimes]);
@@ -314,7 +323,9 @@ export const CinemaSelectionPage = () => {
 
         const normalizedCinemas = (cinemaData || []).map(normalizeCinema);
         const showtimesByMovie = (showtimeData || []).filter(
-          (showtime) => String(showtime.movieId) === String(movieId),
+          (showtime) =>
+            String(showtime.movieId) === String(movieId) &&
+            isUserVisibleShowtimeStatus(showtime.status)
         );
 
         setApiCinemas(normalizedCinemas);
@@ -391,15 +402,15 @@ export const CinemaSelectionPage = () => {
   const regionCinemas = useMemo(
     () =>
       cinemasWithShowtimes.filter(
-        (cinema) => getRegionIdFromCinema(cinema) === selectedRegion,
+        (cinema) => getRegionIdFromCinema(cinema) === selectedRegion
       ),
-    [cinemasWithShowtimes, selectedRegion],
+    [cinemasWithShowtimes, selectedRegion]
   );
 
   const orderedCinemas = useMemo(() => {
     if (!hasPreferredCinema || !preferredCinemaId) return regionCinemas;
     const preferred = regionCinemas.find(
-      (cinema) => cinema.id === preferredCinemaId,
+      (cinema) => cinema.id === preferredCinemaId
     );
     if (!preferred) return regionCinemas;
     return [
@@ -432,7 +443,7 @@ export const CinemaSelectionPage = () => {
 
   const handleSelectShowtime = (cinemaId, showtimeId) => {
     const cinema = cinemasWithShowtimes.find(
-      (c) => String(c.id) === String(cinemaId),
+      (c) => String(c.id) === String(cinemaId)
     );
     if (!cinema) return;
 
@@ -449,7 +460,7 @@ export const CinemaSelectionPage = () => {
   const handleSelectRegion = (regionId) => {
     setSelectedRegion(regionId);
     const cinemasInRegion = cinemasWithShowtimes.filter(
-      (cinema) => getRegionIdFromCinema(cinema) === regionId,
+      (cinema) => getRegionIdFromCinema(cinema) === regionId
     );
     const defaultExpanded =
       hasPreferredCinema &&
@@ -502,10 +513,10 @@ export const CinemaSelectionPage = () => {
                       movie.rating === "T18"
                         ? "#ef4444"
                         : movie.rating === "T16"
-                          ? "#f97316"
-                          : movie.rating === "T13"
-                            ? "#f59e0b"
-                            : "#22c55e",
+                        ? "#f97316"
+                        : movie.rating === "T13"
+                        ? "#f59e0b"
+                        : "#22c55e",
                     fontWeight: 700,
                   }}
                 >
@@ -538,8 +549,8 @@ export const CinemaSelectionPage = () => {
                     step.done
                       ? "bg-green-500 text-white"
                       : step.active
-                        ? "bg-red-600 text-white"
-                        : "bg-zinc-800 text-zinc-400 border border-zinc-700"
+                      ? "bg-red-600 text-white"
+                      : "bg-zinc-800 text-zinc-400 border border-zinc-700"
                   }`}
                   style={{ fontWeight: 700 }}
                 >
@@ -550,8 +561,8 @@ export const CinemaSelectionPage = () => {
                     step.active
                       ? "text-white"
                       : step.done
-                        ? "text-green-400"
-                        : "text-zinc-400"
+                      ? "text-green-400"
+                      : "text-zinc-400"
                   }`}
                 >
                   {step.label}
@@ -608,7 +619,7 @@ export const CinemaSelectionPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
             {regionOptions.map((region) => {
               const count = cinemasWithShowtimes.filter(
-                (cinema) => getRegionIdFromCinema(cinema) === region.id,
+                (cinema) => getRegionIdFromCinema(cinema) === region.id
               ).length;
               return (
                 <button
@@ -655,7 +666,7 @@ export const CinemaSelectionPage = () => {
             </h2>
             {hasPreferredCinema &&
               orderedCinemas.some(
-                (cinema) => cinema.id === preferredCinemaId,
+                (cinema) => cinema.id === preferredCinemaId
               ) && (
                 <p className="text-zinc-400 text-xs mb-3">
                   Đã ưu tiên rạp bạn vừa chọn từ trang rạp chiếu.
@@ -679,7 +690,7 @@ export const CinemaSelectionPage = () => {
                     className="w-full flex items-center justify-between p-4 hover:bg-zinc-800/30 transition-colors"
                     onClick={() =>
                       setExpandedCinema(
-                        expandedCinema === cinema.id ? null : cinema.id,
+                        expandedCinema === cinema.id ? null : cinema.id
                       )
                     }
                   >
@@ -782,17 +793,17 @@ export const CinemaSelectionPage = () => {
                                     isFull
                                       ? "text-zinc-400"
                                       : isLow
-                                        ? "text-orange-400"
-                                        : "text-zinc-400"
+                                      ? "text-orange-400"
+                                      : "text-zinc-400"
                                   }`}
                                 >
                                   {isFull
                                     ? "Hết vé"
                                     : isLow
-                                      ? `Còn ${st.availableSeats} ghế`
-                                      : hasSeatInfo
-                                        ? `${st.availableSeats} ghế trống`
-                                        : "Xem sơ đồ ghế"}
+                                    ? `Còn ${st.availableSeats} ghế`
+                                    : hasSeatInfo
+                                    ? `${st.availableSeats} ghế trống`
+                                    : "Xem sơ đồ ghế"}
                                 </span>
                               </div>
                             </button>
