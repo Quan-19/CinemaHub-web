@@ -296,7 +296,7 @@ export default function RoomsPage() {
   }
 
   return (
-    <div className="p-6 space-y-5 bg-[#050816] min-h-screen">
+    <div className="p-6 space-y-5 bg-cinema-bg min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -331,12 +331,7 @@ export default function RoomsPage() {
               setSearchTerm(e.target.value);
               setPage(1);
             }}
-            className="w-full pl-10 pr-4 py-2 rounded-lg outline-none transition-colors"
-            style={{
-              background: "#0d0d1a",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "#fff",
-            }}
+            className="w-full pl-10 pr-4 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white placeholder-gray-500 outline-none transition-colors focus:border-red-500/50"
           />
         </div>
 
@@ -345,7 +340,7 @@ export default function RoomsPage() {
           className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
             showFilters || activeFilterCount > 0
               ? "bg-red-600 hover:bg-red-700"
-              : "bg-[#0d0d1a] hover:bg-[#1a1a2e]"
+              : "bg-zinc-900 hover:bg-zinc-800"
           }`}
         >
           <Filter size={16} />
@@ -361,8 +356,7 @@ export default function RoomsPage() {
       {/* Advanced Filters */}
       {showFilters && (
         <div
-          className="p-4 rounded-xl border border-white/10"
-          style={{ background: "#0d0d1a" }}
+          className="p-4 rounded-xl border border-white/10 bg-cinema-surface"
         >
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-medium text-white">Bộ lọc nâng cao</h3>
@@ -386,12 +380,7 @@ export default function RoomsPage() {
                   setCinemaFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 rounded-lg outline-none cursor-pointer"
-                style={{
-                  background: "#020617",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
-                }}
+                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white outline-none cursor-pointer focus:border-red-500/50"
               >
                 <option value="all">Tất cả rạp</option>
                 {cinemas.map((cinema) => (
@@ -412,12 +401,7 @@ export default function RoomsPage() {
                   setTypeFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 rounded-lg outline-none cursor-pointer"
-                style={{
-                  background: "#020617",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
-                }}
+                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white outline-none cursor-pointer focus:border-red-500/50"
               >
                 <option value="all">Tất cả loại</option>
                 {types.map((type) => (
@@ -438,12 +422,7 @@ export default function RoomsPage() {
                   setStatusFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 rounded-lg outline-none cursor-pointer"
-                style={{
-                  background: "#020617",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
-                }}
+                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white outline-none cursor-pointer focus:border-red-500/50"
               >
                 <option value="all">Tất cả</option>
                 <option value="active">Hoạt động</option>

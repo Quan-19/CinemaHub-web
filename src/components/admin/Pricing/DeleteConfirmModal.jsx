@@ -5,7 +5,7 @@ export default function DeleteConfirmModal({ show, onClose, onConfirm, item }) {
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="w-[400px] bg-[#0b0f1f] rounded-2xl border border-white/10 shadow-2xl">
+      <div className="w-[400px] bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl">
         <div className="flex justify-between items-center px-6 py-4 border-b border-white/10">
           <h3 className="text-lg font-semibold text-white flex items-center gap-2">
             <AlertTriangle size={20} className="text-red-500" />
@@ -34,7 +34,7 @@ export default function DeleteConfirmModal({ show, onClose, onConfirm, item }) {
         <div className="flex gap-3 px-6 py-4 border-t border-white/10">
           <button
             onClick={onClose}
-            className="flex-1 h-10 bg-[#1f2937] hover:bg-[#374151] rounded-lg text-gray-300 transition-colors"
+            className="flex-1 h-10 bg-zinc-900 hover:bg-zinc-800 rounded-lg text-gray-300 transition-colors"
           >
             Hủy
           </button>

@@ -26,11 +26,12 @@ export default function QuickEditModal({
     onSave(finalUpdates);
   };
 
-  const selectClass = "w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm outline-none focus:border-purple-500/50 transition [&>option]:bg-[#2d2d44] [&>option]:text-white";
+  const selectClass =
+    "w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm outline-none focus:border-purple-500/50 transition [&>option]:bg-zinc-900 [&>option]:text-white";
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="w-full max-w-md bg-[#0d0d1a] border border-white/10 rounded-2xl">
+      <div className="w-full max-w-md bg-cinema-surface border border-white/10 rounded-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10">
           <div>
@@ -58,7 +59,7 @@ export default function QuickEditModal({
               value={updates.price}
               onChange={e => setUpdates(p => ({ ...p, price: e.target.value }))}
               placeholder="Nhập giá vé mới..."
-              className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder:text-white/30"
+              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder:text-white/30"
               min="0"
               step="1000"
             />
@@ -73,15 +74,14 @@ export default function QuickEditModal({
               value={updates.specialType}
               onChange={e => setUpdates(p => ({ ...p, specialType: e.target.value }))}
               className={selectClass}
-              style={{ backgroundColor: '#1a1a2e' }}
             >
-              <option value="" className="bg-[#2d2d44] text-white/70">Giữ nguyên</option>
-              <option value="none" className="bg-[#2d2d44] text-white">Suất thường</option>
+              <option value="" className="bg-zinc-900 text-white/70">Giữ nguyên</option>
+              <option value="none" className="bg-zinc-900 text-white">Suất thường</option>
               {specialTypes.map(type => (
                 <option 
                   key={type.value} 
                   value={type.value} 
-                  className="bg-[#2d2d44]"
+                  className="bg-zinc-900"
                   style={{ color: type.color }}
                 >
                   {type.icon} {type.label}
@@ -98,13 +98,12 @@ export default function QuickEditModal({
               value={updates.status}
               onChange={e => setUpdates(p => ({ ...p, status: e.target.value }))}
               className={selectClass}
-              style={{ backgroundColor: '#1a1a2e' }}
             >
-              <option value="" className="bg-[#2d2d44] text-white/70">Giữ nguyên</option>
-              <option value="scheduled" className="bg-[#2d2d44] text-green-400">Sắp chiếu</option>
-              <option value="ongoing" className="bg-[#2d2d44] text-yellow-400">Đang chiếu</option>
-              <option value="ended" className="bg-[#2d2d44] text-gray-400">Đã kết thúc</option>
-              <option value="cancelled" className="bg-[#2d2d44] text-red-400">Hủy</option>
+              <option value="" className="bg-zinc-900 text-white/70">Giữ nguyên</option>
+              <option value="scheduled" className="bg-zinc-900 text-green-400">Sắp chiếu</option>
+              <option value="ongoing" className="bg-zinc-900 text-yellow-400">Đang chiếu</option>
+              <option value="ended" className="bg-zinc-900 text-gray-400">Đã kết thúc</option>
+              <option value="cancelled" className="bg-zinc-900 text-red-400">Hủy</option>
             </select>
           </div>
 
@@ -116,18 +115,17 @@ export default function QuickEditModal({
               value={updates.type}
               onChange={e => setUpdates(p => ({ ...p, type: e.target.value }))}
               className={selectClass}
-              style={{ backgroundColor: '#1a1a2e' }}
             >
-              <option value="" className="bg-[#2d2d44] text-white/70">Giữ nguyên</option>
-              <option value="2D" className="bg-[#2d2d44] text-cyan-400">2D</option>
-              <option value="3D" className="bg-[#2d2d44] text-purple-400">3D</option>
-              <option value="IMAX" className="bg-[#2d2d44] text-orange-400">IMAX</option>
-              <option value="4DX" className="bg-[#2d2d44] text-red-400">4DX</option>
+              <option value="" className="bg-zinc-900 text-white/70">Giữ nguyên</option>
+              <option value="2D" className="bg-zinc-900 text-cyan-400">2D</option>
+              <option value="3D" className="bg-zinc-900 text-purple-400">3D</option>
+              <option value="IMAX" className="bg-zinc-900 text-orange-400">IMAX</option>
+              <option value="4DX" className="bg-zinc-900 text-red-400">4DX</option>
             </select>
           </div>
 
           {/* Preview affected showtimes */}
-          <div className="mt-4 p-3 bg-[#1a1a2e] border border-white/10 rounded-lg">
+          <div className="mt-4 p-3 bg-zinc-900 border border-white/10 rounded-lg">
             <p className="text-sm text-white/70 mb-2">Các suất sẽ được cập nhật:</p>
             <div className="max-h-32 overflow-y-auto space-y-1 custom-scrollbar">
               {showtimes.map(s => (

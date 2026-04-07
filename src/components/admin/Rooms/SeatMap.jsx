@@ -97,18 +97,8 @@ export default function SeatMap({ room, onClose }) {
     return total + row.seats.reduce((rowTotal, seat) => rowTotal + seat.seatsCount, 0);
   }, 0);
 
-  // Tìm hàng couple để lấy số lượng ghế làm chuẩn cho việc căn chỉnh
-  const coupleRowData = seatRows.find(row => row.isCoupleRow);
   const standardSeatWidth = 28; // w-7 = 28px (7 * 4px)
   const coupleSeatWidth = 56; // w-14 = 56px (14 * 4px)
-  
-  // Tính toán số ghế để căn chỉnh
-  const getSeatWidth = (seat) => seat.isCouple ? coupleSeatWidth : standardSeatWidth;
-  
-  // Tính tổng chiều rộng của hàng thường
-  const standardRowTotalWidth = seatsPerRow * (standardSeatWidth + 8); // 8px là gap
-  // Tính tổng chiều rộng của hàng couple
-  const coupleRowTotalWidth = (coupleRowData?.seats.length || 0) * (coupleSeatWidth + 8);
 
   return (
     <div
@@ -116,11 +106,7 @@ export default function SeatMap({ room, onClose }) {
       style={{ background: "rgba(0,0,0,0.85)" }}
     >
       <div
-        className="w-full max-w-5xl rounded-2xl max-h-[90vh] flex flex-col"
-        style={{
-          background: "#0d0d1a",
-          border: "1px solid rgba(255,255,255,0.1)",
-        }}
+        className="w-full max-w-5xl rounded-2xl max-h-[90vh] flex flex-col bg-cinema-surface border border-white/10"
       >
         {/* Header */}
         <div

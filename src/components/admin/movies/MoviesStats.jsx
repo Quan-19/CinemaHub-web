@@ -69,7 +69,7 @@ export default function MoviesStats({ movies }) {
           return (
             <div
               key={s.label}
-              className="group relative rounded-xl p-4 bg-[#0d0d1a] border border-white/10 hover:bg-[#12121f] hover:border-white/20 transition-all duration-200 cursor-pointer"
+              className="group relative rounded-xl p-4 bg-cinema-surface border border-white/10 hover:bg-white/5 hover:border-white/20 transition-all duration-200 cursor-pointer"
               onMouseEnter={() => setHoveredStat(s.label)}
               onMouseLeave={() => setHoveredStat(null)}
             >

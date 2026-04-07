@@ -25,10 +25,10 @@ export default function MoviesFilter({
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl p-4 flex gap-3 bg-[#0d0d1a] border border-white/10">
+      <div className="rounded-xl p-4 flex gap-3 bg-cinema-surface border border-white/10">
         {/* Ô tìm kiếm */}
         <div className="flex-1 relative">
-          <div className="flex items-center gap-2 w-full bg-[#020617] border border-white/10 rounded-lg px-3 py-2 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500 transition-all">
+          <div className="flex items-center gap-2 w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500 transition-all">
             <Search size={16} className="text-gray-400" />
             <input
               value={search}
@@ -56,7 +56,7 @@ export default function MoviesFilter({
               className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
                 statusFilter === option.value
                   ? `bg-red-600 text-white shadow-lg shadow-red-600/20`
-                  : `bg-[#020617] text-gray-400 hover:text-white hover:bg-white/5 border border-white/10`
+                  : `bg-zinc-900 text-gray-400 hover:text-white hover:bg-zinc-800 border border-white/10`
               }`}
             >
               <option.icon size={14} className={statusFilter === option.value ? "text-white" : option.color} />
@@ -78,7 +78,7 @@ export default function MoviesFilter({
         <div className="md:hidden relative">
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className="flex items-center gap-2 bg-[#020617] border border-white/10 rounded-lg px-3 py-2 hover:border-red-500 transition-all"
+            className="flex items-center gap-2 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 hover:border-red-500 transition-all"
           >
             <Filter size={14} className="text-gray-400" />
             <span className="text-white text-sm">
@@ -92,7 +92,7 @@ export default function MoviesFilter({
                 className="fixed inset-0 z-40"
                 onClick={() => setIsFilterOpen(false)}
               />
-              <div className="absolute right-0 top-full mt-2 w-48 bg-[#020617] border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+              <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
                 {filterOptions.map((option) => (
                   <button
                     key={option.value}
@@ -103,7 +103,7 @@ export default function MoviesFilter({
                     className={`w-full flex items-center gap-2 px-4 py-2.5 transition-colors ${
                       statusFilter === option.value
                         ? "bg-red-600/20 text-red-400"
-                        : "text-gray-300 hover:bg-white/5"
+                        : "text-gray-300 hover:bg-zinc-800"
                     }`}
                   >
                     <option.icon size={14} className={option.color} />

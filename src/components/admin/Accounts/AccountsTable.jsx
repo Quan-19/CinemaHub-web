@@ -32,7 +32,7 @@ export default function AccountsTable({ data, onEdit, onDelete }) {
   };
 
   return (
-    <div className="bg-[#0d0d1a] border border-white/10 rounded-xl overflow-hidden mb-6">
+    <div className="bg-cinema-surface border border-white/10 rounded-xl overflow-hidden mb-6">
       <table className="w-full">
         <thead>
           <tr className="border-b border-white/10">

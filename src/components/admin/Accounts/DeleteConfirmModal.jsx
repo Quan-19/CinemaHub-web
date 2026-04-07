@@ -5,7 +5,7 @@ export default function DeleteConfirmModal({ account, onClose, onConfirm }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-[#0d0d1a] border border-white/10 rounded-xl w-[400px] p-6">
+      <div className="bg-cinema-surface border border-white/10 rounded-xl w-[400px] p-6">
         <div className="flex items-center gap-3 text-red-400 mb-4">
           <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
             <AlertTriangle size={20} />

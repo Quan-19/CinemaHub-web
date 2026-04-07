@@ -334,18 +334,18 @@ export default function AdminPricingPage() {
               placeholder="Tìm theo tên, loại phòng, loại ghế, ngày/giờ áp dụng..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-10 px-4 rounded-lg bg-[#0d0d1a] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
+              className="w-full h-10 px-4 rounded-lg bg-zinc-900 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
             />
           </div>
 
           <div className="relative group">
-            <button className="px-4 py-2 rounded-lg bg-[#0d0d1a] hover:bg-[#1a1a2e] transition-colors flex items-center gap-2">
+            <button className="px-4 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 transition-colors flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
               <span className="hidden sm:inline">Xuất/Nhập</span>
             </button>
-            <div className="absolute right-0 mt-2 w-48 bg-[#0d0d1a] rounded-lg border border-white/10 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+            <div className="absolute right-0 mt-2 w-48 bg-zinc-900 rounded-lg border border-white/10 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
               <button onClick={handleExportData} className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-white/10 rounded-t-lg transition-colors" disabled={data.length === 0}>
                 📤 Xuất dữ liệu (JSON)
               </button>
@@ -361,7 +361,7 @@ export default function AdminPricingPage() {
             className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
               showFilters || filterCategory !== "all" || filterType !== "all" || filterSeat !== "all"
                 ? "bg-red-600 hover:bg-red-700" 
-                : "bg-[#0d0d1a] hover:bg-[#1a1a2e]"
+                : "bg-zinc-900 hover:bg-zinc-800"
             }`}
           >
             <Filter size={16} />
@@ -389,7 +389,7 @@ export default function AdminPricingPage() {
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
             filterCategory === "all"
               ? "bg-red-600 text-white"
-              : "bg-[#0d0d1a] text-gray-400 hover:text-white"
+              : "bg-zinc-900 text-gray-400 hover:text-white hover:bg-zinc-800"
           }`}
         >
           <Ticket size={16} />
@@ -402,7 +402,7 @@ export default function AdminPricingPage() {
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
             filterCategory === "regular"
               ? "bg-blue-600 text-white"
-              : "bg-[#0d0d1a] text-gray-400 hover:text-white"
+              : "bg-zinc-900 text-gray-400 hover:text-white hover:bg-zinc-800"
           }`}
         >
           🎬 Quy tắc thường ({regularCount})
@@ -415,7 +415,7 @@ export default function AdminPricingPage() {
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
             filterCategory === "holiday"
               ? "bg-yellow-600 text-white"
-              : "bg-[#0d0d1a] text-gray-400 hover:text-white"
+              : "bg-zinc-900 text-gray-400 hover:text-white hover:bg-zinc-800"
           }`}
         >
           <Calendar size={16} />
@@ -424,19 +424,19 @@ export default function AdminPricingPage() {
       </div>
 
       {/* Quick Explanation */}
-      <div className="mb-6 p-4 bg-[#0d0d1a] rounded-xl border border-white/10">
+      <div className="mb-6 p-4 bg-cinema-surface rounded-xl border border-white/10">
         <div className="text-sm font-medium text-white mb-1">Bạn đang quản lý gì?</div>
         <div className="text-sm text-gray-400">
           Mỗi <span className="text-white">quy tắc giá</span> là một cấu hình giá vé theo điều kiện áp dụng.
         </div>
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="bg-[#050816] p-3 rounded-lg border border-white/10">
+          <div className="bg-cinema-bg p-3 rounded-lg border border-white/10">
             <div className="text-xs text-gray-400 mb-1">Quy tắc thường</div>
             <div className="text-sm text-gray-300">
               Loại phòng + loại ghế + loại ngày + khung giờ → giá áp dụng.
             </div>
           </div>
-          <div className="bg-[#050816] p-3 rounded-lg border border-white/10">
+          <div className="bg-cinema-bg p-3 rounded-lg border border-white/10">
             <div className="text-xs text-gray-400 mb-1">Quy tắc ngày lễ</div>
             <div className="text-sm text-gray-300">
               Loại phòng + khoảng ngày + các thứ áp dụng → giá theo từng loại ghế.
@@ -446,7 +446,7 @@ export default function AdminPricingPage() {
       </div>
 
       {showFilters && (
-        <div className="mb-6 p-4 bg-[#0d0d1a] rounded-xl border border-white/10">
+        <div className="mb-6 p-4 bg-cinema-surface rounded-xl border border-white/10">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-sm font-medium text-white flex items-center gap-2">
               <Filter size={14} />
@@ -512,7 +512,7 @@ export default function AdminPricingPage() {
       )}
 
       {data.length === 0 && !isLoading && (
-        <div className="mb-6 p-8 bg-[#0d0d1a] rounded-xl border border-white/10 text-center">
+        <div className="mb-6 p-8 bg-cinema-surface rounded-xl border border-white/10 text-center">
           <svg className="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
@@ -610,20 +610,20 @@ function ViewDetailModal({ item, onClose, onEdit }) {
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="w-[500px] bg-[#0b0f1f] rounded-2xl border border-white/10 shadow-2xl max-h-[80vh] overflow-y-auto">
-        <div className="px-6 py-5 border-b border-white/10 sticky top-0 bg-[#0b0f1f]">
+      <div className="w-[500px] bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl max-h-[80vh] overflow-y-auto">
+        <div className="px-6 py-5 border-b border-white/10 sticky top-0 bg-cinema-surface">
           <h3 className="text-lg font-semibold text-white">Chi tiết quy tắc giá</h3>
         </div>
         
         <div className="px-6 py-5 space-y-4">
-          <div className="bg-[#020617] p-4 rounded-xl">
+          <div className="bg-cinema-bg p-4 rounded-xl">
             <p className="text-sm text-gray-400 mb-1">Tên quy tắc</p>
             <p className="text-white font-medium">{item.name}</p>
           </div>
 
           {isHoliday ? (
             <>
-              <div className="bg-[#020617] p-4 rounded-xl">
+              <div className="bg-cinema-bg p-4 rounded-xl">
                 <p className="text-sm text-gray-400 mb-1">Loại phòng</p>
                 <span className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getTypeColor(roomType)}-500/20 text-${getTypeColor(roomType)}-400`}>
                   {roomType}
@@ -631,17 +631,17 @@ function ViewDetailModal({ item, onClose, onEdit }) {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Ngày bắt đầu</p>
                   <p className="text-white">{item.start_date}</p>
                 </div>
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Ngày kết thúc</p>
                   <p className="text-white">{item.end_date}</p>
                 </div>
               </div>
 
-              <div className="bg-[#020617] p-4 rounded-xl">
+              <div className="bg-cinema-bg p-4 rounded-xl">
                 <p className="text-sm text-gray-400 mb-1">Áp dụng các ngày</p>
                 <div className="flex flex-wrap gap-1">
                   {item.apply_days?.map(d => {
@@ -655,7 +655,7 @@ function ViewDetailModal({ item, onClose, onEdit }) {
                 </div>
               </div>
 
-              <div className="bg-[#020617] p-4 rounded-xl">
+              <div className="bg-cinema-bg p-4 rounded-xl">
                 <p className="text-sm text-gray-400 mb-2">Giá vé theo loại ghế</p>
                 <div className="space-y-2">
                   {item.holiday_prices?.map((hp, idx) => (
@@ -672,13 +672,13 @@ function ViewDetailModal({ item, onClose, onEdit }) {
           ) : (
             <>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Loại phòng</p>
                   <span className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getTypeColor(roomType)}-500/20 text-${getTypeColor(roomType)}-400`}>
                     {roomType}
                   </span>
                 </div>
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Loại ghế</p>
                   <span className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getSeatColor(item.seat)}-500/20 text-${getSeatColor(item.seat)}-400`}>
                     {item.seat}
@@ -687,22 +687,22 @@ function ViewDetailModal({ item, onClose, onEdit }) {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Loại ngày</p>
                   <p className="text-white">{item.day}</p>
                 </div>
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Khung giờ</p>
                   <p className="text-white">{item.time}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Giá gốc</p>
                   <p className="text-white line-through">{formatPrice(item.base)}</p>
                 </div>
-                <div className="bg-[#020617] p-4 rounded-xl">
+                <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Giá áp dụng</p>
                   <p className="text-yellow-400 font-bold text-lg">{formatPrice(item.final)}</p>
                 </div>
@@ -710,7 +710,7 @@ function ViewDetailModal({ item, onClose, onEdit }) {
             </>
           )}
 
-          <div className="bg-[#020617] p-4 rounded-xl">
+          <div className="bg-cinema-bg p-4 rounded-xl">
             <p className="text-sm text-gray-400 mb-1">Trạng thái</p>
             <span className={`flex items-center gap-1 w-fit px-2 py-1 rounded-lg text-xs ${
               item.active ? 'text-green-400 bg-green-400/10' : 'text-gray-400 bg-gray-400/10'
@@ -722,7 +722,7 @@ function ViewDetailModal({ item, onClose, onEdit }) {
         </div>
 
         <div className="flex gap-3 px-6 py-5 border-t border-white/10">
-          <button onClick={onClose} className="flex-1 h-11 bg-[#1f2937] hover:bg-[#374151] rounded-xl text-gray-300 transition-colors">
+          <button onClick={onClose} className="flex-1 h-11 bg-zinc-900 hover:bg-zinc-800 rounded-xl text-gray-300 transition-colors">
             Đóng
           </button>
           <button onClick={onEdit} className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 rounded-xl font-medium transition-colors">

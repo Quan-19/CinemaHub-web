@@ -26,7 +26,7 @@ export default function DeleteConfirmModal({ show, onClose, onConfirm, roomName,
       <div
         className="w-full max-w-md rounded-2xl transform animate-in zoom-in-95 duration-200"
         style={{
-          background: "linear-gradient(135deg, #0d0d1a 0%, #0a0a14 100%)",
+          background: "var(--color-cinema-surface)",
           border: "1px solid rgba(239,68,68,0.3)",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
         }}
@@ -156,12 +156,7 @@ export default function DeleteConfirmModal({ show, onClose, onConfirm, roomName,
           <button
             onClick={handleClose}
             disabled={loading}
-            className="flex-1 py-2.5 rounded-lg transition-all duration-200 hover:bg-white/10 font-medium disabled:opacity-50"
-            style={{
-              background: "rgba(255,255,255,0.08)",
-              color: "#fff",
-              border: "1px solid rgba(255,255,255,0.1)",
-            }}
+            className="flex-1 py-2.5 rounded-lg transition-all duration-200 font-medium disabled:opacity-50 bg-zinc-900 hover:bg-zinc-800 text-white border border-white/10"
           >
             Hủy bỏ
           </button>

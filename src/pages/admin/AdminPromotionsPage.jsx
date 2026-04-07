@@ -195,7 +195,7 @@ export default function AdminPromotionsPage() {
             placeholder="Tìm kiếm..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-64 h-10 px-4 rounded-lg bg-[#0d0d1a] border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
+            className="w-64 h-10 px-4 rounded-lg bg-zinc-900 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
           />
 
           <button
@@ -203,7 +203,7 @@ export default function AdminPromotionsPage() {
             className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
               showFilters || statusFilter !== "all"
                 ? "bg-red-600 hover:bg-red-700"
-                : "bg-[#0d0d1a] hover:bg-[#1a1a2e]"
+                : "bg-zinc-900 hover:bg-zinc-800"
             }`}
           >
             <Filter size={16} />
@@ -225,7 +225,7 @@ export default function AdminPromotionsPage() {
 
       {/* Filters Panel */}
       {showFilters && (
-        <div className="bg-[#0d0d1a] rounded-xl border border-white/10 p-4">
+        <div className="bg-cinema-surface rounded-xl border border-white/10 p-4">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-sm font-medium text-white">Bộ lọc nâng cao</h3>
             <button

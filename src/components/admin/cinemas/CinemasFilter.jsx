@@ -18,14 +18,14 @@ export default function CinemasFilter({
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Tìm tên rạp, địa chỉ..."
-          className="w-full pl-10 pr-4 py-2.5 bg-[#0B1220] border border-white/10 rounded-lg text-sm focus:outline-none focus:border-white/20"
+          className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-white/10 rounded-lg text-sm focus:outline-none focus:border-white/20"
         />
       </div>
 
       <select
         value={cityFilter}
         onChange={e => setCityFilter(e.target.value)}
-        className="px-4 py-2.5 bg-[#0B1220] border border-white/10 rounded-lg text-sm focus:outline-none focus:border-white/20"
+        className="px-4 py-2.5 bg-zinc-900 border border-white/10 rounded-lg text-sm focus:outline-none focus:border-white/20"
       >
         <option value="all">Tất cả thành phố</option>
         {cities.map(c => (

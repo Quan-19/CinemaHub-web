@@ -37,7 +37,7 @@ export default function ShowtimesHeader({ total, specialCount, onAdd, onExport }
           </button>
           
           {showExportMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-[#1a1a2e] border border-white/10 rounded-lg shadow-xl z-10">
+            <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-white/10 rounded-lg shadow-xl z-10">
               <button
                 onClick={() => {
                   onExport('excel');

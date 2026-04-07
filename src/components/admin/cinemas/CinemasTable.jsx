@@ -48,7 +48,7 @@ export default function CinemasTable({
 
   return (
     <>
-      <div className="bg-[#0B1220] border border-white/5 rounded-xl overflow-hidden">
+      <div className="bg-cinema-surface border border-white/5 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead className="text-white/40 text-xs border-b border-white/5 bg-white/[0.02]">
             <tr>
@@ -243,7 +243,7 @@ function ViewCinemaModal({ cinema, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
-      <div className="w-[500px] bg-[#0B1220] border border-white/10 rounded-xl overflow-hidden">
+      <div className="w-[500px] bg-cinema-surface border border-white/10 rounded-xl overflow-hidden">
         <div className="flex justify-between items-center px-5 py-4 border-b border-white/10">
           <h2 className="text-white font-semibold text-lg">Chi tiết rạp</h2>
           <button onClick={onClose} className="text-white/40 hover:text-white">✕</button>

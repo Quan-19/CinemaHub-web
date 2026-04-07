@@ -187,16 +187,11 @@ export default function RoomModal({
       style={{ background: "rgba(0,0,0,0.75)" }}
     >
       <div
-        className="w-full max-w-lg rounded-2xl max-h-[90vh] overflow-y-auto"
-        style={{
-          background: "#0d0d1a",
-          border: "1px solid rgba(255,255,255,0.1)",
-        }}
+        className="w-full max-w-lg rounded-2xl max-h-[90vh] overflow-y-auto bg-cinema-surface border border-white/10"
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between p-6 pb-4 sticky top-0 bg-[#0d0d1a]"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+          className="flex items-center justify-between p-6 pb-4 sticky top-0 bg-cinema-surface border-b border-white/10"
         >
           <h2 className="text-xl font-bold text-white">
             {editingRoom ? "Cấu hình phòng chiếu" : "Thêm phòng chiếu"}
@@ -222,14 +217,7 @@ export default function RoomModal({
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="VD: Phòng 1, IMAX Hall..."
-                className="w-full px-4 py-2 rounded-lg outline-none transition-colors"
-                style={{
-                  background: "#020617",
-                  border: errors.name
-                    ? "1px solid #ef4444"
-                    : "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
-                }}
+                className={`w-full px-4 py-2 rounded-lg outline-none transition-colors bg-zinc-900 text-white border ${errors.name ? "border-red-500" : "border-white/10"}`}
               />
               {errors.name && (
                 <p className="text-red-500 text-xs mt-1">{errors.name}</p>
@@ -245,14 +233,7 @@ export default function RoomModal({
                 value={form.cinemaId}
                 onChange={(e) => handleCinemaChange(e.target.value)}
                 disabled={!!editingRoom}
-                className={`w-full px-4 py-2 rounded-lg outline-none cursor-pointer ${editingRoom ? "opacity-70" : ""}`}
-                style={{
-                  background: "#020617",
-                  border: errors.cinemaId
-                    ? "1px solid #ef4444"
-                    : "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
-                }}
+                className={`w-full px-4 py-2 rounded-lg outline-none cursor-pointer bg-zinc-900 text-white border ${errors.cinemaId ? "border-red-500" : "border-white/10"} ${editingRoom ? "opacity-70" : ""}`}
               >
                 <option value="">Chọn rạp chiếu</option>
                 {cinemas.map((cinema) => {
@@ -295,12 +276,7 @@ export default function RoomModal({
               <select
                 value={form.type}
                 onChange={(e) => setForm({ ...form, type: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg outline-none cursor-pointer"
-                style={{
-                  background: "#020617",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
-                }}
+                className="w-full px-4 py-2 rounded-lg outline-none cursor-pointer bg-zinc-900 hover:bg-zinc-800 text-white border border-white/10"
               >
                 <option value="2D">2D</option>
                 <option value="3D">3D</option>
@@ -317,12 +293,7 @@ export default function RoomModal({
               <select
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg outline-none cursor-pointer"
-                style={{
-                  background: "#020617",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
-                }}
+                className="w-full px-4 py-2 rounded-lg outline-none cursor-pointer bg-zinc-900 hover:bg-zinc-800 text-white border border-white/10"
               >
                 <option value="active">Hoạt động</option>
                 <option value="maintenance">Bảo trì</option>
@@ -342,14 +313,7 @@ export default function RoomModal({
                 onChange={(e) =>
                   setForm({ ...form, rows: Number(e.target.value) })
                 }
-                className="w-full px-4 py-2 rounded-lg outline-none"
-                style={{
-                  background: "#020617",
-                  border: errors.rows
-                    ? "1px solid #ef4444"
-                    : "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
-                }}
+                className={`w-full px-4 py-2 rounded-lg outline-none bg-zinc-900 text-white border ${errors.rows ? "border-red-500" : "border-white/10"}`}
               />
               {errors.rows && (
                 <p className="text-red-500 text-xs mt-1">{errors.rows}</p>
@@ -369,14 +333,7 @@ export default function RoomModal({
                 onChange={(e) =>
                   setForm({ ...form, cols: Number(e.target.value) })
                 }
-                className="w-full px-4 py-2 rounded-lg outline-none"
-                style={{
-                  background: "#020617",
-                  border: errors.cols
-                    ? "1px solid #ef4444"
-                    : "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
-                }}
+                className={`w-full px-4 py-2 rounded-lg outline-none bg-zinc-900 text-white border ${errors.cols ? "border-red-500" : "border-white/10"}`}
               />
               {errors.cols && (
                 <p className="text-red-500 text-xs mt-1">{errors.cols}</p>
@@ -393,14 +350,7 @@ export default function RoomModal({
                 value={vipRowsInput}
                 onChange={(e) => handleVipRowsChange(e.target.value)}
                 placeholder="VD: 5, 6, 7"
-                className="w-full px-4 py-2 rounded-lg outline-none"
-                style={{
-                  background: "#020617",
-                  border: errors.vipRows
-                    ? "1px solid #ef4444"
-                    : "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
-                }}
+                className={`w-full px-4 py-2 rounded-lg outline-none bg-zinc-900 text-white border ${errors.vipRows ? "border-red-500" : "border-white/10"}`}
               />
               {errors.vipRows && (
                 <p className="text-red-500 text-xs mt-1">{errors.vipRows}</p>
@@ -425,14 +375,7 @@ export default function RoomModal({
                   })
                 }
                 placeholder="VD: 10"
-                className="w-full px-4 py-2 rounded-lg outline-none"
-                style={{
-                  background: "#020617",
-                  border: errors.coupleRow
-                    ? "1px solid #ef4444"
-                    : "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
-                }}
+                className={`w-full px-4 py-2 rounded-lg outline-none bg-zinc-900 text-white border ${errors.coupleRow ? "border-red-500" : "border-white/10"}`}
               />
               {errors.coupleRow && (
                 <p className="text-red-500 text-xs mt-1">{errors.coupleRow}</p>
@@ -476,17 +419,12 @@ export default function RoomModal({
 
         {/* Footer */}
         <div
-          className="flex gap-3 p-6 pt-4 sticky bottom-0 bg-[#0d0d1a]"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+          className="flex gap-3 p-6 pt-4 sticky bottom-0 bg-cinema-surface border-t border-white/10"
         >
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 py-2.5 rounded-lg transition-colors hover:bg-white/10 disabled:opacity-50"
-            style={{
-              background: "rgba(255,255,255,0.08)",
-              color: "#fff",
-            }}
+            className="flex-1 py-2.5 rounded-lg transition-colors disabled:opacity-50 bg-zinc-900 hover:bg-zinc-800 text-white"
           >
             Hủy
           </button>

@@ -82,9 +82,9 @@ export default function MovieDetailModal({ show, onClose, movie }) {
 
   return (
     <div className="fixed inset-0 bg-black/90 flex justify-center items-center z-50 p-4">
-      <div className="w-[900px] max-h-[90vh] overflow-y-auto bg-[#0b0f1f] rounded-2xl border border-white/10 shadow-2xl">
+      <div className="w-[900px] max-h-[90vh] overflow-y-auto bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl">
         {/* HEADER */}
-        <div className="sticky top-0 bg-gradient-to-r from-[#0b0f1f] to-[#13182c] flex justify-between items-center px-6 py-5 border-b border-white/10 z-10">
+        <div className="sticky top-0 bg-cinema-surface flex justify-between items-center px-6 py-5 border-b border-white/10 z-10">
           <h2 className="text-white text-xl font-semibold flex items-center gap-2">
             <Film size={20} className="text-red-500" />
             Chi tiết phim
@@ -111,7 +111,7 @@ export default function MovieDetailModal({ show, onClose, movie }) {
                   e.target.style.display = 'none';
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f1f] to-transparent rounded-xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent rounded-xl"></div>
             </div>
           )}
 
@@ -262,7 +262,7 @@ export default function MovieDetailModal({ show, onClose, movie }) {
         </div>
 
         {/* FOOTER */}
-        <div className="sticky bottom-0 bg-gradient-to-r from-[#0b0f1f] to-[#13182c] px-6 py-5 border-t border-white/10">
+        <div className="sticky bottom-0 bg-cinema-surface px-6 py-5 border-t border-white/10">
           <button
             onClick={onClose}
             className="w-full h-[44px] bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 rounded-lg transition-all duration-300 font-medium shadow-lg"

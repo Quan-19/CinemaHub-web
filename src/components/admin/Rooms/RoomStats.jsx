@@ -20,13 +20,7 @@ export default function RoomStats({ rooms }) {
   return (
     <div className="space-y-3">
       {/* Total Rooms Card */}
-      <div
-        className="rounded-xl p-4 flex items-center gap-3"
-        style={{
-          background: "#0d0d1a",
-          border: "1px solid rgba(255,255,255,0.07)",
-        }}
-      >
+      <div className="rounded-xl p-4 flex items-center gap-3 bg-cinema-surface border border-white/10">
         <div
           className="w-9 h-9 rounded-lg flex items-center justify-center"
           style={{ background: "rgba(229,9,20,0.12)" }}
@@ -44,11 +38,7 @@ export default function RoomStats({ rooms }) {
         {stats.map(stat => (
           <div
             key={stat.type}
-            className="rounded-xl p-4 flex items-center gap-3"
-            style={{
-              background: "#0d0d1a",
-              border: "1px solid rgba(255,255,255,0.07)",
-            }}
+            className="rounded-xl p-4 flex items-center gap-3 bg-cinema-surface border border-white/10"
           >
             <div
               className="w-9 h-9 rounded-lg flex items-center justify-center"

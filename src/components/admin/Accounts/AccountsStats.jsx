@@ -30,7 +30,7 @@ export default function AccountsStats({ data }) {
       {stats.map((s) => (
         <div
           key={s.label}
-          className={`flex-1 bg-[#0d0d1a] border ${s.borderColor} rounded-xl p-4`}
+          className={`flex-1 bg-cinema-surface border ${s.borderColor} rounded-xl p-4`}
         >
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${s.color}`}>

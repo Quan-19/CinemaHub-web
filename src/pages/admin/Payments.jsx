@@ -101,7 +101,7 @@ export const AdminPaymentsPage = () => {
           { label: "Tổng thu (thành công)", value: `${(totalRevenue / 1000000).toFixed(1)}M₫`, color: "#e50914" },
         ].map((s) => (
           <div key={s.label} className="rounded-xl p-4 flex items-center gap-3"
-            style={{ background: "#0d0d1a", border: "1px solid rgba(255,255,255,0.07)" }}>
+            style={{ background: "var(--color-cinema-surface)", border: "1px solid rgba(255,255,255,0.07)" }}>
             <div className="w-2 h-10 rounded-full flex-shrink-0" style={{ background: s.color }} />
             <div>
               <div style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>{s.value}</div>
@@ -113,7 +113,7 @@ export const AdminPaymentsPage = () => {
 
       {/* Filters */}
       <div className="rounded-xl p-4 flex flex-wrap gap-3"
-        style={{ background: "#0d0d1a", border: "1px solid rgba(255,255,255,0.07)" }}>
+        style={{ background: "var(--color-cinema-surface)", border: "1px solid rgba(255,255,255,0.07)" }}>
         <div className="flex items-center gap-2 flex-1 min-w-[200px] rounded-lg px-3 py-2"
           style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
           <Search size={14} style={{ color: "rgba(255,255,255,0.35)" }} />
@@ -147,7 +147,7 @@ export const AdminPaymentsPage = () => {
 
       {/* Table */}
       <div className="rounded-xl overflow-hidden"
-        style={{ background: "#0d0d1a", border: "1px solid rgba(255,255,255,0.07)" }}>
+        style={{ background: "var(--color-cinema-surface)", border: "1px solid rgba(255,255,255,0.07)" }}>
         <div className="overflow-x-auto">
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
@@ -247,7 +247,7 @@ export const AdminPaymentsPage = () => {
       {selectedPayment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)" }}>
           <div className="w-full max-w-md rounded-2xl p-6"
-            style={{ background: "#0d0d1a", border: "1px solid rgba(255,255,255,0.1)" }}>
+            style={{ background: "var(--color-cinema-surface)", border: "1px solid rgba(255,255,255,0.1)" }}>
             <div className="flex items-center justify-between mb-5">
               <h2 style={{ fontSize: 17, fontWeight: 700, color: "#fff" }}>Chi tiết giao dịch</h2>
               <span className="px-2 py-1 rounded-full text-xs font-semibold"

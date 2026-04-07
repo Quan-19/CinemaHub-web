@@ -26,7 +26,7 @@ import { useState, useEffect } from "react";
 /* ===================== STAT CARD ===================== */
 
 const StatCard = ({ icon, label, value, change, color }) => (
-  <div className="bg-[#0d0d1a] border border-white/10 rounded-xl p-5 flex flex-col gap-4">
+  <div className="bg-cinema-surface border border-white/10 rounded-xl p-5 flex flex-col gap-4">
     <div className="flex justify-between">
       <div
         className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -153,7 +153,7 @@ export default function Dashboard() {
 
       {/* CHART */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-[#0d0d1a] border border-white/10 rounded-xl p-5">
+        <div className="lg:col-span-2 bg-cinema-surface border border-white/10 rounded-xl p-5">
           <h3 className="font-semibold mb-4">Doanh thu theo tháng</h3>
 
           <ResponsiveContainer width="100%" height={250}>
@@ -195,7 +195,7 @@ export default function Dashboard() {
         </div>
 
         {/* PIE (fake giữ lại nếu chưa có API) */}
-        <div className="bg-[#0d0d1a] border border-white/10 rounded-xl p-5">
+        <div className="bg-cinema-surface border border-white/10 rounded-xl p-5">
           <h3 className="font-semibold mb-4">Thể loại</h3>
 
           <ResponsiveContainer width="100%" height={180}>
@@ -220,7 +220,7 @@ export default function Dashboard() {
       </div>
 
       {/* RECENT */}
-      <div className="bg-[#0d0d1a] p-5 rounded-xl">
+      <div className="bg-cinema-surface p-5 rounded-xl">
         <h3 className="mb-4">Đặt vé gần đây</h3>
 
         {data?.recent?.map((b, i) => (
@@ -239,7 +239,7 @@ export default function Dashboard() {
       </div>
 
       {/* TOP MOVIES */}
-      <div className="bg-[#0d0d1a] p-5 rounded-xl">
+      <div className="bg-cinema-surface p-5 rounded-xl">
         <h3 className="mb-4">Top phim</h3>
 
         {data?.topMovies?.map((m, i) => (

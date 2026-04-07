@@ -59,7 +59,7 @@ export const AdminBannersPage = () => {
           { label: "Tổng lượt click", value: banners.reduce((s, b) => s + b.clicks, 0).toLocaleString(), color: "#f59e0b" },
         ].map((s) => (
           <div key={s.label} className="rounded-xl p-4 flex items-center gap-3"
-            style={{ background: "#0d0d1a", border: "1px solid rgba(255,255,255,0.07)" }}>
+            style={{ background: "var(--color-cinema-surface)", border: "1px solid rgba(255,255,255,0.07)" }}>
             <div className="w-2 h-10 rounded-full" style={{ background: s.color }} />
             <div>
               <div style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>{s.value}</div>
@@ -100,7 +100,7 @@ export const AdminBannersPage = () => {
             key={banner.id}
             className="rounded-xl overflow-hidden"
             style={{
-              background: "#0d0d1a",
+              background: "var(--color-cinema-surface)",
               border: `1px solid ${banner.status === "active" ? "rgba(229,9,20,0.3)" : "rgba(255,255,255,0.07)"}`,
             }}
           >
@@ -208,7 +208,7 @@ export const AdminBannersPage = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)" }}>
           <div className="w-full max-w-lg rounded-2xl p-6 space-y-4"
-            style={{ background: "#0d0d1a", border: "1px solid rgba(255,255,255,0.1)" }}>
+            style={{ background: "var(--color-cinema-surface)", border: "1px solid rgba(255,255,255,0.1)" }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>
               {editItem ? "Chỉnh sửa banner" : "Thêm banner mới"}
             </h2>
@@ -294,7 +294,7 @@ export const AdminBannersPage = () => {
           <div className="w-full max-w-3xl rounded-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <img src={previewBanner.image} alt={previewBanner.title} className="w-full object-cover" style={{ maxHeight: 400 }} />
             <div className="p-4 flex items-center justify-between"
-              style={{ background: "#0d0d1a" }}>
+              style={{ background: "var(--color-cinema-surface)" }}>
               <div>
                 <h3 style={{ color: "#fff", fontWeight: 600 }}>{previewBanner.title}</h3>
                 <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>{positionLabel[previewBanner.position]}</p>

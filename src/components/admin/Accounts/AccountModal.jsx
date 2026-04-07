@@ -60,7 +60,7 @@ export default function AccountModal({ data, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-[#0d0d1a] border border-white/10 rounded-xl w-[480px] relative">
+      <div className="bg-cinema-surface border border-white/10 rounded-xl w-[480px] relative">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className="text-white font-semibold text-lg">
@@ -85,7 +85,7 @@ export default function AccountModal({ data, onClose, onSave }) {
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30" // ✅ THÊM styling từ Code 2
+                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30" // ✅ THÊM styling từ Code 2
               />
             </div>
 
@@ -98,7 +98,7 @@ export default function AccountModal({ data, onClose, onSave }) {
                 value={formData.email}
                 onChange={(e) => handleChange("email", e.target.value)}
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
+                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
               />
             </div>
 
@@ -111,7 +111,7 @@ export default function AccountModal({ data, onClose, onSave }) {
                 value={formData.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
+                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
               />
             </div>
 
@@ -121,7 +121,7 @@ export default function AccountModal({ data, onClose, onSave }) {
               <select
                 value={formData.role}
                 onChange={(e) => handleChange("role", e.target.value)}
-                className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition appearance-none cursor-pointer"
+                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition appearance-none cursor-pointer"
               >
                 <option value="admin">Admin</option>
                 <option value="staff">Nhân viên</option>
@@ -136,7 +136,7 @@ export default function AccountModal({ data, onClose, onSave }) {
                 <select
                   value={formData.status}
                   onChange={(e) => handleChange("status", e.target.value)}
-                  className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition appearance-none cursor-pointer"
+                  className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition appearance-none cursor-pointer"
                 >
                   <option value="active">Hoạt động</option>
                   <option value="inactive">Tạm ngưng</option>
