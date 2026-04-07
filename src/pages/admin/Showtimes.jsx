@@ -7,7 +7,13 @@ import ShowtimesTable from "../../components/admin/showtimes/ShowtimesTable";
 import ShowtimeModal from "../../components/admin/showtimes/ShowtimeModal";
 import BulkActionBar from "../../components/admin/showtimes/BulkActionBar";
 import { toast } from "react-hot-toast";
-import { getTodayDate, getTomorrowDate, getWeekLaterDate, formatDateToDisplay, getTodayDisplay } from "../../utils/dateUtils";
+import {
+  getTodayDate,
+  getTomorrowDate,
+  getWeekLaterDate,
+  formatDateToDisplay,
+  getTodayDisplay,
+} from "../../utils/dateUtils";
 import { normalizeShowtimePricing } from "../../utils/showtimePricing";
 
 export const statusConfig = {
@@ -70,16 +76,17 @@ export default function ShowtimesPage() {
   // Lấy giá cho từng loại ghế từ pricing_rules (API)
   const getPricesFromPricingRules = async (type, date, time) => {
     try {
-      const token = localStorage.getItem("token");
+      const token =
+        sessionStorage.getItem("token") || localStorage.getItem("token");
       const response = await fetch(
         `http://localhost:5000/api/pricing/preview-prices?type=${type}&date=${date}&time=${time}`,
         {
           headers: {
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      
+
       const result = await response.json();
       if (result.success && result.data) {
         return result.data;
@@ -96,12 +103,13 @@ export default function ShowtimesPage() {
     const loadData = async () => {
       setDataLoading(true);
       try {
-        const [moviesRes, cinemasRes, showtimesRes, roomsRes] = await Promise.all([
-          fetch("http://localhost:5000/api/movies"),
-          fetch("http://localhost:5000/api/cinemas"),
-          fetch("http://localhost:5000/api/showtimes"),
-          fetch("http://localhost:5000/api/rooms"),
-        ]);
+        const [moviesRes, cinemasRes, showtimesRes, roomsRes] =
+          await Promise.all([
+            fetch("http://localhost:5000/api/movies"),
+            fetch("http://localhost:5000/api/cinemas"),
+            fetch("http://localhost:5000/api/showtimes"),
+            fetch("http://localhost:5000/api/rooms"),
+          ]);
 
         const moviesData = await moviesRes.json();
         const cinemasData = await cinemasRes.json();
@@ -115,7 +123,7 @@ export default function ShowtimesPage() {
 
         // Gom rooms theo cinemaId
         const roomsByCinema = {};
-        (Array.isArray(roomsData) ? roomsData : []).forEach(room => {
+        (Array.isArray(roomsData) ? roomsData : []).forEach((room) => {
           const cinemaId = room.cinema_id || room.cinemaId;
           if (!roomsByCinema[cinemaId]) roomsByCinema[cinemaId] = [];
           roomsByCinema[cinemaId].push({
@@ -130,10 +138,12 @@ export default function ShowtimesPage() {
         });
 
         // Chuẩn hóa cinemas với rooms
-        const normalizedCinemas = (Array.isArray(cinemasData) ? cinemasData : []).map((cinema) => {
+        const normalizedCinemas = (
+          Array.isArray(cinemasData) ? cinemasData : []
+        ).map((cinema) => {
           const cinemaId = cinema.cinema_id || cinema.id;
           const rooms = roomsByCinema[cinemaId] || [];
-          
+
           return {
             id: cinemaId,
             cinema_id: cinemaId,
@@ -155,7 +165,9 @@ export default function ShowtimesPage() {
         setCinemas(normalizedCinemas);
 
         // Chuẩn hóa showtimes
-        const normalizedShowtimes = (Array.isArray(showtimesData) ? showtimesData : []).map((s) => {
+        const normalizedShowtimes = (
+          Array.isArray(showtimesData) ? showtimesData : []
+        ).map((s) => {
           let formattedDate = s.date;
           if (s.date && s.date.includes("T")) {
             formattedDate = s.date.split("T")[0];
@@ -191,10 +203,14 @@ export default function ShowtimesPage() {
             date: formattedDate,
             time: formattedTime,
             endTime: formattedEndTime || "---",
-            isSpecial: Boolean(s.isSpecial ?? s.special ?? s.is_special ?? false),
+            isSpecial: Boolean(
+              s.isSpecial ?? s.special ?? s.is_special ?? false
+            ),
             specialType: s.specialType || s.special_type || null,
-            specialPromotionId: s.specialPromotionId || s.special_promotion_id || null,
-            specialPricingRuleId: s.specialPricingRuleId || s.special_pricing_rule_id || null,
+            specialPromotionId:
+              s.specialPromotionId || s.special_promotion_id || null,
+            specialPricingRuleId:
+              s.specialPricingRuleId || s.special_pricing_rule_id || null,
             regularPrices: pricing.regularPrices,
             specialPrices: pricing.specialPrices,
             prices: pricing.prices,
@@ -261,22 +277,30 @@ export default function ShowtimesPage() {
       if (e.key === "showtimes") {
         try {
           const storedShowtimes = JSON.parse(e.newValue) || [];
-          setShowtimes((Array.isArray(storedShowtimes) ? storedShowtimes : []).map((s) => {
-            const pricing = normalizeShowtimePricing(s);
-            return {
-              ...s,
-              isSpecial: Boolean(s.isSpecial ?? s.special ?? s.is_special ?? false),
-              special: Boolean(s.isSpecial ?? s.special ?? s.is_special ?? false),
-              specialType: s.specialType || s.special_type || null,
-              specialPromotionId: s.specialPromotionId || s.special_promotion_id || null,
-              specialPricingRuleId: s.specialPricingRuleId || s.special_pricing_rule_id || null,
-              regularPrices: pricing.regularPrices,
-              specialPrices: pricing.specialPrices,
-              prices: pricing.prices,
-              base_price: Number(s.base_price) || pricing.basePrice,
-              priceSource: pricing.priceSource,
-            };
-          }));
+          setShowtimes(
+            (Array.isArray(storedShowtimes) ? storedShowtimes : []).map((s) => {
+              const pricing = normalizeShowtimePricing(s);
+              return {
+                ...s,
+                isSpecial: Boolean(
+                  s.isSpecial ?? s.special ?? s.is_special ?? false
+                ),
+                special: Boolean(
+                  s.isSpecial ?? s.special ?? s.is_special ?? false
+                ),
+                specialType: s.specialType || s.special_type || null,
+                specialPromotionId:
+                  s.specialPromotionId || s.special_promotion_id || null,
+                specialPricingRuleId:
+                  s.specialPricingRuleId || s.special_pricing_rule_id || null,
+                regularPrices: pricing.regularPrices,
+                specialPrices: pricing.specialPrices,
+                prices: pricing.prices,
+                base_price: Number(s.base_price) || pricing.basePrice,
+                priceSource: pricing.priceSource,
+              };
+            })
+          );
         } catch (error) {
           console.error("Failed to parse showtimes:", error);
         }
@@ -311,13 +335,18 @@ export default function ShowtimesPage() {
     const totalMinutes = hours * 60 + minutes + durationMinutes + 15;
     const endHours = Math.floor(totalMinutes / 60);
     const endMinutes = totalMinutes % 60;
-    
+
     if (endHours >= 24) {
       const nextDayHours = endHours - 24;
-      return `${String(nextDayHours).padStart(2, "0")}:${String(endMinutes).padStart(2, "0")} (ngày hôm sau)`;
+      return `${String(nextDayHours).padStart(2, "0")}:${String(
+        endMinutes
+      ).padStart(2, "0")} (ngày hôm sau)`;
     }
-    
-    return `${String(endHours).padStart(2, "0")}:${String(endMinutes).padStart(2, "0")}`;
+
+    return `${String(endHours).padStart(2, "0")}:${String(endMinutes).padStart(
+      2,
+      "0"
+    )}`;
   };
 
   const getMovieDuration = (movieId) => {
@@ -328,7 +357,9 @@ export default function ShowtimesPage() {
   const formatPriceMap = (priceMap) => {
     if (!priceMap) return "-";
     return ["Thường", "VIP", "Couple"]
-      .map((tier) => `${tier}: ${Number(priceMap[tier] || 0).toLocaleString()}đ`)
+      .map(
+        (tier) => `${tier}: ${Number(priceMap[tier] || 0).toLocaleString()}đ`
+      )
       .join(" | ");
   };
 
@@ -369,7 +400,10 @@ export default function ShowtimesPage() {
     setForm((prev) => {
       const newForm = { ...prev, ...updates };
 
-      if (updates.cinemaId !== undefined && updates.cinemaId !== prev.cinemaId) {
+      if (
+        updates.cinemaId !== undefined &&
+        updates.cinemaId !== prev.cinemaId
+      ) {
         const cinema = cinemas.find((c) => c.id == updates.cinemaId);
         if (cinema) {
           newForm.cinemaName = cinema.name;
@@ -392,7 +426,11 @@ export default function ShowtimesPage() {
         }
       }
 
-      if (updates.roomId !== undefined && updates.roomId !== prev.roomId && newForm.cinemaId) {
+      if (
+        updates.roomId !== undefined &&
+        updates.roomId !== prev.roomId &&
+        newForm.cinemaId
+      ) {
         const cinema = cinemas.find((c) => c.id == newForm.cinemaId);
         const room = cinema?.rooms?.find((r) => r.id == updates.roomId);
         if (room) {
@@ -414,13 +452,22 @@ export default function ShowtimesPage() {
         }
       }
 
-      if (updates.time !== undefined && updates.time !== prev.time && newForm.movieId) {
+      if (
+        updates.time !== undefined &&
+        updates.time !== prev.time &&
+        newForm.movieId
+      ) {
         const duration = getMovieDuration(newForm.movieId);
         newForm.endTime = calculateEndTime(newForm.time, duration);
       }
 
-      if (updates.isSpecial !== undefined && updates.isSpecial !== prev.isSpecial) {
-        newForm.specialPromotionId = updates.isSpecial ? prev.specialPromotionId : null;
+      if (
+        updates.isSpecial !== undefined &&
+        updates.isSpecial !== prev.isSpecial
+      ) {
+        newForm.specialPromotionId = updates.isSpecial
+          ? prev.specialPromotionId
+          : null;
         newForm.prices = updates.isSpecial
           ? prev.specialPrices || prev.prices || prev.regularPrices
           : prev.regularPrices || prev.prices;
@@ -441,14 +488,18 @@ export default function ShowtimesPage() {
         s.roomId == newShowtime.roomId &&
         s.date === newShowtime.date &&
         s.id !== newShowtime.id &&
-        s.status !== "cancelled",
+        s.status !== "cancelled"
     );
 
     for (let existing of conflicts) {
       const existingStart = new Date(`${existing.date}T${existing.time}`);
-      const existingEnd = new Date(`${existing.date}T${existing.endTime?.split(" ")[0] || "23:59"}`);
+      const existingEnd = new Date(
+        `${existing.date}T${existing.endTime?.split(" ")[0] || "23:59"}`
+      );
       const newStart = new Date(`${newShowtime.date}T${newShowtime.time}`);
-      const newEnd = new Date(`${newShowtime.date}T${newShowtime.endTime?.split(" ")[0] || "23:59"}`);
+      const newEnd = new Date(
+        `${newShowtime.date}T${newShowtime.endTime?.split(" ")[0] || "23:59"}`
+      );
 
       if (newStart < existingEnd && newEnd > existingStart) {
         return { conflict: true, with: existing };
@@ -475,14 +526,16 @@ export default function ShowtimesPage() {
     try {
       const finalFormData = {
         ...formData,
-        endTime: formData.endTime || calculateEndTime(formData.time, getMovieDuration(formData.movieId)),
+        endTime:
+          formData.endTime ||
+          calculateEndTime(formData.time, getMovieDuration(formData.movieId)),
       };
 
       const { conflict, with: conflictingShow } = checkConflict(finalFormData);
 
       if (conflict) {
         const confirm = window.confirm(
-          `Suất chiếu này xung đột với "${conflictingShow.movieTitle}" lúc ${conflictingShow.time}. Bạn có muốn tiếp tục?`,
+          `Suất chiếu này xung đột với "${conflictingShow.movieTitle}" lúc ${conflictingShow.time}. Bạn có muốn tiếp tục?`
         );
         if (!confirm) {
           setLoading(false);
@@ -513,11 +566,19 @@ export default function ShowtimesPage() {
         endTime: cleanEndTime,
         type: finalFormData.type,
         base_price: finalFormData.isSpecial
-          ? (finalFormData.specialPrices?.Thường || finalFormData.prices?.Thường || 90000)
-          : (finalFormData.regularPrices?.Thường || finalFormData.prices?.Thường || 90000),
+          ? finalFormData.specialPrices?.Thường ||
+            finalFormData.prices?.Thường ||
+            90000
+          : finalFormData.regularPrices?.Thường ||
+            finalFormData.prices?.Thường ||
+            90000,
         regular_prices: finalFormData.regularPrices || finalFormData.prices,
-        special_prices: finalFormData.isSpecial ? (finalFormData.specialPrices || finalFormData.prices) : null,
-        special_pricing_rule_id: finalFormData.isSpecial ? (finalFormData.specialPricingRuleId || null) : null,
+        special_prices: finalFormData.isSpecial
+          ? finalFormData.specialPrices || finalFormData.prices
+          : null,
+        special_pricing_rule_id: finalFormData.isSpecial
+          ? finalFormData.specialPricingRuleId || null
+          : null,
         prices: finalFormData.prices,
         is_special: Boolean(finalFormData.isSpecial),
         status: finalFormData.status || "scheduled",
@@ -525,24 +586,25 @@ export default function ShowtimesPage() {
 
       console.log("📦 Payload gửi lên API:", payload);
 
-      const token = localStorage.getItem("token");
-      
+      const token =
+        sessionStorage.getItem("token") || localStorage.getItem("token");
+
       let response;
       let url = "http://localhost:5000/api/showtimes";
       let method = "POST";
-      
+
       if (editingShowtime) {
         const showtimeId = editingShowtime.id;
         console.log("🔄 Đang cập nhật suất chiếu với ID:", showtimeId);
         url = `http://localhost:5000/api/showtimes/${showtimeId}`;
         method = "PUT";
       }
-      
+
       response = await fetch(url, {
         method: method,
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
@@ -550,7 +612,7 @@ export default function ShowtimesPage() {
       const responseText = await response.text();
       console.log("📥 Response status:", response.status);
       console.log("📥 Response body:", responseText);
-      
+
       let result;
       try {
         result = JSON.parse(responseText);
@@ -565,8 +627,10 @@ export default function ShowtimesPage() {
       if (editingShowtime) {
         setShowtimes((prev) =>
           prev.map((s) =>
-            s.id === editingShowtime.id ? { ...s, ...finalFormData, id: result.id || s.id } : s,
-          ),
+            s.id === editingShowtime.id
+              ? { ...s, ...finalFormData, id: result.id || s.id }
+              : s
+          )
         );
         toast.success("Cập nhật suất chiếu thành công!");
       } else {
@@ -597,13 +661,17 @@ export default function ShowtimesPage() {
     if (window.confirm("Bạn có chắc chắn muốn xóa suất chiếu này?")) {
       setLoading(true);
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/api/showtimes/${id}`, {
-          method: "DELETE",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-          },
-        });
+        const token =
+          sessionStorage.getItem("token") || localStorage.getItem("token");
+        const response = await fetch(
+          `http://localhost:5000/api/showtimes/${id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Xóa thất bại");
@@ -622,14 +690,14 @@ export default function ShowtimesPage() {
   const handleBulkDelete = async () => {
     if (selectedShowtimes.length === 0) return;
     const confirm = window.confirm(
-      `Bạn có chắc muốn xóa ${selectedShowtimes.length} suất chiếu?`,
+      `Bạn có chắc muốn xóa ${selectedShowtimes.length} suất chiếu?`
     );
     if (!confirm) return;
 
     setLoading(true);
     try {
       setShowtimes((prev) =>
-        prev.filter((s) => !selectedShowtimes.includes(s.id)),
+        prev.filter((s) => !selectedShowtimes.includes(s.id))
       );
       setSelectedShowtimes([]);
       toast.success(`Đã xóa ${selectedShowtimes.length} suất chiếu`);
@@ -646,12 +714,12 @@ export default function ShowtimesPage() {
     try {
       setShowtimes((prev) =>
         prev.map((s) =>
-          selectedShowtimes.includes(s.id) ? { ...s, status: newStatus } : s,
-        ),
+          selectedShowtimes.includes(s.id) ? { ...s, status: newStatus } : s
+        )
       );
       setSelectedShowtimes([]);
       toast.success(
-        `Đã cập nhật trạng thái ${selectedShowtimes.length} suất chiếu`,
+        `Đã cập nhật trạng thái ${selectedShowtimes.length} suất chiếu`
       );
     } catch (error) {
       toast.error("Có lỗi xảy ra!");
@@ -669,26 +737,30 @@ export default function ShowtimesPage() {
     const exportData = filtered.map((s) => {
       const isSpecialShowtime = Boolean(s.isSpecial || s.special);
 
-      return ({
-      "Tên phim": s.movieTitle,
-      Rạp: s.cinemaName,
-      Phòng: s.roomName,
-      Ngày: formatDateToDisplay(s.date),
-      Giờ: s.time,
-      "Định dạng": s.type,
-      "Loại suất": s.isSpecial || s.special ? "Đặc biệt" : "Thường",
-      "Ghế trống": `${s.availableSeats}/${s.totalSeats}`,
-      "Giá thường": isSpecialShowtime ? "---" : formatPriceMap(s.regularPrices || s.prices),
-      "Giá đặc biệt": isSpecialShowtime ? formatPriceMap(s.specialPrices) : "---",
-      "Trạng thái": statusConfig[s.status]?.label || s.status,
-      });
+      return {
+        "Tên phim": s.movieTitle,
+        Rạp: s.cinemaName,
+        Phòng: s.roomName,
+        Ngày: formatDateToDisplay(s.date),
+        Giờ: s.time,
+        "Định dạng": s.type,
+        "Loại suất": s.isSpecial || s.special ? "Đặc biệt" : "Thường",
+        "Ghế trống": `${s.availableSeats}/${s.totalSeats}`,
+        "Giá thường": isSpecialShowtime
+          ? "---"
+          : formatPriceMap(s.regularPrices || s.prices),
+        "Giá đặc biệt": isSpecialShowtime
+          ? formatPriceMap(s.specialPrices)
+          : "---",
+        "Trạng thái": statusConfig[s.status]?.label || s.status,
+      };
     });
 
     const headers = Object.keys(exportData[0]);
     const csvContent = [
       headers.join(","),
       ...exportData.map((row) =>
-        headers.map((header) => `"${row[header] || ""}"`).join(","),
+        headers.map((header) => `"${row[header] || ""}"`).join(",")
       ),
     ].join("\n");
 
@@ -698,10 +770,7 @@ export default function ShowtimesPage() {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `suat-chieu-${getTodayDate()}.csv`,
-    );
+    link.setAttribute("download", `suat-chieu-${getTodayDate()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -751,11 +820,10 @@ export default function ShowtimesPage() {
           </thead>
           <tbody>
             ${filtered
-              .map(
-                (s) => {
-                  const isSpecialShowtime = Boolean(s.isSpecial || s.special);
+              .map((s) => {
+                const isSpecialShowtime = Boolean(s.isSpecial || s.special);
 
-                  return `
+                return `
               <tr>
                 <td>${s.movieTitle || ""}</td>
                 <td>${s.cinemaName || ""}</td>
@@ -764,15 +832,20 @@ export default function ShowtimesPage() {
                 <td>${s.time || ""}</td>
                 <td>${s.endTime || ""}</td>
                 <td>${s.type || ""}</td>
-                <td>${isSpecialShowtime ? "---" : formatPriceMap(s.regularPrices || s.prices)}</td>
-                <td>${isSpecialShowtime ? formatPriceMap(s.specialPrices) : "---"}</td>
+                <td>${
+                  isSpecialShowtime
+                    ? "---"
+                    : formatPriceMap(s.regularPrices || s.prices)
+                }</td>
+                <td>${
+                  isSpecialShowtime ? formatPriceMap(s.specialPrices) : "---"
+                }</td>
                 <td>${
                   statusConfig[s.status]?.label || s.status || "Sắp chiếu"
                 }</td>
               </tr>
             `;
-                },
-              )
+              })
               .join("")}
           </tbody>
         </table>
@@ -844,10 +917,12 @@ export default function ShowtimesPage() {
         prev.map((showtime) => {
           const now = new Date();
           const nowDate = getTodayDate();
-          const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-          
+          const nowTime = `${String(now.getHours()).padStart(2, "0")}:${String(
+            now.getMinutes()
+          ).padStart(2, "0")}`;
+
           let newStatus = showtime.status;
-          
+
           if (showtime.status !== "cancelled") {
             if (showtime.date < nowDate) {
               newStatus = "ended";
@@ -871,9 +946,9 @@ export default function ShowtimesPage() {
               newStatus = "scheduled";
             }
           }
-          
+
           return { ...showtime, status: newStatus };
-        }),
+        })
       );
     }, 60000);
     return () => clearInterval(interval);
@@ -893,7 +968,7 @@ export default function ShowtimesPage() {
     <div className="space-y-5">
       <ShowtimesHeader
         total={showtimes.length}
-        specialCount={showtimes.filter(s => s.isSpecial || s.special).length}
+        specialCount={showtimes.filter((s) => s.isSpecial || s.special).length}
         onAdd={handleAdd}
         onExport={handleExport}
       />

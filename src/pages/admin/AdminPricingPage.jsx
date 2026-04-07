@@ -31,13 +31,16 @@ export default function AdminPricingPage() {
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) {
-      const fallback = localStorage.getItem("token");
+      const fallback =
+        sessionStorage.getItem("token") || localStorage.getItem("token");
       return fallback || null;
     }
     try {
       const token = await user.getIdToken();
       if (token) {
-        localStorage.setItem("token", token);
+        const rememberLogin = localStorage.getItem("rememberLogin") !== "false";
+        const targetStorage = rememberLogin ? localStorage : sessionStorage;
+        targetStorage.setItem("token", token);
       }
       return token;
     } catch (error) {
@@ -246,7 +249,8 @@ export default function AdminPricingPage() {
       try {
         const importedData = JSON.parse(e.target.result);
         if (Array.isArray(importedData)) {
-          const token = localStorage.getItem("token");
+          const token =
+            sessionStorage.getItem("token") || localStorage.getItem("token");
           let successCount = 0;
 
           for (const item of importedData) {

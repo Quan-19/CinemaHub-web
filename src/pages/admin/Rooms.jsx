@@ -87,10 +87,11 @@ export default function RoomsPage() {
 
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
-  
+
   // Lấy token từ localStorage
   const getToken = () => {
-    const token = localStorage.getItem("token");
+    const token =
+      sessionStorage.getItem("token") || localStorage.getItem("token");
     console.log("Token:", token); // Debug: kiểm tra token
     return token;
   };
@@ -98,7 +99,7 @@ export default function RoomsPage() {
   const handleAdd = async (newRoom) => {
     try {
       const token = getToken();
-      
+
       if (!token) {
         alert("Vui lòng đăng nhập lại!");
         return;
@@ -108,7 +109,7 @@ export default function RoomsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           cinema_id: newRoom.cinemaId,
@@ -140,29 +141,32 @@ export default function RoomsPage() {
   const handleUpdate = async (room) => {
     try {
       const token = getToken();
-      
+
       if (!token) {
         alert("Vui lòng đăng nhập lại!");
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/rooms/${room.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: room.name,
-          type: room.type,
-          seat_rows: room.rows,
-          seat_cols: room.cols,
-          vip_rows: JSON.stringify(room.vipRows || []),
-          couple_row: room.coupleRow,
-          total_seats: room.rows * room.cols,
-          status: room.status,
-        }),
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/rooms/${room.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: room.name,
+            type: room.type,
+            seat_rows: room.rows,
+            seat_cols: room.cols,
+            vip_rows: JSON.stringify(room.vipRows || []),
+            couple_row: room.coupleRow,
+            total_seats: room.rows * room.cols,
+            status: room.status,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -184,7 +188,7 @@ export default function RoomsPage() {
     setDeleteLoading(true);
     try {
       const token = getToken();
-      
+
       if (!token) {
         alert("Vui lòng đăng nhập lại!");
         setDeleteLoading(false);
@@ -196,7 +200,7 @@ export default function RoomsPage() {
         {
           method: "DELETE",
           headers: {
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -222,29 +226,32 @@ export default function RoomsPage() {
 
     try {
       const token = getToken();
-      
+
       if (!token) {
         alert("Vui lòng đăng nhập lại!");
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/rooms/${room.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: room.name,
-          type: room.type,
-          seat_rows: room.rows,
-          seat_cols: room.cols,
-          vip_rows: JSON.stringify(room.vipRows || []),
-          couple_row: room.coupleRow,
-          total_seats: room.rows * room.cols,
-          status: newStatus,
-        }),
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/rooms/${room.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: room.name,
+            type: room.type,
+            seat_rows: room.rows,
+            seat_cols: room.cols,
+            vip_rows: JSON.stringify(room.vipRows || []),
+            couple_row: room.coupleRow,
+            total_seats: room.rows * room.cols,
+            status: newStatus,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -355,9 +362,7 @@ export default function RoomsPage() {
 
       {/* Advanced Filters */}
       {showFilters && (
-        <div
-          className="p-4 rounded-xl border border-white/10 bg-cinema-surface"
-        >
+        <div className="p-4 rounded-xl border border-white/10 bg-cinema-surface">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-medium text-white">Bộ lọc nâng cao</h3>
             <button
@@ -385,7 +390,8 @@ export default function RoomsPage() {
                 <option value="all">Tất cả rạp</option>
                 {cinemas.map((cinema) => (
                   <option key={cinema.cinema_id} value={cinema.cinema_id}>
-                    {cinema.name} ({cinema.currentRooms || 0}/{cinema.maxRooms || 4} phòng)
+                    {cinema.name} ({cinema.currentRooms || 0}/
+                    {cinema.maxRooms || 4} phòng)
                   </option>
                 ))}
               </select>
@@ -439,7 +445,9 @@ export default function RoomsPage() {
           <span className="text-xs text-gray-400">Đang lọc:</span>
           {cinemaFilter !== "all" && (
             <span className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded-lg text-xs flex items-center gap-1">
-              Rạp: {cinemas.find(c => c.cinema_id == cinemaFilter)?.name || cinemaFilter}
+              Rạp:{" "}
+              {cinemas.find((c) => c.cinema_id == cinemaFilter)?.name ||
+                cinemaFilter}
               <X
                 size={12}
                 className="cursor-pointer hover:text-white"

@@ -20,14 +20,6 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { MovieCard } from "../components/MovieCard";
 
-// ========== RATING COLORS ==========
-const ratingColors = {
-  P: "#22c55e",
-  T13: "#f59e0b",
-  T16: "#f97316",
-  T18: "#ef4444",
-};
-
 function normalizeList(value) {
   if (Array.isArray(value)) return value.filter(Boolean);
   if (typeof value === "string") {
@@ -80,8 +72,15 @@ export const HomePage = () => {
 
         // Fetch promotions
         try {
-          const promoRes = await fetch("http://localhost:5000/api/promotions");
-          const promoData = await promoRes.json();
+          const promoRes = await fetch(
+            "http://localhost:5000/api/promotions?scope=public"
+          );
+          const promoPayload = await promoRes.json();
+          const promoData = Array.isArray(promoPayload?.data)
+            ? promoPayload.data
+            : Array.isArray(promoPayload)
+            ? promoPayload
+            : [];
           setPromotions(promoData);
         } catch {
           setPromotions([
@@ -242,14 +241,15 @@ export const HomePage = () => {
                       {current?.duration} phút
                     </span>
                     <span
-                      className={`rounded px-2 py-0.5 text-xs font-bold text-white ${current?.rating === "T18"
-                        ? "bg-red-500"
-                        : current?.rating === "T16"
+                      className={`rounded px-2 py-0.5 text-xs font-bold text-white ${
+                        current?.rating === "T18"
+                          ? "bg-red-500"
+                          : current?.rating === "T16"
                           ? "bg-orange-500"
                           : current?.rating === "T13"
-                            ? "bg-amber-500"
-                            : "bg-green-500"
-                        }`}
+                          ? "bg-amber-500"
+                          : "bg-green-500"
+                      }`}
                     >
                       {current?.rating}
                     </span>
@@ -297,10 +297,11 @@ export const HomePage = () => {
             <button
               key={i}
               onClick={() => setHeroIndex(i)}
-              className={`rounded-full transition-all ${i === heroIndex
-                ? "w-8 h-2 bg-red-500"
-                : "w-2 h-2 bg-white/30 hover:bg-white/60"
-                }`}
+              className={`rounded-full transition-all ${
+                i === heroIndex
+                  ? "w-8 h-2 bg-red-500"
+                  : "w-2 h-2 bg-white/30 hover:bg-white/60"
+              }`}
             />
           ))}
         </div>
@@ -310,10 +311,11 @@ export const HomePage = () => {
             <button
               key={m.movie_id}
               onClick={() => setHeroIndex(i)}
-              className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === heroIndex
-                ? "border-red-500 opacity-100"
-                : "border-transparent opacity-50 hover:opacity-75"
-                }`}
+              className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${
+                i === heroIndex
+                  ? "border-red-500 opacity-100"
+                  : "border-transparent opacity-50 hover:opacity-75"
+              }`}
             >
               <img
                 src={m.poster}
@@ -426,8 +428,8 @@ export const HomePage = () => {
                     <span className="text-zinc-400 text-xs">
                       {movie.releaseDate
                         ? new Date(movie.releaseDate).toLocaleDateString(
-                          "vi-VN"
-                        )
+                            "vi-VN"
+                          )
                         : "Sắp ra mắt"}
                     </span>
                   </div>
@@ -721,11 +723,17 @@ export const MovieDetailPage = () => {
   ];
 
   return (
-    <div className="space-y-2 relative min-h-screen pb-16" style={{ background: "#0a0a0f" }}>
+    <div
+      className="space-y-2 relative min-h-screen pb-16"
+      style={{ background: "#0a0a0f" }}
+    >
       {/* Banner / Backdrop layer with masking */}
       <div className="relative left-1/2 -translate-x-1/2 lg:mt-[-100px] xl:mt-[-160px] 2xl:mt-[-200px] w-screen max-w-none pointer-events-none">
         <div className="aspect-[16/10] md:aspect-[2/1] xl:aspect-[21/9] w-full invisible pointer-events-none" />
-        <div className="absolute top-0 left-0 w-full h-[125%] z-0 pointer-events-none overflow-hidden" style={{ background: "#0a0a0f" }}>
+        <div
+          className="absolute top-0 left-0 w-full h-[125%] z-0 pointer-events-none overflow-hidden"
+          style={{ background: "#0a0a0f" }}
+        >
           <div className="absolute top-0 left-0 w-full h-full">
             <img
               src={movie.backdrop}
@@ -740,13 +748,12 @@ export const MovieDetailPage = () => {
           className="absolute top-full bottom-[-25%] left-0 w-full backdrop-blur-[6px] z-0 pointer-events-none"
           style={{
             background: "rgba(10, 10, 15, 0.7)",
-            WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 30%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, transparent 0%, black 30%)",
             maskImage: "linear-gradient(to bottom, transparent 0%, black 30%)",
           }}
         />
       </div>
-
-
 
       <div className="relative z-10 flex flex-col space-y-8 lg:space-y-12">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -764,12 +771,12 @@ export const MovieDetailPage = () => {
                 <span
                   className="px-2.5 py-1 rounded-lg text-xs text-white font-bold"
                   style={{
-                    background: movie.status === "now_showing" ? "#e50914" : "#f59e0b",
+                    background:
+                      movie.status === "now_showing" ? "#e50914" : "#f59e0b",
                   }}
                 >
                   {movie.status === "now_showing" ? "Đang chiếu" : "Sắp chiếu"}
                 </span>
-
               </div>
 
               <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,1)] leading-tight">
@@ -816,7 +823,9 @@ export const MovieDetailPage = () => {
                   <button
                     onClick={handleBooking}
                     className="flex items-center gap-2 px-7 py-3 rounded-full font-bold text-white transition-all hover:-translate-y-[1px] active:scale-[0.98] shadow-[0_0_20px_rgba(229,9,20,0.3)] hover:shadow-[0_0_25px_rgba(229,9,20,0.5)] z-30"
-                    style={{ background: "linear-gradient(135deg, #e50914, #b20710)" }}
+                    style={{
+                      background: "linear-gradient(135deg, #e50914, #b20710)",
+                    }}
                   >
                     <Ticket className="w-4 h-4" />
                     Đặt vé ngay
@@ -833,12 +842,16 @@ export const MovieDetailPage = () => {
 
                 <button
                   onClick={() => setLiked(!liked)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold border transition-colors z-30 shadow-sm ${liked
+                  className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold border transition-colors z-30 shadow-sm ${
+                    liked
                       ? "bg-red-500/10 border-red-500/50 text-red-500 hover:bg-red-500/20"
                       : "bg-zinc-800/80 border-zinc-700 text-white hover:bg-zinc-700"
-                    }`}
+                  }`}
                 >
-                  <Heart className="w-4 h-4" fill={liked ? "currentColor" : "none"} />
+                  <Heart
+                    className="w-4 h-4"
+                    fill={liked ? "currentColor" : "none"}
+                  />
                   Yêu thích
                 </button>
 
@@ -939,9 +952,15 @@ export const MovieDetailPage = () => {
                     Phim liên quan
                   </p>
                 </div>
-                <div className="flex overflow-x-auto gap-4 pb-4 snap-x pointer-events-auto" style={{ scrollbarWidth: "none" }}>
+                <div
+                  className="flex overflow-x-auto gap-4 pb-4 snap-x pointer-events-auto"
+                  style={{ scrollbarWidth: "none" }}
+                >
                   {related.map((m) => (
-                    <div key={m.movie_id} className="min-w-[140px] sm:min-w-[160px] snap-start">
+                    <div
+                      key={m.movie_id}
+                      className="min-w-[140px] sm:min-w-[160px] snap-start"
+                    >
                       <MovieCard movie={m} size="sm" />
                     </div>
                   ))}
@@ -968,9 +987,10 @@ export const MovieDetailPage = () => {
               {(() => {
                 const extractYouTubeId = (url) => {
                   if (!url) return null;
-                  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                  const regExp =
+                    /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
                   const match = url.match(regExp);
-                  return (match && match[2].length === 11) ? match[2] : null;
+                  return match && match[2].length === 11 ? match[2] : null;
                 };
                 const youtubeId = extractYouTubeId(movie?.trailer);
 

@@ -58,7 +58,9 @@ function LoginForm({ onLogin }) {
   const { loginWithEmail, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(
+    () => localStorage.getItem("rememberLogin") === "true"
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -82,7 +84,7 @@ function LoginForm({ onLogin }) {
     setError("");
     setLoading(true);
     try {
-      const user = await loginWithGoogle();
+      const user = await loginWithGoogle(remember);
       onLogin(user); // 🔥 trả user cho modal xử lý navigate
     } catch (err) {
       if (err.code !== "auth/popup-closed-by-user")
@@ -416,13 +418,21 @@ function AuthModal({ onClose }) {
         <div className="mb-6 flex rounded-xl border border-zinc-700 bg-zinc-800/50 p-1">
           <button
             onClick={() => setTab("login")}
-            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${tab === "login" ? "bg-zinc-700 text-white shadow" : "text-zinc-400 hover:text-white"}`}
+            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
+              tab === "login"
+                ? "bg-zinc-700 text-white shadow"
+                : "text-zinc-400 hover:text-white"
+            }`}
           >
             Đăng nhập
           </button>
           <button
             onClick={() => setTab("register")}
-            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${tab === "register" ? "bg-zinc-700 text-white shadow" : "text-zinc-400 hover:text-white"}`}
+            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
+              tab === "register"
+                ? "bg-zinc-700 text-white shadow"
+                : "text-zinc-400 hover:text-white"
+            }`}
           >
             Đăng ký
           </button>

@@ -59,10 +59,17 @@ const HomePage = () => {
 
         // Try to fetch promotions (optional)
         try {
-          const promoRes = await fetch("http://localhost:5000/api/promotions");
-          const promoData = await promoRes.json();
+          const promoRes = await fetch(
+            "http://localhost:5000/api/promotions?scope=public"
+          );
+          const promoPayload = await promoRes.json();
+          const promoData = Array.isArray(promoPayload?.data)
+            ? promoPayload.data
+            : Array.isArray(promoPayload)
+            ? promoPayload
+            : [];
           setPromotions(promoData);
-        } catch (err) {
+        } catch {
           // Fallback promotions data (từ Code 2)
           setPromotions([
             {
@@ -71,7 +78,8 @@ const HomePage = () => {
               description: "Áp dụng cho tất cả các phim đang chiếu",
               code: "WED30",
               discount: "30%",
-              image: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400",
+              image:
+                "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400",
               expiry: "31/12/2024",
             },
             {
@@ -80,7 +88,8 @@ const HomePage = () => {
               description: "Chỉ áp dụng cho các suất chiếu từ 10h-14h",
               code: "CINE10",
               discount: "Combo",
-              image: "https://images.unsplash.com/photo-1512149177596-f817c7ef5d4c?w=400",
+              image:
+                "https://images.unsplash.com/photo-1512149177596-f817c7ef5d4c?w=400",
               expiry: "30/11/2024",
             },
           ]);
@@ -104,14 +113,20 @@ const HomePage = () => {
   // ========== AUTO SLIDE (Code 1) ==========
   useEffect(() => {
     if (featured.length === 0) return;
-    const t = setInterval(() => setHeroIndex((i) => (i + 1) % featured.length), 5000);
+    const t = setInterval(
+      () => setHeroIndex((i) => (i + 1) % featured.length),
+      5000
+    );
     return () => clearInterval(t);
   }, [featured.length]);
 
   // ========== LOADING STATE ==========
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0f" }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "#0a0a0f" }}
+      >
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-zinc-400">Đang tải dữ liệu...</p>
@@ -122,10 +137,16 @@ const HomePage = () => {
 
   if (!current && featured.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0f" }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "#0a0a0f" }}
+      >
         <div className="text-center">
           <p className="text-zinc-400 mb-4">Không có phim đang chiếu</p>
-          <button onClick={() => navigate("/movies")} className="text-red-500 hover:underline">
+          <button
+            onClick={() => navigate("/movies")}
+            className="text-red-500 hover:underline"
+          >
             Xem phim sắp chiếu
           </button>
         </div>
@@ -135,7 +156,6 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-cinema-bg text-zinc-100">
-
       {/* ========== HERO SECTION (Kết hợp UI Code 2 + Data Code 1) ========== */}
       <div className="relative h-[74vh] min-h-[460px] overflow-hidden sm:h-[70vh] sm:min-h-[500px]">
         <AnimatePresence mode="wait">
@@ -265,7 +285,9 @@ const HomePage = () => {
 
         {/* Slider controls */}
         <button
-          onClick={() => setHeroIndex((i) => (i - 1 + featured.length) % featured.length)}
+          onClick={() =>
+            setHeroIndex((i) => (i - 1 + featured.length) % featured.length)
+          }
           className="absolute left-3 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white transition-colors hover:bg-black/60 sm:flex"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -283,10 +305,11 @@ const HomePage = () => {
             <button
               key={i}
               onClick={() => setHeroIndex(i)}
-              className={`rounded-full transition-all ${i === heroIndex
-                ? "w-8 h-2 bg-red-500"
-                : "w-2 h-2 bg-white/30 hover:bg-white/60"
-                }`}
+              className={`rounded-full transition-all ${
+                i === heroIndex
+                  ? "w-8 h-2 bg-red-500"
+                  : "w-2 h-2 bg-white/30 hover:bg-white/60"
+              }`}
             />
           ))}
         </div>
@@ -297,10 +320,11 @@ const HomePage = () => {
             <button
               key={m.movie_id}
               onClick={() => setHeroIndex(i)}
-              className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === heroIndex
-                ? "border-red-500 opacity-100"
-                : "border-transparent opacity-50 hover:opacity-75"
-                }`}
+              className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${
+                i === heroIndex
+                  ? "border-red-500 opacity-100"
+                  : "border-transparent opacity-50 hover:opacity-75"
+              }`}
             >
               <img
                 src={m.poster}
@@ -314,7 +338,6 @@ const HomePage = () => {
 
       {/* ========== MAIN CONTENT ========== */}
       <div className="mx-auto w-full px-3 pb-14 sm:px-6 sm:pb-16 lg:px-10 2xl:px-14">
-
         {/* NOW SHOWING SECTION */}
         <section className="mt-10">
           <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
@@ -361,7 +384,9 @@ const HomePage = () => {
                       </div>
                       <span className="text-zinc-300 text-sm">{step}</span>
                     </div>
-                    {i < 2 && <ChevronRight className="w-4 h-4 text-zinc-400" />}
+                    {i < 2 && (
+                      <ChevronRight className="w-4 h-4 text-zinc-400" />
+                    )}
                   </div>
                 ))}
                 <button
@@ -420,7 +445,7 @@ const HomePage = () => {
                 Xem tất cả <ArrowRight className="w-4 h-4" />
               </button>
             </div>
-            
+
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {promotions.slice(0, 4).map((promo) => (
                 <div
@@ -442,7 +467,7 @@ const HomePage = () => {
                       -{promo.discount_percent || promo.discount}%
                     </div>
                   </div>
-                  
+
                   <div className="p-5">
                     <h3 className="text-white mb-2 line-clamp-1 text-base font-bold group-hover:text-red-400 transition-colors">
                       {promo.title}
@@ -463,7 +488,7 @@ const HomePage = () => {
                           {promo.code}
                         </span>
                       </div>
-                      <button 
+                      <button
                         onClick={() => navigate("/promotions")}
                         className="w-10 h-10 rounded-xl bg-zinc-700 hover:bg-zinc-600 flex items-center justify-center transition-all"
                       >

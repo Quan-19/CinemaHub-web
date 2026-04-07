@@ -69,7 +69,8 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token =
+          sessionStorage.getItem("token") || localStorage.getItem("token");
 
         const res = await fetch("http://localhost:5000/api/dashboard", {
           headers: {
