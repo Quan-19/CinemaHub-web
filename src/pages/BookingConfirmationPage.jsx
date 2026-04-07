@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { getAuth } from "firebase/auth";
 import {
   ChevronLeft,
   Check,
@@ -162,118 +163,116 @@ export default function BookingConfirmationPage() {
   };
 
   const handleConfirm = async () => {
-  setPaying(true);
+    setPaying(true);
 
-  try {
-    const auth = getAuth();
-    const user = auth.currentUser;
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
 
-    if (!user) {
-      alert("Bạn chưa đăng nhập!");
-      setPaying(false);
-      return;
-    }
-
-    const token = await user.getIdToken(true);
-
-    // 🔥 FIX paymentMethod chuẩn
-    const method = paymentMethod?.toLowerCase().trim();
-    console.log("💡 PAYMENT METHOD RAW:", paymentMethod);
-    console.log("💡 PAYMENT METHOD FIX:", method);
-
-    // 🔥 1. CREATE BOOKING
-    const bookingRes = await axios.post(
-      "http://localhost:5000/api/bookings",
-      {
-        user_id: 1,
-        showtime_id: showtime.showtime_id,
-        seats: seats.map((s) => s.id),
-        foods: Object.entries(comboCounts)
-          .filter(([_, q]) => q > 0)
-          .map(([id, q]) => ({
-            food_id: Number(id),
-            quantity: q,
-          })),
-        total_price: grandTotal,
-        payment_method: method, // 🔥 dùng method đã fix
-        promo_code: promoApplied ? promoCode : null,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      if (!user) {
+        alert("Bạn chưa đăng nhập!");
+        setPaying(false);
+        return;
       }
-    );
 
-    // 🔥 DEBUG
-    console.log("🔥 BOOKING DATA:", bookingRes.data);
+      const token = await user.getIdToken(true);
 
-    // 🔥 2. LẤY booking_id (FIX insertId)
-    const bookingId =
-      bookingRes.data?.booking_id ??
-      bookingRes.data?.id ??
-      bookingRes.data?.bookingId ??
-      bookingRes.data?.insertId ?? // 🔥 QUAN TRỌNG
-      bookingRes.data?.data?.booking_id ??
-      bookingRes.data?.booking?.booking_id ??
-      bookingRes.data?.result?.booking_id;
+      // 🔥 FIX paymentMethod chuẩn
+      const method = paymentMethod?.toLowerCase().trim();
+      console.log("💡 PAYMENT METHOD RAW:", paymentMethod);
+      console.log("💡 PAYMENT METHOD FIX:", method);
 
-    if (!bookingId) {
-      console.error("❌ RESPONSE:", bookingRes.data);
-      throw new Error("Không lấy được booking_id từ server");
-    }
-
-    console.log("✅ BOOKING ID:", bookingId);
-
-    // 🔥 3. VNPAY
-    if (method === "vnpay") {
-      console.log("🚀 CALL VNPAY");
-
-      const res = await axios.post(
-        "http://localhost:5000/api/payments/vnpay",
+      // 🔥 1. CREATE BOOKING
+      const bookingRes = await axios.post(
+        "http://localhost:5000/api/bookings",
         {
-          booking_id: bookingId,
-          amount: grandTotal,
+          user_id: 1,
+          showtime_id: showtime.showtime_id,
+          seats: seats.map((s) => s.id),
+          foods: Object.entries(comboCounts)
+            .filter(([_, q]) => q > 0)
+            .map(([id, q]) => ({
+              food_id: Number(id),
+              quantity: q,
+            })),
+          total_price: grandTotal,
+          payment_method: method, // 🔥 dùng method đã fix
+          promo_code: promoApplied ? promoCode : null,
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
-      console.log("💰 VNPAY RESPONSE:", res.data);
+      // 🔥 DEBUG
+      console.log("🔥 BOOKING DATA:", bookingRes.data);
 
-      if (!res.data?.paymentUrl) {
-        throw new Error("Không nhận được paymentUrl");
+      // 🔥 2. LẤY booking_id (FIX insertId)
+      const bookingId =
+        bookingRes.data?.booking_id ??
+        bookingRes.data?.id ??
+        bookingRes.data?.bookingId ??
+        bookingRes.data?.insertId ?? // 🔥 QUAN TRỌNG
+        bookingRes.data?.data?.booking_id ??
+        bookingRes.data?.booking?.booking_id ??
+        bookingRes.data?.result?.booking_id;
+
+      if (!bookingId) {
+        console.error("❌ RESPONSE:", bookingRes.data);
+        throw new Error("Không lấy được booking_id từ server");
       }
 
-      // 👉 redirect sang VNPay
-      window.location.href = res.data.paymentUrl;
-      return;
+      console.log("✅ BOOKING ID:", bookingId);
+
+      // 🔥 3. VNPAY
+      if (method === "vnpay") {
+        console.log("🚀 CALL VNPAY");
+
+        const res = await axios.post(
+          "http://localhost:5000/api/payments/vnpay",
+          {
+            booking_id: bookingId,
+            amount: grandTotal,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        console.log("💰 VNPAY RESPONSE:", res.data);
+
+        if (!res.data?.paymentUrl) {
+          throw new Error("Không nhận được paymentUrl");
+        }
+
+        // 👉 redirect sang VNPay
+        window.location.href = res.data.paymentUrl;
+        return;
+      }
+
+      // 🔥 4. PAYMENT THƯỜNG (KHÔNG PHẢI VNPAY)
+      const ticketCode =
+        bookingRes.data?.bookingCode || `CS${Date.now().toString().slice(-8)}`;
+
+      setBookingCode(ticketCode);
+      setStep("success");
+    } catch (err) {
+      console.error("❌ Thanh toán thất bại:", err);
+
+      if (err.response) {
+        console.error("❌ BACKEND ERROR:", err.response.data);
+        alert(err.response.data?.message || "Backend lỗi");
+      } else {
+        alert(err.message || "Thanh toán thất bại.");
+      }
     }
 
-    // 🔥 4. PAYMENT THƯỜNG (KHÔNG PHẢI VNPAY)
-    const ticketCode =
-      bookingRes.data?.bookingCode ||
-      `CS${Date.now().toString().slice(-8)}`;
-
-    setBookingCode(ticketCode);
-    setStep("success");
-
-  } catch (err) {
-    console.error("❌ Thanh toán thất bại:", err);
-
-    if (err.response) {
-      console.error("❌ BACKEND ERROR:", err.response.data);
-      alert(err.response.data?.message || "Backend lỗi");
-    } else {
-      alert(err.message || "Thanh toán thất bại.");
-    }
-  }
-
-  setPaying(false);
-};
+    setPaying(false);
+  };
 
   // Kiểm tra dữ liệu
   if (!showtime || !movie) {
