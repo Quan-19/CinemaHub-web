@@ -163,6 +163,23 @@ export default function BookingConfirmationPage() {
   };
 
   const handleConfirm = async () => {
+    console.log("🔍 Full showtime object:", showtime);
+    console.log("🔍 showtime_id value:", showtime?.showtime_id);
+    console.log("🔍 showtime.id value:", showtime?.id);
+
+    // Nếu showtime_id undefined, thử lấy từ showtime.id
+    const actualShowtimeId = showtime?.showtime_id || showtime?.id;
+    console.log("🔍 actualShowtimeId:", actualShowtimeId);
+
+    if (!actualShowtimeId) {
+      console.error("❌ Không tìm thấy showtime_id!");
+      alert(
+        "Lỗi: Không tìm thấy thông tin suất chiếu. Vui lòng quay lại chọn lại.",
+      );
+      setPaying(false);
+      return;
+    }
+
     setPaying(true);
 
     try {
@@ -177,26 +194,28 @@ export default function BookingConfirmationPage() {
 
       const token = await user.getIdToken(true);
 
-      // 🔥 FIX paymentMethod chuẩn
       const method = paymentMethod?.toLowerCase().trim();
-      console.log("💡 PAYMENT METHOD RAW:", paymentMethod);
-      console.log("💡 PAYMENT METHOD FIX:", method);
+      console.log("💡 PAYMENT METHOD:", method);
 
-      // 🔥 1. CREATE BOOKING
+      // Helper tính giá ghế
+      const calculateSeatPrice = (seatType, basePrice = 75000) => {
+        if (seatType === "vip") return Math.round(basePrice * 1.3);
+        if (seatType === "couple") return Math.round(basePrice * 1.5);
+        return basePrice;
+      };
+
+      // 1. CREATE BOOKING với đúng cấu trúc seats
       const bookingRes = await axios.post(
         "http://localhost:5000/api/bookings",
         {
-          user_id: 1,
-          showtime_id: showtime.showtime_id,
-          seats: seats.map((s) => s.id),
-          foods: Object.entries(comboCounts)
-            .filter(([_, q]) => q > 0)
-            .map(([id, q]) => ({
-              food_id: Number(id),
-              quantity: q,
-            })),
-          total_price: grandTotal,
-          payment_method: method, // 🔥 dùng method đã fix
+          user_id: 1, // Hoặc lấy từ auth
+          showtime_id: showtime.showtime_id, // Đảm bảo có giá trị
+          total_price: grandTotal, // Dùng total_price thay vì total_amount
+          seats: seats.map((s) => ({
+            id: s.id,
+            price: calculateSeatPrice(s.type, showtime.base_price || 75000),
+          })),
+          payment_method: method,
           promo_code: promoApplied ? promoCode : null,
         },
         {
@@ -206,32 +225,23 @@ export default function BookingConfirmationPage() {
         },
       );
 
-      // 🔥 DEBUG
-      console.log("🔥 BOOKING DATA:", bookingRes.data);
+      console.log("🔥 BOOKING RESPONSE:", bookingRes.data);
 
-      // 🔥 2. LẤY booking_id (FIX insertId)
       const bookingId =
-        bookingRes.data?.booking_id ??
-        bookingRes.data?.id ??
-        bookingRes.data?.bookingId ??
-        bookingRes.data?.insertId ?? // 🔥 QUAN TRỌNG
-        bookingRes.data?.data?.booking_id ??
-        bookingRes.data?.booking?.booking_id ??
-        bookingRes.data?.result?.booking_id;
+        bookingRes.data?.booking_id ?? bookingRes.data?.insertId;
 
       if (!bookingId) {
-        console.error("❌ RESPONSE:", bookingRes.data);
         throw new Error("Không lấy được booking_id từ server");
       }
 
       console.log("✅ BOOKING ID:", bookingId);
 
-      // 🔥 3. VNPAY
+      // 2. VNPAY
       if (method === "vnpay") {
-        console.log("🚀 CALL VNPAY");
+        console.log("🚀 CALL VNPAY with booking_id:", bookingId);
 
         const res = await axios.post(
-          "http://localhost:5000/api/payments/vnpay",
+          "http://localhost:5000/api/payments/create-vnpay", // URL đúng
           {
             booking_id: bookingId,
             amount: grandTotal,
@@ -249,20 +259,17 @@ export default function BookingConfirmationPage() {
           throw new Error("Không nhận được paymentUrl");
         }
 
-        // 👉 redirect sang VNPay
         window.location.href = res.data.paymentUrl;
         return;
       }
 
-      // 🔥 4. PAYMENT THƯỜNG (KHÔNG PHẢI VNPAY)
+      // 3. Các phương thức thanh toán khác
       const ticketCode =
         bookingRes.data?.bookingCode || `CS${Date.now().toString().slice(-8)}`;
-
       setBookingCode(ticketCode);
       setStep("success");
     } catch (err) {
       console.error("❌ Thanh toán thất bại:", err);
-
       if (err.response) {
         console.error("❌ BACKEND ERROR:", err.response.data);
         alert(err.response.data?.message || "Backend lỗi");

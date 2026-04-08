@@ -1,8 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import axios from "axios"; // hoặc fetch
 
 export default function PaymentResultPage() {
-  // ✅ ĐỔI TÊN Ở ĐÂY
   const { search } = useLocation();
   const navigate = useNavigate();
 
@@ -10,15 +10,31 @@ export default function PaymentResultPage() {
     const params = new URLSearchParams(search);
     const status = params.get("status");
     const code = params.get("code");
-    const paymentId = params.get("paymentId");
+    const bookingId = params.get("booking_id"); // ✅ QUAN TRỌNG: lấy booking_id từ URL
 
-    console.log("Payment Result Page:", { status, code, paymentId });
+    console.log("Payment Result Page:", { status, code, bookingId });
 
-    // Tự động chuyển hướng sau 3 giây nếu thành công
-    if (status === "paid") {
+    // ✅ Nếu thanh toán thành công, cập nhật trạng thái booking
+    if (status === "paid" && bookingId) {
+      const updateBookingStatus = async () => {
+        try {
+          const response = await axios.put(
+            `http://localhost:5000/api/bookings/${bookingId}/status`,
+            { status: "paid" }, // hoặc "confirmed"
+          );
+          console.log("✅ Updated booking status:", response.data);
+        } catch (error) {
+          console.error("❌ Failed to update booking status:", error);
+        }
+      };
+
+      updateBookingStatus();
+
+      // Tự động chuyển hướng sau 3 giây
       const timer = setTimeout(() => {
-        navigate("/movies"); // ✅ SỬA THÀNH "/profile" HOẶC "/"
+        navigate("/profile/my-tickets"); // chuyển đến trang vé của tôi
       }, 3000);
+
       return () => clearTimeout(timer);
     }
   }, [search, navigate]);

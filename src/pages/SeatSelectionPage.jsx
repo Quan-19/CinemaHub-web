@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { useBooking } from "../context/BookingContext";
 import { calculateShowtimeTotal } from "../utils/showtimePricing";
+import axios from "axios";
+import { getAuth } from "firebase/auth";
 
 const ROWS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 const COLS = 10;
@@ -30,6 +32,69 @@ const SEAT_TYPES = {
     border: "rgba(229,9,20,0.4)",
     multiplier: 1.5,
   },
+};
+
+// ✅ HÀM RELEASE LOCK CỦA USER HIỆN TẠI
+const releaseMyLocks = async (showtimeId) => {
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      console.log("User not logged in");
+      return false;
+    }
+
+    const token = await user.getIdToken();
+
+    await axios.post(
+      "http://localhost:5000/api/seats/release-my-locks",
+      { showtime_id: showtimeId },
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+
+    console.log("✅ Released my previous locks");
+    return true;
+  } catch (error) {
+    console.log("No locks to release or error:", error?.response?.data);
+    return false;
+  }
+};
+
+// ✅ HÀM LOCK GHẾ
+const lockSelectedSeats = async (seats, showtimeId) => {
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      console.error("User not logged in");
+      return false;
+    }
+
+    const token = await user.getIdToken();
+
+    const response = await axios.post(
+      "http://localhost:5000/api/seats/lock",
+      {
+        seats: seats.map((s) => ({ id: s.id, price: s.price })),
+        showtime_id: showtimeId,
+        user_id: 1,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    console.log("✅ Seats locked:", response.data);
+    return true;
+  } catch (error) {
+    console.error("❌ Failed to lock seats:", error);
+    if (error.response?.data?.error) {
+      alert(error.response.data.error);
+    }
+    return false;
+  }
 };
 
 function SeatLegendItem({ colorClassName, label }) {
@@ -79,34 +144,71 @@ export const SeatSelectionPage = () => {
     [],
   );
 
-  // ========== FETCH DATA FROM API (Code 1) ==========
+  // ✅ KHI VÀO TRANG, RELEASE LOCK CỦA USER NÀY
   useEffect(() => {
+    const releaseLocksOnEnter = async () => {
+      await releaseMyLocks(showtimeId);
+      // Sau khi release, fetch lại dữ liệu ghế
+      const resSeats = await fetch(
+        `http://localhost:5000/api/seats/showtime/${showtimeId}`,
+      );
+      const seatData = await resSeats.json();
+      setOccupiedSeats(new Set(seatData.occupied || []));
+    };
+
+    releaseLocksOnEnter();
+  }, [showtimeId]);
+
+  // ========== FETCH DATA FROM API ==========
+  useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
-      setLoading(true);
       try {
-        // Fetch showtime data
         const resShowtime = await fetch(
           `http://localhost:5000/api/showtimes/${showtimeId}`,
         );
-        if (!resShowtime.ok) throw new Error("Failed to fetch showtime");
         const showtimeData = await resShowtime.json();
-        setShowtime(showtimeData);
 
-        // Fetch occupied seats
         const resSeats = await fetch(
           `http://localhost:5000/api/seats/showtime/${showtimeId}`,
         );
-        if (!resSeats.ok) throw new Error("Failed to fetch seats");
         const seatData = await resSeats.json();
-        setOccupiedSeats(new Set(seatData.occupied));
+        console.log("🎯 API Response:", seatData);
+        console.log("🎯 Occupied seats:", seatData.occupied);
+
+        if (!isMounted) return;
+
+        setShowtime(showtimeData);
+        setOccupiedSeats(new Set(seatData.occupied || []));
+        setLoading(false);
       } catch (err) {
         console.error("Error loading seat data:", err);
-      } finally {
         setLoading(false);
       }
     };
 
-    if (showtimeId) fetchData();
+    fetchData();
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:5000/api/seats/showtime/${showtimeId}`,
+        );
+        const data = await res.json();
+
+        if (isMounted) {
+          setOccupiedSeats(new Set(data.occupied || []));
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [showtimeId]);
 
   // ========== TOGGLE SEAT ==========
@@ -122,16 +224,25 @@ export const SeatSelectionPage = () => {
   };
 
   // ========== HANDLE CONTINUE ==========
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (picked.length === 0) return;
 
-    // Lưu vào context (Code 2)
+    const locked = await lockSelectedSeats(picked, showtimeId);
+
+    if (!locked) {
+      return;
+    }
+
     setSelectedSeats(picked);
 
-    // Điều hướng với state (Code 1)
+    const showtimeWithId = {
+      ...(showtime || selectedShowtime),
+      showtime_id: Number(showtimeId),
+    };
+
     navigate("/booking/confirm", {
       state: {
-        showtime: showtime || selectedShowtime,
+        showtime: showtimeWithId,
         seats: picked,
         movie: movieInfo,
       },
@@ -163,7 +274,6 @@ export const SeatSelectionPage = () => {
 
   return (
     <div className="min-h-screen pt-16" style={{ background: "#0a0a0f" }}>
-      {/* ========== HEADER (Code 2) ========== */}
       <div
         className="border-b border-zinc-700"
         style={{ background: "#12121f" }}
@@ -191,7 +301,6 @@ export const SeatSelectionPage = () => {
               )}
             </div>
 
-            {/* Step indicator (Code 2) */}
             <div className="hidden sm:flex items-center gap-2">
               {[
                 { n: 1, label: "Phim", done: true },
@@ -253,7 +362,6 @@ export const SeatSelectionPage = () => {
                   <stop offset="1" stopColor="currentColor" stopOpacity="0" />
                 </linearGradient>
               </defs>
-
               <path
                 d="M 110 52 Q 300 16 490 52 L 520 110 L 80 110 Z"
                 fill="url(#screenSpotCustomer)"
@@ -293,7 +401,6 @@ export const SeatSelectionPage = () => {
                     <div className="text-center text-[11px] font-semibold text-zinc-400">
                       {row.label}
                     </div>
-
                     <div className="grid auto-cols-max grid-flow-col gap-2">
                       {row.seats.map((seat) => {
                         const isOccupied = occupiedSeats.has(seat.id);
@@ -332,7 +439,6 @@ export const SeatSelectionPage = () => {
                         );
                       })}
                     </div>
-
                     <div className="text-center text-[11px] font-semibold text-zinc-400">
                       {row.label}
                     </div>
@@ -380,7 +486,6 @@ export const SeatSelectionPage = () => {
           </div>
         </div>
 
-        {/* ========== BOTTOM BAR (Kết hợp cả 2) ========== */}
         <div
           className="fixed bottom-0 left-0 right-0 border-t border-zinc-700 px-4 py-3"
           style={{ background: "#12121f" }}
@@ -413,8 +518,6 @@ export const SeatSelectionPage = () => {
             </button>
           </div>
         </div>
-
-        {/* Spacer cho fixed bottom bar */}
         <div className="h-20" />
       </div>
     </div>
