@@ -23,13 +23,14 @@ export default function AdminPromotionsPage() {
   const loadPromotions = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token =
+        sessionStorage.getItem("token") || localStorage.getItem("token");
       const response = await fetch(API_URL, {
         headers: {
-          "Authorization": token ? `Bearer ${token}` : "",
+          Authorization: token ? `Bearer ${token}` : "",
         },
       });
-      
+
       const result = await response.json();
       if (result.success) {
         setPromotions(result.data);
@@ -51,29 +52,33 @@ export default function AdminPromotionsPage() {
   // Filter promotions
   useEffect(() => {
     let filteredData = [...promotions];
-    
+
     if (searchTerm) {
-      filteredData = filteredData.filter(p =>
-        p.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.code?.toLowerCase().includes(searchTerm.toLowerCase())
+      filteredData = filteredData.filter(
+        (p) =>
+          p.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.code?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     if (statusFilter !== "all") {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       if (statusFilter === "active") {
-        filteredData = filteredData.filter(p => 
-          p.status === 'active' && p.start_date <= today && p.end_date >= today
+        filteredData = filteredData.filter(
+          (p) =>
+            p.status === "active" &&
+            p.start_date <= today &&
+            p.end_date >= today
         );
       } else if (statusFilter === "inactive") {
-        filteredData = filteredData.filter(p => p.status === 'inactive');
+        filteredData = filteredData.filter((p) => p.status === "inactive");
       } else if (statusFilter === "expired") {
-        filteredData = filteredData.filter(p => 
-          p.status === 'active' && p.end_date < today
+        filteredData = filteredData.filter(
+          (p) => p.status === "active" && p.end_date < today
         );
       }
     }
-    
+
     setFiltered(filteredData);
   }, [promotions, searchTerm, statusFilter]);
 
@@ -89,34 +94,39 @@ export default function AdminPromotionsPage() {
 
   const handleSave = async (data) => {
     try {
-      const token = localStorage.getItem("token");
-      
+      const token =
+        sessionStorage.getItem("token") || localStorage.getItem("token");
+
       if (!token) {
         toast.error("Vui lòng đăng nhập lại!");
         return;
       }
-      
+
       let url = API_URL;
       let method = "POST";
-      
+
       if (editingItem) {
         url = `${API_URL}/${editingItem.promotion_id}`;
         method = "PUT";
       }
-      
+
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(data),
       });
-      
+
       const result = await response.json();
-      
+
       if (response.ok && result.success) {
-        toast.success(editingItem ? "Cập nhật khuyến mãi thành công" : "Thêm khuyến mãi thành công");
+        toast.success(
+          editingItem
+            ? "Cập nhật khuyến mãi thành công"
+            : "Thêm khuyến mãi thành công"
+        );
         loadPromotions();
         setShowModal(false);
         setEditingItem(null);
@@ -131,24 +141,25 @@ export default function AdminPromotionsPage() {
 
   const handleDelete = async () => {
     if (!deleteItem) return;
-    
+
     try {
-      const token = localStorage.getItem("token");
-      
+      const token =
+        sessionStorage.getItem("token") || localStorage.getItem("token");
+
       if (!token) {
         toast.error("Vui lòng đăng nhập lại!");
         return;
       }
-      
+
       const response = await fetch(`${API_URL}/${deleteItem.promotion_id}`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-      
+
       const result = await response.json();
-      
+
       if (response.ok && result.success) {
         toast.success("Xóa khuyến mãi thành công");
         loadPromotions();
@@ -236,17 +247,19 @@ export default function AdminPromotionsPage() {
               Xóa bộ lọc
             </button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs text-gray-400 mb-2 block">Trạng thái</label>
+              <label className="text-xs text-gray-400 mb-2 block">
+                Trạng thái
+              </label>
               <div className="flex gap-2 flex-wrap">
                 {[
                   { value: "all", label: "Tất cả" },
                   { value: "active", label: "Đang áp dụng" },
                   { value: "inactive", label: "Ngưng áp dụng" },
                   { value: "expired", label: "Đã hết hạn" },
-                ].map(opt => (
+                ].map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() => setStatusFilter(opt.value)}

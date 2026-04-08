@@ -6,7 +6,10 @@ import DeleteConfirmModal from "../../components/admin/Pricing/DeleteConfirmModa
 import { Plus, Filter, X, Calendar, Ticket } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getAuth } from "firebase/auth";
-import { getPricingRuleRoomType, isHolidayPricingRule } from "../../utils/pricingRuleUtils";
+import {
+  getPricingRuleRoomType,
+  isHolidayPricingRule,
+} from "../../utils/pricingRuleUtils";
 
 export default function AdminPricingPage() {
   const [data, setData] = useState([]);
@@ -28,13 +31,16 @@ export default function AdminPricingPage() {
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) {
-      const fallback = localStorage.getItem("token");
+      const fallback =
+        sessionStorage.getItem("token") || localStorage.getItem("token");
       return fallback || null;
     }
     try {
       const token = await user.getIdToken();
       if (token) {
-        localStorage.setItem("token", token);
+        const rememberLogin = localStorage.getItem("rememberLogin") !== "false";
+        const targetStorage = rememberLogin ? localStorage : sessionStorage;
+        targetStorage.setItem("token", token);
       }
       return token;
     } catch (error) {
@@ -54,10 +60,10 @@ export default function AdminPricingPage() {
       }
       const response = await fetch(API_URL, {
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           throw new Error("UNAUTHORIZED");
@@ -67,7 +73,7 @@ export default function AdminPricingPage() {
         }
         throw new Error("Failed to load data");
       }
-      
+
       const result = await response.json();
       if (result.success) {
         setData(result.data);
@@ -97,18 +103,18 @@ export default function AdminPricingPage() {
       const token = await getAuthToken();
       if (!token) return;
       const payload = { ...newItem };
-      
+
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         toast.success("Thêm quy tắc giá thành công!");
         loadData();
@@ -128,18 +134,18 @@ export default function AdminPricingPage() {
       if (!token) return;
       const payload = { ...updatedItem };
       delete payload.id;
-      
+
       const response = await fetch(`${API_URL}/${updatedItem.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         toast.success("Cập nhật quy tắc giá thành công!");
         loadData();
@@ -161,10 +167,10 @@ export default function AdminPricingPage() {
       const response = await fetch(`${API_URL}/${deleteItem.id}`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-      
+
       const result = await response.json();
       if (result.success) {
         toast.success("Xóa quy tắc giá thành công!");
@@ -186,10 +192,10 @@ export default function AdminPricingPage() {
       const response = await fetch(`${API_URL}/${item.id}/toggle`, {
         method: "PATCH",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-      
+
       const result = await response.json();
       if (result.success) {
         toast.success(result.message);
@@ -226,7 +232,9 @@ export default function AdminPricingPage() {
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `pricing_rules_${new Date().toISOString().split("T")[0]}.json`;
+    link.download = `pricing_rules_${
+      new Date().toISOString().split("T")[0]
+    }.json`;
     link.click();
     URL.revokeObjectURL(url);
     toast.success("Xuất dữ liệu thành công!");
@@ -241,16 +249,17 @@ export default function AdminPricingPage() {
       try {
         const importedData = JSON.parse(e.target.result);
         if (Array.isArray(importedData)) {
-          const token = localStorage.getItem("token");
+          const token =
+            sessionStorage.getItem("token") || localStorage.getItem("token");
           let successCount = 0;
-          
+
           for (const item of importedData) {
             try {
               const response = await fetch(API_URL, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  "Authorization": `Bearer ${token}`,
+                  Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify(item),
               });
@@ -260,11 +269,15 @@ export default function AdminPricingPage() {
               console.error("Error importing item:", err);
             }
           }
-          
-          toast.success(`Đã import thành công ${successCount}/${importedData.length} quy tắc giá!`);
+
+          toast.success(
+            `Đã import thành công ${successCount}/${importedData.length} quy tắc giá!`
+          );
           loadData();
         } else {
-          toast.error("File không hợp lệ. Vui lòng chọn file JSON đúng định dạng.");
+          toast.error(
+            "File không hợp lệ. Vui lòng chọn file JSON đúng định dạng."
+          );
         }
       } catch (error) {
         console.error("Error importing data:", error);
@@ -275,7 +288,7 @@ export default function AdminPricingPage() {
     event.target.value = "";
   };
 
-  const filtered = data.filter(item => {
+  const filtered = data.filter((item) => {
     const isHoliday = isHolidayPricingRule(item);
     const roomType = getPricingRuleRoomType(item);
 
@@ -297,13 +310,21 @@ export default function AdminPricingPage() {
       (!isHoliday && item.seat?.toLowerCase().includes(q)) ||
       (!isHoliday && item.day?.toLowerCase().includes(q)) ||
       (!isHoliday && item.time?.toLowerCase().includes(q)) ||
-      (isHoliday && String(item.start_date || "").toLowerCase().includes(q)) ||
-      (isHoliday && String(item.end_date || "").toLowerCase().includes(q));
+      (isHoliday &&
+        String(item.start_date || "")
+          .toLowerCase()
+          .includes(q)) ||
+      (isHoliday &&
+        String(item.end_date || "")
+          .toLowerCase()
+          .includes(q));
 
     return matchesCategory && matchesType && matchesSeat && matchesSearch;
   });
 
-  const regularCount = data.filter((item) => !isHolidayPricingRule(item)).length;
+  const regularCount = data.filter(
+    (item) => !isHolidayPricingRule(item)
+  ).length;
   const holidayCount = data.filter((item) => isHolidayPricingRule(item)).length;
 
   if (isLoading) {
@@ -323,7 +344,8 @@ export default function AdminPricingPage() {
         <div>
           <h1 className="text-2xl font-semibold text-white">Quản lý giá vé</h1>
           <p className="text-sm text-gray-400">
-            Quản lý các quy tắc giá vé áp dụng cho suất chiếu thường và quy tắc giá cho ngày lễ.
+            Quản lý các quy tắc giá vé áp dụng cho suất chiếu thường và quy tắc
+            giá cho ngày lễ.
           </p>
         </div>
 
@@ -339,19 +361,38 @@ export default function AdminPricingPage() {
           </div>
 
           <div className="relative group">
-            <button className="px-4 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 transition-colors flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <button className="px-4 py-2 rounded-lg bg-[#0d0d1a] hover:bg-[#1a1a2e] transition-colors flex items-center gap-2">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
               </svg>
               <span className="hidden sm:inline">Xuất/Nhập</span>
             </button>
-            <div className="absolute right-0 mt-2 w-48 bg-zinc-900 rounded-lg border border-white/10 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-              <button onClick={handleExportData} className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-white/10 rounded-t-lg transition-colors" disabled={data.length === 0}>
+            <div className="absolute right-0 mt-2 w-48 bg-[#0d0d1a] rounded-lg border border-white/10 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+              <button
+                onClick={handleExportData}
+                className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-white/10 rounded-t-lg transition-colors"
+                disabled={data.length === 0}
+              >
                 📤 Xuất dữ liệu (JSON)
               </button>
               <label className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-white/10 rounded-b-lg transition-colors cursor-pointer block">
                 📥 Nhập dữ liệu (JSON)
-                <input type="file" accept=".json" onChange={handleImportData} className="hidden" />
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportData}
+                  className="hidden"
+                />
               </label>
             </div>
           </div>
@@ -359,9 +400,12 @@ export default function AdminPricingPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-              showFilters || filterCategory !== "all" || filterType !== "all" || filterSeat !== "all"
-                ? "bg-red-600 hover:bg-red-700" 
-                : "bg-zinc-900 hover:bg-zinc-800"
+              showFilters ||
+              filterCategory !== "all" ||
+              filterType !== "all" ||
+              filterSeat !== "all"
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-[#0d0d1a] hover:bg-[#1a1a2e]"
             }`}
           >
             <Filter size={16} />
@@ -424,10 +468,13 @@ export default function AdminPricingPage() {
       </div>
 
       {/* Quick Explanation */}
-      <div className="mb-6 p-4 bg-cinema-surface rounded-xl border border-white/10">
-        <div className="text-sm font-medium text-white mb-1">Bạn đang quản lý gì?</div>
+      <div className="mb-6 p-4 bg-[#0d0d1a] rounded-xl border border-white/10">
+        <div className="text-sm font-medium text-white mb-1">
+          Bạn đang quản lý gì?
+        </div>
         <div className="text-sm text-gray-400">
-          Mỗi <span className="text-white">quy tắc giá</span> là một cấu hình giá vé theo điều kiện áp dụng.
+          Mỗi <span className="text-white">quy tắc giá</span> là một cấu hình
+          giá vé theo điều kiện áp dụng.
         </div>
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="bg-cinema-bg p-3 rounded-lg border border-white/10">
@@ -439,7 +486,8 @@ export default function AdminPricingPage() {
           <div className="bg-cinema-bg p-3 rounded-lg border border-white/10">
             <div className="text-xs text-gray-400 mb-1">Quy tắc ngày lễ</div>
             <div className="text-sm text-gray-300">
-              Loại phòng + khoảng ngày + các thứ áp dụng → giá theo từng loại ghế.
+              Loại phòng + khoảng ngày + các thứ áp dụng → giá theo từng loại
+              ghế.
             </div>
           </div>
         </div>
@@ -452,14 +500,19 @@ export default function AdminPricingPage() {
               <Filter size={14} />
               Bộ lọc nâng cao
             </h3>
-            <button onClick={clearFilters} className="text-xs text-gray-400 hover:text-white flex items-center gap-1">
+            <button
+              onClick={clearFilters}
+              className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
+            >
               <X size={14} /> Xóa bộ lọc
             </button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs text-gray-400 mb-2 block">Lọc theo loại phòng</label>
+              <label className="text-xs text-gray-400 mb-2 block">
+                Lọc theo loại phòng
+              </label>
               <div className="flex flex-wrap gap-2">
                 {[
                   { id: "all", label: "Tất cả", color: "gray" },
@@ -467,14 +520,15 @@ export default function AdminPricingPage() {
                   { id: "3D", label: "3D", color: "purple" },
                   { id: "IMAX", label: "IMAX", color: "yellow" },
                   { id: "4DX", label: "4DX", color: "green" },
-                ].map(f => (
+                ].map((f) => (
                   <button
                     key={f.id}
                     onClick={() => setFilterType(f.id)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                      ${filterType === f.id 
-                        ? `bg-${f.color}-600 text-white` 
-                        : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                      ${
+                        filterType === f.id
+                          ? `bg-${f.color}-600 text-white`
+                          : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
                       }`}
                   >
                     {f.label}
@@ -484,21 +538,24 @@ export default function AdminPricingPage() {
             </div>
 
             <div>
-              <label className="text-xs text-gray-400 mb-2 block">Lọc theo loại ghế</label>
+              <label className="text-xs text-gray-400 mb-2 block">
+                Lọc theo loại ghế
+              </label>
               <div className="flex flex-wrap gap-2">
                 {[
                   { id: "all", label: "Tất cả", color: "gray" },
                   { id: "Thường", label: "Thường", color: "gray" },
                   { id: "VIP", label: "VIP", color: "amber" },
                   { id: "Couple", label: "Couple", color: "pink" },
-                ].map(f => (
+                ].map((f) => (
                   <button
                     key={f.id}
                     onClick={() => setFilterSeat(f.id)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                      ${filterSeat === f.id 
-                        ? `bg-${f.color}-600 text-white` 
-                        : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                      ${
+                        filterSeat === f.id
+                          ? `bg-${f.color}-600 text-white`
+                          : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
                       }`}
                     disabled={filterCategory === "holiday"}
                   >
@@ -512,12 +569,24 @@ export default function AdminPricingPage() {
       )}
 
       {data.length === 0 && !isLoading && (
-        <div className="mb-6 p-8 bg-cinema-surface rounded-xl border border-white/10 text-center">
-          <svg className="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <div className="mb-6 p-8 bg-[#0d0d1a] rounded-xl border border-white/10 text-center">
+          <svg
+            className="w-16 h-16 mx-auto mb-4 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
           </svg>
           <p className="text-gray-400 mb-2">Chưa có dữ liệu quy tắc giá</p>
-          <p className="text-sm text-gray-500 mb-4">Nhấn "Thêm quy tắc giá" để tạo quy tắc giá đầu tiên</p>
+          <p className="text-sm text-gray-500 mb-4">
+            Nhấn "Thêm quy tắc giá" để tạo quy tắc giá đầu tiên
+          </p>
           <button
             onClick={() => {
               setEditingItem(null);
@@ -530,11 +599,13 @@ export default function AdminPricingPage() {
         </div>
       )}
 
-      {data.length > 0 && <PricingStats data={filtered} filterCategory={filterCategory} />}
-      
       {data.length > 0 && (
-        <PricingTable 
-          data={filtered} 
+        <PricingStats data={filtered} filterCategory={filterCategory} />
+      )}
+
+      {data.length > 0 && (
+        <PricingTable
+          data={filtered}
           onEdit={handleEdit}
           onDelete={setDeleteItem}
           onView={handleView}
@@ -580,41 +651,43 @@ export default function AdminPricingPage() {
 // View Detail Modal Component
 function ViewDetailModal({ item, onClose, onEdit }) {
   if (!item) return null;
-  
+
   const isHoliday = isHolidayPricingRule(item);
   const roomType = getPricingRuleRoomType(item);
 
   const getTypeColor = (type) => {
     const colors = {
-      '2D': 'blue',
-      '3D': 'purple',
-      'IMAX': 'yellow',
-      '4DX': 'green'
+      "2D": "blue",
+      "3D": "purple",
+      IMAX: "yellow",
+      "4DX": "green",
     };
-    return colors[type] || 'gray';
+    return colors[type] || "gray";
   };
 
   const getSeatColor = (seat) => {
     const colors = {
-      'VIP': 'amber',
-      'Couple': 'pink',
-      'Thường': 'gray'
+      VIP: "amber",
+      Couple: "pink",
+      Thường: "gray",
     };
-    return colors[seat] || 'gray';
+    return colors[seat] || "gray";
   };
 
   const formatPrice = (price) => {
-    if (!price && price !== 0) return '---';
-    return price.toLocaleString() + '₫';
+    if (!price && price !== 0) return "---";
+    return price.toLocaleString() + "₫";
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-      <div className="w-full max-w-[500px] bg-cinema-surface rounded-2xl border border-white/10 shadow-2xl max-h-[80vh] overflow-y-auto">
-        <div className="px-6 py-5 border-b border-white/10 sticky top-0 bg-cinema-surface">
-          <h3 className="text-lg font-semibold text-white">Chi tiết quy tắc giá</h3>
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
+      <div className="w-[500px] bg-[#0b0f1f] rounded-2xl border border-white/10 shadow-2xl max-h-[80vh] overflow-y-auto">
+        <div className="px-6 py-5 border-b border-white/10 sticky top-0 bg-[#0b0f1f]">
+          <h3 className="text-lg font-semibold text-white">
+            Chi tiết quy tắc giá
+          </h3>
         </div>
-        
+
         <div className="px-6 py-5 space-y-4">
           <div className="bg-cinema-bg p-4 rounded-xl">
             <p className="text-sm text-gray-400 mb-1">Tên quy tắc</p>
@@ -625,7 +698,11 @@ function ViewDetailModal({ item, onClose, onEdit }) {
             <>
               <div className="bg-cinema-bg p-4 rounded-xl">
                 <p className="text-sm text-gray-400 mb-1">Loại phòng</p>
-                <span className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getTypeColor(roomType)}-500/20 text-${getTypeColor(roomType)}-400`}>
+                <span
+                  className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getTypeColor(
+                    roomType
+                  )}-500/20 text-${getTypeColor(roomType)}-400`}
+                >
                   {roomType}
                 </span>
               </div>
@@ -644,10 +721,13 @@ function ViewDetailModal({ item, onClose, onEdit }) {
               <div className="bg-cinema-bg p-4 rounded-xl">
                 <p className="text-sm text-gray-400 mb-1">Áp dụng các ngày</p>
                 <div className="flex flex-wrap gap-1">
-                  {item.apply_days?.map(d => {
-                    const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+                  {item.apply_days?.map((d) => {
+                    const days = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
                     return (
-                      <span key={d} className="px-2 py-1 bg-white/10 rounded text-xs">
+                      <span
+                        key={d}
+                        className="px-2 py-1 bg-white/10 rounded text-xs"
+                      >
                         {days[d]}
                       </span>
                     );
@@ -655,15 +735,30 @@ function ViewDetailModal({ item, onClose, onEdit }) {
                 </div>
               </div>
 
-              <div className="bg-cinema-bg p-4 rounded-xl">
-                <p className="text-sm text-gray-400 mb-2">Giá vé theo loại ghế</p>
+              <div className="bg-[#020617] p-4 rounded-xl">
+                <p className="text-sm text-gray-400 mb-2">
+                  Giá vé theo loại ghế
+                </p>
                 <div className="space-y-2">
                   {item.holiday_prices?.map((hp, idx) => (
-                    <div key={idx} className="flex justify-between items-center">
-                      <span className={`text-sm ${hp.seat_type === 'VIP' ? 'text-amber-400' : hp.seat_type === 'Couple' ? 'text-pink-400' : 'text-gray-400'}`}>
+                    <div
+                      key={idx}
+                      className="flex justify-between items-center"
+                    >
+                      <span
+                        className={`text-sm ${
+                          hp.seat_type === "VIP"
+                            ? "text-amber-400"
+                            : hp.seat_type === "Couple"
+                            ? "text-pink-400"
+                            : "text-gray-400"
+                        }`}
+                      >
                         {hp.seat_type}
                       </span>
-                      <span className="text-yellow-400 font-bold">{formatPrice(Number(hp.price))}</span>
+                      <span className="text-yellow-400 font-bold">
+                        {formatPrice(Number(hp.price))}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -674,13 +769,21 @@ function ViewDetailModal({ item, onClose, onEdit }) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Loại phòng</p>
-                  <span className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getTypeColor(roomType)}-500/20 text-${getTypeColor(roomType)}-400`}>
+                  <span
+                    className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getTypeColor(
+                      roomType
+                    )}-500/20 text-${getTypeColor(roomType)}-400`}
+                  >
                     {roomType}
                   </span>
                 </div>
                 <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Loại ghế</p>
-                  <span className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getSeatColor(item.seat)}-500/20 text-${getSeatColor(item.seat)}-400`}>
+                  <span
+                    className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getSeatColor(
+                      item.seat
+                    )}-500/20 text-${getSeatColor(item.seat)}-400`}
+                  >
                     {item.seat}
                   </span>
                 </div>
@@ -700,11 +803,15 @@ function ViewDetailModal({ item, onClose, onEdit }) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Giá gốc</p>
-                  <p className="text-white line-through">{formatPrice(item.base)}</p>
+                  <p className="text-white line-through">
+                    {formatPrice(item.base)}
+                  </p>
                 </div>
                 <div className="bg-cinema-bg p-4 rounded-xl">
                   <p className="text-sm text-gray-400 mb-1">Giá áp dụng</p>
-                  <p className="text-yellow-400 font-bold text-lg">{formatPrice(item.final)}</p>
+                  <p className="text-yellow-400 font-bold text-lg">
+                    {formatPrice(item.final)}
+                  </p>
                 </div>
               </div>
             </>
@@ -712,20 +819,34 @@ function ViewDetailModal({ item, onClose, onEdit }) {
 
           <div className="bg-cinema-bg p-4 rounded-xl">
             <p className="text-sm text-gray-400 mb-1">Trạng thái</p>
-            <span className={`flex items-center gap-1 w-fit px-2 py-1 rounded-lg text-xs ${
-              item.active ? 'text-green-400 bg-green-400/10' : 'text-gray-400 bg-gray-400/10'
-            }`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${item.active ? 'bg-green-400' : 'bg-gray-400'}`}></div>
-              {item.active ? 'Đang áp dụng' : 'Ngưng áp dụng'}
+            <span
+              className={`flex items-center gap-1 w-fit px-2 py-1 rounded-lg text-xs ${
+                item.active
+                  ? "text-green-400 bg-green-400/10"
+                  : "text-gray-400 bg-gray-400/10"
+              }`}
+            >
+              <div
+                className={`w-1.5 h-1.5 rounded-full ${
+                  item.active ? "bg-green-400" : "bg-gray-400"
+                }`}
+              ></div>
+              {item.active ? "Đang áp dụng" : "Ngưng áp dụng"}
             </span>
           </div>
         </div>
 
         <div className="flex gap-3 px-6 py-5 border-t border-white/10">
-          <button onClick={onClose} className="flex-1 h-11 bg-zinc-900 hover:bg-zinc-800 rounded-xl text-gray-300 transition-colors">
+          <button
+            onClick={onClose}
+            className="flex-1 h-11 bg-[#1f2937] hover:bg-[#374151] rounded-xl text-gray-300 transition-colors"
+          >
             Đóng
           </button>
-          <button onClick={onEdit} className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 rounded-xl font-medium transition-colors">
+          <button
+            onClick={onEdit}
+            className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 rounded-xl font-medium transition-colors"
+          >
             Chỉnh sửa
           </button>
         </div>

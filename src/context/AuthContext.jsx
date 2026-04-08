@@ -28,6 +28,85 @@ const RANDOM_AVATARS = [
 
 const AuthContext = createContext(null);
 
+const TOKEN_STORAGE_KEY = "token";
+const ROLE_STORAGE_KEY = "role";
+const REMEMBER_LOGIN_KEY = "rememberLogin";
+const USER_META_STORAGE_KEY = "authUserMeta";
+
+function getRememberPreference() {
+  const stored = localStorage.getItem(REMEMBER_LOGIN_KEY);
+  if (stored === null) return true;
+  return stored === "true";
+}
+
+function storeAuthState({ token, role, remember }) {
+  localStorage.setItem(REMEMBER_LOGIN_KEY, String(remember));
+
+  const targetStorage = remember ? localStorage : sessionStorage;
+  const secondaryStorage = remember ? sessionStorage : localStorage;
+
+  if (token) {
+    targetStorage.setItem(TOKEN_STORAGE_KEY, token);
+  } else {
+    targetStorage.removeItem(TOKEN_STORAGE_KEY);
+  }
+
+  if (role) {
+    targetStorage.setItem(ROLE_STORAGE_KEY, role);
+  } else {
+    targetStorage.removeItem(ROLE_STORAGE_KEY);
+  }
+
+  secondaryStorage.removeItem(TOKEN_STORAGE_KEY);
+  secondaryStorage.removeItem(ROLE_STORAGE_KEY);
+}
+
+function getStoredUserMeta() {
+  const raw =
+    sessionStorage.getItem(USER_META_STORAGE_KEY) ||
+    localStorage.getItem(USER_META_STORAGE_KEY);
+
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function persistUserMeta(meta, remember) {
+  const targetStorage = remember ? localStorage : sessionStorage;
+  const secondaryStorage = remember ? sessionStorage : localStorage;
+
+  if (meta) {
+    targetStorage.setItem(USER_META_STORAGE_KEY, JSON.stringify(meta));
+  } else {
+    targetStorage.removeItem(USER_META_STORAGE_KEY);
+  }
+
+  secondaryStorage.removeItem(USER_META_STORAGE_KEY);
+}
+
+function buildUserWithMeta(firebaseUser, meta = {}) {
+  return {
+    ...firebaseUser,
+    role: meta.role,
+    cinema_id: meta.cinema_id,
+    cinema_name: meta.cinema_name,
+  };
+}
+
+function clearStoredAuthState() {
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+  localStorage.removeItem(ROLE_STORAGE_KEY);
+  sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+  sessionStorage.removeItem(ROLE_STORAGE_KEY);
+  localStorage.removeItem(USER_META_STORAGE_KEY);
+  sessionStorage.removeItem(USER_META_STORAGE_KEY);
+  localStorage.removeItem(REMEMBER_LOGIN_KEY);
+}
+
 function createAuthError(code, message) {
   const error = new Error(message);
   error.code = code;
@@ -64,37 +143,61 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-    if (firebaseUser) {
-      try {
-        const token = await firebaseUser.getIdToken();
-        const res = await fetch("http://localhost:5000/api/users/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setUser({
-            ...firebaseUser,
-            role: data.role,
-            cinema_id: data.cinema_id,
-            cinema_name: data.cinema_name,
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const token = await firebaseUser.getIdToken();
+          const res = await fetch("http://localhost:5000/api/users/me", {
+            headers: { Authorization: `Bearer ${token}` },
           });
-        } else {
-          // Nếu token không hợp lệ hoặc user không tồn tại ở backend
-          await signOut(auth);
-          setUser(null);
+
+          if (res.ok) {
+            const data = await res.json();
+            const remember = getRememberPreference();
+            const meta = {
+              role: data.role,
+              cinema_id: data.cinema_id,
+              cinema_name: data.cinema_name,
+            };
+            setUser(buildUserWithMeta(firebaseUser, meta));
+
+            storeAuthState({
+              token,
+              role: data.role,
+              remember,
+            });
+            persistUserMeta(meta, remember);
+          } else if (res.status === 401 || res.status === 403) {
+            // Token thực sự không hợp lệ -> đăng xuất
+            await signOut(auth);
+            clearStoredAuthState();
+            setUser(null);
+          } else {
+            // Backend tạm lỗi: giữ phiên Firebase và fallback dữ liệu đã cache
+            const meta = getStoredUserMeta();
+            if (meta?.role) {
+              setUser(buildUserWithMeta(firebaseUser, meta));
+            } else {
+              setUser(firebaseUser);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch user role:", err);
+          const meta = getStoredUserMeta();
+          if (meta?.role) {
+            setUser(buildUserWithMeta(firebaseUser, meta));
+          } else {
+            setUser(firebaseUser);
+          }
         }
-      } catch (err) {
-        console.error("Failed to fetch user role:", err);
+      } else {
         setUser(null);
       }
-    } else {
-      setUser(null);
-    }
-    setLoading(false);
-  });
-  return unsubscribe;
-}, []);
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
 
   // ================= LOGIN =================
   // const loginWithEmail = async (email, password, remember) => {
@@ -182,64 +285,90 @@ export function AuthProvider({ children }) {
   //     throw err;
   //   }
   // };
-const loginWithEmail = async (email, password, remember) => {
-  try {
-    const persistence = remember ? browserLocalPersistence : browserSessionPersistence;
-    await setPersistence(auth, persistence);
+  const loginWithEmail = async (email, password, remember) => {
+    try {
+      const rememberLogin = Boolean(remember);
+      const persistence = rememberLogin
+        ? browserLocalPersistence
+        : browserSessionPersistence;
+      await setPersistence(auth, persistence);
 
-    const credential = await signInWithEmailAndPassword(auth, email, password);
-    const token = await credential.user.getIdToken();
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const token = await credential.user.getIdToken();
 
-    // Sync user với backend
-    await fetch("http://localhost:5000/api/auth/sync-user", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+      // Sync user với backend
+      await fetch("http://localhost:5000/api/auth/sync-user", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-    // Lấy thông tin user từ backend (có role)
-    const res = await fetch("http://localhost:5000/api/users/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    const role = data?.role;
+      // Lấy thông tin user từ backend (có role)
+      const res = await fetch("http://localhost:5000/api/users/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    // Lưu role vào localStorage (nếu cần)
-    localStorage.setItem("role", role);
-    localStorage.setItem("token", token);
+      if (!res.ok) {
+        throw new Error("Không lấy được thông tin user từ backend");
+      }
 
-    // 🔥 Tạo user object có role và set vào context
-    const userData = {
-      uid: credential.user.uid,
-      email: credential.user.email,
-      displayName: credential.user.displayName,
-      photoURL: credential.user.photoURL,
-      role: role,
-      cinema_id: data.cinema_id,
-      cinema_name: data.cinema_name,
-    };
-    setUser(userData);
+      const data = await res.json();
+      const role = data?.role;
 
-    return userData;
-  } catch (err) {
-    console.error("LOGIN ERROR:", err);
-    throw err;
-  }
-};
+      if (!role) {
+        throw new Error("Không lấy được role từ backend");
+      }
+
+      storeAuthState({
+        token,
+        role,
+        remember: rememberLogin,
+      });
+      persistUserMeta(
+        {
+          role,
+          cinema_id: data.cinema_id,
+          cinema_name: data.cinema_name,
+        },
+        rememberLogin
+      );
+
+      // 🔥 Tạo user object có role và set vào context
+      const userData = {
+        uid: credential.user.uid,
+        email: credential.user.email,
+        displayName: credential.user.displayName,
+        photoURL: credential.user.photoURL,
+        role: role,
+        cinema_id: data.cinema_id,
+        cinema_name: data.cinema_name,
+      };
+      setUser(userData);
+
+      return userData;
+    } catch (err) {
+      console.error("LOGIN ERROR:", err);
+      throw err;
+    }
+  };
   // ================= REGISTER =================
   const registerWithEmail = async (
     email,
     password,
     displayName,
     phone,
-    dob,
+    dob
   ) => {
     const credential = await createUserWithEmailAndPassword(
       auth,
       email,
-      password,
+      password
     );
 
     const randomAvatar =
@@ -280,7 +409,7 @@ const loginWithEmail = async (email, password, remember) => {
     if (!email || !password) {
       throw createAuthError(
         "auth/missing-email-for-verification",
-        "Vui lòng nhập email và mật khẩu.",
+        "Vui lòng nhập email và mật khẩu."
       );
     }
 
@@ -308,36 +437,74 @@ const loginWithEmail = async (email, password, remember) => {
   };
 
   // ================= GOOGLE LOGIN =================
-  const loginWithGoogle = async () => {
-  const credential = await signInWithPopup(auth, googleProvider);
-  const token = await credential.user.getIdToken();
+  const loginWithGoogle = async (remember = true) => {
+    const rememberLogin = Boolean(remember);
+    const persistence = rememberLogin
+      ? browserLocalPersistence
+      : browserSessionPersistence;
+    await setPersistence(auth, persistence);
 
-  await fetch("http://localhost:5000/api/auth/sync-user", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+    const credential = await signInWithPopup(auth, googleProvider);
+    const token = await credential.user.getIdToken();
 
-  const res = await fetch("http://localhost:5000/api/users/me", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
+    await fetch("http://localhost:5000/api/auth/sync-user", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
 
-  const userData = {
-    uid: credential.user.uid,
-    email: credential.user.email,
-    displayName: credential.user.displayName,
-    photoURL: credential.user.photoURL,
-    role: data.role,
-    cinema_id: data.cinema_id,
-    cinema_name: data.cinema_name,
+    const res = await fetch("http://localhost:5000/api/users/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error("Không lấy được thông tin user từ backend");
+    }
+
+    const data = await res.json();
+    const role = data?.role;
+
+    if (!role) {
+      throw new Error("Không lấy được role từ backend");
+    }
+
+    storeAuthState({
+      token,
+      role,
+      remember: rememberLogin,
+    });
+    persistUserMeta(
+      {
+        role,
+        cinema_id: data.cinema_id,
+        cinema_name: data.cinema_name,
+      },
+      rememberLogin
+    );
+
+    const userData = {
+      uid: credential.user.uid,
+      email: credential.user.email,
+      displayName: credential.user.displayName,
+      photoURL: credential.user.photoURL,
+      role: role,
+      cinema_id: data.cinema_id,
+      cinema_name: data.cinema_name,
+    };
+    setUser(userData);
+    return userData;
   };
-  setUser(userData);
-  return userData;
-};
-  const logout = () => signOut(auth);
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } finally {
+      clearStoredAuthState();
+      setUser(null);
+    }
+  };
 
   return (
     <AuthContext.Provider

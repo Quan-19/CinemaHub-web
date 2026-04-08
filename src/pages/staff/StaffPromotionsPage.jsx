@@ -25,7 +25,9 @@ function normalizeDays(raw) {
     const cleaned = raw
       .map((d) => Number(d))
       .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
-    return cleaned.length ? [...new Set(cleaned)].sort((a, b) => a - b) : DEFAULT_DAYS;
+    return cleaned.length
+      ? [...new Set(cleaned)].sort((a, b) => a - b)
+      : DEFAULT_DAYS;
   }
   if (typeof raw === "string" && raw.trim()) {
     try {
@@ -48,6 +50,12 @@ function toDateInputValue(raw) {
   const m = String(dt.getMonth() + 1).padStart(2, "0");
   const d = String(dt.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+function toPromotionArray(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
 }
 
 const EXTRA_PROMOTIONS = [
@@ -484,8 +492,13 @@ function PromotionCard({ promo, onEdit, onDelete, onCopy, copied }) {
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" aria-hidden="true" />
             <span>
-              {promo.startDate ? new Date(promo.startDate).toLocaleDateString("vi-VN") : "N/A"} -{" "}
-              {promo.endDate ? new Date(promo.endDate).toLocaleDateString("vi-VN") : "N/A"}
+              {promo.startDate
+                ? new Date(promo.startDate).toLocaleDateString("vi-VN")
+                : "N/A"}{" "}
+              -{" "}
+              {promo.endDate
+                ? new Date(promo.endDate).toLocaleDateString("vi-VN")
+                : "N/A"}
             </span>
           </div>
 
@@ -524,7 +537,7 @@ function StaffPromotionsPage() {
   const copiedTimeoutRef = useRef(null);
 
   const mapPromotionFromApi = (p) => ({
-    id: p.promotion_id,
+    id: p.promotion_id ?? p.id,
     name: p.title,
     description: p.description,
     code: p.code,
@@ -533,7 +546,7 @@ function StaffPromotionsPage() {
     minOrder: Number(p.min_order || 0),
     startDate: p.start_date,
     endDate: p.end_date,
-    status: p.status,
+    status: p.status || "active",
     type: "fixed",
     usedCount: Number(p.used_count ?? p.usedCount ?? 0),
     usageLimit: Number(p.usage_limit ?? p.usageLimit ?? 0),
@@ -543,10 +556,13 @@ function StaffPromotionsPage() {
   const loadPromotions = async (cinemaId) => {
     if (!cinemaId) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/promotions/cinema/${cinemaId}`);
+      const res = await fetch(
+        `http://localhost:5000/api/promotions/cinema/${cinemaId}`
+      );
       if (!res.ok) return;
-      const data = await res.json();
-      setPromotions(data.map(mapPromotionFromApi));
+      const payload = await res.json();
+      const rows = toPromotionArray(payload);
+      setPromotions(rows.map(mapPromotionFromApi));
     } catch (err) {
       console.error(err);
     }
@@ -559,11 +575,14 @@ function StaffPromotionsPage() {
       const cinemaId = user?.cinema_id;
       if (!cinemaId) return;
       try {
-        const res = await fetch(`http://localhost:5000/api/promotions/cinema/${cinemaId}`);
+        const res = await fetch(
+          `http://localhost:5000/api/promotions/cinema/${cinemaId}`
+        );
         if (!res.ok) return;
-        const data = await res.json();
+        const payload = await res.json();
+        const rows = toPromotionArray(payload);
         if (!cancelled) {
-          setPromotions(data.map(mapPromotionFromApi));
+          setPromotions(rows.map(mapPromotionFromApi));
         }
       } catch (err) {
         console.error(err);
@@ -575,7 +594,7 @@ function StaffPromotionsPage() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user?.cinema_id]);
 
   useEffect(() => {
     return () => {
@@ -663,7 +682,7 @@ function StaffPromotionsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           title: created.name,
@@ -679,17 +698,20 @@ function StaffPromotionsPage() {
           status: created.status,
           cinema_id: user?.cinema_id,
           days: created.days,
-          apply_days: created.days
-        })
+          apply_days: created.days,
+        }),
       });
       if (res.ok) {
         await loadPromotions(user?.cinema_id);
         setAdding(false);
       } else {
         const errorData = await res.json().catch(() => ({}));
-        alert("Lỗi thêm khuyến mãi: " + (errorData.error || errorData.message || "Unknown error"));
+        alert(
+          "Lỗi thêm khuyến mãi: " +
+            (errorData.error || errorData.message || "Unknown error")
+        );
       }
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       alert("Network error: " + err.message);
     }
@@ -698,37 +720,43 @@ function StaffPromotionsPage() {
   const onSave = async (updated) => {
     try {
       const token = await getAuth().currentUser?.getIdToken();
-      const res = await fetch(`http://localhost:5000/api/promotions/${updated.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title: updated.name,
-          description: updated.description,
-          code: updated.code,
-          image: updated.image,
-          discount_value: updated.discountValue,
-          min_order: updated.minOrder,
-          usage_limit: updated.usageLimit,
-          usageLimit: updated.usageLimit,
-          start_date: updated.startDate,
-          end_date: updated.endDate,
-          status: updated.status,
-          cinema_id: user?.cinema_id,
-          days: updated.days,
-          apply_days: updated.days
-        })
-      });
+      const res = await fetch(
+        `http://localhost:5000/api/promotions/${updated.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title: updated.name,
+            description: updated.description,
+            code: updated.code,
+            image: updated.image,
+            discount_value: updated.discountValue,
+            min_order: updated.minOrder,
+            usage_limit: updated.usageLimit,
+            usageLimit: updated.usageLimit,
+            start_date: updated.startDate,
+            end_date: updated.endDate,
+            status: updated.status,
+            cinema_id: user?.cinema_id,
+            days: updated.days,
+            apply_days: updated.days,
+          }),
+        }
+      );
       if (res.ok) {
         await loadPromotions(user?.cinema_id);
         setEditing(null);
       } else {
         const errorData = await res.json().catch(() => ({}));
-        alert("Lỗi cập nhật: " + (errorData.error || errorData.message || "Unknown error"));
+        alert(
+          "Lỗi cập nhật: " +
+            (errorData.error || errorData.message || "Unknown error")
+        );
       }
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       alert("Network error: " + err.message);
     }
@@ -739,13 +767,13 @@ function StaffPromotionsPage() {
       const token = await getAuth().currentUser?.getIdToken();
       const res = await fetch(`http://localhost:5000/api/promotions/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         await loadPromotions(user?.cinema_id);
         setConfirmDelete(null);
       }
-    } catch(err) {
+    } catch (err) {
       console.error(err);
     }
   };

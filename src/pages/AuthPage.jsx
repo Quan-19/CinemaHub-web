@@ -57,7 +57,9 @@ function LoginForm({ onSuccess, notice }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(
+    () => localStorage.getItem("rememberLogin") === "true"
+  );
   const [error, setError] = useState("");
   const [info, setInfo] = useState(notice ?? "");
   const [pendingVerification, setPendingVerification] = useState(false);
@@ -99,7 +101,7 @@ function LoginForm({ onSuccess, notice }) {
     setPendingVerification(false);
     setLoading(true);
     try {
-      const userData = await loginWithGoogle();
+      const userData = await loginWithGoogle(remember);
 
       if (userData.role === "admin") {
         navigate("/admin/dashboard");
@@ -131,7 +133,7 @@ function LoginForm({ onSuccess, notice }) {
       }
       setPendingVerification(true);
       setInfo(
-        "Đã gửi lại email xác minh. Vui lòng kiểm tra hộp thư (và mục Spam).",
+        "Đã gửi lại email xác minh. Vui lòng kiểm tra hộp thư (và mục Spam)."
       );
     } catch (err) {
       setError(getErrorMessage(err.code));
@@ -435,8 +437,26 @@ function getErrorMessage(code) {
 }
 
 function AuthPage() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [tab, setTab] = useState("login");
   const [loginNotice, setLoginNotice] = useState("");
+
+  useEffect(() => {
+    if (loading || !user) return;
+
+    const role = String(user.role || "").toLowerCase();
+    if (role === "admin") {
+      navigate("/admin/dashboard", { replace: true });
+      return;
+    }
+    if (role === "staff") {
+      navigate("/staff", { replace: true });
+      return;
+    }
+
+    navigate("/", { replace: true });
+  }, [loading, navigate, user]);
 
   return (
     <div className="relative mx-auto flex min-h-[70vh] max-w-5xl items-center justify-center px-3 py-10 sm:px-6 lg:px-10">
@@ -485,7 +505,7 @@ function AuthPage() {
           <RegisterForm
             onSuccess={(registeredEmail) => {
               setLoginNotice(
-                `Đăng ký thành công. Chúng tôi đã gửi email xác minh tới ${registeredEmail}.`,
+                `Đăng ký thành công. Chúng tôi đã gửi email xác minh tới ${registeredEmail}.`
               );
               setTab("login");
             }}

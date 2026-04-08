@@ -11,8 +11,15 @@ export const PromotionsPage = () => {
     const fetchPromotions = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:5000/api/promotions");
-        const data = await res.json();
+        const res = await fetch(
+          "http://localhost:5000/api/promotions?scope=public"
+        );
+        const payload = await res.json();
+        const data = Array.isArray(payload?.data)
+          ? payload.data
+          : Array.isArray(payload)
+          ? payload
+          : [];
 
         // Format dữ liệu từ API để tương thích với UI
         const formatted = data.map((promo) => ({
@@ -22,8 +29,9 @@ export const PromotionsPage = () => {
           discount: promo.discount_percent || promo.discount,
           discount_percent: promo.discount_percent,
           code: promo.code || "",
-          image: promo.image || "https://via.placeholder.com/400x200?text=Promotion",
-          expiry: promo.end_date 
+          image:
+            promo.image || "https://via.placeholder.com/400x200?text=Promotion",
+          expiry: promo.end_date
             ? new Date(promo.end_date).toLocaleDateString("vi-VN")
             : promo.expiry || "Đang cập nhật",
           end_date: promo.end_date,
@@ -51,7 +59,10 @@ export const PromotionsPage = () => {
   // ========== LOADING STATE ==========
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0f" }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "#0a0a0f" }}
+      >
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-zinc-400">Đang tải khuyến mãi...</p>
@@ -85,7 +96,9 @@ export const PromotionsPage = () => {
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🎁</div>
             <p className="text-zinc-400 mb-2">Chưa có khuyến mãi</p>
-            <p className="text-zinc-400 text-sm">Hãy quay lại sau để xem ưu đãi mới nhất</p>
+            <p className="text-zinc-400 text-sm">
+              Hãy quay lại sau để xem ưu đãi mới nhất
+            </p>
           </div>
         )}
 
@@ -105,7 +118,7 @@ export const PromotionsPage = () => {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                
+
                 {/* Discount Badge */}
                 <div
                   className="absolute top-3 right-3 px-3 py-1.5 rounded-lg text-white text-sm font-bold shadow-lg"
@@ -117,12 +130,10 @@ export const PromotionsPage = () => {
 
               {/* Content Section */}
               <div className="p-5">
-                <h3
-                  className="text-white mb-2 line-clamp-1 text-base font-bold group-hover:text-red-400 transition-colors"
-                >
+                <h3 className="text-white mb-2 line-clamp-1 text-base font-bold group-hover:text-red-400 transition-colors">
                   {promo.title}
                 </h3>
-                
+
                 <p className="text-zinc-400 text-sm mb-4 line-clamp-2 leading-relaxed">
                   {promo.description}
                 </p>
@@ -137,13 +148,11 @@ export const PromotionsPage = () => {
                 <div className="flex items-center gap-2">
                   <div className="flex-1 bg-zinc-900 border border-dashed border-zinc-600 rounded-xl px-4 py-2.5 flex items-center gap-2 group-hover:border-red-500/50 transition-colors">
                     <Tag className="w-4 h-4 text-red-500 shrink-0" />
-                    <span
-                      className="text-white text-sm tracking-wider font-bold"
-                    >
+                    <span className="text-white text-sm tracking-wider font-bold">
                       {promo.code}
                     </span>
                   </div>
-                  
+
                   <button
                     onClick={() => handleCopy(promo.code)}
                     className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
@@ -167,7 +176,9 @@ export const PromotionsPage = () => {
         {/* Optional: Show more promotions message */}
         {promotions.length > 0 && promotions.length >= 6 && (
           <div className="text-center mt-8">
-            <p className="text-zinc-400 text-sm">Còn nhiều ưu đãi hấp dẫn khác đang chờ bạn!</p>
+            <p className="text-zinc-400 text-sm">
+              Còn nhiều ưu đãi hấp dẫn khác đang chờ bạn!
+            </p>
           </div>
         )}
       </div>
