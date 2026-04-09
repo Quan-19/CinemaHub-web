@@ -2,6 +2,8 @@ import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Phone, Clock, ChevronLeft } from "lucide-react";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const BRAND_COLORS = {
   CGV: "#e50914",
   Lotte: "#c41230",
@@ -9,25 +11,357 @@ const BRAND_COLORS = {
   Galaxy: "#7c3aed",
 };
 
+const removeDiacritics = (value = "") =>
+  String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+const isActiveCinema = (cinema) => {
+  const status = String(cinema?.status ?? "")
+    .trim()
+    .toLowerCase();
+  return status === "active" || status === "";
+};
+
+const unwrapArrayResponse = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (payload && Array.isArray(payload.data)) return payload.data;
+  return [];
+};
+
+const normalizeRegionKey = (value = "") =>
+  removeDiacritics(value)
+    .trim()
+    .toLowerCase()
+    .replace(/\./g, " ")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9\-]/g, "")
+    .replace(/\-+/g, "-")
+    .replace(/^\-|-$/g, "");
+
+const normalizeCityText = (value = "") =>
+  removeDiacritics(value)
+    .toLowerCase()
+    .replace(/[\.,;:()\[\]{}]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+// Vietnam administrative areas after 2025 mergers (per the user's provided list).
+// Canonical labels are displayed on the UI, while aliases map old/new spellings to the canonical area.
+const VN_AREA_DEFINITIONS = [
+  {
+    label: "Thành phố Hà Nội",
+    id: "ha-noi",
+    aliases: [
+      "ha noi",
+      "hanoi",
+      "hn",
+      "tp ha noi",
+      "thanh pho ha noi",
+      "ha-noi",
+    ],
+  },
+  {
+    label: "Thành phố Huế",
+    id: "hue",
+    aliases: [
+      "hue",
+      "thanh pho hue",
+      "tp hue",
+      // Common older reference
+      "thua thien hue",
+      "thua thien - hue",
+    ],
+  },
+  {
+    label: "Thành phố Hồ Chí Minh",
+    id: "ho-chi-minh",
+    aliases: [
+      "ho chi minh",
+      "tp ho chi minh",
+      "tphcm",
+      "tp.hcm",
+      "tp hcm",
+      "hcm",
+      "sai gon",
+      "saigon",
+      "sg",
+      // merged in
+      "ba ria vung tau",
+      "ba ria - vung tau",
+      "vung tau",
+      "binh duong",
+    ],
+  },
+  {
+    label: "Thành phố Hải Phòng",
+    id: "hai-phong",
+    aliases: [
+      "hai phong",
+      "haiphong",
+      "hp",
+      // merged in
+      "hai duong",
+    ],
+  },
+  {
+    label: "Thành phố Đà Nẵng",
+    id: "da-nang",
+    aliases: ["da nang", "danang", "tp da nang", "thanh pho da nang", "quang nam"],
+  },
+  {
+    label: "Thành phố Cần Thơ",
+    id: "can-tho",
+    aliases: [
+      "can tho",
+      "cantho",
+      "tp can tho",
+      "thanh pho can tho",
+      // merged in
+      "soc trang",
+      "hau giang",
+    ],
+  },
+
+  // Provinces (28)
+  { label: "Tỉnh Lai Châu", id: "lai-chau", aliases: ["lai chau"] },
+  { label: "Tỉnh Điện Biên", id: "dien-bien", aliases: ["dien bien"] },
+  { label: "Tỉnh Sơn La", id: "son-la", aliases: ["son la"] },
+  { label: "Tỉnh Lạng Sơn", id: "lang-son", aliases: ["lang son"] },
+  { label: "Tỉnh Quảng Ninh", id: "quang-ninh", aliases: ["quang ninh"] },
+  { label: "Tỉnh Thanh Hoá", id: "thanh-hoa", aliases: ["thanh hoa", "thanh hoá"] },
+  { label: "Tỉnh Nghệ An", id: "nghe-an", aliases: ["nghe an"] },
+  { label: "Tỉnh Hà Tĩnh", id: "ha-tinh", aliases: ["ha tinh"] },
+  { label: "Tỉnh Cao Bằng", id: "cao-bang", aliases: ["cao bang"] },
+  {
+    label: "Tỉnh Tuyên Quang",
+    id: "tuyen-quang",
+    aliases: ["tuyen quang", "ha giang"],
+  },
+  {
+    label: "Tỉnh Lào Cai",
+    id: "lao-cai",
+    aliases: ["lao cai", "yen bai"],
+  },
+  {
+    label: "Tỉnh Thái Nguyên",
+    id: "thai-nguyen",
+    aliases: ["thai nguyen", "bac kan"],
+  },
+  {
+    label: "Tỉnh Phú Thọ",
+    id: "phu-tho",
+    aliases: ["phu tho", "vinh phuc", "hoa binh", "hoà binh", "hoa bình"],
+  },
+  {
+    label: "Tỉnh Bắc Ninh",
+    id: "bac-ninh",
+    aliases: ["bac ninh", "bac giang"],
+  },
+  {
+    label: "Tỉnh Hưng Yên",
+    id: "hung-yen",
+    aliases: ["hung yen", "thai binh"],
+  },
+  {
+    label: "Tỉnh Ninh Bình",
+    id: "ninh-binh",
+    aliases: ["ninh binh", "ha nam", "nam dinh"],
+  },
+  {
+    label: "Tỉnh Quảng Trị",
+    id: "quang-tri",
+    aliases: ["quang tri", "quang binh"],
+  },
+  {
+    label: "Tỉnh Quảng Ngãi",
+    id: "quang-ngai",
+    aliases: ["quang ngai", "kon tum"],
+  },
+  {
+    label: "Tỉnh Gia Lai",
+    id: "gia-lai",
+    aliases: ["gia lai", "binh dinh", "bình định"],
+  },
+  {
+    label: "Tỉnh Khánh Hoà",
+    id: "khanh-hoa",
+    aliases: ["khanh hoa", "khánh hoà", "ninh thuan", "ninh thuận"],
+  },
+  {
+    label: "Tỉnh Lâm Đồng",
+    id: "lam-dong",
+    aliases: ["lam dong", "dak nong", "đak nong", "dak nông", "binh thuan", "bình thuận"],
+  },
+  {
+    label: "Tỉnh Đắk Lắk",
+    id: "dak-lak",
+    aliases: ["dak lak", "đak lak", "phu yen", "phú yên"],
+  },
+  {
+    label: "Tỉnh Đồng Nai",
+    id: "dong-nai",
+    aliases: ["dong nai", "binh phuoc", "bình phước"],
+  },
+  {
+    label: "Tỉnh Tây Ninh",
+    id: "tay-ninh",
+    aliases: ["tay ninh", "long an"],
+  },
+  {
+    label: "Tỉnh Vĩnh Long",
+    id: "vinh-long",
+    aliases: ["vinh long", "ben tre", "bến tre", "tra vinh", "trà vinh"],
+  },
+  {
+    label: "Tỉnh Đồng Tháp",
+    id: "dong-thap",
+    aliases: ["dong thap", "tien giang", "tiền giang"],
+  },
+  {
+    label: "Tỉnh Cà Mau",
+    id: "ca-mau",
+    aliases: ["ca mau", "cà mau", "bac lieu", "bạc liêu"],
+  },
+  {
+    label: "Tỉnh An Giang",
+    id: "an-giang",
+    aliases: ["an giang", "kien giang", "kiên giang"],
+  },
+];
+
+const VIETNAM_CITY_ENTRIES = (() => {
+  const entries = [];
+  const addEntry = (canonical, alias) => {
+    const normalizedAlias = normalizeCityText(alias);
+    if (!normalizedAlias) return;
+    entries.push({
+      id: canonical.id,
+      label: canonical.label,
+      alias: normalizedAlias,
+      flatAlias: normalizedAlias.replace(/\s+/g, ""),
+    });
+  };
+
+  const baseVariants = (text) => {
+    const cleaned = normalizeCityText(text);
+    if (!cleaned) return [];
+    const noSpaces = cleaned.replace(/\s+/g, "");
+    return [cleaned, noSpaces];
+  };
+
+  VN_AREA_DEFINITIONS.forEach((canonical) => {
+    const canonicalId = canonical.id || normalizeRegionKey(canonical.label);
+    const normalizedCanonical = { ...canonical, id: canonicalId };
+
+    // Always include canonical label.
+    baseVariants(normalizedCanonical.label).forEach((v) => addEntry(normalizedCanonical, v));
+
+    // Include label without the "tinh"/"thanh pho" prefix, since admin may store short names.
+    const shortLabel = normalizeCityText(normalizedCanonical.label)
+      .replace(/^tinh\s+/i, "")
+      .replace(/^thanh\s+pho\s+/i, "")
+      .replace(/^tp\s+/i, "")
+      .trim();
+    baseVariants(shortLabel).forEach((v) => addEntry(normalizedCanonical, v));
+
+    (normalizedCanonical.aliases || []).forEach((alias) => {
+      baseVariants(alias).forEach((v) => addEntry(normalizedCanonical, v));
+
+      // Also accept common prefixes.
+      baseVariants(`tinh ${alias}`).forEach((v) => addEntry(normalizedCanonical, v));
+      baseVariants(`tp ${alias}`).forEach((v) => addEntry(normalizedCanonical, v));
+      baseVariants(`thanh pho ${alias}`).forEach((v) => addEntry(normalizedCanonical, v));
+    });
+  });
+
+  // Longer aliases first to reduce accidental matches.
+  return entries.sort((a, b) => b.alias.length - a.alias.length);
+})();
+
+const matchVietnamCity = (text = "") => {
+  const normalized = normalizeCityText(text);
+  if (!normalized) return null;
+
+  const flat = normalized.replace(/\s+/g, "");
+
+  for (const entry of VIETNAM_CITY_ENTRIES) {
+    if (entry.alias.length >= 3) {
+      const boundaryRegex = new RegExp(`(^|\\s)${entry.alias.replace(/[-/\\^$*+?.()|[\\]{}]/g, "\\$&")}(\\s|$)`);
+      if (boundaryRegex.test(normalized)) return entry;
+    }
+    if (entry.flatAlias && entry.flatAlias.length >= 4 && flat.includes(entry.flatAlias)) {
+      return entry;
+    }
+  }
+
+  return null;
+};
+
+const inferCinemaCity = (cinema) => {
+  const rawCity = String(cinema?.city ?? "").trim();
+  if (rawCity) {
+    const matched = matchVietnamCity(rawCity);
+    return (
+      matched || {
+        id: normalizeRegionKey(rawCity),
+        label: rawCity,
+      }
+    );
+  }
+
+  const rawAddress = String(cinema?.address ?? "").trim();
+  if (!rawAddress) return { id: "other", label: "Khác" };
+
+  // Try from last segments: "..., Quận 1, TP.HCM"
+  const segments = rawAddress
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(-3)
+    .reverse();
+
+  for (const segment of segments) {
+    const matched = matchVietnamCity(segment);
+    if (matched) return matched;
+  }
+
+  const matchedWhole = matchVietnamCity(rawAddress);
+  if (matchedWhole) return matchedWhole;
+
+  return { id: "other", label: "Khác" };
+};
+
 function CinemaPage() {
   const navigate = useNavigate();
   const [cinemas, setCinemas] = useState([]);
   const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(true); // ✅ THÊM loading state
+  const [loading, setLoading] = useState(true); 
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedCinemaId, setSelectedCinemaId] = useState("");
 
-  // ✅ GIỮ API call từ Code 1
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const cinemaRes = await fetch("http://localhost:5000/api/cinemas");
-        const cinemaData = await cinemaRes.json();
-        const movieRes = await fetch("http://localhost:5000/api/movies");
-        const movieData = await movieRes.json();
-        setCinemas(cinemaData);
-        setMovies(movieData);
+        const [cinemaRes, movieRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/cinemas`),
+          fetch(`${API_BASE_URL}/api/movies`),
+        ]);
+
+        if (!cinemaRes.ok) throw new Error("Không thể tải danh sách rạp");
+        if (!movieRes.ok) throw new Error("Không thể tải danh sách phim");
+
+        const [cinemaPayload, moviePayload] = await Promise.all([
+          cinemaRes.json(),
+          movieRes.json(),
+        ]);
+
+        const cinemaList = unwrapArrayResponse(cinemaPayload)
+          .filter(isActiveCinema);
+
+        setCinemas(cinemaList);
+        setMovies(unwrapArrayResponse(moviePayload));
       } catch (err) {
         console.error("Lỗi tải dữ liệu:", err);
       } finally {
@@ -37,39 +371,31 @@ function CinemaPage() {
     fetchData();
   }, []);
 
-  // ✅ KẾT HỢP: regions từ Code 1 + desc từ Code 2
+  // Regions are built dynamically from API cinemas.
   const regions = useMemo(() => {
-    const regionMap = [
-      { id: "hanoi", label: "Hà Nội", desc: "Các rạp khu vực Hà Nội" },
-      { id: "hcm", label: "TP.HCM", desc: "Các rạp khu vực TP.HCM" },
-      { id: "haiphong", label: "Hải Phòng", desc: "Các rạp khu vực Hải Phòng" }, // ✅ GIỮ Hải Phòng
-    ];
+    const groups = new Map();
 
-    return regionMap.map((region) => {
-      const regionCinemas = cinemas.filter((cinema) => {
-        const city = (cinema.city || "").toLowerCase();
-        const address = (cinema.address || "").toLowerCase();
+    cinemas.forEach((cinema) => {
+      const inferred = inferCinemaCity(cinema);
+      const regionKey = inferred?.id || "other";
+      const label = inferred?.label || "Khác";
 
-        if (region.id === "hanoi") {
-          return city === "hanoi" || address.includes("ha noi");
-        }
-        if (region.id === "hcm") {
-          return (
-            city === "hcm" ||
-            address.includes("hcm") ||
-            address.includes("tp.hcm")
-          );
-        }
-        if (region.id === "haiphong") {
-          return address.includes("hai phong");
-        }
-        return false;
-      });
+      if (!groups.has(regionKey)) {
+        groups.set(regionKey, {
+          id: regionKey,
+          label,
+          desc: `Các rạp khu vực ${label}`,
+          cinemas: [],
+        });
+      }
 
-      return {
-        ...region,
-        cinemas: regionCinemas,
-      };
+      groups.get(regionKey).cinemas.push(cinema);
+    });
+
+    return Array.from(groups.values()).sort((a, b) => {
+      if (a.id === "other") return 1;
+      if (b.id === "other") return -1;
+      return a.label.localeCompare(b.label, "vi", { sensitivity: "base" });
     });
   }, [cinemas]);
 
@@ -78,7 +404,9 @@ function CinemaPage() {
 
   // ✅ GIỮ ID naming từ Code 1
   const selectedCinema =
-    displayedCinemas.find((c) => c.cinema_id === selectedCinemaId) || null;
+    displayedCinemas.find(
+      (c) => String(c.cinema_id ?? c.id) === String(selectedCinemaId),
+    ) || null;
 
   // ✅ GIỮ movie status từ Code 1 (underscore)
   const nowShowingMovies = useMemo(
@@ -173,10 +501,13 @@ function CinemaPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {displayedCinemas.map((cinema) => (
                 <button
-                  key={cinema.cinema_id} // ✅ GIỮ cinema_id từ Code 1
-                  onClick={() => setSelectedCinemaId(cinema.cinema_id)}
+                  key={String(cinema.cinema_id ?? cinema.id)}
+                  onClick={() =>
+                    setSelectedCinemaId(String(cinema.cinema_id ?? cinema.id))
+                  }
                   className={`text-left rounded-2xl border transition-all p-5 ${
-                    selectedCinemaId === cinema.cinema_id
+                    String(selectedCinemaId) ===
+                    String(cinema.cinema_id ?? cinema.id)
                       ? "border-red-500"
                       : "border-zinc-700 hover:border-zinc-700"
                   }`}
