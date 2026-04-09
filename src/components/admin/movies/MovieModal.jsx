@@ -1,4 +1,11 @@
-import { X, Upload, Youtube, Plus, Trash2 } from "lucide-react";
+import {
+  X,
+  Upload,
+  Youtube,
+  Plus,
+  Trash2,
+  Image as ImageIcon,
+} from "lucide-react";
 import { useRef, useState } from "react";
 
 export default function MovieModal({
@@ -18,7 +25,7 @@ export default function MovieModal({
 
   const inputClass =
     "w-full h-[42px] px-3 rounded-lg bg-zinc-900 border border-white/10 text-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all";
-  
+
   const textareaClass =
     "w-full px-3 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 resize-none";
 
@@ -30,7 +37,7 @@ export default function MovieModal({
     if (genre && !form.genre.includes(genre)) {
       setForm({
         ...form,
-        genre: [...form.genre, genre]
+        genre: [...form.genre, genre],
       });
       setInputGenre("");
     }
@@ -40,7 +47,7 @@ export default function MovieModal({
   const removeGenre = (indexToRemove) => {
     setForm({
       ...form,
-      genre: form.genre.filter((_, index) => index !== indexToRemove)
+      genre: form.genre.filter((_, index) => index !== indexToRemove),
     });
   };
 
@@ -48,14 +55,14 @@ export default function MovieModal({
   const handleGenreInputChange = (e) => {
     const value = e.target.value;
     setInputGenre(value);
-    
+
     // Nếu người dùng nhập dấu phẩy, tự động thêm genre
-    if (value.endsWith(',')) {
+    if (value.endsWith(",")) {
       const genreToAdd = value.slice(0, -1).trim();
       if (genreToAdd && !form.genre.includes(genreToAdd)) {
         setForm({
           ...form,
-          genre: [...form.genre, genreToAdd]
+          genre: [...form.genre, genreToAdd],
         });
       }
       setInputGenre("");
@@ -64,7 +71,7 @@ export default function MovieModal({
 
   // Hàm xử lý khi nhấn phím Enter
   const handleGenreKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       addGenre();
     }
@@ -77,14 +84,14 @@ export default function MovieModal({
         alert("File ảnh quá lớn! Tối đa 5MB");
         return;
       }
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         alert("Chỉ chấp nhận file ảnh!");
         return;
       }
-      setForm({ 
-        ...form, 
+      setForm({
+        ...form,
         poster: file,
-        posterPreview: URL.createObjectURL(file)
+        posterPreview: URL.createObjectURL(file),
       });
     }
   };
@@ -96,14 +103,14 @@ export default function MovieModal({
         alert("File ảnh quá lớn! Tối đa 5MB");
         return;
       }
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         alert("Chỉ chấp nhận file ảnh!");
         return;
       }
-      setForm({ 
-        ...form, 
+      setForm({
+        ...form,
         backdrop: file,
-        backdropPreview: URL.createObjectURL(file)
+        backdropPreview: URL.createObjectURL(file),
       });
     }
   };
@@ -111,7 +118,6 @@ export default function MovieModal({
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 p-4">
       <div className="w-full max-w-[800px] max-h-[90vh] bg-cinema-surface rounded-2xl border border-white/10 flex flex-col">
-        
         {/* HEADER */}
         <div className="flex justify-between items-center px-6 py-5 border-b border-white/10">
           <h2 className="text-white text-lg font-semibold">
@@ -233,9 +239,7 @@ export default function MovieModal({
               <label className={labelClass}>Ngôn ngữ</label>
               <input
                 value={form?.language || ""}
-                onChange={(e) =>
-                  setForm({ ...form, language: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, language: e.target.value })}
                 className={inputClass}
                 placeholder="Ngôn ngữ chiếu"
               />
@@ -245,9 +249,7 @@ export default function MovieModal({
               <label className={labelClass}>Phụ đề</label>
               <input
                 value={form?.subtitle || ""}
-                onChange={(e) =>
-                  setForm({ ...form, subtitle: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
                 className={inputClass}
                 placeholder="Phụ đề"
               />
@@ -272,7 +274,7 @@ export default function MovieModal({
             <label className={labelClass}>
               Thể loại <span className="text-red-500">*</span>
             </label>
-            
+
             {/* Input thêm thể loại */}
             <div className="flex gap-2 mb-3">
               <input
@@ -316,7 +318,6 @@ export default function MovieModal({
                 ⚠️ Chưa có thể loại nào. Vui lòng thêm ít nhất 1 thể loại.
               </p>
             )}
-            
           </div>
 
           <div>
@@ -332,86 +333,86 @@ export default function MovieModal({
             />
           </div>
 
-          {/* Poster Upload */}
-          <div>
-            <label className={labelClass}>Poster</label>
-            <div className="flex gap-3 items-start">
-              <button
-                type="button"
+          <div className="flex flex-col gap-6 sm:flex-row">
+            <div className="w-full sm:w-36">
+              <label className={labelClass}>Poster phim</label>
+              <div
                 onClick={() => posterInputRef.current?.click()}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm transition-colors"
+                className="relative mt-1.5 flex aspect-[2/3] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-white/15 bg-zinc-900/40 transition-all hover:border-red-500/60 hover:bg-zinc-900/60"
               >
-                <Upload size={16} />
-                Chọn ảnh poster
-              </button>
-              <input
-                ref={posterInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handlePosterChange}
-                className="hidden"
-              />
-              {form?.posterPreview && (
-                <span className="text-xs text-green-400 self-center">
-                  Đã chọn ảnh mới
-                </span>
-              )}
-              {!form?.posterPreview && isEdit && form?.poster && (
-                <span className="text-xs text-blue-400 self-center">
-                  Giữ nguyên ảnh cũ
-                </span>
-              )}
-            </div>
-            {form?.posterPreview && (
-              <div className="mt-2">
-                <img
-                  src={form.posterPreview}
-                  alt="Poster preview"
-                  className="w-32 h-40 object-cover rounded-lg border border-white/10"
+                {form?.posterPreview ? (
+                  <>
+                    <img
+                      src={form.posterPreview}
+                      alt="Poster"
+                      className="h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
+                      <div className="flex flex-col items-center gap-1">
+                        <Upload className="h-5 w-5 text-white" />
+                        <span className="text-[10px] font-bold text-white">
+                          Thay đổi
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 p-4 text-center">
+                    <ImageIcon className="h-5 w-5 text-zinc-400" />
+                    <div className="text-xs font-semibold text-zinc-300">
+                      Tải poster
+                    </div>
+                  </div>
+                )}
+                <input
+                  ref={posterInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePosterChange}
+                  className="hidden"
                 />
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* Backdrop Upload */}
-          <div>
-            <label className={labelClass}>Backdrop (ảnh nền)</label>
-            <div className="flex gap-3 items-start">
-              <button
-                type="button"
+            <div className="flex-1 min-w-0">
+              <label className={labelClass}>Backdrop (Ảnh nền)</label>
+              <div
                 onClick={() => backdropInputRef.current?.click()}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm transition-colors"
+                className="relative mt-1.5 flex aspect-video w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-white/15 bg-zinc-900/40 transition-all hover:border-red-500/60 hover:bg-zinc-900/60"
               >
-                <Upload size={16} />
-                Chọn ảnh backdrop
-              </button>
-              <input
-                ref={backdropInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleBackdropChange}
-                className="hidden"
-              />
-              {form?.backdropPreview && (
-                <span className="text-xs text-green-400 self-center">
-                  Đã chọn ảnh mới
-                </span>
-              )}
-              {!form?.backdropPreview && isEdit && form?.backdrop && (
-                <span className="text-xs text-blue-400 self-center">
-                  Giữ nguyên ảnh cũ
-                </span>
-              )}
-            </div>
-            {form?.backdropPreview && (
-              <div className="mt-2">
-                <img
-                  src={form.backdropPreview}
-                  alt="Backdrop preview"
-                  className="w-full h-32 object-cover rounded-lg border border-white/10"
+                {form?.backdropPreview ? (
+                  <>
+                    <img
+                      src={form.backdropPreview}
+                      alt="Backdrop"
+                      className="h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
+                      <div className="flex flex-col items-center gap-1">
+                        <Upload className="h-5 w-5 text-white" />
+                        <span className="text-[10px] font-bold text-white">
+                          Thay đổi
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 p-4 text-center">
+                    <ImageIcon className="h-5 w-5 text-zinc-400" />
+                    <div className="text-xs font-semibold text-zinc-300">
+                      Tải backdrop
+                    </div>
+                  </div>
+                )}
+                <input
+                  ref={backdropInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBackdropChange}
+                  className="hidden"
                 />
               </div>
-            )}
+            </div>
           </div>
 
           <div>
@@ -420,9 +421,7 @@ export default function MovieModal({
               <Youtube size={20} className="text-red-500" />
               <input
                 value={form?.trailer || ""}
-                onChange={(e) =>
-                  setForm({ ...form, trailer: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, trailer: e.target.value })}
                 className={inputClass}
                 placeholder="https://www.youtube.com/watch?v=..."
               />
@@ -474,8 +473,10 @@ export default function MovieModal({
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 Đang xử lý...
               </span>
+            ) : isEdit ? (
+              "Cập nhật"
             ) : (
-              isEdit ? "Cập nhật" : "Thêm phim"
+              "Thêm phim"
             )}
           </button>
         </div>
