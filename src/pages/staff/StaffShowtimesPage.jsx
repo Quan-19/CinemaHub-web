@@ -27,6 +27,7 @@ const STATUS_OPTIONS = [
   { value: "locked", label: "Khóa" },
 ];
 const DEFAULT_LANGUAGE_OPTION = { value: "VIETSUB", label: "Phụ đề Việt" };
+const STAFF_PAST_DATE_ERROR = "Bạn chỉ được chọn ngày chiếu từ hôm nay trở đi.";
 
 function normalizeStaffStatus(status) {
   const normalized = String(status ?? "")
@@ -52,6 +53,16 @@ function normalizeStaffStatus(status) {
   }
 
   return "open";
+}
+
+function normalizeMovieStatus(status) {
+  const normalized = String(status ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (normalized === "coming-soon") return "coming_soon";
+  if (normalized === "now-showing") return "now_showing";
+  return normalized;
 }
 
 function isPastCalendarDate(dateValue) {
@@ -188,6 +199,14 @@ function durationToEnd(startIso, duration) {
   const min = String(end.getMinutes()).padStart(2, "0");
 
   return `${yyyy}-${mm}-${dd}T${hh}:${min}:00`;
+}
+
+function getTodayDateInputValue() {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 function StatusBadge({ status, isPast }) {
@@ -460,6 +479,7 @@ function EditShowtimeModal({
       id: m.id,
       title: m.title,
       duration: m.duration,
+      status: normalizeMovieStatus(m.status),
       languageOptions:
         m.languageOptions?.length > 0
           ? m.languageOptions
@@ -470,6 +490,9 @@ function EditShowtimeModal({
   const selectedMovie = movieOptions.find(
     (m) => String(m.id) === String(movieId)
   );
+  const selectedMovieStatus = normalizeMovieStatus(selectedMovie?.status);
+  const isComingSoonMovie = selectedMovieStatus === "coming_soon";
+  const effectiveIsSpecial = isComingSoonMovie ? true : isSpecial;
   const durationNumber = Number(duration) || (selectedMovie?.duration ?? 0);
 
   const modalLanguageOptions = useMemo(() => {
@@ -524,9 +547,19 @@ function EditShowtimeModal({
       return;
     }
 
+    if (isPastCalendarDate(date)) {
+      setError(STAFF_PAST_DATE_ERROR);
+      return;
+    }
+
     // ✅ Validate duration
     if (durationNumber <= 0) {
       setError("Thời lượng phải lớn hơn 0");
+      return;
+    }
+
+    if (isComingSoonMovie && !effectiveIsSpecial) {
+      setError("Phim sắp chiếu chỉ được phép tạo suất chiếu đặc biệt.");
       return;
     }
 
@@ -565,8 +598,8 @@ function EditShowtimeModal({
       format: selectedRoom?.type || format,
       language: resolvedLanguage,
       languageLabel: normalizeLanguageOption(resolvedLanguage).label,
-      isSpecial,
-      special: isSpecial,
+      isSpecial: effectiveIsSpecial,
+      special: effectiveIsSpecial,
       status,
     });
   };
@@ -602,6 +635,9 @@ function EditShowtimeModal({
                       if (m.languageOptions?.length > 0) {
                         setLanguage(m.languageOptions[0].value);
                       }
+                      if (normalizeMovieStatus(m.status) === "coming_soon") {
+                        setIsSpecial(true);
+                      }
                     }}
                     className={[
                       "flex w-full items-center justify-between px-3 py-2 text-left text-sm transition",
@@ -626,7 +662,20 @@ function EditShowtimeModal({
               <input
                 type="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                min={getTodayDateInputValue()}
+                onChange={(e) => {
+                  const nextDate = e.target.value;
+                  setDate(nextDate);
+
+                  if (isPastCalendarDate(nextDate)) {
+                    setError(STAFF_PAST_DATE_ERROR);
+                    return;
+                  }
+
+                  setError((prev) =>
+                    prev === STAFF_PAST_DATE_ERROR ? null : prev
+                  );
+                }}
                 className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100"
               />
             </div>
@@ -703,10 +752,17 @@ function EditShowtimeModal({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsSpecial(false)}
+                  onClick={() => {
+                    if (!isComingSoonMovie) {
+                      setIsSpecial(false);
+                    }
+                  }}
+                  disabled={isComingSoonMovie}
                   className={[
                     "h-10 rounded-xl border text-sm font-semibold transition",
-                    !isSpecial
+                    isComingSoonMovie
+                      ? "border-zinc-700 bg-zinc-900/30 text-zinc-500 cursor-not-allowed"
+                      : !effectiveIsSpecial
                       ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
                       : "border-zinc-700 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900",
                   ].join(" ")}
@@ -718,7 +774,7 @@ function EditShowtimeModal({
                   onClick={() => setIsSpecial(true)}
                   className={[
                     "h-10 rounded-xl border text-sm font-semibold transition",
-                    isSpecial
+                    effectiveIsSpecial
                       ? "border-yellow-500/40 bg-yellow-500/15 text-yellow-300"
                       : "border-zinc-700 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900",
                   ].join(" ")}
@@ -728,7 +784,9 @@ function EditShowtimeModal({
                 </button>
               </div>
               <p className="mt-1 text-[11px] text-zinc-500">
-                {isSpecial
+                {isComingSoonMovie
+                  ? "Phim sắp chiếu chỉ được tạo suất chiếu đặc biệt."
+                  : effectiveIsSpecial
                   ? "Suất này sẽ được đánh dấu là suất chiếu đặc biệt."
                   : "Suất này là suất chiếu thường."}
               </p>
@@ -898,7 +956,7 @@ function StaffShowtimesPage() {
 
       const [showtimesRes, moviesRes, roomsRes] = await Promise.all([
         fetch("http://localhost:5000/api/showtimes"),
-        fetch("http://localhost:5000/api/movies"),
+        fetch("http://localhost:5000/api/movies?scope=manage"),
         fetch(roomsApiUrl),
       ]);
 
@@ -936,6 +994,7 @@ function StaffShowtimesPage() {
         duration: m.duration || 120,
         subtitle: m.subtitle || "",
         language: m.language || "",
+        status: normalizeMovieStatus(m.status),
         languageOptions: extractLanguageOptionsFromMovie(m),
       }));
       setMoviesList(normalizedMovies);
@@ -1040,6 +1099,8 @@ function StaffShowtimesPage() {
   const openCreate = () => {
     const firstMovie = moviesList[0];
     const firstRoom = roomOptions[0];
+    const firstMovieStatus = normalizeMovieStatus(firstMovie?.status);
+    const forceSpecialForComingSoon = firstMovieStatus === "coming_soon";
     const firstLanguage =
       firstMovie?.languageOptions?.[0] ||
       availableLanguageOptions[0] ||
@@ -1061,8 +1122,8 @@ function StaffShowtimesPage() {
       roomId: firstRoom?.id || "",
       room: firstRoom?.name || "",
       format: firstRoom?.type || formatOptions[0] || "",
-      isSpecial: false,
-      special: false,
+      isSpecial: forceSpecialForComingSoon,
+      special: forceSpecialForComingSoon,
       languageCode: firstLanguage.value,
       language: firstLanguage.value,
       status: "open",
@@ -1084,6 +1145,10 @@ function StaffShowtimesPage() {
 
   const handleSave = async (next) => {
     try {
+      if (isPastCalendarDate(next.date)) {
+        throw new Error(STAFF_PAST_DATE_ERROR);
+      }
+
       const auth = getAuth();
       const currentToken = await auth.currentUser?.getIdToken();
       if (!currentToken) {

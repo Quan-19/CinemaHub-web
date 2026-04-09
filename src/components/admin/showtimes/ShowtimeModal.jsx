@@ -8,6 +8,16 @@ import {
   normalizePriceMap,
 } from "../../../utils/showtimePricing";
 
+const normalizeMovieStatus = (status) => {
+  const normalized = String(status ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (normalized === "coming-soon") return "coming_soon";
+  if (normalized === "now-showing") return "now_showing";
+  return normalized;
+};
+
 export default function ShowtimeModal({
   show,
   onClose,
@@ -279,11 +289,16 @@ export default function ShowtimeModal({
     "w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition [&>option]:bg-zinc-900 [&>option]:text-white";
 
   const handleMovieSelect = (movie) => {
+    const selectedMovieStatus = normalizeMovieStatus(movie?.status);
+    const forceSpecialForComingSoon = selectedMovieStatus === "coming_soon";
+
     setForm({
       ...form,
       movieId: movie.id,
       movieTitle: movie.title,
       movieDuration: movie.duration,
+      isSpecial: forceSpecialForComingSoon ? true : Boolean(form?.isSpecial),
+      priceSource: forceSpecialForComingSoon ? "special" : form?.priceSource,
     });
     setSearchMovieTerm(movie.title);
     setShowMovieDropdown(false);
@@ -379,6 +394,10 @@ export default function ShowtimeModal({
   };
 
   const handleSpecialToggle = (isSpecial) => {
+    if (!isSpecial && isComingSoonMovie) {
+      return;
+    }
+
     if (isSpecial) {
       // Switching to special - require selecting a pricing rule to populate prices
       setForm({
@@ -499,6 +518,23 @@ export default function ShowtimeModal({
   };
 
   const selectedCinema = cinemas?.find((c) => c.id == form?.cinemaId);
+  const selectedMovie = movies?.find(
+    (m) => String(m.id) === String(form?.movieId)
+  );
+  const isComingSoonMovie =
+    normalizeMovieStatus(selectedMovie?.status) === "coming_soon";
+
+  useEffect(() => {
+    if (!isComingSoonMovie || form?.isSpecial) return;
+
+    setForm({
+      ...form,
+      isSpecial: true,
+      priceSource: "special",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isComingSoonMovie, form?.isSpecial]);
+
   const currentRoomCount = selectedCinema?.rooms?.length || 0;
   const maxRooms = selectedCinema?.maxRooms || 4;
 
@@ -914,8 +950,11 @@ export default function ShowtimeModal({
                     onClick={() => {
                       handleSpecialToggle(false);
                     }}
+                    disabled={isComingSoonMovie}
                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                      !form?.isSpecial
+                      isComingSoonMovie
+                        ? "bg-zinc-900 text-zinc-500 border border-white/10 cursor-not-allowed"
+                        : !form?.isSpecial
                         ? "bg-green-600 text-white shadow-lg shadow-green-600/30"
                         : "bg-zinc-900 text-gray-400 hover:text-white border border-white/10 hover:bg-zinc-800"
                     }`}
@@ -942,6 +981,13 @@ export default function ShowtimeModal({
                   <p className="text-[10px] text-green-400 flex items-center gap-1 mb-2">
                     ✓ Giá vé tự động theo bảng giá (loại ghế, loại rạp, giờ
                     chiếu)
+                  </p>
+                )}
+
+                {isComingSoonMovie && (
+                  <p className="text-[10px] text-yellow-400 flex items-center gap-1 mb-2">
+                    <Sparkles size={10} />
+                    Phim sắp chiếu chỉ cho phép tạo suất chiếu đặc biệt.
                   </p>
                 )}
 

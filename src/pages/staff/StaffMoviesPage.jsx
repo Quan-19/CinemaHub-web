@@ -689,7 +689,9 @@ function StaffMoviesPage() {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/movies");
+        const res = await fetch(
+          "http://localhost:5000/api/movies?scope=manage"
+        );
         const data = await res.json();
 
         setMovies(data);
@@ -742,7 +744,7 @@ function StaffMoviesPage() {
       });
 
       // reload lại
-      const res = await fetch("http://localhost:5000/api/movies");
+      const res = await fetch("http://localhost:5000/api/movies?scope=manage");
       const data = await res.json();
       setMovies(data);
 
@@ -794,7 +796,9 @@ function StaffMoviesPage() {
       const result = await res.json();
 
       // reload lại list
-      const newRes = await fetch("http://localhost:5000/api/movies");
+      const newRes = await fetch(
+        "http://localhost:5000/api/movies?scope=manage"
+      );
       const newData = await newRes.json();
       setMovies(newData);
 

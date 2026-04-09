@@ -43,7 +43,7 @@ export default function MoviesPage() {
   const fetchMovies = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/movies");
+      const res = await fetch("http://localhost:5000/api/movies?scope=manage");
       const data = await res.json();
       setMovies(data || []);
     } catch (err) {
@@ -85,9 +85,11 @@ export default function MoviesPage() {
       duration: movie.duration || "",
       ageRating: movie.ageRating || "P",
       status: movie.status || "coming_soon",
-      genre: Array.isArray(movie.genre) 
-        ? movie.genre 
-        : (movie.genre ? movie.genre.split(",") : []),
+      genre: Array.isArray(movie.genre)
+        ? movie.genre
+        : movie.genre
+        ? movie.genre.split(",")
+        : [],
       language: movie.language || "",
       subtitle: movie.subtitle || "",
       poster: null,
@@ -106,7 +108,8 @@ export default function MoviesPage() {
     if (!form.releaseDate) return "Phải có ngày khởi chiếu";
     if (!form.duration || form.duration <= 0) return "Thời lượng không hợp lệ";
     if (form.duration > 500) return "Thời lượng không hợp lệ (tối đa 500 phút)";
-    if (form.rating < 0 || form.rating > 10) return "Điểm đánh giá phải từ 0-10";
+    if (form.rating < 0 || form.rating > 10)
+      return "Điểm đánh giá phải từ 0-10";
     return null;
   };
 
@@ -132,7 +135,7 @@ export default function MoviesPage() {
 
       // Tạo FormData để gửi file
       const formDataToSend = new FormData();
-      
+
       // Thêm text fields
       formDataToSend.append("title", formData.title.trim());
       formDataToSend.append("originalTitle", formData.originalTitle || "");
@@ -148,7 +151,7 @@ export default function MoviesPage() {
       formDataToSend.append("subtitle", formData.subtitle || "");
       formDataToSend.append("trailer", formData.trailer || "");
       formDataToSend.append("rating", formData.rating || 0);
-      
+
       // Thêm file nếu có
       if (formData.poster && formData.poster instanceof File) {
         formDataToSend.append("poster", formData.poster);
@@ -180,7 +183,9 @@ export default function MoviesPage() {
       setShowModal(false);
       setForm(defaultForm);
       setEditingMovie(null);
-      alert(editingMovie ? "Cập nhật phim thành công!" : "Thêm phim thành công!");
+      alert(
+        editingMovie ? "Cập nhật phim thành công!" : "Thêm phim thành công!"
+      );
     } catch (err) {
       console.error("SAVE ERROR:", err);
       alert(err.message || "Lỗi lưu phim");
@@ -202,7 +207,9 @@ export default function MoviesPage() {
       />
 
       {loading ? (
-        <div className="text-center text-gray-400 py-10">Đang tải dữ liệu...</div>
+        <div className="text-center text-gray-400 py-10">
+          Đang tải dữ liệu...
+        </div>
       ) : (
         <MoviesTable
           movies={filtered}

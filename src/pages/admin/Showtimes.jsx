@@ -105,7 +105,7 @@ export default function ShowtimesPage() {
       try {
         const [moviesRes, cinemasRes, showtimesRes, roomsRes] =
           await Promise.all([
-            fetch("http://localhost:5000/api/movies"),
+            fetch("http://localhost:5000/api/movies?scope=manage"),
             fetch("http://localhost:5000/api/cinemas"),
             fetch("http://localhost:5000/api/showtimes"),
             fetch("http://localhost:5000/api/rooms"),
