@@ -1,120 +1,188 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import axios from "axios"; // hoặc fetch
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { getAuth } from "firebase/auth";
+import { CheckCircle, XCircle, AlertTriangle, Loader2 } from "lucide-react";
 
 export default function PaymentResultPage() {
   const { search } = useLocation();
   const navigate = useNavigate();
+  const [countdown, setCountdown] = useState(5);
+  const [status, setStatus] = useState("processing");
+  const [message, setMessage] = useState("Đang xử lý thanh toán...");
 
   useEffect(() => {
     const params = new URLSearchParams(search);
-    const status = params.get("status");
-    const code = params.get("code");
-    const bookingId = params.get("booking_id"); // ✅ QUAN TRỌNG: lấy booking_id từ URL
+    const statusParam = params.get("status");
+    const resultCode = params.get("code") || params.get("resultCode");
+    const orderId = params.get("orderId") || params.get("paymentId");
+    const bookingId = params.get("booking_id");
 
-    console.log("Payment Result Page:", { status, code, bookingId });
+    console.log("Payment Result Page:", {
+      statusParam,
+      resultCode,
+      orderId,
+      bookingId,
+    });
 
-    // ✅ Nếu thanh toán thành công, cập nhật trạng thái booking
-    if (status === "paid" && bookingId) {
-      const updateBookingStatus = async () => {
-        try {
-          const response = await axios.put(
-            `http://localhost:5000/api/bookings/${bookingId}/status`,
-            { status: "paid" }, // hoặc "confirmed"
-          );
-          console.log("✅ Updated booking status:", response.data);
-        } catch (error) {
-          console.error("❌ Failed to update booking status:", error);
+    const processPayment = async () => {
+      // VNPay success (status=paid)
+      if (statusParam === "paid") {
+        setStatus("success");
+        setMessage("✅ Thanh toán thành công!");
+
+        if (bookingId) {
+          await updateBookingStatus(bookingId, "paid");
         }
-      };
 
-      updateBookingStatus();
+        startCountdown();
+        return;
+      }
 
-      // Tự động chuyển hướng sau 3 giây
-      const timer = setTimeout(() => {
-        navigate("/profile/my-tickets"); // chuyển đến trang vé của tôi
-      }, 3000);
+      // MoMo success (resultCode=0)
+      if (resultCode === "0") {
+        setStatus("success");
+        setMessage("✅ Thanh toán MoMo thành công!");
 
-      return () => clearTimeout(timer);
-    }
+        // Tìm booking_id từ orderId nếu cần
+        if (orderId && !bookingId) {
+          const bookingIdFromOrder = orderId.split("_")[0];
+          await updateBookingStatus(bookingIdFromOrder, "paid");
+        } else if (bookingId) {
+          await updateBookingStatus(bookingId, "paid");
+        }
+
+        startCountdown();
+        return;
+      }
+
+      // Xử lý lỗi
+      if (statusParam === "invalid_signature") {
+        setStatus("error");
+        setMessage("🔐 Chữ ký không hợp lệ. Vui lòng thử lại.");
+      } else if (statusParam === "error" || resultCode !== "0") {
+        setStatus("error");
+        setMessage(
+          `❌ Thanh toán thất bại. Mã lỗi: ${resultCode || "Unknown"}`,
+        );
+      } else {
+        setStatus("error");
+        setMessage("❌ Có lỗi xảy ra trong quá trình thanh toán.");
+      }
+
+      startCountdown();
+    };
+
+    const updateBookingStatus = async (bookingIdParam, newStatus) => {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+        const token = await user?.getIdToken();
+
+        await axios.put(
+          `http://localhost:5000/api/bookings/${bookingIdParam}/status`,
+          { status: newStatus },
+          { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+        );
+        console.log("✅ Updated booking status to:", newStatus);
+      } catch (error) {
+        console.error("❌ Failed to update booking status:", error);
+      }
+    };
+
+    const startCountdown = () => {
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            navigate("/movies");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    };
+
+    processPayment();
   }, [search, navigate]);
 
-  const params = new URLSearchParams(search);
-  const status = params.get("status");
-  const code = params.get("code");
+  // UI Components
+  const getIcon = () => {
+    if (status === "success") {
+      return <CheckCircle size={64} className="text-green-500" />;
+    }
+    if (status === "error") {
+      return <XCircle size={64} className="text-red-500" />;
+    }
+    return <Loader2 size={64} className="text-yellow-500 animate-spin" />;
+  };
+
+  const getBgColor = () => {
+    if (status === "success") return "bg-green-500/10 border-green-500/20";
+    if (status === "error") return "bg-red-500/10 border-red-500/20";
+    return "bg-yellow-500/10 border-yellow-500/20";
+  };
+
+  const getTitleColor = () => {
+    if (status === "success") return "text-green-400";
+    if (status === "error") return "text-red-400";
+    return "text-yellow-400";
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      {status === "paid" ? (
-        <div className="text-center">
-          <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-10 h-10 text-green-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
-          <h1 className="text-2xl text-green-400 mb-2">
-            ✅ Thanh toán thành công!
-          </h1>
-          <p className="text-zinc-400 mb-4">Mã giao dịch: {code || "N/A"}</p>
-          <p className="text-zinc-400 mb-6">
-            Đang chuyển hướng về trang chủ...
-          </p>
-          <button
-            onClick={() => navigate("/")}
-            className="px-6 py-2 bg-green-600 rounded-lg hover:bg-green-700 transition"
-          >
-            Về trang chủ ngay
-          </button>
-        </div>
-      ) : status === "invalid_signature" ? (
-        <div className="text-center">
-          <h1 className="text-2xl text-red-400 mb-4">🔐 Chữ ký không hợp lệ</h1>
-          <p className="text-zinc-400 mb-6">
-            Có lỗi xảy ra trong quá trình xác thực
-          </p>
-          <button
-            onClick={() => navigate(-1)}
-            className="px-6 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition"
-          >
-            Thử lại
-          </button>
-        </div>
-      ) : status === "error" ? (
-        <div className="text-center">
-          <h1 className="text-2xl text-red-400 mb-4">❌ Có lỗi xảy ra</h1>
-          <p className="text-zinc-400 mb-6">Vui lòng thử lại sau</p>
-          <button
-            onClick={() => navigate(-1)}
-            className="px-6 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition"
-          >
-            Thử lại
-          </button>
-        </div>
-      ) : (
-        <div className="text-center">
-          <h1 className="text-2xl text-red-400 mb-4">❌ Thanh toán thất bại</h1>
-          <p className="text-zinc-400 mb-2">Mã lỗi: {code || "Unknown"}</p>
-          <p className="text-zinc-400 mb-6">
-            Vui lòng thử lại hoặc chọn phương thức khác
-          </p>
-          <button
-            onClick={() => navigate(-1)}
-            className="px-6 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition"
-          >
-            Thử lại
-          </button>
-        </div>
-      )}
+    <div className="min-h-screen flex items-center justify-center bg-black">
+      <div
+        className={`max-w-md w-full mx-4 p-8 rounded-2xl text-center border ${getBgColor()}`}
+      >
+        <div className="flex justify-center mb-6">{getIcon()}</div>
+
+        <h1 className={`text-2xl font-bold mb-3 ${getTitleColor()}`}>
+          {status === "success"
+            ? "Thanh toán thành công!"
+            : status === "error"
+              ? "Thanh toán thất bại"
+              : "Đang xử lý..."}
+        </h1>
+
+        <p className="text-zinc-400 mb-6">{message}</p>
+
+        {status !== "processing" && (
+          <>
+            <p className="text-zinc-500 text-sm mb-6">
+              Đang chuyển hướng sau {countdown} giây...
+            </p>
+
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => navigate("/")}
+                className="px-6 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-sm transition"
+              >
+                Về trang chủ
+              </button>
+
+              {status === "error" && (
+                <button
+                  onClick={() => navigate(-2)}
+                  className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm transition"
+                >
+                  Thử lại
+                </button>
+              )}
+
+              {status === "success" && (
+                <button
+                  onClick={() => navigate("/profile/my-tickets")}
+                  className="px-6 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm transition"
+                >
+                  Xem vé của tôi
+                </button>
+              )}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
