@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
+import toast from "react-hot-toast";
 
 import MoviesStats from "../../components/admin/movies/MoviesStats";
 import MoviesFilter from "../../components/admin/movies/MoviesFilter";
@@ -35,6 +36,7 @@ export default function MoviesPage() {
     backdropPreview: "",
     trailer: "",
     rating: 0,
+    description: "",
   };
 
   const [form, setForm] = useState(defaultForm);
@@ -48,7 +50,7 @@ export default function MoviesPage() {
       setMovies(data || []);
     } catch (err) {
       console.error("Fetch error:", err);
-      alert("Lỗi tải phim");
+      toast.error("Lỗi tải phim");
     } finally {
       setLoading(false);
     }
@@ -98,6 +100,7 @@ export default function MoviesPage() {
       backdropPreview: movie.backdrop || "",
       trailer: movie.trailer || "",
       rating: movie.rating || 0,
+      description: movie.description || "",
     });
     setShowModal(true);
   };
@@ -117,7 +120,7 @@ export default function MoviesPage() {
   const handleSave = async (formData) => {
     const error = validateForm();
     if (error) {
-      alert(error);
+      toast.error(error);
       return;
     }
 
@@ -127,7 +130,7 @@ export default function MoviesPage() {
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) {
-        alert("Chưa đăng nhập");
+        toast.error("Chưa đăng nhập");
         return;
       }
 
@@ -151,6 +154,7 @@ export default function MoviesPage() {
       formDataToSend.append("subtitle", formData.subtitle || "");
       formDataToSend.append("trailer", formData.trailer || "");
       formDataToSend.append("rating", formData.rating || 0);
+      formDataToSend.append("description", formData.description || "");
 
       // Thêm file nếu có
       if (formData.poster && formData.poster instanceof File) {
@@ -183,12 +187,12 @@ export default function MoviesPage() {
       setShowModal(false);
       setForm(defaultForm);
       setEditingMovie(null);
-      alert(
+      toast.success(
         editingMovie ? "Cập nhật phim thành công!" : "Thêm phim thành công!"
       );
     } catch (err) {
       console.error("SAVE ERROR:", err);
-      alert(err.message || "Lỗi lưu phim");
+      toast.error(err.message || "Lỗi lưu phim");
     } finally {
       setUploading(false);
     }

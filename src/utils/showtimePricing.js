@@ -29,8 +29,9 @@ export const normalizePriceMap = (prices, fallbackPrices = DEFAULT_REGULAR_PRICE
   }, {});
 };
 
-export const normalizeShowtimePricing = (showtime = {}) => {
-  const basePrice = Number(showtime.base_price ?? showtime.price ?? DEFAULT_REGULAR_PRICES.Thường);
+export const normalizeShowtimePricing = (showtime) => {
+  const st = showtime || {};
+  const basePrice = Number(st.base_price ?? st.price ?? DEFAULT_REGULAR_PRICES.Thường);
   const derivedFromBase = Number.isFinite(basePrice)
     ? {
         Thường: basePrice,
@@ -39,23 +40,23 @@ export const normalizeShowtimePricing = (showtime = {}) => {
       }
     : DEFAULT_REGULAR_PRICES;
 
-  const legacyPrices = normalizePriceMap(showtime.prices, DEFAULT_REGULAR_PRICES);
-  const hasLegacyPriceFields = Boolean(showtime.prices || showtime.base_price || showtime.price);
-  const regularSource = showtime.regularPrices || showtime.regular_prices || (!showtime.isSpecial && hasLegacyPriceFields ? legacyPrices : null);
+  const legacyPrices = normalizePriceMap(st.prices, DEFAULT_REGULAR_PRICES);
+  const hasLegacyPriceFields = Boolean(st.prices || st.base_price || st.price);
+  const regularSource = st.regularPrices || st.regular_prices || (!st.isSpecial && hasLegacyPriceFields ? legacyPrices : null);
   const regularPrices = normalizePriceMap(
     regularSource,
     normalizePriceMap(derivedFromBase, DEFAULT_REGULAR_PRICES)
   );
 
-  const specialSource = showtime.specialPrices || showtime.special_prices;
+  const specialSource = st.specialPrices || st.special_prices;
   const specialPrices = specialSource
     ? normalizePriceMap(specialSource, regularPrices)
-    : showtime.isSpecial || showtime.special || showtime.is_special
+    : st.isSpecial || st.special || st.is_special
       ? normalizePriceMap(legacyPrices, regularPrices)
       : null;
 
   const isSpecial = Boolean(
-    showtime.isSpecial ?? showtime.special ?? showtime.is_special ?? false
+    st.isSpecial ?? st.special ?? st.is_special ?? false
   );
 
   const effectivePrices = isSpecial && specialPrices ? specialPrices : regularPrices;
@@ -74,6 +75,7 @@ export const normalizeShowtimePricing = (showtime = {}) => {
 export const getSeatPriceTier = (seatType) => SEAT_TYPE_TO_TIER[seatType] || "Thường";
 
 export const getShowtimeSeatPrice = (showtime, seatType) => {
+  if (!showtime) return 0;
   const { prices } = normalizeShowtimePricing(showtime);
   const tier = getSeatPriceTier(seatType);
   return prices[tier] ?? 0;

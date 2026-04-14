@@ -97,20 +97,62 @@ export const ShowtimesTab = ({ showtimes }) => {
                   {currentShowtimes[cinemaName].map(st => {
                     const isImax = String(st.type).includes('IMAX');
                     const is3D = String(st.type).includes('3D');
+                    
+                    let isExpired = false;
+                    if (st.date && st.time && st.endTime) {
+                      const now = new Date();
+                      const startParts = st.time.split(':');
+                      const endParts = st.endTime.split(':');
+                      
+                      const startDateObj = new Date(st.date);
+                      startDateObj.setHours(parseInt(startParts[0], 10), parseInt(startParts[1], 10), 0, 0);
+                      
+                      const endDateObj = new Date(st.date);
+                      endDateObj.setHours(parseInt(endParts[0], 10), parseInt(endParts[1], 10), 0, 0);
+                      
+                      // Handle overnight showtimes correctly
+                      if (endDateObj < startDateObj) {
+                        endDateObj.setDate(endDateObj.getDate() + 1);
+                      }
+                      
+                      if (endDateObj < now) {
+                        isExpired = true;
+                      }
+                    }
+
                     return (
                       <div
                         key={st.id}
-                        onClick={() => navigate(`/seats/${st.id}`)}
-                        className="border border-zinc-700/80 bg-zinc-900/50 rounded-2xl p-3 min-w-[120px] transition-all hover:bg-zinc-800 hover:border-red-600/50 hover:scale-[1.02] cursor-pointer text-left group/st"
+                        onClick={() => !isExpired && navigate(`/seats/${st.id}`)}
+                        className={`border rounded-2xl p-3 min-w-[120px] transition-all text-left group/st relative overflow-hidden ${
+                          isExpired 
+                            ? 'border-zinc-800 bg-zinc-900/30 opacity-50 cursor-not-allowed' 
+                            : 'border-zinc-700/80 bg-zinc-900/50 hover:bg-zinc-800 hover:border-red-600/50 hover:scale-[1.02] cursor-pointer'
+                        }`}
                       >
+                        {isExpired && (
+                          <div className="absolute top-0 right-0 bg-zinc-800 text-zinc-400 text-[9px] font-bold px-1.5 py-0.5 rounded-bl-lg z-10">
+                            Đã chiếu
+                          </div>
+                        )}
                         <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-white font-bold text-[17px] group-hover/st:text-red-500 transition-colors">{st.time}</span>
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${is3D ? 'bg-blue-600' : isImax ? 'bg-orange-500' : 'bg-zinc-800 border border-zinc-700'} text-white`}>{st.type}</span>
+                          <span className={`font-bold text-[17px] transition-colors ${
+                            isExpired ? 'text-zinc-500' : 'text-white group-hover/st:text-red-500'
+                          }`}>{st.time}</span>
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            isExpired ? 'bg-zinc-800 text-zinc-500 border border-zinc-700' : is3D ? 'bg-blue-600 text-white' : isImax ? 'bg-orange-500 text-white' : 'bg-zinc-800 border border-zinc-700 text-white'
+                          }`}>{st.type}</span>
                         </div>
-                        <div className="text-zinc-300 font-semibold text-xs mb-1.5">{st.prices?.Thường?.toLocaleString() || "90.000"}đ</div>
-                        <div className="text-zinc-500 text-[11px] flex items-center gap-1.5 font-medium">
+                        <div className={`font-semibold text-xs mb-1.5 ${isExpired ? 'text-zinc-600' : 'text-zinc-300'}`}>
+                          {st.prices?.Thường?.toLocaleString() || "90.000"}đ
+                        </div>
+                        <div className={`text-[11px] flex items-center gap-1.5 font-medium ${isExpired ? 'text-zinc-600' : 'text-zinc-500'}`}>
                           <User className="w-3.5 h-3.5" />
-                          {st.remainingSeats > 0 ? <span className="text-amber-500">Còn {st.remainingSeats}</span> : <span className="text-zinc-500">{st.totalSeats || 45} ghế</span>}
+                          {isExpired ? (
+                            <span>{st.totalSeats || 45} ghế</span>
+                          ) : (
+                            st.remainingSeats > 0 ? <span className="text-amber-500">Còn {st.remainingSeats}</span> : <span>{st.totalSeats || 45} ghế</span>
+                          )}
                         </div>
                       </div>
                     );

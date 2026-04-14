@@ -7,6 +7,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { useRef, useState } from "react";
+import toast from "react-hot-toast";
 
 export default function MovieModal({
   show,
@@ -81,11 +82,11 @@ export default function MovieModal({
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert("File ảnh quá lớn! Tối đa 5MB");
+        toast.error("File ảnh quá lớn! Tối đa 5MB");
         return;
       }
       if (!file.type.startsWith("image/")) {
-        alert("Chỉ chấp nhận file ảnh!");
+        toast.error("Chỉ chấp nhận file ảnh!");
         return;
       }
       setForm({
@@ -100,11 +101,11 @@ export default function MovieModal({
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert("File ảnh quá lớn! Tối đa 5MB");
+        toast.error("File ảnh quá lớn! Tối đa 5MB");
         return;
       }
       if (!file.type.startsWith("image/")) {
-        alert("Chỉ chấp nhận file ảnh!");
+        toast.error("Chỉ chấp nhận file ảnh!");
         return;
       }
       setForm({
@@ -448,19 +449,19 @@ export default function MovieModal({
             onClick={() => {
               // Kiểm tra validation trước khi submit
               if (!form.title) {
-                alert("Vui lòng nhập tên phim");
+                toast.error("Vui lòng nhập tên phim");
                 return;
               }
               if (!form.releaseDate) {
-                alert("Vui lòng chọn ngày khởi chiếu");
+                toast.error("Vui lòng chọn ngày khởi chiếu");
                 return;
               }
               if (!form.duration || form.duration <= 0) {
-                alert("Vui lòng nhập thời lượng hợp lệ");
+                toast.error("Vui lòng nhập thời lượng hợp lệ");
                 return;
               }
               if (!form.genre || form.genre.length === 0) {
-                alert("Vui lòng thêm ít nhất 1 thể loại");
+                toast.error("Vui lòng thêm ít nhất 1 thể loại");
                 return;
               }
               onSave(form);

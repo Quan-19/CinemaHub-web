@@ -1,6 +1,6 @@
 // SeatMap.jsx (phiên bản căn chỉnh ghế Couple)
 import { X, Wrench } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 const ROWS_LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -64,6 +64,45 @@ function buildSeatGrid({ rows, seatsPerRow, vipRows, coupleRow }) {
 export default function SeatMap({ room, onClose }) {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceSeats, setMaintenanceSeats] = useState(new Set());
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (room && room.maintenance_seats) {
+      try {
+        const parsed = typeof room.maintenance_seats === 'string' ? JSON.parse(room.maintenance_seats) : room.maintenance_seats;
+        setMaintenanceSeats(new Set(parsed || []));
+      } catch (e) {
+        setMaintenanceSeats(new Set());
+      }
+    }
+  }, [room]);
+
+  const handleSaveMaintenance = async () => {
+    setLoading(true);
+    try {
+      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+      const roomId = room.id || room.room_id;
+      const maintenanceArray = Array.from(maintenanceSeats);
+      
+      const response = await fetch(`http://localhost:5000/api/rooms/${roomId}/maintenance`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ maintenance_seats: maintenanceArray }),
+      });
+      
+      if (!response.ok) throw new Error("Cập nhật thất bại");
+      
+      setMaintenanceMode(false);
+    } catch (error) {
+      console.error("Save maintenance error:", error);
+      alert("Lỗi khi lưu ghế bảo trì!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const seatRows = useMemo(() => {
     if (!room) return [];
@@ -127,6 +166,16 @@ export default function SeatMap({ room, onClose }) {
             )}
           </div>
           <div className="flex items-center gap-3">
+            {maintenanceMode && (
+              <button
+                type="button"
+                onClick={handleSaveMaintenance}
+                disabled={loading}
+                className="inline-flex h-9 items-center px-4 rounded-2xl bg-green-600 text-white text-xs font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                {loading ? "Đang lưu..." : "Lưu bảo trì"}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setMaintenanceMode((v) => !v)}

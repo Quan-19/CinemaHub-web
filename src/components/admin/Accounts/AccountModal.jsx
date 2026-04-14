@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export default function AccountModal({ data, onClose, onSave }) {
   const getInitialFormData = (payload) => ({
@@ -17,14 +18,14 @@ export default function AccountModal({ data, onClose, onSave }) {
     e.preventDefault();
     
     if (!formData.name || !formData.email) {
-      alert("Vui lòng nhập tên và email");
+      toast.error("Vui lòng nhập tên và email");
       return;
     }
     
     // ✅ THÊM email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      alert("Email không hợp lệ");
+      toast.error("Email không hợp lệ");
       return;
     }
     
@@ -33,7 +34,7 @@ export default function AccountModal({ data, onClose, onSave }) {
     if (normalizedPhone) {
       const phoneRegex = /^[0-9]{8,11}$/;
       if (!phoneRegex.test(normalizedPhone)) {
-        alert("Số điện thoại không hợp lệ (8-11 số)");
+        toast.error("Số điện thoại không hợp lệ (8-11 số)");
         return;
       }
     }

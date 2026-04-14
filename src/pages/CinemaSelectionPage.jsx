@@ -220,6 +220,39 @@ export const CinemaSelectionPage = () => {
 
       const pricing = normalizeShowtimePricing(showtime);
 
+      // Check if showtime is expired
+      let isExpired = false;
+      if (showtime.date && showtime.time && showtime.endTime) {
+        const now = new Date();
+        const startParts = showtime.time.split(":");
+        const endParts = showtime.endTime.split(":");
+
+        const startDateObj = new Date(showtime.date);
+        startDateObj.setHours(
+          parseInt(startParts[0], 10),
+          parseInt(startParts[1], 10),
+          0,
+          0
+        );
+
+        const endDateObj = new Date(showtime.date);
+        endDateObj.setHours(
+          parseInt(endParts[0], 10),
+          parseInt(endParts[1], 10),
+          0,
+          0
+        );
+
+        // Handle overnight showtimes
+        if (endDateObj < startDateObj) {
+          endDateObj.setDate(endDateObj.getDate() + 1);
+        }
+
+        if (endDateObj < now) {
+          isExpired = true;
+        }
+      }
+
       groupedShowtimes.get(cinemaKey).push({
         ...showtime,
         id: String(showtime.id),
@@ -232,6 +265,7 @@ export const CinemaSelectionPage = () => {
         specialPrices: pricing.specialPrices,
         prices: pricing.prices,
         isSpecial: pricing.isSpecial,
+        isExpired,
         availableSeats: null,
       });
     });
@@ -724,6 +758,8 @@ export const CinemaSelectionPage = () => {
                           const hasSeatInfo =
                             typeof st.availableSeats === "number";
                           const isFull = hasSeatInfo && st.availableSeats === 0;
+                          const isExpired = st.isExpired;
+                          const isDisabled = isFull || isExpired;
                           const isLow =
                             hasSeatInfo &&
                             st.availableSeats > 0 &&
@@ -731,12 +767,12 @@ export const CinemaSelectionPage = () => {
                           return (
                             <button
                               key={st.id}
-                              disabled={isFull}
+                              disabled={isDisabled}
                               onClick={() =>
                                 handleSelectShowtime(cinema.id, st.id)
                               }
                               className={`group flex flex-col items-start p-3 rounded-xl border min-w-[110px] transition-all ${
-                                isFull
+                                isDisabled
                                   ? "border-zinc-700 opacity-40 cursor-not-allowed"
                                   : "border-zinc-700 hover:border-red-500 hover:bg-red-500/5 cursor-pointer"
                               }`}
@@ -765,14 +801,16 @@ export const CinemaSelectionPage = () => {
                                 <Users className="w-3 h-3 text-zinc-400" />
                                 <span
                                   className={`text-xs ${
-                                    isFull
-                                      ? "text-zinc-400"
+                                    isDisabled
+                                      ? "text-zinc-500"
                                       : isLow
                                       ? "text-orange-400"
                                       : "text-zinc-400"
                                   }`}
                                 >
-                                  {isFull
+                                  {isExpired
+                                    ? "Đã chiếu"
+                                    : isFull
                                     ? "Hết vé"
                                     : isLow
                                     ? `Còn ${st.availableSeats} ghế`

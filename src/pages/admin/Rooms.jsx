@@ -12,6 +12,7 @@ import RoomCard from "../../components/admin/Rooms/RoomCard.jsx";
 import RoomModal from "../../components/admin/Rooms/RoomModal.jsx";
 import SeatMap from "../../components/admin/Rooms/SeatMap.jsx";
 import DeleteConfirmModal from "../../components/admin/Rooms/DeleteConfirmModal.jsx";
+import { toast } from "react-hot-toast";
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState([]);
@@ -129,12 +130,12 @@ export default function RoomsPage() {
         throw new Error(errorData.message || "Add failed");
       }
 
-      alert("Thêm phòng thành công!");
+      toast.success("Thêm phòng thành công!");
       setShowModal(false);
       await reloadData();
     } catch (err) {
       console.error(err);
-      alert(err.message || "Lỗi khi thêm phòng");
+      toast.error(err.message || "Lỗi khi thêm phòng");
     }
   };
 
@@ -173,12 +174,12 @@ export default function RoomsPage() {
         throw new Error(errorData.message || "Update failed");
       }
 
-      alert("Cập nhật thành công");
+      toast.success("Cập nhật thành công");
       setShowModal(false);
       await reloadData();
     } catch (err) {
       console.error(err);
-      alert(err.message || "Lỗi update");
+      toast.error(err.message || "Lỗi update");
     }
   };
 
@@ -190,7 +191,7 @@ export default function RoomsPage() {
       const token = getToken();
 
       if (!token) {
-        alert("Vui lòng đăng nhập lại!");
+        toast.error("Vui lòng đăng nhập lại!");
         setDeleteLoading(false);
         return;
       }
@@ -210,12 +211,12 @@ export default function RoomsPage() {
         throw new Error(errorData.message || "Delete failed");
       }
 
-      alert("Xóa phòng thành công!");
+      toast.success("Xóa phòng thành công!");
       setDeleteRoom(null);
       await reloadData();
     } catch (err) {
       console.error(err);
-      alert(err.message || "Lỗi xóa phòng. Vui lòng thử lại!");
+      toast.error(err.message || "Lỗi xóa phòng. Vui lòng thử lại!");
     } finally {
       setDeleteLoading(false);
     }
@@ -261,7 +262,7 @@ export default function RoomsPage() {
       await reloadData();
     } catch (err) {
       console.error(err);
-      alert(err.message || "Lỗi cập nhật trạng thái!");
+      toast.error(err.message || "Lỗi cập nhật trạng thái!");
     }
   };
 

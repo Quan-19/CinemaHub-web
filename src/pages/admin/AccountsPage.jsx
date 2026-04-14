@@ -7,6 +7,7 @@ import AccountsFilter from "../../components/admin/Accounts/AccountsFilter";
 import AccountsTable from "../../components/admin/Accounts/AccountsTable";
 import AccountModal from "../../components/admin/Accounts/AccountModal";
 import DeleteConfirmModal from "../../components/admin/Accounts/DeleteConfirmModal";
+import { toast } from "react-hot-toast";
 
 const API_BASE_URL = "http://localhost:5000";
 
@@ -186,9 +187,10 @@ export default function AccountsPage() {
 
       setShowModal(false);
       setEditAccount(null);
+      toast.success(isEdit ? "Cập nhật tài khoản thành công!" : "Tạo tài khoản thành công!");
     } catch (err) {
       console.error("UPDATE ERROR:", err);
-      alert("Không thể lưu tài khoản. Vui lòng thử lại.");
+      toast.error("Không thể lưu tài khoản. Vui lòng thử lại.");
     }
   };
 
@@ -225,9 +227,10 @@ export default function AccountsPage() {
       await fetchAccounts();
       setShowDeleteModal(false);
       setDeleteAccount(null);
+      toast.success("Xoá tài khoản thành công!");
     } catch (err) {
       console.error("DELETE ERROR:", err);
-      alert("Không thể xoá tài khoản. Vui lòng thử lại.");
+      toast.error("Không thể xoá tài khoản. Vui lòng thử lại.");
     } finally {
       setDeleteLoading(false);
     }

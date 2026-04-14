@@ -18,12 +18,13 @@ import {
   Sparkles,
   QrCode,
   X,
+  AlertCircle
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateShowtimeTotal } from "../utils/showtimePricing";
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams, useBlocker } from "react-router-dom";
 
 // Constants
 const PAYMENT_METHODS = [
@@ -119,6 +120,28 @@ export default function BookingConfirmationPage() {
   const showtime = state?.showtime;
   const seats = state?.seats || [];
   const movie = state?.movie;
+
+  // ✅ CẢNH BÁO KHI THOÁT TRANG (Dùng useBlocker)
+  const blocker = useBlocker(({ nextLocation }) => {
+    // Chỉ chặn nếu:
+    // 1. Đang ở bước confirm (chưa xong)
+    // 2. Không phải đang thực hiện thanh toán (để tránh block redirect URL nội bộ nếu có)
+    // 3. Có dữ liệu ghế (đang giữ ghế)
+    // 4. KHÔNG phải là callback thanh toán (đã xong)
+    return step === "confirm" && !paying && seats.length > 0 && !isPaymentCallback;
+  });
+
+  // Sự kiện BeforeUnload vẫn giữ cho đóng tab/refresh
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (step === "confirm" && seats.length > 0 && !isPaymentCallback) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [step, seats.length, isPaymentCallback]);
 
   // ========== DEBUG LOG ==========
   useEffect(() => {
@@ -1159,6 +1182,59 @@ export default function BookingConfirmationPage() {
           </div>
         </div>
       </div>
+
+      {/* ✅ CUSTOM NAVIGATION GUARD MODAL */}
+      <AnimatePresence>
+        {blocker.state === "blocked" && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              onClick={() => blocker.reset()}
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-sm overflow-hidden"
+              style={{
+                background: "#12121f",
+                border: "1px solid rgba(229, 9, 20, 0.3)",
+                borderRadius: "28px",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+              }}
+            >
+              <div className="p-8 text-center">
+                <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-5 border border-red-500/20">
+                  <AlertCircle size={32} className="text-red-500" />
+                </div>
+                
+                <h3 className="text-white text-xl font-bold mb-3 tracking-tight">Giao dịch chưa hoàn tất!</h3>
+                <p className="text-zinc-400 text-sm leading-relaxed mb-8">
+                  Nếu thoát ra, các ghế bạn đang giữ có thể bị hủy. Bạn có muốn tiếp tục thanh toán không?
+                </p>
+
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => blocker.reset()}
+                    className="w-full py-3.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-all active:scale-[0.98]"
+                  >
+                    Tiếp tục thanh toán
+                  </button>
+                  <button
+                    onClick={() => blocker.proceed()}
+                    className="w-full py-3.5 rounded-2xl bg-zinc-800/50 hover:bg-zinc-800 text-zinc-400 font-semibold text-sm transition-all"
+                  >
+                    Thoát
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
