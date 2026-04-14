@@ -91,6 +91,7 @@ function persistUserMeta(meta, remember) {
 function buildUserWithMeta(firebaseUser, meta = {}) {
   return {
     ...firebaseUser,
+    user_id: meta.user_id,
     role: meta.role,
     cinema_id: meta.cinema_id,
     cinema_name: meta.cinema_name,
@@ -155,6 +156,7 @@ export function AuthProvider({ children }) {
             const data = await res.json();
             const remember = getRememberPreference();
             const meta = {
+              user_id: data.user_id,
               role: data.role,
               cinema_id: data.cinema_id,
               cinema_name: data.cinema_name,
@@ -332,6 +334,7 @@ export function AuthProvider({ children }) {
       });
       persistUserMeta(
         {
+          user_id: data.user_id,
           role,
           cinema_id: data.cinema_id,
           cinema_name: data.cinema_name,
@@ -342,6 +345,7 @@ export function AuthProvider({ children }) {
       // 🔥 Tạo user object có role và set vào context
       const userData = {
         uid: credential.user.uid,
+        user_id: data.user_id,
         email: credential.user.email,
         displayName: credential.user.displayName,
         photoURL: credential.user.photoURL,
@@ -477,6 +481,7 @@ export function AuthProvider({ children }) {
     });
     persistUserMeta(
       {
+        user_id: data.user_id,
         role,
         cinema_id: data.cinema_id,
         cinema_name: data.cinema_name,
@@ -486,6 +491,7 @@ export function AuthProvider({ children }) {
 
     const userData = {
       uid: credential.user.uid,
+      user_id: data.user_id,
       email: credential.user.email,
       displayName: credential.user.displayName,
       photoURL: credential.user.photoURL,
