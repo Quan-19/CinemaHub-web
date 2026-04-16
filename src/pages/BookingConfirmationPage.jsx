@@ -18,13 +18,18 @@ import {
   Sparkles,
   QrCode,
   X,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateShowtimeTotal } from "../utils/showtimePricing";
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate, useSearchParams, useBlocker } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useSearchParams,
+  useBlocker,
+} from "react-router-dom";
 
 // Constants
 const PAYMENT_METHODS = [
@@ -128,7 +133,9 @@ export default function BookingConfirmationPage() {
     // 2. Không phải đang thực hiện thanh toán (để tránh block redirect URL nội bộ nếu có)
     // 3. Có dữ liệu ghế (đang giữ ghế)
     // 4. KHÔNG phải là callback thanh toán (đã xong)
-    return step === "confirm" && !paying && seats.length > 0 && !isPaymentCallback;
+    return (
+      step === "confirm" && !paying && seats.length > 0 && !isPaymentCallback
+    );
   });
 
   // Sự kiện BeforeUnload vẫn giữ cho đóng tab/refresh
@@ -254,13 +261,24 @@ export default function BookingConfirmationPage() {
   }, [isPaymentCallback, paymentBookingId]);
 
   // ========== EFFECT 2: Load foods từ API ==========
+  // Trong useEffect load foods (dòng 168-185)
   useEffect(() => {
     axios
       .get("http://localhost:5000/api/foods")
       .then((res) => {
-        setFoods(res.data);
+        // Format giá tiền cho mỗi food
+        const formattedFoods = res.data.map((food) => ({
+          ...food,
+          // Làm tròn giá trước khi format
+          price: Math.round(parseFloat(food.price)), // Ghi đè price thành số nguyên
+          price_formatted:
+            Math.round(parseFloat(food.price)).toLocaleString("vi-VN") + "₫",
+        }));
+
+        setFoods(formattedFoods);
+
         const init = {};
-        res.data.forEach((f) => {
+        formattedFoods.forEach((f) => {
           init[f.food_id] = 0;
         });
         setComboCounts(init);
@@ -278,7 +296,9 @@ export default function BookingConfirmationPage() {
       navigate("/movies");
     }
   }, [isPaymentCallback, showtime, seats, navigate]);
-
+  const formatCurrency = (amount) => {
+    return amount.toLocaleString("vi-VN") + "₫";
+  };
   // ========== TÍNH TOÁN GIÁ ==========
   const ticketTotal = calculateShowtimeTotal(showtime, seats);
   const comboTotal = foods.reduce((sum, f) => {
@@ -654,14 +674,14 @@ export default function BookingConfirmationPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-zinc-400">
                     <span>{displaySeats.length} vé xem phim</span>
-                    <span>{displayTicketTotal.toLocaleString()}₫</span>
+                    <span>{formatCurrency(displayTicketTotal)}</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-white/10">
                     <span className="text-white font-bold">
                       Tổng thanh toán
                     </span>
                     <span className="text-orange-400 font-bold text-base">
-                      {displayTicketTotal.toLocaleString()}₫
+                      {formatCurrency(displayTicketTotal)}
                     </span>
                   </div>
                 </div>
@@ -990,7 +1010,7 @@ export default function BookingConfirmationPage() {
                       <div>
                         <p className="text-zinc-200 text-sm">{food.name}</p>
                         <p className="text-red-400 text-xs font-semibold mt-0.5">
-                          {food.price.toLocaleString()}₫
+                          {food.price_formatted}{" "}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1049,7 +1069,7 @@ export default function BookingConfirmationPage() {
               {promoApplied && (
                 <p className="text-green-400 text-xs mt-2 flex items-center gap-1">
                   <Check className="w-3 h-3" /> Áp dụng thành công! Giảm{" "}
-                  {discount.toLocaleString()}₫
+                  {formatCurrency(discount)}{" "}
                 </p>
               )}
               {promoError && (
@@ -1120,18 +1140,18 @@ export default function BookingConfirmationPage() {
               <div className="space-y-2 text-sm mb-4">
                 <div className="flex justify-between text-zinc-400">
                   <span>{seats.length} vé xem phim</span>
-                  <span>{ticketTotal.toLocaleString()}₫</span>
+                  <span>{formatCurrency(ticketTotal)}</span>
                 </div>
                 {comboTotal > 0 && (
                   <div className="flex justify-between text-zinc-400">
                     <span>Combo bắp nước</span>
-                    <span>{comboTotal.toLocaleString()}₫</span>
+                    <span>{formatCurrency(comboTotal)}</span>
                   </div>
                 )}
                 {promoApplied && (
                   <div className="flex justify-between text-green-400">
                     <span>Giảm giá</span>
-                    <span>-{discount.toLocaleString()}₫</span>
+                    <span>-{formatCurrency(discount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-zinc-400">
@@ -1143,7 +1163,7 @@ export default function BookingConfirmationPage() {
               <div className="flex justify-between items-center py-3 border-t border-zinc-700 mb-4">
                 <span className="text-white font-bold">Tổng thanh toán</span>
                 <span className="text-lg text-red-500 font-bold">
-                  {grandTotal.toLocaleString()}₫
+                  {formatCurrency(grandTotal)}
                 </span>
               </div>
 
@@ -1169,7 +1189,7 @@ export default function BookingConfirmationPage() {
                 ) : (
                   <>
                     <CreditCard className="w-4 h-4" />
-                    Thanh toán {grandTotal.toLocaleString()}₫
+                    Thanh toán {formatCurrency(grandTotal)}
                   </>
                 )}
               </motion.button>
@@ -1203,17 +1223,20 @@ export default function BookingConfirmationPage() {
                 background: "#12121f",
                 border: "1px solid rgba(229, 9, 20, 0.3)",
                 borderRadius: "28px",
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
               }}
             >
               <div className="p-8 text-center">
                 <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-5 border border-red-500/20">
                   <AlertCircle size={32} className="text-red-500" />
                 </div>
-                
-                <h3 className="text-white text-xl font-bold mb-3 tracking-tight">Giao dịch chưa hoàn tất!</h3>
+
+                <h3 className="text-white text-xl font-bold mb-3 tracking-tight">
+                  Giao dịch chưa hoàn tất!
+                </h3>
                 <p className="text-zinc-400 text-sm leading-relaxed mb-8">
-                  Nếu thoát ra, các ghế bạn đang giữ có thể bị hủy. Bạn có muốn tiếp tục thanh toán không?
+                  Nếu thoát ra, các ghế bạn đang giữ có thể bị hủy. Bạn có muốn
+                  tiếp tục thanh toán không?
                 </p>
 
                 <div className="flex flex-col gap-3">
