@@ -363,6 +363,15 @@ export default function BookingConfirmationPage() {
         return basePrice;
       };
 
+      // Chuẩn bị dữ liệu foods
+      const selectedFoods = foods
+        .filter((food) => (comboCounts[food.food_id] || 0) > 0)
+        .map((food) => ({
+          food_id: food.food_id,
+          quantity: comboCounts[food.food_id],
+          price: food.price,
+        }));
+
       // 1. CREATE BOOKING
       const bookingRes = await axios.post(
         "http://localhost:5000/api/bookings",
@@ -376,6 +385,7 @@ export default function BookingConfirmationPage() {
           })),
           payment_method: method,
           promo_code: promoApplied ? promoCode : null,
+          foods: selectedFoods, // ✅ Thêm foods vào đây
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -385,6 +395,21 @@ export default function BookingConfirmationPage() {
 
       if (!bookingId) {
         throw new Error("Không lấy được booking_id từ server");
+      }
+
+      // 2. Nếu có foods, lưu vào booking_food
+      if (selectedFoods.length > 0) {
+        await axios.post(
+          "http://localhost:5000/api/booking-foods",
+          {
+            booking_id: bookingId,
+            foods: selectedFoods.map((f) => ({
+              food_id: f.food_id,
+              quantity: f.quantity,
+            })),
+          },
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
       }
 
       // 2. XỬ LÝ THEO PHƯƠNG THỨC THANH TOÁN

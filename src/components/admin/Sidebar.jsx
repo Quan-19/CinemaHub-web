@@ -16,6 +16,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Package,
 } from "lucide-react";
 
 // expanded, setExpanded sẽ nhận từ props
@@ -67,6 +68,7 @@ export default function Sidebar(props) {
       title: "KINH DOANH",
       items: [
         { name: "Đơn hàng", icon: FileText, path: "/admin/orders" },
+        { name: "Combo & Đồ ăn", icon: Package, path: "/admin/foods" },
         { name: "Giá vé", icon: DollarSign, path: "/admin/prices" },
         { name: "Khuyến mãi", icon: Tag, path: "/admin/promotions" },
         { name: "Báo cáo doanh thu", icon: BarChart3, path: "/admin/revenue" },
