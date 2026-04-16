@@ -411,7 +411,7 @@ function SeatMapModal({
               </div>
             </div>
 
-          <div className="mt-5 flex items-center justify-between border-t border-zinc-700 pt-3">
+          <div className="mt-5 flex items-center justify-between border-t border-zinc-700 pt-3 pb-2">
             <div className="flex flex-wrap items-center gap-5">
               <SeatLegendItem
                 colorClassName="border-zinc-700 bg-zinc-800/40"
@@ -821,15 +821,15 @@ function StaffRoomsPage() {
 
       // ✅ KHÔNG MAP LẠI SAI FIELD NỮA
       const mapped = roomsData.map((r) => ({
-        id: r.id,
-        cinemaId: r.cinemaId,
-        cinemaName: r.cinemaName,
+        id: r.id || r.room_id,
+        cinemaId: r.cinemaId || r.cinema_id,
+        cinemaName: r.cinemaName || r.cinema_name,
         name: r.name,
         type: r.type,
-        rows: r.rows,
-        seatsPerRow: r.cols, // 🔥 đổi từ cols
-        vipRows: r.vipRows || [],
-        coupleRow: r.coupleRow,
+        rows: r.rows || r.seat_rows,
+        seatsPerRow: r.cols || r.seat_cols,
+        vipRows: r.vipRows || (typeof r.vip_rows === 'string' ? JSON.parse(r.vip_rows) : r.vip_rows) || [],
+        coupleRow: r.coupleRow || r.couple_row,
         status: r.status,
       }));
 

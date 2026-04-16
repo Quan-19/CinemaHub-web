@@ -174,8 +174,8 @@ function EditArticleModal({
       ...article,
       ...form,
       slug: article?.slug || slug,
-      publishDate: form.status === "published" && !article?.publishDate 
-        ? new Date().toISOString().split("T")[0] 
+      publishDate: form.status === "published" && !article?.publishDate
+        ? new Date().toISOString().split("T")[0]
         : article?.publishDate || "",
       views: article?.views || 0,
       iconType: article?.iconType || "clapper",
@@ -442,7 +442,7 @@ export default function StaffArticlesPage() {
               {filteredArticles.map((article) => {
                 const catStyle = CATEGORY_STYLES[article.category] || CATEGORY_STYLES.news;
                 const isPub = article.status === "published";
-                
+
                 return (
                   <tr key={article.id} className="transition-colors hover:bg-zinc-800/20">
                     <td className="px-5 py-4">
@@ -478,7 +478,7 @@ export default function StaffArticlesPage() {
                       {formatDateDisplay(article.publishDate)}
                     </td>
                     <td className="px-5 py-4 text-zinc-300 font-medium">
-                      <div className="flex items-center gap-1.5 h-full"> 
+                      <div className="flex items-center gap-1.5 h-full">
                         <Eye className="h-3.5 w-3.5 text-zinc-400" />
                         {article.views > 0 ? article.views.toLocaleString("vi-VN") : "—"}
                       </div>
@@ -527,7 +527,7 @@ export default function StaffArticlesPage() {
       {adding && (
         <EditArticleModal onCancel={closeAdd} onSave={onAdd} />
       )}
-      
+
       {editing && (
         <EditArticleModal
           article={editing}
