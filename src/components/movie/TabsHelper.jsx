@@ -193,7 +193,7 @@ export const ReviewsTab = ({ movieId, reviews, onReviewSubmit }) => {
 
     // 2. Pin current user review to top
     if (user) {
-      const mineIndex = list.findIndex(r => Number(r.user_id) === Number(user.user_id));
+      const mineIndex = list.findIndex(r => String(r.user_id) === String(user.user_id));
       if (mineIndex > -1) {
         const [mine] = list.splice(mineIndex, 1);
         list = [mine, ...list];
@@ -203,7 +203,7 @@ export const ReviewsTab = ({ movieId, reviews, onReviewSubmit }) => {
   }, [reviews, user, filter]);
 
   const existingReview = useMemo(() => {
-    return user ? reviews.find(r => Number(r.user_id) === Number(user.user_id)) : null;
+    return user ? reviews.find(r => String(r.user_id) === String(user.user_id)) : null;
   }, [reviews, user]);
 
   const averageRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + Number(r.rating), 0) / reviews.length).toFixed(1) : 0;
@@ -429,7 +429,7 @@ export const ReviewsTab = ({ movieId, reviews, onReviewSubmit }) => {
       {/* REVIEWS LIST */}
       <div className="space-y-4">
         {sortedReviews.map((r) => {
-          const isCurrentUser = user && Number(user.user_id) === Number(r.user_id);
+          const isCurrentUser = user && String(user.user_id) === String(r.user_id);
           const finalName = r.user_name || (isCurrentUser ? user.displayName : "Thành viên");
           const finalAvatar = r.avatar || (isCurrentUser ? user.photoURL : null);
 

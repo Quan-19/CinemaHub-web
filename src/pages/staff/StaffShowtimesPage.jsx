@@ -950,12 +950,24 @@ function StaffShowtimesPage() {
   const loadShowtimes = useCallback(async () => {
     try {
       setLoading(true);
+      const auth = getAuth();
+      const currentToken = await auth.currentUser?.getIdToken();
+      if (!currentToken) {
+        throw new Error(
+          "Không lấy được token xác thực. Vui lòng đăng nhập lại."
+        );
+      }
+
       const roomsApiUrl = user?.cinema_id
         ? `http://localhost:5000/api/rooms/cinema/${user.cinema_id}`
         : "http://localhost:5000/api/rooms";
 
       const [showtimesRes, moviesRes, roomsRes] = await Promise.all([
-        fetch("http://localhost:5000/api/showtimes"),
+        fetch("http://localhost:5000/api/showtimes/manage", {
+          headers: {
+            Authorization: `Bearer ${currentToken}`,
+          },
+        }),
         fetch("http://localhost:5000/api/movies?scope=manage"),
         fetch(roomsApiUrl),
       ]);

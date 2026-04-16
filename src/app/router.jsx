@@ -39,6 +39,7 @@ import StaffPromotionsPage from "../pages/staff/StaffPromotionsPage.jsx";
 import StaffProfilePage from "../pages/staff/StaffProfilePage.jsx";
 import StaffRoomsPage from "../pages/staff/StaffRoomsPage.jsx";
 import StaffShowtimesPage from "../pages/staff/StaffShowtimesPage.jsx";
+import StaffRevenuePage from "../pages/staff/StaffRevenuePage.jsx";
 import StaffBannersPage from "../pages/staff/StaffBannersPage.jsx";
 import StaffArticlesPage from "../pages/staff/StaffArticlesPage.jsx";
 
@@ -136,6 +137,7 @@ export const router = createBrowserRouter([
       { path: "profile", element: <StaffProfilePage /> },
       { path: "movies", element: <StaffMoviesPage /> },
       { path: "showtimes", element: <StaffShowtimesPage /> },
+      { path: "revenue", element: <StaffRevenuePage /> },
       { path: "rooms", element: <StaffRoomsPage /> },
       { path: "promotions", element: <StaffPromotionsPage /> },
     ],

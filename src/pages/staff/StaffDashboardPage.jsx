@@ -275,11 +275,13 @@ function StaffDashboardPage() {
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   // 🔥 CALL API
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
+        setError("");
         const auth = getAuth();
         const user = auth.currentUser;
 
@@ -298,10 +300,17 @@ function StaffDashboardPage() {
           },
         });
 
-        const result = await res.json();
+        const result = await res.json().catch(() => null);
+        if (!res.ok) {
+          throw new Error(
+            result?.message || result?.error || `Lỗi từ hệ thống: ${res.status}`
+          );
+        }
+
         setData(result);
       } catch (err) {
         console.error(err);
+        setError(err?.message || "Không tải được dashboard");
       } finally {
         setLoading(false);
       }
@@ -312,7 +321,15 @@ function StaffDashboardPage() {
 
   if (loading) return <div className="text-white p-6">Loading...</div>;
 
-  const todayRevenue = data?.revenue?.slice(-1)[0]?.revenue || 0;
+  if (error) {
+    return (
+      <div className="cinema-surface p-4 sm:p-5">
+        <div className="text-sm font-semibold text-red-400">{error}</div>
+      </div>
+    );
+  }
+
+  const todayRevenue = data?.todayRevenue || 0;
 
   return (
     <div className="space-y-5">
@@ -328,7 +345,7 @@ function StaffDashboardPage() {
           accentClassName="bg-cinema-primary/15 text-cinema-primary"
           value={data?.tickets || 0}
           title="Vé đã bán"
-          sub1="Tổng hệ thống"
+          sub1="Tại rạp của bạn"
           delta="+5%"
         />
 
@@ -340,7 +357,7 @@ function StaffDashboardPage() {
             currency: "VND",
           }).format(todayRevenue)}
           title="Doanh thu"
-          sub1="Tháng hiện tại"
+          sub1="Hôm nay"
         />
 
         <StatCard

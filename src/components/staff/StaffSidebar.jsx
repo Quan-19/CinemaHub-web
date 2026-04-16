@@ -11,6 +11,7 @@ import {
   User,
   X,
   FileText,
+  DollarSign,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 
@@ -190,6 +191,13 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
             to="/staff/showtimes"
             icon={Clock}
             label="Suất chiếu"
+            collapsed={collapsed}
+            onNavigate={handleNavigate}
+          />
+          <SidebarLink
+            to="/staff/revenue"
+            icon={DollarSign}
+            label="Doanh thu"
             collapsed={collapsed}
             onNavigate={handleNavigate}
           />

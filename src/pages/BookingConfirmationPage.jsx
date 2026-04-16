@@ -347,7 +347,7 @@ export default function BookingConfirmationPage() {
       const bookingRes = await axios.post(
         "http://localhost:5000/api/bookings",
         {
-          user_id: user.uid,
+          user_id: user.user_id,
           showtime_id: actualShowtimeId,
           total_price: grandTotal,
           seats: seats.map((s) => ({

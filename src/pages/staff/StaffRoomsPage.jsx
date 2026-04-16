@@ -810,7 +810,11 @@ function StaffRoomsPage() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:5000/api/rooms");
+      const roomsApiUrl = user?.cinema_id
+        ? `http://localhost:5000/api/rooms/cinema/${user.cinema_id}`
+        : "http://localhost:5000/api/rooms";
+
+      const res = await fetch(roomsApiUrl);
       const data = await res.json();
 
       const roomsData = Array.isArray(data) ? data : data.data || [];
