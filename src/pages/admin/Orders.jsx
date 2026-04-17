@@ -1,4 +1,4 @@
-// src/pages/Orders.jsx - Phiên bản sửa lỗi
+// src/pages/Orders.jsx - Phiên bản đã thêm cột Combo/Đồ ăn
 
 import { useState, useEffect } from "react";
 import {
@@ -15,6 +15,8 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  Package,
+  X,
 } from "lucide-react";
 
 const Orders = () => {
@@ -44,24 +46,27 @@ const Orders = () => {
 
     try {
       const response = await fetch(url, { ...options, headers });
-      
+
       if (!response.ok) {
         console.warn(`⚠️ API ${url} returned status ${response.status}`);
         return null;
       }
-      
+
       const text = await response.text();
-      
+
       if (!text || text.trim() === "") {
         console.warn(`⚠️ API ${url} returned empty response`);
         return null;
       }
-      
+
       try {
         const data = JSON.parse(text);
         return data.data || data;
       } catch (parseError) {
-        console.warn(`⚠️ API ${url} returned non-JSON response:`, text.substring(0, 100));
+        console.warn(
+          `⚠️ API ${url} returned non-JSON response:`,
+          text.substring(0, 100),
+        );
         return null;
       }
     } catch (error) {
@@ -72,7 +77,7 @@ const Orders = () => {
 
   const fetchBookingSeats = async (bookingId) => {
     const seatsData = await fetchAPI(
-      `http://localhost:5000/api/booking-seats/booking/${bookingId}`
+      `http://localhost:5000/api/booking-seats/booking/${bookingId}`,
     );
     if (Array.isArray(seatsData)) {
       return seatsData.map((seat) => seat.seat_id);
@@ -80,7 +85,29 @@ const Orders = () => {
     return [];
   };
 
-  const fetchOrderDetails = async (booking, showtimesCache, moviesCache, cinemasCache, roomsCache) => {
+  const fetchBookingFoods = async (bookingId) => {
+    const foodsData = await fetchAPI(
+      `http://localhost:5000/api/booking-foods/booking/${bookingId}`,
+    );
+    if (Array.isArray(foodsData)) {
+      return foodsData.map((food) => ({
+        id: food.id,
+        name: food.name,
+        quantity: food.quantity,
+        price: food.price,
+        total: food.price * food.quantity,
+      }));
+    }
+    return [];
+  };
+
+  const fetchOrderDetails = async (
+    booking,
+    showtimesCache,
+    moviesCache,
+    cinemasCache,
+    roomsCache,
+  ) => {
     console.log(`📦 Processing booking ID: ${booking.booking_id}`, booking);
 
     let totalPrice = booking.total_price ?? booking.total_amount ?? 0;
@@ -93,9 +120,12 @@ const Orders = () => {
     let showDate = null;
     let showTime = null;
     let seatIds = [];
+    let foods = [];
 
     seatIds = await fetchBookingSeats(booking.booking_id);
+    foods = await fetchBookingFoods(booking.booking_id);
     console.log(`💺 Booking ${booking.booking_id} seats:`, seatIds);
+    console.log(`🍿 Booking ${booking.booking_id} foods:`, foods);
 
     if (booking.showtime_id) {
       if (showtimesCache[booking.showtime_id]) {
@@ -103,14 +133,13 @@ const Orders = () => {
       } else {
         console.log(`📽️ Fetching showtime ${booking.showtime_id}...`);
         showtime = await fetchAPI(
-          `http://localhost:5000/api/showtimes/${booking.showtime_id}`
+          `http://localhost:5000/api/showtimes/${booking.showtime_id}`,
         );
         console.log(`📽️ Showtime response:`, showtime);
         if (showtime) showtimesCache[booking.showtime_id] = showtime;
       }
-      
+
       if (showtime) {
-        // Lấy thông tin phim từ movieId
         const movieId = showtime.movieId || showtime.movie_id;
         if (movieId) {
           if (moviesCache[movieId]) {
@@ -118,14 +147,13 @@ const Orders = () => {
           } else {
             console.log(`🎬 Fetching movie ${movieId}...`);
             movie = await fetchAPI(
-              `http://localhost:5000/api/movies/${movieId}`
+              `http://localhost:5000/api/movies/${movieId}`,
             );
             console.log(`🎬 Movie response:`, movie);
             if (movie) moviesCache[movieId] = movie;
           }
         }
-        
-        // Lấy thông tin phòng chiếu và rạp
+
         const roomId = showtime.roomId || showtime.room_id;
         if (roomId) {
           if (roomsCache[roomId]) {
@@ -137,7 +165,7 @@ const Orders = () => {
               } else {
                 console.log(`🏢 Fetching cinema ${cinemaId}...`);
                 const cinema = await fetchAPI(
-                  `http://localhost:5000/api/cinemas/${cinemaId}`
+                  `http://localhost:5000/api/cinemas/${cinemaId}`,
                 );
                 console.log(`🏢 Cinema response:`, cinema);
                 cinemaName = cinema?.name || "Đang cập nhật";
@@ -148,7 +176,7 @@ const Orders = () => {
           } else {
             console.log(`🏠 Fetching room ${roomId}...`);
             const room = await fetchAPI(
-              `http://localhost:5000/api/rooms/${roomId}`
+              `http://localhost:5000/api/rooms/${roomId}`,
             );
             console.log(`🏠 Room response:`, room);
             if (room) {
@@ -160,7 +188,7 @@ const Orders = () => {
                 } else {
                   console.log(`🏢 Fetching cinema ${cinemaId}...`);
                   const cinema = await fetchAPI(
-                    `http://localhost:5000/api/cinemas/${cinemaId}`
+                    `http://localhost:5000/api/cinemas/${cinemaId}`,
                   );
                   console.log(`🏢 Cinema response:`, cinema);
                   cinemaName = cinema?.name || "Đang cập nhật";
@@ -170,13 +198,12 @@ const Orders = () => {
             }
           }
         }
-        
-        // Lấy ngày và giờ chiếu
+
         const showDateRaw = showtime.show_date || showtime.date;
         if (showDateRaw) {
           showDate = new Date(showDateRaw);
         }
-        
+
         showTime = showtime.start_time || showtime.time;
       }
     } else {
@@ -186,7 +213,7 @@ const Orders = () => {
     // Lấy thông tin thanh toán
     try {
       const payment = await fetchAPI(
-        `http://localhost:5000/api/payments/booking/${booking.booking_id}`
+        `http://localhost:5000/api/payments/booking/${booking.booking_id}`,
       );
       if (payment) {
         paymentMethod = payment.method || booking.payment_method;
@@ -199,9 +226,12 @@ const Orders = () => {
       console.log(`No payment data for booking ${booking.booking_id}`);
     }
 
-    // Xác định trạng thái cuối cùng
     let finalStatus = "pending";
-    if (paymentStatus === "paid" || booking.booking_status === "confirmed" || booking.status === "paid") {
+    if (
+      paymentStatus === "paid" ||
+      booking.booking_status === "confirmed" ||
+      booking.status === "paid"
+    ) {
       finalStatus = "paid";
     } else if (
       paymentStatus === "cancelled" ||
@@ -210,7 +240,6 @@ const Orders = () => {
       finalStatus = "cancelled";
     }
 
-    // Chuyển đổi totalPrice sang number
     const totalAmountNum = parseFloat(totalPrice) || 0;
 
     return {
@@ -228,6 +257,7 @@ const Orders = () => {
       movie: movie,
       showtime: showtime,
       seat_ids: seatIds,
+      foods: foods,
       formatted_show_date: showDate,
       formatted_show_time: showTime,
       formatted_cinema: cinemaName,
@@ -242,11 +272,11 @@ const Orders = () => {
       const moviesCache = {};
       const cinemasCache = {};
       const roomsCache = {};
-      
+
       console.log("🔄 Fetching bookings from API...");
       const bookings = await fetchAPI("http://localhost:5000/api/bookings");
       console.log("📋 Raw bookings response:", bookings);
-      
+
       if (!bookings || !Array.isArray(bookings)) {
         console.error("❌ Bookings is not an array:", bookings);
         setOrders([]);
@@ -257,15 +287,21 @@ const Orders = () => {
       console.log(`📋 Found ${bookings.length} bookings`);
 
       const ordersWithDetails = await Promise.all(
-        bookings.map(booking => 
-          fetchOrderDetails(booking, showtimesCache, moviesCache, cinemasCache, roomsCache)
-        )
+        bookings.map((booking) =>
+          fetchOrderDetails(
+            booking,
+            showtimesCache,
+            moviesCache,
+            cinemasCache,
+            roomsCache,
+          ),
+        ),
       );
 
       console.log("✅ Final orders with details:", ordersWithDetails);
 
       ordersWithDetails.sort(
-        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        (a, b) => new Date(b.created_at) - new Date(a.created_at),
       );
 
       setOrders(ordersWithDetails);
@@ -284,16 +320,20 @@ const Orders = () => {
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
-      order.booking_id?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.booking_id
+        ?.toString()
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       order.movie?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.user_id?.toString().includes(searchTerm);
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const paginatedOrders = filteredOrders.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const getStatusBadge = (status) => {
@@ -370,6 +410,23 @@ const Orders = () => {
     }).format(amount);
   };
 
+  const getFoodsDisplay = (foods) => {
+    if (!foods || foods.length === 0) {
+      return <span className="text-zinc-500 text-sm">Không có</span>;
+    }
+    return (
+      <div className="flex flex-col gap-1">
+        {foods.map((food, idx) => (
+          <div key={idx} className="flex items-center gap-1 text-sm">
+            <Package className="w-3 h-3 text-red-400" />
+            <span className="text-zinc-300">{food.name}</span>
+            <span className="text-zinc-500">x{food.quantity}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
     setShowDetailModal(true);
@@ -385,6 +442,7 @@ const Orders = () => {
       "Rạp",
       "Phòng chiếu",
       "Số vé",
+      "Combo/Đồ ăn",
       "Tổng tiền",
       "Trạng thái",
       "PT thanh toán",
@@ -399,6 +457,8 @@ const Orders = () => {
       order.formatted_cinema || "N/A",
       order.room_name || "N/A",
       order.seat_ids?.length || 0,
+      order.foods?.map((f) => `${f.name} x${f.quantity}`).join("; ") ||
+        "Không có",
       order.total_amount,
       order.status === "paid" ? "Đã thanh toán" : "Chờ thanh toán",
       order.payment_method?.toUpperCase() || "N/A",
@@ -416,7 +476,7 @@ const Orders = () => {
     link.href = url;
     link.setAttribute(
       "download",
-      `orders_${new Date().toISOString().slice(0, 19)}.csv`
+      `orders_${new Date().toISOString().slice(0, 19)}.csv`,
     );
     document.body.appendChild(link);
     link.click();
@@ -499,7 +559,7 @@ const Orders = () => {
                   {formatCurrency(
                     orders
                       .filter((o) => o.status === "paid")
-                      .reduce((sum, o) => sum + (o.total_amount || 0), 0)
+                      .reduce((sum, o) => sum + (o.total_amount || 0), 0),
                   )}
                 </p>
               </div>
@@ -547,7 +607,7 @@ const Orders = () => {
         ) : (
           <>
             <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/50">
-              <table className="w-full min-w-[900px]">
+              <table className="w-full min-w-[1100px]">
                 <thead className="border-b border-zinc-800 bg-zinc-900">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
@@ -567,6 +627,9 @@ const Orders = () => {
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
                       Số vé
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
+                      Combo/Đồ ăn
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
                       Tổng tiền
@@ -592,12 +655,16 @@ const Orders = () => {
                       </td>
                       <td className="px-4 py-3">
                         <p className="text-white text-sm font-medium">
-                          {order.movie?.title || order.showtime?.movieTitle || "Đang tải..."}
+                          {order.movie?.title ||
+                            order.showtime?.movieTitle ||
+                            "Đang tải..."}
                         </p>
                         <p className="text-zinc-400 text-xs">
                           {order.movie?.duration
                             ? `${order.movie.duration} phút`
-                            : order.showtime?.type ? `${order.showtime.type}` : ""}
+                            : order.showtime?.type
+                              ? `${order.showtime.type}`
+                              : ""}
                         </p>
                       </td>
                       <td className="px-4 py-3">
@@ -609,12 +676,15 @@ const Orders = () => {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 text-zinc-300 text-sm">
                           <Clock className="w-3 h-3 text-zinc-400" />
-                          {order.formatted_show_time?.slice(0, 5) || "Đang tải..."}
+                          {order.formatted_show_time?.slice(0, 5) ||
+                            "Đang tải..."}
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-zinc-300 text-sm">
-                          {order.formatted_cinema || order.showtime?.cinemaName || "Đang tải..."}
+                          {order.formatted_cinema ||
+                            order.showtime?.cinemaName ||
+                            "Đang tải..."}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -622,6 +692,9 @@ const Orders = () => {
                           <Ticket className="w-3 h-3 text-zinc-400" />
                           {order.seat_ids?.length || 0} vé
                         </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {getFoodsDisplay(order.foods)}
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-white font-semibold">
@@ -700,7 +773,7 @@ const Orders = () => {
                   onClick={() => setShowDetailModal(false)}
                   className="text-zinc-400 hover:text-white transition-colors"
                 >
-                  <XCircle className="w-5 h-5" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
@@ -728,7 +801,9 @@ const Orders = () => {
                   </label>
                   <div className="mt-1 p-3 rounded-lg bg-zinc-800/50">
                     <p className="text-white font-medium">
-                      {selectedOrder.movie?.title || selectedOrder.showtime?.movieTitle || "Không có dữ liệu"}
+                      {selectedOrder.movie?.title ||
+                        selectedOrder.showtime?.movieTitle ||
+                        "Không có dữ liệu"}
                     </p>
                     {selectedOrder.movie?.duration && (
                       <p className="text-zinc-400 text-sm">
@@ -762,7 +837,8 @@ const Orders = () => {
                       Suất chiếu
                     </label>
                     <p className="text-white">
-                      {selectedOrder.formatted_show_time?.slice(0, 5) || "Không có dữ liệu"}
+                      {selectedOrder.formatted_show_time?.slice(0, 5) ||
+                        "Không có dữ liệu"}
                     </p>
                   </div>
                 </div>
@@ -773,7 +849,9 @@ const Orders = () => {
                       Rạp
                     </label>
                     <p className="text-white">
-                      {selectedOrder.formatted_cinema || selectedOrder.showtime?.cinemaName || "Không có dữ liệu"}
+                      {selectedOrder.formatted_cinema ||
+                        selectedOrder.showtime?.cinemaName ||
+                        "Không có dữ liệu"}
                     </p>
                   </div>
                   <div>
@@ -781,7 +859,9 @@ const Orders = () => {
                       Phòng chiếu
                     </label>
                     <p className="text-white">
-                      {selectedOrder.room_name || selectedOrder.showtime?.roomName || "Không có dữ liệu"}
+                      {selectedOrder.room_name ||
+                        selectedOrder.showtime?.roomName ||
+                        "Không có dữ liệu"}
                     </p>
                   </div>
                 </div>
@@ -789,7 +869,7 @@ const Orders = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-zinc-400 text-xs uppercase">
-                      Số ghế
+                      Danh sách ghế
                     </label>
                     <p className="text-white">
                       {selectedOrder.seat_ids?.length > 0
@@ -810,6 +890,53 @@ const Orders = () => {
                   </div>
                 </div>
 
+                {/* Thêm phần hiển thị Combo/Đồ ăn trong modal */}
+                <div>
+                  <label className="text-zinc-400 text-xs uppercase">
+                    Combo & Đồ ăn
+                  </label>
+                  <div className="mt-1 p-3 rounded-lg bg-zinc-800/50">
+                    {selectedOrder.foods && selectedOrder.foods.length > 0 ? (
+                      <div className="space-y-2">
+                        {selectedOrder.foods.map((food, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Package className="w-4 h-4 text-red-400" />
+                              <span className="text-white">{food.name}</span>
+                              <span className="text-zinc-400 text-sm">
+                                x{food.quantity}
+                              </span>
+                            </div>
+                            <span className="text-red-400 font-semibold">
+                              {formatCurrency(food.total)}
+                            </span>
+                          </div>
+                        ))}
+                        <div className="border-t border-zinc-700 pt-2 mt-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-zinc-400">
+                              Tổng tiền đồ ăn:
+                            </span>
+                            <span className="text-white font-semibold">
+                              {formatCurrency(
+                                selectedOrder.foods.reduce(
+                                  (sum, f) => sum + f.total,
+                                  0,
+                                ),
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-zinc-500">Không có đặt thêm đồ ăn</p>
+                    )}
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-zinc-400 text-xs uppercase">
                     Ngày đặt
@@ -826,6 +953,19 @@ const Orders = () => {
                       {selectedOrder.seat_ids?.length || 0} vé
                     </span>
                   </div>
+                  {selectedOrder.foods && selectedOrder.foods.length > 0 && (
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-zinc-400">Tiền đồ ăn:</span>
+                      <span className="text-white font-medium">
+                        {formatCurrency(
+                          selectedOrder.foods.reduce(
+                            (sum, f) => sum + f.total,
+                            0,
+                          ),
+                        )}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-zinc-400">Tổng tiền:</span>
                     <span className="text-2xl font-bold text-red-500">
