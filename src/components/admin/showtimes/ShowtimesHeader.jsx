@@ -2,7 +2,7 @@ import { Plus, Download, Calendar as CalendarIcon, Sparkles } from "lucide-react
 import { useState } from "react";
 import { getTodayDisplay } from "../../../utils/dateUtils";
 
-export default function ShowtimesHeader({ total, specialCount, onAdd, onExport }) {
+export default function ShowtimesHeader({ total, specialCount, onAdd, onExport, exporting, exportingPDF }) {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const todayDisplay = getTodayDisplay();
 
@@ -30,14 +30,19 @@ export default function ShowtimesHeader({ total, specialCount, onAdd, onExport }
         <div className="relative">
           <button
             onClick={() => setShowExportMenu(!showExportMenu)}
-            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm font-medium transition"
+            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+            disabled={exporting || exportingPDF}
           >
-            <Download size={16} />
+            {exporting || exportingPDF ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+            ) : (
+              <Download size={16} />
+            )}
             Xuất dữ liệu
           </button>
           
           {showExportMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-white/10 rounded-lg shadow-xl z-10">
+            <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-white/10 rounded-lg shadow-xl z-20">
               <button
                 onClick={() => {
                   onExport('excel');
@@ -45,7 +50,7 @@ export default function ShowtimesHeader({ total, specialCount, onAdd, onExport }
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition"
               >
-                Xuất Excel
+                Xuất Excel (.xlsx)
               </button>
               <button
                 onClick={() => {
@@ -54,7 +59,7 @@ export default function ShowtimesHeader({ total, specialCount, onAdd, onExport }
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition"
               >
-                Xuất PDF
+                Xuất PDF (.pdf)
               </button>
               <button
                 onClick={() => {

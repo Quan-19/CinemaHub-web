@@ -1,5 +1,6 @@
 // Showtimes.jsx - Complete file with pricing integration
 import { useState, useEffect } from "react";
+import { Download, Eye, Printer, X } from "lucide-react";
 import ShowtimesHeader from "../../components/admin/showtimes/ShowtimesHeader";
 import ShowtimesStats from "../../components/admin/showtimes/ShowtimesStats";
 import ShowtimesFilter from "../../components/admin/showtimes/ShowtimesFilter";
@@ -52,6 +53,12 @@ export default function ShowtimesPage() {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(null);
   const [dataLoading, setDataLoading] = useState(true);
+
+  // New states for professional exports
+  const [exporting, setExporting] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState(null);
 
   const itemsPerPage = 10;
 
@@ -728,58 +735,115 @@ export default function ShowtimesPage() {
     }
   };
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (filtered.length === 0) {
       toast.error("Không có dữ liệu để xuất!");
       return;
     }
 
-    const exportData = filtered.map((s) => {
-      const isSpecialShowtime = Boolean(s.isSpecial || s.special);
+    try {
+      setExporting(true);
+      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+      
+      const cinemaName = cinemaFilter === 'all' 
+        ? 'Tất cả rạp' 
+        : cinemas.find(c => c.id == cinemaFilter)?.name || `Rạp ${cinemaFilter}`;
 
-      return {
-        "Tên phim": s.movieTitle,
-        Rạp: s.cinemaName,
-        Phòng: s.roomName,
-        Ngày: formatDateToDisplay(s.date),
-        Giờ: s.time,
-        "Định dạng": s.type,
-        "Loại suất": s.isSpecial || s.special ? "Đặc biệt" : "Thường",
-        "Ghế trống": `${s.availableSeats}/${s.totalSeats}`,
-        "Giá thường": isSpecialShowtime
-          ? "---"
-          : formatPriceMap(s.regularPrices || s.prices),
-        "Giá đặc biệt": isSpecialShowtime
-          ? formatPriceMap(s.specialPrices)
-          : "---",
-        "Trạng thái": statusConfig[s.status]?.label || s.status,
-      };
-    });
+      const response = await fetch("http://localhost:5000/api/reports/showtimes/export", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          showtimes: filtered,
+          options: {
+            cinema: cinemaName,
+            date: dateFilter === 'all' ? 'Tất cả ngày' : (dateFilter === 'today' ? 'Hôm nay' : (dateFilter === 'tomorrow' ? 'Ngày mai' : (dateFilter === 'week' ? '7 ngày tới' : dateFilter))),
+            status: statusFilter === 'all' ? 'Tất cả trạng thái' : (statusConfig[statusFilter]?.label || statusFilter)
+          }
+        }),
+      });
 
-    const headers = Object.keys(exportData[0]);
-    const csvContent = [
-      headers.join(","),
-      ...exportData.map((row) =>
-        headers.map((header) => `"${row[header] || ""}"`).join(",")
-      ),
-    ].join("\n");
+      if (!response.ok) throw new Error("Không thể xuất file Excel");
 
-    const blob = new Blob(["\uFEFF" + csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `suat-chieu-${getTodayDate()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success("Xuất file Excel thành công!");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `LichChieu_${new Date().getTime()}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Xuất file Excel thành công!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Lỗi khi xuất file Excel!");
+    } finally {
+      setExporting(false);
+    }
   };
 
-  const exportToPDF = () => {
-    window.print();
-    toast.success("Đã mở trang in, bạn có thể lưu dưới dạng PDF");
+  const exportToPDF = async () => {
+    if (filtered.length === 0) {
+      toast.error("Không có dữ liệu để xuất!");
+      return;
+    }
+
+    try {
+      setExportingPDF(true);
+      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+
+      const cinemaName = cinemaFilter === 'all' 
+        ? 'Tất cả rạp' 
+        : cinemas.find(c => c.id == cinemaFilter)?.name || `Rạp ${cinemaFilter}`;
+
+      const response = await fetch("http://localhost:5000/api/reports/showtimes/export/pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          showtimes: filtered,
+          options: {
+            cinema: cinemaName,
+            date: dateFilter === 'all' ? 'Tất cả ngày' : (dateFilter === 'today' ? 'Hôm nay' : (dateFilter === 'tomorrow' ? 'Ngày mai' : (dateFilter === 'week' ? '7 ngày tới' : dateFilter))),
+            status: statusFilter === 'all' ? 'Tất cả trạng thái' : (statusConfig[statusFilter]?.label || statusFilter)
+          }
+        }),
+      });
+
+      if (!response.ok) throw new Error("Không thể tạo PDF");
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      setPdfUrl(url);
+      setIsPreviewOpen(true);
+    } catch (error) {
+      console.error(error);
+      toast.error("Lỗi khi tạo báo cáo PDF!");
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
+  const closePreview = () => {
+    if (pdfUrl) window.URL.revokeObjectURL(pdfUrl);
+    setPdfUrl(null);
+    setIsPreviewOpen(false);
+  };
+
+  const confirmDownloadPDF = () => {
+    if (!pdfUrl) return;
+    const a = document.createElement("a");
+    a.href = pdfUrl;
+    a.download = `Bao-cao-suat-chieu-${new Date().getTime()}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast.success("Đã tải báo cáo xuống!");
   };
 
   const printSchedule = () => {
@@ -971,6 +1035,8 @@ export default function ShowtimesPage() {
         specialCount={showtimes.filter((s) => s.isSpecial || s.special).length}
         onAdd={handleAdd}
         onExport={handleExport}
+        exporting={exporting}
+        exportingPDF={exportingPDF}
       />
 
       <ShowtimesStats showtimes={showtimes} onDateChange={setDateFilter} />
@@ -1025,6 +1091,61 @@ export default function ShowtimesPage() {
           cinemas={cinemas}
           loading={loading}
         />
+      )}
+
+      {/* PDF PREVIEW MODAL */}
+      {isPreviewOpen && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm transition-all duration-300"
+          aria-modal="true"
+          role="dialog"
+        >
+          <div className="bg-[#121212] border border-white/10 w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden shadow-2xl rounded-2xl">
+            <header className="flex items-center justify-between p-4 border-b border-white/5 bg-zinc-900/50">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Eye className="text-red-500" size={20} />
+                  Xem trước báo cáo lịch chiếu
+                </h3>
+                <p className="text-[10px] text-zinc-400 mt-0.5 uppercase font-bold tracking-widest italic">TẬP ĐOÀN GIẢI TRÍ CINEMAHUB — CHUẨN DOANH NGHIỆP</p>
+              </div>
+              <button 
+                onClick={closePreview}
+                className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all transform hover:rotate-90"
+              >
+                <X size={20} />
+              </button>
+            </header>
+            
+            <div className="flex-1 bg-zinc-950 p-1 sm:p-2 min-h-0">
+              {pdfUrl ? (
+                <iframe 
+                  src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                  className="w-full h-full rounded-lg border border-white/5 shadow-inner"
+                  title="PDF Preview content"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-zinc-500 italic text-sm animate-pulse">Đang nạp dữ liệu báo cáo chuyên nghiệp...</div>
+              )}
+            </div>
+
+            <footer className="p-4 border-t border-white/5 bg-zinc-900/50 flex flex-wrap items-center justify-end gap-3">
+              <button 
+                onClick={closePreview}
+                className="px-5 py-2.5 rounded-xl text-sm font-bold text-zinc-400 hover:text-white transition-all"
+              >
+                Hủy bỏ
+              </button>
+              <button 
+                onClick={confirmDownloadPDF}
+                className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-8 py-2.5 text-sm font-bold text-white transition-all hover:bg-red-700 active:scale-95 shadow-lg shadow-red-600/20"
+              >
+                <Download className="h-4 w-4" />
+                Xác nhận & Tải về máy (.pdf)
+              </button>
+            </footer>
+          </div>
+        </div>
       )}
     </div>
   );
