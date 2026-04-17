@@ -101,7 +101,7 @@ export default function Sidebar(props) {
 
           {expanded && (
             <div>
-              <div className="font-bold text-red-500">CINEMAHUB</div>
+              <div className="font-bold text-red-500">EBIZCINEMA</div>
               <div className="text-xs text-gray-400">Quản trị viên</div>
             </div>
           )}

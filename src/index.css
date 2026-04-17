@@ -1,8 +1,8 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-cinema-bg: #0a0a0f;
-  --color-cinema-surface: #12121f;
+  --color-cinema-bg: #111827;
+  --color-cinema-surface: #1f2937;
   --color-cinema-primary: #e50914;
   --color-cinema-primary-dark: #b20710;
 }
@@ -44,7 +44,7 @@
   }
 
   .cinema-surface {
-    @apply rounded-2xl border border-zinc-800 bg-cinema-surface;
+    @apply rounded-2xl border border-white/10 bg-cinema-surface;
   }
 }
 
@@ -52,8 +52,8 @@
   font-family: Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #111827;
-  background-color: #ffffff;
+  color: #f4f4f5;
+  background-color: var(--color-cinema-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

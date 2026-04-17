@@ -457,7 +457,7 @@ export const SeatSelectionPage = () => {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -468,10 +468,10 @@ export const SeatSelectionPage = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#0a0a0f" }}>
+    <div className="min-h-screen" style={{ background: "var(--color-cinema-bg)" }}>
       <div
         className="border-b border-zinc-700"
-        style={{ background: "#12121f" }}
+        style={{ background: "var(--color-cinema-surface)" }}
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
           <button
@@ -782,7 +782,7 @@ export const SeatSelectionPage = () => {
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="relative w-full max-w-sm overflow-hidden"
               style={{
-                background: "#12121f",
+                background: "var(--color-cinema-surface)",
                 border: "1px solid rgba(229, 9, 20, 0.3)",
                 borderRadius: "28px",
                 boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"

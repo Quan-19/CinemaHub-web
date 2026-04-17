@@ -77,8 +77,8 @@ function Navbar() {
     <header
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/10 py-2 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
-          : "bg-gradient-to-b from-black/80 via-black/40 to-transparent py-4 md:py-5"
+          ? "bg-cinema-bg/95 backdrop-blur-xl border-b border-white/10 py-2 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
+          : "bg-gradient-to-b from-cinema-bg/80 via-cinema-bg/40 to-transparent py-4 md:py-5"
       }`}
     >
       <div className="flex items-center justify-between gap-4 lg:gap-8 px-4 sm:px-6 lg:px-8 max-w-[1920px] mx-auto">
@@ -87,7 +87,7 @@ function Navbar() {
             <Film className="h-4 w-4 text-white" />
           </span>
           <span className="text-2xl font-bold leading-none text-white">
-            Cinema<span className="text-cinema-primary">Hub</span>
+            Ebiz<span className="text-cinema-primary">Cinema</span>
           </span>
         </Link>
 
@@ -131,7 +131,7 @@ function Navbar() {
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="relative block xl:hidden">
             {searchOpen ? (
-              <div className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 backdrop-blur-md px-3 py-1.5 h-10 w-48 sm:w-64 absolute right-0 top-1/2 -translate-y-1/2">
+              <div className="flex items-center gap-2 rounded-full border border-white/20 bg-cinema-bg/70 backdrop-blur-md px-3 py-1.5 h-10 w-48 sm:w-64 absolute right-0 top-1/2 -translate-y-1/2">
                 <Search className="h-4 w-4 shrink-0 text-white/70" />
                 <input
                   autoFocus
@@ -251,7 +251,7 @@ function Navbar() {
       </div>
 
       {menuOpen ? (
-        <div className="absolute top-full left-0 w-full bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/10 md:hidden pb-4 shadow-xl">
+        <div className="absolute top-full left-0 w-full bg-cinema-bg/95 backdrop-blur-xl border-b border-white/10 md:hidden pb-4 shadow-xl">
           <div className="space-y-1 px-4 sm:px-6 pt-2">
             {navLinks.map((link) => {
               const active = isLinkActive(location.pathname, link.path);

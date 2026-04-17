@@ -99,7 +99,7 @@ function StaffLayout() {
                       Nhân viên
                     </div>
                     <div className="text-xs text-zinc-400">
-                      staff@CinemaHub.vn
+                      staff@EbizCinema.vn
                     </div>
                   </div>
                 </div> */}

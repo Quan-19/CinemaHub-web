@@ -136,7 +136,7 @@ export const HomePage = () => {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -150,7 +150,7 @@ export const HomePage = () => {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="text-center">
           <p className="text-zinc-400 mb-4">Không có phim đang chiếu</p>
@@ -187,14 +187,14 @@ export const HomePage = () => {
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to right, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.6) 50%, rgba(10,10,15,0.2) 100%)",
+                  "linear-gradient(to right, rgba(17,24,39,0.92) 0%, rgba(17,24,39,0.55) 50%, rgba(17,24,39,0.15) 100%)",
               }}
             />
             <div
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to top, rgba(10,10,15,1) 0%, transparent 50%)",
+                  "linear-gradient(to top, rgba(17,24,39,1) 0%, transparent 50%)",
               }}
             />
           </motion.div>
@@ -515,7 +515,10 @@ export const HomePage = () => {
         <section className="mt-10">
           <div
             className="relative overflow-hidden rounded-2xl"
-            style={{ background: "linear-gradient(135deg, #1a0005, #0a0a0f)" }}
+            style={{
+              background:
+                "linear-gradient(135deg, #1a0005, var(--color-cinema-bg))",
+            }}
           >
             <div
               className="absolute inset-0 opacity-30"
@@ -529,12 +532,12 @@ export const HomePage = () => {
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(229,9,20,0.3) 0%, rgba(10,10,15,0.9) 100%)",
+                  "linear-gradient(135deg, rgba(229,9,20,0.3) 0%, rgba(17,24,39,0.9) 100%)",
               }}
             />
             <div className="relative z-10 p-6 text-center sm:p-8 md:p-12">
               <h2 className="mb-3 text-2xl font-extrabold text-white sm:text-3xl">
-                Tải ứng dụng CinemaHub
+                Tải ứng dụng EbizCinema
               </h2>
               <p className="text-zinc-300 mb-6 max-w-md mx-auto text-sm">
                 Đặt vé, theo dõi phim yêu thích và nhận ưu đãi độc quyền mọi lúc
@@ -695,7 +698,7 @@ export const MovieDetailPage = () => {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -709,7 +712,7 @@ export const MovieDetailPage = () => {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="text-center">
           <p className="text-zinc-400 mb-4">Không tìm thấy phim</p>
@@ -728,7 +731,7 @@ export const MovieDetailPage = () => {
   const handleShare = async () => {
     const shareData = {
       title: movie.title,
-      text: `Xem chi tiết phim ${movie.title} trên CinemaHub`,
+      text: `Xem chi tiết phim ${movie.title} trên EbizCinema`,
       url: window.location.href,
     };
     if (navigator.share) {
@@ -761,14 +764,14 @@ export const MovieDetailPage = () => {
   return (
     <div
       className="space-y-2 relative min-h-screen pb-16"
-      style={{ background: "#0a0a0f" }}
+      style={{ background: "var(--color-cinema-bg)" }}
     >
       {/* Banner / Backdrop layer with masking */}
       <div className="relative left-1/2 -translate-x-1/2 lg:mt-[-100px] xl:mt-[-160px] 2xl:mt-[-200px] w-screen max-w-none pointer-events-none">
         <div className="aspect-[16/10] md:aspect-[2/1] xl:aspect-[21/9] w-full invisible pointer-events-none" />
         <div
           className="absolute top-0 left-0 w-full h-[125%] z-0 pointer-events-none overflow-hidden"
-          style={{ background: "#0a0a0f" }}
+          style={{ background: "var(--color-cinema-bg)" }}
         >
           <div className="absolute top-0 left-0 w-full h-full">
             <img
@@ -776,14 +779,14 @@ export const MovieDetailPage = () => {
               alt={movie.title}
               className="w-full h-full object-cover object-[50%_10%]"
             />
-            <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-[#0a0a0f]/80 via-[#0a0a0f]/40 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/80 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-cinema-bg/80 via-cinema-bg/40 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-cinema-bg via-cinema-bg/80 to-transparent" />
           </div>
         </div>
         <div
           className="absolute top-full bottom-[-25%] left-0 w-full backdrop-blur-[6px] z-0 pointer-events-none"
           style={{
-            background: "rgba(10, 10, 15, 0.7)",
+            background: "rgba(17, 24, 39, 0.7)",
             WebkitMaskImage:
               "linear-gradient(to bottom, transparent 0%, black 30%)",
             maskImage: "linear-gradient(to bottom, transparent 0%, black 30%)",
@@ -984,7 +987,7 @@ export const MovieDetailPage = () => {
               {/* Specs Panel */}
               <div className="bg-[#111113] border border-zinc-800/60 rounded-3xl p-6 sm:p-8 flex flex-wrap lg:grid lg:grid-cols-4 gap-6 items-center">
                 <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto">
-                  <p className="text-zinc-500 text-xs font-semibold mb-1">Điểm CinemaHub</p>
+                  <p className="text-zinc-500 text-xs font-semibold mb-1">Điểm EbizCinema</p>
                   <p className="text-yellow-500 text-[26px] font-bold leading-tight">{displayScore}<span className="text-base text-yellow-500/80">/10</span></p>
                   <p className="text-zinc-500 text-[11px] mt-1">{voteCount} votes</p>
                 </div>

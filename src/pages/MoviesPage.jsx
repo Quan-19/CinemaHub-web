@@ -157,7 +157,7 @@ function MoviesPage() {
   // ========== LOADING STATE ==========
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0f" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--color-cinema-bg)" }}>
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-zinc-400">Đang tải danh sách phim...</p>
@@ -195,7 +195,7 @@ function MoviesPage() {
                 <Film className="h-4 w-4" />
               </div>
               <div>
-                <p className="font-semibold text-white">Rạp CinemaHub</p>
+                <p className="font-semibold text-white">Rạp EbizCinema</p>
                 <p className="text-[11px] text-zinc-400">
                   Đầy đủ suất chiếu hôm nay
                 </p>

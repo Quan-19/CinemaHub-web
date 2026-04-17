@@ -114,7 +114,7 @@ function ProfilePage() {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <p className="text-zinc-400 text-sm">Đang tải...</p>
       </div>
@@ -124,13 +124,13 @@ function ProfilePage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4 py-10"
-      style={{ background: "#0a0a0f" }}
+      style={{ background: "var(--color-cinema-bg)" }}
     >
       <div className="w-full max-w-md space-y-4">
         {/* Avatar & Name */}
         <div
           className="rounded-2xl border border-zinc-700 p-6 flex items-center gap-5"
-          style={{ background: "#12121f" }}
+          style={{ background: "var(--color-cinema-surface)" }}
         >
           {user.photoURL ? (
             <img
@@ -157,7 +157,7 @@ function ProfilePage() {
         {/* Info rows */}
         <div
           className="rounded-2xl border border-zinc-700 divide-y divide-zinc-800"
-          style={{ background: "#12121f" }}
+          style={{ background: "var(--color-cinema-surface)" }}
         >
           <div className="flex items-center gap-4 px-5 py-4">
             <User className="h-4 w-4 text-zinc-400 shrink-0" />
@@ -191,7 +191,7 @@ function ProfilePage() {
         {/* Editable fields */}
         <div
           className="rounded-2xl border border-zinc-700 divide-y divide-zinc-800"
-          style={{ background: "#12121f" }}
+          style={{ background: "var(--color-cinema-surface)" }}
         >
           {/* Phone */}
           <div className="px-5 py-4">
