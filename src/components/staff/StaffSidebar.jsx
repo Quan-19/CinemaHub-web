@@ -87,7 +87,7 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
           </div>
           {!collapsed && (
             <div className="leading-tight">
-              <div className="text-sm font-bold tracking-wide">CINEMAHUB</div>
+              <div className="text-sm font-bold tracking-wide">EBIZCINEMA</div>
               <div className="text-xs text-zinc-400">Nhân viên rạp</div>
             </div>
           )}
@@ -248,7 +248,7 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
                   {user?.displayName || "Nhân viên"}
                 </div>
                 <div className="truncate text-[11px] text-zinc-400">
-                  {user?.email || "staff@CinemaHub.vn"}
+                  {user?.email || "staff@EbizCinema.vn"}
                 </div>
               </div>
             )}

@@ -107,7 +107,7 @@ function Footer() {
               </li>
               <li className="flex items-center gap-2 text-sm text-zinc-400">
                 <Mail className="h-4 w-4 shrink-0 text-cinema-primary" />
-                support@cinemahub.vn
+                support@ebizcinema.vn
               </li>
             </ul>
             <div className="mt-4">
@@ -125,7 +125,7 @@ function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-zinc-700 pt-6 sm:flex-row">
-          <p className="text-sm text-zinc-400">© 2026 CinemaHub. Tất cả quyền được bảo lưu.</p>
+          <p className="text-sm text-zinc-400">© 2026 EbizCinema. Tất cả quyền được bảo lưu.</p>
           <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
             <span className="mr-1 text-xs text-zinc-400">Phương thức thanh toán</span>
             {paymentMethods.map((pay) => (

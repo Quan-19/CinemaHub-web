@@ -125,7 +125,7 @@ const HomePage = () => {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -139,7 +139,7 @@ const HomePage = () => {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="text-center">
           <p className="text-zinc-400 mb-4">Không có phim đang chiếu</p>
@@ -177,14 +177,14 @@ const HomePage = () => {
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to right, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.6) 50%, rgba(10,10,15,0.2) 100%)",
+                  "linear-gradient(to right, rgba(17,24,39,0.92) 0%, rgba(17,24,39,0.55) 50%, rgba(17,24,39,0.15) 100%)",
               }}
             />
             <div
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to top, rgba(10,10,15,1) 0%, transparent 50%)",
+                  "linear-gradient(to top, rgba(17,24,39,1) 0%, transparent 50%)",
               }}
             />
           </motion.div>
@@ -451,7 +451,7 @@ const HomePage = () => {
                 <div
                   key={promo.id}
                   className="group rounded-2xl overflow-hidden border border-zinc-700 hover:border-zinc-700 transition-all hover:-translate-y-1 duration-300"
-                  style={{ background: "#12121f" }}
+                  style={{ background: "var(--color-cinema-surface)" }}
                 >
                   <div className="relative h-44 overflow-hidden">
                     <img
@@ -462,7 +462,7 @@ const HomePage = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div
                       className="absolute top-3 right-3 px-3 py-1.5 rounded-lg text-white text-sm font-bold shadow-lg"
-                      style={{ background: "#e50914" }}
+                      style={{ background: "var(--color-cinema-primary)" }}
                     >
                       -{promo.discount_percent || promo.discount}%
                     </div>
@@ -506,7 +506,10 @@ const HomePage = () => {
         <section className="mt-10">
           <div
             className="relative overflow-hidden rounded-2xl"
-            style={{ background: "linear-gradient(135deg, #1a0005, #0a0a0f)" }}
+            style={{
+              background:
+                "linear-gradient(135deg, #1a0005, var(--color-cinema-bg))",
+            }}
           >
             <div
               className="absolute inset-0 opacity-30"
@@ -520,12 +523,12 @@ const HomePage = () => {
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(229,9,20,0.3) 0%, rgba(10,10,15,0.9) 100%)",
+                  "linear-gradient(135deg, rgba(229,9,20,0.3) 0%, rgba(17,24,39,0.9) 100%)",
               }}
             />
             <div className="relative z-10 p-6 text-center sm:p-8 md:p-12">
               <h2 className="mb-3 text-2xl font-extrabold text-white sm:text-3xl">
-                Tải ứng dụng CinemaHub
+                Tải ứng dụng EbizCinema
               </h2>
               <p className="text-zinc-300 mb-6 max-w-md mx-auto text-sm">
                 Đặt vé, theo dõi phim yêu thích và nhận ưu đãi độc quyền mọi lúc

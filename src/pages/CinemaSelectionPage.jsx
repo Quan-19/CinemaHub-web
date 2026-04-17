@@ -432,7 +432,7 @@ export const CinemaSelectionPage = () => {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <p className="text-zinc-400">Đang tải lịch chiếu...</p>
       </div>
@@ -443,7 +443,7 @@ export const CinemaSelectionPage = () => {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <p className="text-zinc-400">Không tìm thấy phim</p>
       </div>
@@ -480,11 +480,11 @@ export const CinemaSelectionPage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-16" style={{ background: "#0a0a0f" }}>
+    <div className="min-h-screen pt-16" style={{ background: "var(--color-cinema-bg)" }}>
       {/* Header */}
       <div
         className="border-b border-zinc-700"
-        style={{ background: "#12121f" }}
+        style={{ background: "var(--color-cinema-surface)" }}
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <button
@@ -692,7 +692,7 @@ export const CinemaSelectionPage = () => {
                 <div
                   key={cinema.id}
                   className="rounded-xl border border-zinc-700 overflow-hidden"
-                  style={{ background: "#12121f" }}
+                  style={{ background: "var(--color-cinema-surface)" }}
                 >
                   {/* Cinema header */}
                   <button

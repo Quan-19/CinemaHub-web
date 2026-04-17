@@ -488,7 +488,7 @@ const Orders = () => {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -499,7 +499,7 @@ const Orders = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#0a0a0f" }}>
+    <div className="min-h-screen" style={{ background: "var(--color-cinema-bg)" }}>
       <div className="mx-auto w-full px-3 py-6 sm:px-6 lg:px-10">
         {/* Header */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

@@ -410,7 +410,7 @@ function AuthModal({ onClose }) {
           <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-cinema-primary to-cinema-primary-dark shadow-lg">
             <Film className="h-6 w-6 text-white" />
           </span>
-          <h1 className="text-2xl font-bold text-white">CinemaHub</h1>
+          <h1 className="text-2xl font-bold text-white">EbizCinema</h1>
           <p className="text-sm text-zinc-400">Đặt vé xem phim dễ dàng</p>
         </div>
 

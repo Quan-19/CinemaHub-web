@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { motion, AnimatePresence } from "framer-motion";
-import { calculateShowtimeTotal } from "../utils/showtimePricing";
+import { getShowtimeSeatPrice } from "../utils/showtimePricing";
 import { useState, useEffect } from "react";
 import {
   useLocation,
@@ -48,14 +48,6 @@ const PAYMENT_METHODS = [
     desc: "Thanh toán qua ZaloPay",
   },
 ];
-
-const PROMO_PERCENT_BY_CODE = {
-  WED30: 0.3,
-  CGV10YEARS: 0.1,
-  COUPLE2026: 0.25,
-  CINE10: 0.1,
-  SPRING2026: 0.2,
-};
 
 // Confetti component
 const Confetti = () => {
@@ -110,7 +102,7 @@ export default function BookingConfirmationPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("momo");
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
-  const [promoPercent, setPromoPercent] = useState(0);
+  const [promoDiscountAmount, setPromoDiscountAmount] = useState(0);
   const [promoError, setPromoError] = useState("");
   const [bookingCode, setBookingCode] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
@@ -300,11 +292,14 @@ export default function BookingConfirmationPage() {
     return amount.toLocaleString("vi-VN") + "₫";
   };
   // ========== TÍNH TOÁN GIÁ ==========
-  const ticketTotal = calculateShowtimeTotal(showtime, seats);
+  const ticketTotal = seats.reduce(
+    (sum, s) => sum + getShowtimeSeatPrice(showtime, String(s?.type || "").toLowerCase()),
+    0,
+  );
   const comboTotal = foods.reduce((sum, f) => {
     return sum + f.price * (comboCounts[f.food_id] || 0);
   }, 0);
-  const discount = promoApplied ? Math.round(ticketTotal * promoPercent) : 0;
+  const discount = promoApplied ? promoDiscountAmount : 0;
   const grandTotal = ticketTotal + comboTotal - discount;
 
   // ========== HANDLERS ==========
@@ -315,18 +310,57 @@ export default function BookingConfirmationPage() {
     }));
   };
 
-  const handleApplyPromo = () => {
+  const handleApplyPromo = async () => {
     const normalizedCode = promoCode.trim().toUpperCase();
-    const percent = PROMO_PERCENT_BY_CODE[normalizedCode];
 
-    if (percent) {
-      setPromoApplied(true);
-      setPromoPercent(percent);
-      setPromoError("");
-    } else {
-      setPromoError("Mã khuyến mãi không hợp lệ hoặc đã hết hạn");
+    if (!normalizedCode) {
+      setPromoError("Vui lòng nhập mã khuyến mãi");
       setPromoApplied(false);
-      setPromoPercent(0);
+      setPromoDiscountAmount(0);
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        code: normalizedCode,
+        originalPrice: String(ticketTotal),
+      });
+
+      const showtimeCinemaId = showtime?.cinema_id ?? showtime?.cinemaId;
+      if (showtimeCinemaId !== undefined && showtimeCinemaId !== null) {
+        params.set("cinemaId", String(showtimeCinemaId));
+      }
+
+      const startTime = showtime?.start_time ?? showtime?.startTime;
+      if (startTime) {
+        params.set(
+          "date",
+          new Date(startTime).toISOString().split("T")[0]
+        );
+      }
+
+      const res = await fetch(
+        `http://localhost:5000/api/promotions/calculate?${params.toString()}`
+      );
+      const data = await res.json();
+
+      if (res.ok && data?.success) {
+        setPromoApplied(true);
+        setPromoDiscountAmount(Number(data.discountAmount || 0));
+        setPromoError("");
+      } else {
+        setPromoError(
+          data?.message ||
+            data?.error ||
+            "Mã khuyến mãi không hợp lệ hoặc đã hết hạn"
+        );
+        setPromoApplied(false);
+        setPromoDiscountAmount(0);
+      }
+    } catch (e) {
+      setPromoError("Không thể kết nối đến server");
+      setPromoApplied(false);
+      setPromoDiscountAmount(0);
     }
   };
 
@@ -337,6 +371,13 @@ export default function BookingConfirmationPage() {
       console.error("❌ Không tìm thấy showtime_id!");
       alert(
         "Lỗi: Không tìm thấy thông tin suất chiếu. Vui lòng quay lại chọn lại.",
+      );
+      return;
+    }
+
+    if (comboTotal > 0) {
+      alert(
+        "Combo bắp nước hiện chưa hỗ trợ trong thanh toán. Vui lòng bỏ chọn combo để tiếp tục.",
       );
       return;
     }
@@ -381,7 +422,7 @@ export default function BookingConfirmationPage() {
           total_price: grandTotal,
           seats: seats.map((s) => ({
             id: s.id,
-            price: calculateSeatPrice(s.type, showtime.base_price || 75000),
+            price: getShowtimeSeatPrice(showtime, String(s.type || "").toLowerCase()),
           })),
           payment_method: method,
           promo_code: promoApplied ? promoCode : null,
@@ -392,6 +433,8 @@ export default function BookingConfirmationPage() {
 
       const bookingId =
         bookingRes.data?.booking_id ?? bookingRes.data?.insertId;
+
+      const payableAmount = bookingRes.data?.total_price ?? grandTotal;
 
       if (!bookingId) {
         throw new Error("Không lấy được booking_id từ server");
@@ -416,7 +459,7 @@ export default function BookingConfirmationPage() {
       if (method === "vnpay") {
         const res = await axios.post(
           "http://localhost:5000/api/payments/vnpay",
-          { booking_id: bookingId, amount: grandTotal },
+          { booking_id: bookingId, amount: payableAmount },
           { headers: { Authorization: `Bearer ${token}` } },
         );
 
@@ -432,7 +475,7 @@ export default function BookingConfirmationPage() {
           "http://localhost:5000/api/payment/momo",
           {
             booking_id: bookingId,
-            amount: grandTotal,
+            amount: payableAmount,
             orderInfo: `Thanh toan booking ${bookingId}`,
           },
           { headers: { Authorization: `Bearer ${token}` } },
@@ -484,7 +527,7 @@ export default function BookingConfirmationPage() {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="text-center">
           <div className="w-12 h-12 rounded-full border-3 border-red-500 border-t-transparent animate-spin mx-auto mb-4" />
@@ -500,7 +543,7 @@ export default function BookingConfirmationPage() {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="text-center max-w-md mx-auto p-6">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
@@ -536,7 +579,7 @@ export default function BookingConfirmationPage() {
     const ticketUrl = `${window.location.origin}/ticket/${displayBookingCode}`;
 
     return (
-      <div className="min-h-screen pt-16" style={{ background: "#0a0a0f" }}>
+      <div className="min-h-screen pt-16" style={{ background: "var(--color-cinema-bg)" }}>
         {showConfetti && <Confetti />}
 
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
@@ -590,7 +633,7 @@ export default function BookingConfirmationPage() {
               <div
                 className="rounded-2xl p-5 mb-4"
                 style={{
-                  background: "#12121f",
+                  background: "var(--color-cinema-surface)",
                   border: "1px solid rgba(255,255,255,0.07)",
                 }}
               >
@@ -689,7 +732,7 @@ export default function BookingConfirmationPage() {
               <div
                 className="rounded-2xl p-5"
                 style={{
-                  background: "#12121f",
+                  background: "var(--color-cinema-surface)",
                   border: "1px solid rgba(255,255,255,0.07)",
                 }}
               >
@@ -737,7 +780,7 @@ export default function BookingConfirmationPage() {
               <div
                 className="rounded-2xl p-5 text-center"
                 style={{
-                  background: "#12121f",
+                  background: "var(--color-cinema-surface)",
                   border: "1px solid rgba(255,255,255,0.07)",
                 }}
               >
@@ -756,7 +799,7 @@ export default function BookingConfirmationPage() {
               <div
                 className="rounded-2xl mt-4 overflow-hidden"
                 style={{
-                  background: "#12121f",
+                  background: "var(--color-cinema-surface)",
                   border: "1px solid rgba(229,9,20,0.25)",
                 }}
               >
@@ -821,7 +864,7 @@ export default function BookingConfirmationPage() {
                 exit={{ scale: 0.8, opacity: 0 }}
                 className="rounded-3xl p-6 text-center max-w-sm w-full"
                 style={{
-                  background: "#12121f",
+                  background: "var(--color-cinema-surface)",
                   border: "1px solid rgba(255,255,255,0.1)",
                 }}
                 onClick={(e) => e.stopPropagation()}
@@ -877,7 +920,7 @@ export default function BookingConfirmationPage() {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="text-center">
           <div className="w-12 h-12 rounded-full border-3 border-red-500 border-t-transparent animate-spin mx-auto mb-4" />
@@ -892,7 +935,7 @@ export default function BookingConfirmationPage() {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="text-center">
           <p className="text-zinc-400 mb-4">Không có thông tin đặt vé</p>
@@ -909,11 +952,11 @@ export default function BookingConfirmationPage() {
 
   // Render form xác nhận thanh toán
   return (
-    <div className="min-h-screen pt-16" style={{ background: "#0a0a0f" }}>
+    <div className="min-h-screen pt-16" style={{ background: "var(--color-cinema-bg)" }}>
       {/* Header */}
       <div
         className="border-b border-zinc-700 sticky top-0 z-10"
-        style={{ background: "#12121f" }}
+        style={{ background: "var(--color-cinema-surface)" }}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
           <button
@@ -959,7 +1002,7 @@ export default function BookingConfirmationPage() {
             <div
               className="rounded-2xl p-5"
               style={{
-                background: "#12121f",
+                background: "var(--color-cinema-surface)",
                 border: "1px solid rgba(255,255,255,0.07)",
               }}
             >
@@ -1017,7 +1060,7 @@ export default function BookingConfirmationPage() {
             <div
               className="rounded-2xl p-5"
               style={{
-                background: "#12121f",
+                background: "var(--color-cinema-surface)",
                 border: "1px solid rgba(255,255,255,0.07)",
               }}
             >
@@ -1066,7 +1109,7 @@ export default function BookingConfirmationPage() {
             <div
               className="rounded-2xl p-5"
               style={{
-                background: "#12121f",
+                background: "var(--color-cinema-surface)",
                 border: "1px solid rgba(255,255,255,0.07)",
               }}
             >
@@ -1080,6 +1123,7 @@ export default function BookingConfirmationPage() {
                     setPromoCode(e.target.value);
                     setPromoError("");
                     setPromoApplied(false);
+                    setPromoDiscountAmount(0);
                   }}
                   placeholder="Nhập mã khuyến mãi"
                   className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-red-500 transition"
@@ -1101,7 +1145,7 @@ export default function BookingConfirmationPage() {
                 <p className="text-red-400 text-xs mt-2">{promoError}</p>
               )}
               <p className="text-zinc-400 text-xs mt-2">
-                Thử: WED30, CINE10, SPRING2026
+                Mã khuyến mãi áp dụng cho vé xem phim (không áp dụng cho combo).
               </p>
             </div>
 
@@ -1109,7 +1153,7 @@ export default function BookingConfirmationPage() {
             <div
               className="rounded-2xl p-5"
               style={{
-                background: "#12121f",
+                background: "var(--color-cinema-surface)",
                 border: "1px solid rgba(255,255,255,0.07)",
               }}
             >
@@ -1156,7 +1200,7 @@ export default function BookingConfirmationPage() {
             <div
               className="rounded-2xl p-5 sticky top-20"
               style={{
-                background: "#12121f",
+                background: "var(--color-cinema-surface)",
                 border: "1px solid rgba(255,255,255,0.07)",
               }}
             >
@@ -1245,7 +1289,7 @@ export default function BookingConfirmationPage() {
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="relative w-full max-w-sm overflow-hidden"
               style={{
-                background: "#12121f",
+                background: "var(--color-cinema-surface)",
                 border: "1px solid rgba(229, 9, 20, 0.3)",
                 borderRadius: "28px",
                 boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",

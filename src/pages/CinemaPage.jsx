@@ -419,7 +419,7 @@ function CinemaPage() {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "#0a0a0f" }}
+        style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -430,10 +430,13 @@ function CinemaPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#0a0a0f" }}>
+    <div className="min-h-screen" style={{ background: "var(--color-cinema-bg)" }}>
       <div
         className="py-10 border-b border-zinc-700"
-        style={{ background: "linear-gradient(to bottom, #12121f, #0a0a0f)" }}
+        style={{
+          background:
+            "linear-gradient(to bottom, var(--color-cinema-surface), var(--color-cinema-bg))",
+        }}
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <h1
@@ -456,7 +459,7 @@ function CinemaPage() {
                 key={region.id}
                 onClick={() => setSelectedRegion(region.id)}
                 className="text-left rounded-2xl border border-zinc-700 hover:border-zinc-700 transition-all p-5"
-                style={{ background: "#12121f" }}
+                style={{ background: "var(--color-cinema-surface)" }}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -511,7 +514,7 @@ function CinemaPage() {
                       ? "border-red-500"
                       : "border-zinc-700 hover:border-zinc-700"
                   }`}
-                  style={{ background: "#12121f" }}
+                  style={{ background: "var(--color-cinema-surface)" }}
                 >
                   <div className="flex items-start gap-4">
                     <div
@@ -569,7 +572,7 @@ function CinemaPage() {
                     <div
                       key={movie.movie_id} // ✅ GIỮ movie_id từ Code 1
                       className="rounded-2xl border border-zinc-700 p-4"
-                      style={{ background: "#12121f" }}
+                      style={{ background: "var(--color-cinema-surface)" }}
                     >
                       <div className="flex gap-3">
                         <img
