@@ -19,6 +19,8 @@ import SeatSelectionPage from "../pages/SeatSelectionPage.jsx";
 import BookingConfirmationPage from "../pages/BookingConfirmationPage.jsx";
 import TicketPage from "../pages/TicketPage.jsx";
 import PaymentResultPage from "../pages/PaymentResult.jsx";
+import NotificationPage from "../pages/NotificationPage.jsx";
+
 // Admin pages
 import Dashboard from "../pages/admin/Dashboard.jsx";
 import Movies from "../pages/admin/Movies.jsx";
@@ -102,7 +104,9 @@ export const router = createBrowserRouter([
       { path: "promotions", element: <PromotionsPage /> },
       { path: "auth", element: <AuthPage /> },
       { path: "profile", element: <ProfilePage /> },
+      { path: "notifications", element: <NotificationPage /> },
       { path: "*", element: <NotFoundPage /> },
+
     ],
   },
   {

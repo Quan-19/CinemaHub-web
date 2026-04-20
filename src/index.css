@@ -46,6 +46,15 @@
   .cinema-surface {
     @apply rounded-2xl border border-white/10 bg-cinema-surface;
   }
+
+  .glass-card {
+    @apply backdrop-blur-xl border border-white/10;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-tr from-cinema-primary to-rose-400;
+  }
 }
 
 :root {
