@@ -6,6 +6,7 @@ import ShowtimesStats from "../../components/admin/showtimes/ShowtimesStats";
 import ShowtimesFilter from "../../components/admin/showtimes/ShowtimesFilter";
 import ShowtimesTable from "../../components/admin/showtimes/ShowtimesTable";
 import ShowtimeModal from "../../components/admin/showtimes/ShowtimeModal";
+import ShowtimeDetailModal from "../../components/admin/showtimes/ShowtimeDetailModal";
 import BulkActionBar from "../../components/admin/showtimes/BulkActionBar";
 import { toast } from "react-hot-toast";
 import {
@@ -59,6 +60,8 @@ export default function ShowtimesPage() {
   const [exportingPDF, setExportingPDF] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedDetailShowtime, setSelectedDetailShowtime] = useState(null);
 
   const itemsPerPage = 10;
 
@@ -79,6 +82,11 @@ export default function ShowtimesPage() {
     if (dayOfWeek === 0 || dayOfWeek === 6) return "Cuối tuần";
     return "Ngày thường";
   };
+
+  // Set professional document title
+  useEffect(() => {
+    document.title = "Quản lý suất chiếu | EbizCinema Admin";
+  }, []);
 
   // Lấy giá cho từng loại ghế từ pricing_rules (API)
   const getPricesFromPricingRules = async (type, date, time) => {
@@ -525,6 +533,11 @@ export default function ShowtimesPage() {
     setEditingShowtime(showtime);
     setForm(showtime);
     setShowModal(true);
+  };
+
+  const handleViewDetail = (showtime) => {
+    setSelectedDetailShowtime(showtime);
+    setShowDetailModal(true);
   };
 
   const handleSave = async (formData) => {
@@ -1067,6 +1080,7 @@ export default function ShowtimesPage() {
         showtimes={filtered}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onViewDetail={handleViewDetail}
         onSelect={(selectedIds) => setSelectedShowtimes(selectedIds)}
         selectedIds={selectedShowtimes}
         currentPage={currentPage}
@@ -1085,7 +1099,7 @@ export default function ShowtimesPage() {
           }}
           onSave={handleSave}
           form={form}
-          setForm={updateForm}
+          setForm={setForm}
           isEdit={!!editingShowtime}
           movies={movies}
           cinemas={cinemas}
@@ -1107,7 +1121,7 @@ export default function ShowtimesPage() {
                   <Eye className="text-red-500" size={20} />
                   Xem trước báo cáo lịch chiếu
                 </h3>
-                <p className="text-[10px] text-zinc-400 mt-0.5 uppercase font-bold tracking-widest italic">TẬP ĐOÀN GIẢI TRÍ CINEMAHUB — CHUẨN DOANH NGHIỆP</p>
+                <p className="text-[10px] text-zinc-400 mt-0.5 uppercase font-bold tracking-widest italic">TẬP ĐOÀN GIẢI TRÍ EBIZCINEMA — CHUẨN DOANH NGHIỆP</p>
               </div>
               <button 
                 onClick={closePreview}
@@ -1147,6 +1161,12 @@ export default function ShowtimesPage() {
           </div>
         </div>
       )}
+      
+      <ShowtimeDetailModal
+        showtime={selectedDetailShowtime}
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+      />
     </div>
   );
 }

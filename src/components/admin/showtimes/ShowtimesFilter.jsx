@@ -1,4 +1,4 @@
-import { Search, Calendar, Filter, X } from "lucide-react";
+import { Search, Calendar, Filter, X, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { formatDateToDisplay, getTodayDisplay } from "../../../utils/dateUtils";
 
@@ -25,205 +25,189 @@ export default function ShowtimesFilter({
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const selectClass =
-    "bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition [&>option]:bg-zinc-900 [&>option]:text-white";
+    "bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition duration-200 [&>option]:bg-zinc-900";
+
+  const isFiltered = search || dateFilter !== "all" || statusFilter !== "all" || cinemaFilter !== "all";
 
   return (
-    <div className="space-y-3">
-      {/* Filter cơ bản */}
-      <div className="bg-cinema-surface border border-white/10 rounded-xl p-4">
-        <div className="flex flex-wrap gap-3">
-          {/* Search */}
-          <div className="flex-1 min-w-[250px]">
-            <div className="flex items-center gap-2 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 focus-within:border-red-500/50 transition">
-              <Search size={16} className="text-white/35" />
-              <input
-                placeholder="Tìm theo tên phim, rạp, phòng..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="bg-transparent border-none outline-none text-white text-sm w-full placeholder:text-white/30"
-              />
-              {search && (
-                <X
-                  size={14}
-                  className="text-white/35 cursor-pointer hover:text-white"
-                  onClick={() => setSearch("")}
-                />
+    <div className="space-y-4">
+      <div className="bg-cinema-surface border border-white/10 rounded-xl p-5 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+          {/* Search Section */}
+          <div className="relative flex-1 group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 group-focus-within:text-red-500 transition-colors">
+              <Search size={18} />
+            </div>
+            <input
+              type="text"
+              placeholder="Tìm theo tên phim, rạp hoặc phòng chiếu..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-white text-sm outline-none focus:border-red-500/50 focus:bg-zinc-900/50 transition-all placeholder:text-gray-600"
+            />
+            {search && (
+              <button 
+                onClick={() => setSearch("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white transition-colors"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Quick date filters */}
+            <div className="flex items-center bg-[#1a1a1a] p-1 rounded-xl border border-white/5">
+              {[
+                { id: 'today', label: `Hôm nay` },
+                { id: 'tomorrow', label: 'Ngày mai' },
+                { id: 'week', label: 'Trong tuần' }
+              ].map((btn) => (
+                <button
+                  key={btn.id}
+                  onClick={() => setDateFilter(btn.id)}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 uppercase tracking-tight ${
+                    dateFilter === btn.id
+                      ? "bg-red-600 text-white shadow-md shadow-red-600/20"
+                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="h-6 w-[1px] bg-white/10 hidden lg:block" />
+
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all border ${
+                  showAdvanced 
+                    ? "bg-white text-black border-white" 
+                    : "bg-[#1a1a1a] text-gray-400 border-white/10 hover:border-white/20 hover:text-white"
+                }`}
+              >
+                <Filter size={14} />
+                Bộ lọc nâng cao
+              </button>
+
+              {isFiltered && (
+                <button
+                  onClick={() => {
+                    setSearch("");
+                    setDateFilter("all");
+                    setStatusFilter("all");
+                    setCinemaFilter("all");
+                  }}
+                  className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                  title="Đặt lại tất cả"
+                >
+                  <RotateCcw size={18} />
+                </button>
               )}
             </div>
           </div>
-
-          {/* Quick date filters */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setDateFilter("today")}
-              className={`px-3 py-2 rounded-lg text-sm transition ${
-                dateFilter === "today"
-                  ? "bg-red-600 text-white"
-                  : "bg-zinc-900 text-white/70 hover:bg-zinc-800 border border-white/10"
-              }`}
-            >
-              Hôm nay ({getTodayDisplay()})
-            </button>
-            <button
-              onClick={() => setDateFilter("tomorrow")}
-              className={`px-3 py-2 rounded-lg text-sm transition ${
-                dateFilter === "tomorrow"
-                  ? "bg-red-600 text-white"
-                  : "bg-zinc-900 text-white/70 hover:bg-zinc-800 border border-white/10"
-              }`}
-            >
-              Ngày mai
-            </button>
-            <button
-              onClick={() => setDateFilter("week")}
-              className={`px-3 py-2 rounded-lg text-sm transition ${
-                dateFilter === "week"
-                  ? "bg-red-600 text-white"
-                  : "bg-zinc-900 text-white/70 hover:bg-zinc-800 border border-white/10"
-              }`}
-            >
-              Trong tuần
-            </button>
-          </div>
-
-          {/* Toggle advanced filter */}
-          <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition border ${
-              showAdvanced 
-                ? "bg-red-600 text-white border-red-600" 
-                : "bg-zinc-900 text-white/70 hover:bg-zinc-800 border-white/10"
-            }`}
-          >
-            <Filter size={14} />
-            Bộ lọc nâng cao
-          </button>
         </div>
 
-        {/* Filter nâng cao */}
-        {showAdvanced && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 pt-3 border-t border-white/10">
-            {/* Chọn rạp */}
+        {/* Advanced Filters Grid */}
+        <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 transition-all duration-300 ease-in-out ${
+          showAdvanced ? 'mt-5 pt-5 border-t border-white/5 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
+        }`}>
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Hệ thống rạp</label>
             <select
               value={cinemaFilter}
               onChange={e => setCinemaFilter(e.target.value)}
-              className={selectClass}
+              className={`${selectClass} w-full`}
             >
-              <option value="all" className="bg-zinc-900 text-white">Tất cả rạp</option>
+              <option value="all">Tất cả chi nhánh</option>
               {cinemas.map(cinema => (
-                <option key={cinema.id} value={cinema.id} className="bg-zinc-900 text-white">
-                  {cinema.name}
-                </option>
-              ))}
-            </select>
-
-            {/* Chọn ngày cụ thể */}
-            <select
-              value={dateFilter}
-              onChange={e => setDateFilter(e.target.value)}
-              className={selectClass}
-            >
-              <option value="all" className="bg-zinc-900 text-white">Tất cả ngày</option>
-              <option value="today" className="bg-zinc-900 text-white">Hôm nay ({getTodayDisplay()})</option>
-              <option value="tomorrow" className="bg-zinc-900 text-white">Ngày mai</option>
-              <option value="week" className="bg-zinc-900 text-white">Trong tuần</option>
-              {availableDates.map(date => (
-                <option key={date} value={date} className="bg-zinc-900 text-white">
-                  {formatDateToDisplay(date)}
-                </option>
-              ))}
-            </select>
-
-            {/* Chọn trạng thái */}
-            <select
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-              className={selectClass}
-            >
-              {statusOptions.map(option => (
-                <option 
-                  key={option.value} 
-                  value={option.value} 
-                  className="bg-zinc-900 text-white"
-                  style={option.color ? { color: option.color } : {}}
-                >
-                  {option.label}
-                </option>
+                <option key={cinema.id} value={cinema.id}>{cinema.name}</option>
               ))}
             </select>
           </div>
-        )}
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Thời gian chiếu</label>
+            <select
+              value={dateFilter}
+              onChange={e => setDateFilter(e.target.value)}
+              className={`${selectClass} w-full`}
+            >
+              <option value="all">Tất cả các ngày</option>
+              <option value="today">Hôm nay ({getTodayDisplay()})</option>
+              <option value="tomorrow">Ngày mai</option>
+              <option value="week">Trong tuần này</option>
+              {availableDates.map(date => (
+                <option key={date} value={date}>{formatDateToDisplay(date)}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Trạng thái vận hành</label>
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className={`${selectClass} w-full`}
+            >
+              {statusOptions.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
-      {/* Active filters */}
-      {(search || dateFilter !== "all" || statusFilter !== "all" || cinemaFilter !== "all") && (
-        <div className="flex items-center gap-2 flex-wrap bg-cinema-surface border border-white/10 rounded-lg p-2">
-          <span className="text-xs text-white/40 px-1">Bộ lọc đang áp dụng:</span>
+      {/* Filter Tags */}
+      {isFiltered && (
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest px-2 border-r border-white/10 mr-1">Đang lọc</span>
           
-          {search && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-900 rounded text-xs text-white border border-white/10">
-              <Search size={10} className="text-white/40" />
-              "{search}"
-              <X 
-                size={12} 
-                className="cursor-pointer hover:text-red-400 ml-1" 
-                onClick={() => setSearch("")} 
+          <div className="flex items-center gap-2 flex-wrap">
+            {search && (
+              <Tag label={`"${search}"`} icon={<Search size={10} />} onClear={() => setSearch("")} />
+            )}
+            {dateFilter !== "all" && (
+              <Tag 
+                label={dateFilter === "today" ? `Hôm nay` : dateFilter === "tomorrow" ? "Ngày mai" : dateFilter === "week" ? "Trong tuần" : formatDateToDisplay(dateFilter)} 
+                icon={<Calendar size={10} />} 
+                onClear={() => setDateFilter("all")} 
               />
-            </span>
-          )}
-          
-          {dateFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-900 rounded text-xs text-white border border-white/10">
-              <Calendar size={10} className="text-white/40" />
-              {dateFilter === "today" ? `Hôm nay (${getTodayDisplay()})` : 
-               dateFilter === "tomorrow" ? "Ngày mai" : 
-               dateFilter === "week" ? "Trong tuần" : 
-               formatDateToDisplay(dateFilter)}
-              <X 
-                size={12} 
-                className="cursor-pointer hover:text-red-400 ml-1" 
-                onClick={() => setDateFilter("all")} 
+            )}
+            {statusFilter !== "all" && (
+              <Tag 
+                label={statusOptions.find(o => o.value === statusFilter)?.label} 
+                onClear={() => setStatusFilter("all")}
+                color={statusOptions.find(o => o.value === statusFilter)?.color}
               />
-            </span>
-          )}
-          
-          {statusFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-900 rounded text-xs border border-white/10"
-              style={{ color: statusOptions.find(o => o.value === statusFilter)?.color || '#fff' }}
-            >
-              {statusOptions.find(o => o.value === statusFilter)?.label}
-              <X 
-                size={12} 
-                className="cursor-pointer hover:text-red-400 ml-1 text-white" 
-                onClick={() => setStatusFilter("all")} 
+            )}
+            {cinemaFilter !== "all" && (
+              <Tag 
+                label={cinemas.find(c => c.id === cinemaFilter)?.name} 
+                onClear={() => setCinemaFilter("all")} 
               />
-            </span>
-          )}
-          
-          {cinemaFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-900 rounded text-xs text-white border border-white/10">
-              {cinemas.find(c => c.id === cinemaFilter)?.name}
-              <X 
-                size={12} 
-                className="cursor-pointer hover:text-red-400 ml-1" 
-                onClick={() => setCinemaFilter("all")} 
-              />
-            </span>
-          )}
-
-          <button
-            onClick={() => {
-              setSearch("");
-              setDateFilter("all");
-              setStatusFilter("all");
-              setCinemaFilter("all");
-            }}
-            className="text-xs text-red-400 hover:text-red-300 ml-auto"
-          >
-            Xóa tất cả
-          </button>
+            )}
+          </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function Tag({ label, icon, onClear, color }) {
+  return (
+    <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-white/[0.03] border border-white/10 rounded-lg text-xs font-medium group hover:border-red-500/30 transition-all">
+      {icon && <span className="text-gray-500">{icon}</span>}
+      <span style={color ? { color } : {}} className="text-gray-300 font-bold">{label}</span>
+      <button 
+        onClick={onClear} 
+        className="text-gray-600 hover:text-red-500 transition-colors"
+      >
+        <X size={12} />
+      </button>
     </div>
   );
 }

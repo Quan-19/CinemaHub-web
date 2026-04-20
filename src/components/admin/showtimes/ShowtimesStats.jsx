@@ -4,7 +4,7 @@ import { getTodayDate, formatDateToDisplay, getTodayDisplay } from "../../../uti
 export default function ShowtimesStats({ showtimes, onDateChange, specialTypes }) {
   const today = getTodayDate();
   const todayDisplay = getTodayDisplay();
-  
+
   const stats = {
     today: showtimes.filter(s => s.date === today).length,
     upcoming: showtimes.filter(s => s.date > today && s.status === "scheduled").length,
@@ -14,7 +14,7 @@ export default function ShowtimesStats({ showtimes, onDateChange, specialTypes }
 
   return (
     <div className="grid grid-cols-4 gap-3">
-      <div 
+      <div
         onClick={() => onDateChange('today')}
         className="bg-cinema-surface border border-white/10 rounded-xl p-4 cursor-pointer hover:bg-white/5 transition"
       >

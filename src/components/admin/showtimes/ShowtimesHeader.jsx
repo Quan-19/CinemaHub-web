@@ -40,7 +40,7 @@ export default function ShowtimesHeader({ total, specialCount, onAdd, onExport, 
             )}
             Xuất dữ liệu
           </button>
-          
+
           {showExportMenu && (
             <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-white/10 rounded-lg shadow-xl z-20">
               <button
