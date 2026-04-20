@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
+  ChevronRight,
   Clapperboard,
   Clock,
   LayoutDashboard,
@@ -69,29 +70,51 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
   return (
     <aside
       className={[
-        "fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col overflow-hidden border-r border-zinc-700 bg-indigo-950/20 backdrop-blur-xl transition-transform duration-200 lg:sticky lg:top-0 lg:translate-x-0 lg:bg-indigo-950/35 lg:backdrop-blur-none",
+        "fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col overflow-hidden border-r border-zinc-700 bg-indigo-950/20 backdrop-blur-xl transition-all duration-300 lg:sticky lg:top-0 lg:translate-x-0 lg:bg-indigo-950/35 lg:backdrop-blur-none",
         mobileOpen ? "translate-x-0" : "-translate-x-full",
         "w-[86vw] max-w-[320px] sm:w-[320px]",
-        collapsed ? "lg:w-[76px]" : "lg:w-[280px]",
+        collapsed ? "lg:w-20" : "lg:w-[280px]",
       ].join(" ")}
     >
-      <div className="flex items-center justify-between gap-2 px-4 py-4">
+      <div
+        className={[
+          "flex items-center justify-between gap-2 py-4",
+          collapsed ? "px-3" : "px-4",
+        ].join(" ")}
+      >
         <div
           className={[
             "flex items-center gap-2",
-            collapsed ? "justify-center" : "",
+            collapsed ? "justify-start" : "",
           ].join(" ")}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cinema-primary text-white">
-            <span className="text-lg font-black">★</span>
+          <div
+            className={[
+              "flex items-center justify-center bg-cinema-primary text-white",
+              collapsed ? "h-9 w-9 rounded-xl" : "h-10 w-10 rounded-2xl",
+            ].join(" ")}
+          >
+            <span className={collapsed ? "text-base font-black" : "text-lg font-black"}>
+              ★
+            </span>
           </div>
           {!collapsed && (
             <div className="leading-tight">
               <div className="text-sm font-bold tracking-wide">EBIZCINEMA</div>
-              <div className="text-xs text-zinc-400">Nhân viên rạp</div>
+              <div className="text-xs text-zinc-400">Quản lý rạp</div>
             </div>
           )}
         </div>
+
+        <button
+          type="button"
+          onClick={onToggle}
+          className="hidden lg:inline-flex rounded p-1 hover:bg-white/10"
+          aria-label={collapsed ? "Mở rộng menu" : "Thu gọn menu"}
+          title={collapsed ? "Mở rộng" : "Thu gọn"}
+        >
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
 
         <button
           type="button"
@@ -100,24 +123,6 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
           aria-label="Đóng menu"
         >
           <X className="h-4 w-4" />
-        </button>
-
-        <button
-          type="button"
-          onClick={onToggle}
-          className={[
-            "absolute -right-3 top-6 hidden h-8 w-8 items-center justify-center rounded-full border border-zinc-700 bg-cinema-surface text-zinc-200 hover:bg-zinc-900 lg:inline-flex",
-          ].join(" ")}
-          aria-label={
-            collapsed ? "Mở rộng thanh điều hướng" : "Thu gọn thanh điều hướng"
-          }
-        >
-          <ChevronLeft
-            className={[
-              "h-4 w-4 transition-transform",
-              collapsed ? "rotate-180" : "",
-            ].join(" ")}
-          />
         </button>
       </div>
 
@@ -133,7 +138,7 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
           <div className="mb-3 rounded-2xl border border-zinc-700 bg-cinema-surface px-3 py-2 text-xs text-zinc-300">
             <span className="inline-flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-cinema-primary" />
-              Nhân viên rạp
+              Quản lý rạp
             </span>
           </div>
         )}
