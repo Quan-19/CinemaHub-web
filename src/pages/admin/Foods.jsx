@@ -1,23 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
-import { Plus, Edit, Trash2, Package, Search, X } from "lucide-react";
-
+import { Plus, Edit, Trash2, Package, Search, X, Upload, Image as ImageIcon } from "lucide-react";
+import toast from "react-hot-toast";
 export default function Foods() {
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingFood, setEditingFood] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
+  
   const [formData, setFormData] = useState({
     name: "",
     price: "",
-    image: "",
+    image: null,        // Thay đổi: lưu File object thay vì URL
+    imagePreview: "",   // Thêm preview cho ảnh
     status: "available",
   });
 
   const formatCurrency = (amount) => {
-    // Chuyển đổi sang số và làm tròn
     const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
     return Math.round(numAmount).toLocaleString("vi-VN") + "₫";
   };
@@ -25,7 +28,6 @@ export default function Foods() {
   const fetchFoods = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/foods");
-      // Format giá ngay khi nhận dữ liệu
       const formattedFoods = res.data.map((food) => ({
         ...food,
         price_formatted: formatCurrency(food.price),
@@ -43,38 +45,86 @@ export default function Foods() {
     fetchFoods();
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const auth = getAuth();
-    const user = auth.currentUser;
-    const token = await user.getIdToken();
-
-    // Đảm bảo price là số
-    const submitData = {
-      ...formData,
-      price: parseFloat(formData.price),
-    };
-
-    try {
-      if (editingFood) {
-        await axios.put(
-          `http://localhost:5000/api/foods/${editingFood.food_id}`,
-          submitData,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-      } else {
-        await axios.post("http://localhost:5000/api/foods", submitData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+  // Xử lý chọn file
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Kiểm tra loại file
+      if (!file.type.startsWith('image/')) {
+        alert("Vui lòng chọn file ảnh (jpg, png, gif, ...)");
+        return;
       }
-      fetchFoods();
-      setShowModal(false);
-      resetForm();
-    } catch (error) {
-      console.error("Lỗi lưu food:", error);
-      alert(error.response?.data?.message || "Có lỗi xảy ra");
+      // Kiểm tra kích thước (tối đa 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Ảnh không được vượt quá 5MB");
+        return;
+      }
+      
+      setFormData({
+        ...formData,
+        image: file,
+        imagePreview: URL.createObjectURL(file)
+      });
     }
   };
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  const auth = getAuth();
+  const user = auth.currentUser;
+  const token = await user.getIdToken();
+
+  // Tạo FormData
+  const submitData = new FormData();
+  submitData.append("name", formData.name);
+  submitData.append("price", parseFloat(formData.price));
+  submitData.append("status", formData.status);
+  
+  // CHỈ THÊM NẾU CÓ FILE MỚI
+  if (formData.image && formData.image instanceof File) {
+    submitData.append("image", formData.image);
+  }
+
+  // Debug: kiểm tra dữ liệu
+  console.log("=== FormData being sent ===");
+  for (let pair of submitData.entries()) {
+    console.log(pair[0], pair[1]);
+  }
+
+  try {
+    setUploading(true);
+    
+    if (editingFood) {
+      await axios.put(
+        `http://localhost:5000/api/foods/${editingFood.food_id}`,
+        submitData,
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data"
+          } 
+        }
+      );
+    } else {
+      await axios.post("http://localhost:5000/api/foods", submitData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"
+        },
+      });
+    }
+    
+    fetchFoods();
+    setShowModal(false);
+    resetForm();
+    toast.success(editingFood ? "Cập nhật thành công!" : "Thêm mới thành công!");
+  } catch (error) {
+    console.error("Lỗi chi tiết:", error.response?.data || error);
+    toast.error(error.response?.data?.error || "Có lỗi xảy ra");
+  } finally {
+    setUploading(false);
+  }
+};
 
   const handleDelete = async (id) => {
     if (!confirm("Bạn có chắc muốn xóa món này?")) return;
@@ -94,23 +144,33 @@ export default function Foods() {
   };
 
   const resetForm = () => {
-    setEditingFood(null);
-    setFormData({ name: "", price: "", image: "", status: "available" });
-  };
-
+  // Cleanup preview URL
+  if (formData.imagePreview && formData.imagePreview.startsWith('blob:')) {
+    URL.revokeObjectURL(formData.imagePreview);
+  }
+  setEditingFood(null);
+  setFormData({ 
+    name: "", 
+    price: "", 
+    image: null,      // Reset về null
+    imagePreview: "", 
+    status: "available" 
+  });
+};
   const openEditModal = (food) => {
-    setEditingFood(food);
-    setFormData({
-      name: food.name,
-      price: food.price_raw || food.price,
-      image: food.image || "",
-      status: food.status,
-    });
-    setShowModal(true);
-  };
+  setEditingFood(food);
+  setFormData({
+    name: food.name,
+    price: food.price_raw || food.price,
+    image: null,                    // Quan trọng: không giữ file cũ
+    imagePreview: food.image || "", // Hiển thị ảnh cũ
+    status: food.status,
+  });
+  setShowModal(true);
+};
 
   const filteredFoods = foods.filter((food) =>
-    food.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    food.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -294,7 +354,7 @@ export default function Foods() {
         )}
       </div>
 
-      {/* Modal Thêm/Sửa - Giống form kia */}
+      {/* Modal Thêm/Sửa */}
       {showModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
@@ -308,7 +368,6 @@ export default function Foods() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
             <div className="flex items-center justify-between p-5 border-b border-white/10">
               <h2 className="text-white text-xl font-bold">
                 {editingFood ? "Sửa món ăn" : "Thêm món ăn mới"}
@@ -321,7 +380,6 @@ export default function Foods() {
               </button>
             </div>
 
-            {/* Modal Body */}
             <form onSubmit={handleSubmit} className="p-5">
               <div className="space-y-4">
                 <div>
@@ -356,19 +414,56 @@ export default function Foods() {
                   />
                 </div>
 
+                {/* Upload Ảnh - Thay đổi ở đây */}
                 <div>
                   <label className="text-zinc-400 text-sm block mb-2">
-                    URL Hình ảnh
+                    Hình ảnh
                   </label>
-                  <input
-                    type="text"
-                    value={formData.image}
-                    onChange={(e) =>
-                      setFormData({ ...formData, image: e.target.value })
-                    }
-                    placeholder="https://example.com/image.jpg"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 transition-colors"
-                  />
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white transition-colors"
+                    >
+                      <Upload size={16} />
+                      Chọn ảnh
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    {formData.imagePreview && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, image: null, imagePreview: "" });
+                        }}
+                        className="text-red-400 text-sm hover:text-red-300"
+                      >
+                        Xóa ảnh
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Preview ảnh */}
+                  {formData.imagePreview && (
+                    <div className="mt-3">
+                      <div className="relative w-32 h-32 rounded-lg overflow-hidden bg-zinc-800 border border-zinc-700">
+                        <img
+                          src={formData.imagePreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  <p className="text-zinc-500 text-xs mt-2">
+                    Hỗ trợ: JPG, PNG, GIF (tối đa 5MB)
+                  </p>
                 </div>
 
                 <div>
@@ -388,7 +483,6 @@ export default function Foods() {
                 </div>
               </div>
 
-              {/* Modal Footer */}
               <div className="flex gap-3 mt-6 pt-4 border-t border-white/10">
                 <button
                   type="button"
@@ -399,9 +493,10 @@ export default function Foods() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:opacity-90 text-white font-semibold transition-all duration-200"
+                  disabled={uploading}
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:opacity-90 text-white font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {editingFood ? "Cập nhật" : "Thêm mới"}
+                  {uploading ? "Đang xử lý..." : (editingFood ? "Cập nhật" : "Thêm mới")}
                 </button>
               </div>
             </form>
