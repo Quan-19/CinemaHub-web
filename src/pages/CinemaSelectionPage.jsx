@@ -153,11 +153,14 @@ export const CinemaSelectionPage = () => {
   const [movieLoading, setMovieLoading] = useState(true);
   const [scheduleLoading, setScheduleLoading] = useState(true);
   const {
+    selectedDate: cachedDate,
+    selectedCinema: cachedCinema,
     setSelectedMovie,
     setSelectedCinema,
     setSelectedShowtime,
     setSelectedDate,
   } = useBooking();
+
   const preferredCinemaId = searchParams.get("cinemaId");
   const hasPreferredCinema = Boolean(
     preferredCinemaId &&
@@ -177,7 +180,20 @@ export const CinemaSelectionPage = () => {
           .map((showtime) => formatDateKey(showtime.date))
           .filter(Boolean)
       )
-    ).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    )
+      .filter((dateStr) => {
+        const d = new Date(dateStr);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const diffTime = d.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // Only today and next 7 days
+        return diffDays >= 0 && diffDays <= 7;
+      })
+      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
 
     return uniqueDateKeys.map((value) => {
       const currentDate = new Date(value);
@@ -284,9 +300,12 @@ export const CinemaSelectionPage = () => {
       .filter(Boolean);
   }, [apiCinemas, apiShowtimes, selectedDateValue]);
 
-  const [selectedRegion, setSelectedRegion] = useState(
-    preferredCinema ? getRegionIdFromCinema(preferredCinema) : ""
-  );
+  const [selectedRegion, setSelectedRegion] = useState(() => {
+    if (preferredCinema) return getRegionIdFromCinema(preferredCinema);
+    if (cachedCinema) return getRegionIdFromCinema(cachedCinema);
+    return "";
+  });
+
   const [expandedCinema, setExpandedCinema] = useState(
     hasPreferredCinema ? preferredCinemaId : null
   );
@@ -301,10 +320,33 @@ export const CinemaSelectionPage = () => {
     );
     return regionIds.map(createRegionOption);
   }, [cinemasWithShowtimes]);
+  // Restore selected date index from cache
   useEffect(() => {
-    if (selectedDateIdx <= dateOptions.length - 1) return;
-    setSelectedDateIdx(0);
-  }, [dateOptions, selectedDateIdx]);
+    if (dateOptions.length > 0) {
+      if (cachedDate) {
+        const cachedIdx = dateOptions.findIndex((d) => d.value === cachedDate);
+        if (cachedIdx !== -1) {
+          setSelectedDateIdx(cachedIdx);
+          return;
+        }
+      }
+      // If not found in cache or no cache, stay at 0 but ensure it's in bounds
+      if (selectedDateIdx >= dateOptions.length) {
+        setSelectedDateIdx(0);
+      }
+    }
+  }, [dateOptions, cachedDate, selectedDateIdx]);
+
+  // Restore expanded cinema from cache
+  useEffect(() => {
+    if (cachedCinema && !expandedCinema && apiCinemas.length > 0) {
+      const cinemaId = String(cachedCinema.id || cachedCinema.cinema_id);
+      if (apiCinemas.some(c => String(c.id) === cinemaId)) {
+        setExpandedCinema(cinemaId);
+      }
+    }
+  }, [cachedCinema, expandedCinema, apiCinemas]);
+
 
   useEffect(() => {
     let active = true;
