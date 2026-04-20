@@ -19,6 +19,7 @@ import {
   QrCode,
   X,
   AlertCircle,
+  Image as ImageIcon,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,6 +31,65 @@ import {
   useSearchParams,
   useBlocker,
 } from "react-router-dom";
+
+// Helper functions để xử lý date - SỬA LẠI HOÀN CHỈNH
+const formatDateTime = (showtimeData) => {
+  if (!showtimeData) return null;
+  
+  // Trường hợp có start_time hoặc startTime
+  let dateTimeString = showtimeData.start_time || showtimeData.startTime;
+  
+  // Nếu không có, lấy từ date + time
+  if (!dateTimeString && showtimeData.date && showtimeData.time) {
+    dateTimeString = `${showtimeData.date}T${showtimeData.time}`;
+  }
+  
+  // Nếu chỉ có date (không có time)
+  if (!dateTimeString && showtimeData.date) {
+    dateTimeString = showtimeData.date;
+  }
+
+  if (!dateTimeString) return null;
+
+  // Xử lý format
+  let safeString = dateTimeString;
+  if (safeString.includes(' ') && !safeString.includes('T')) {
+    safeString = safeString.replace(' ', 'T');
+  }
+  
+  const date = new Date(safeString);
+
+  if (isNaN(date.getTime())) {
+    console.error("❌ Invalid date:", dateTimeString);
+    return null;
+  }
+
+  return date;
+};
+
+const formatDateVI = (showtimeData) => {
+  const date = formatDateTime(showtimeData);
+  if (!date) return "Đang cập nhật";
+  return date.toLocaleDateString("vi-VN");
+};
+
+const formatTimeVI = (showtimeData) => {
+  const date = formatDateTime(showtimeData);
+  if (!date) return "Đang cập nhật";
+  return date.toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' });
+};
+
+const formatDateTimeVI = (showtimeData) => {
+  const date = formatDateTime(showtimeData);
+  if (!date) return "";
+  return date.toLocaleString("vi-VN", {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
 
 // Constants
 const PAYMENT_METHODS = [
@@ -107,6 +167,8 @@ export default function BookingConfirmationPage() {
   const [bookingCode, setBookingCode] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
+  const [selectedFoodImage, setSelectedFoodImage] = useState(null);
+  const [showFoodImageModal, setShowFoodImageModal] = useState(false);
 
   // Dữ liệu booking từ API (cho callback)
   const [bookingData, setBookingData] = useState(null);
@@ -120,16 +182,19 @@ export default function BookingConfirmationPage() {
 
   // ✅ CẢNH BÁO KHI THOÁT TRANG (Dùng useBlocker)
   const blocker = useBlocker(({ nextLocation }) => {
-    // Chỉ chặn nếu:
-    // 1. Đang ở bước confirm (chưa xong)
-    // 2. Không phải đang thực hiện thanh toán (để tránh block redirect URL nội bộ nếu có)
-    // 3. Có dữ liệu ghế (đang giữ ghế)
-    // 4. KHÔNG phải là callback thanh toán (đã xong)
     return (
       step === "confirm" && !paying && seats.length > 0 && !isPaymentCallback
     );
   });
-
+// Thêm function debug này sau các helper functions
+const debugShowtimeData = (showtime) => {
+  console.log("=== DEBUG SHOWTIME DATA ===");
+  console.log("Raw start_time:", showtime?.start_time);
+  console.log("Type of start_time:", typeof showtime?.start_time);
+  console.log("Formatted date:", formatDateVI(showtime?.start_time));
+  console.log("Formatted time:", formatTimeVI(showtime?.start_time));
+  console.log("==========================");
+};
   // Sự kiện BeforeUnload vẫn giữ cho đóng tab/refresh
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -143,19 +208,26 @@ export default function BookingConfirmationPage() {
   }, [step, seats.length, isPaymentCallback]);
 
   // ========== DEBUG LOG ==========
-  useEffect(() => {
-    console.log("=== BOOKING CONFIRMATION PAGE ===");
-    console.log("URL:", window.location.href);
-    console.log("Search params:", Object.fromEntries(searchParams.entries()));
-    console.log("paymentStatus:", paymentStatus);
-    console.log("paymentBookingId:", paymentBookingId);
-    console.log("isPaymentCallback:", isPaymentCallback);
-    console.log("Has state showtime:", !!showtime);
-    console.log("Has state seats:", seats.length);
-    console.log("Has state movie:", !!movie);
-    console.log("=================================");
-  }, []);
-
+  // Thêm useEffect này để debug showtime data
+useEffect(() => {
+  if (showtime) {
+    console.log("=== SHOWTIME DATA DEBUG ===");
+    console.log("Raw showtime:", showtime);
+    console.log("start_time:", showtime.start_time);
+    console.log("startTime:", showtime.startTime);
+    console.log("show_date:", showtime.show_date);
+    console.log("date:", showtime.date);
+    console.log("Formatted date from start_time:", formatDateVI(showtime.start_time));
+    console.log("Formatted time from start_time:", formatTimeVI(showtime.start_time));
+    console.log("==========================");
+  }
+}, [showtime]);
+useEffect(() => {
+  if (showtime?.start_time) {
+    debugShowtimeData(showtime);
+  }
+  console.log("Full showtime object:", showtime);
+}, [showtime]);
   // ========== EFFECT 1: Fetch booking data khi callback ==========
   useEffect(() => {
     const fetchBookingData = async () => {
@@ -175,7 +247,6 @@ export default function BookingConfirmationPage() {
         if (!user) {
           console.error("User not logged in");
           setFetchError("Vui lòng đăng nhập lại");
-          // Đợi user đăng nhập? Có thể redirect về login
           return;
         }
 
@@ -253,16 +324,13 @@ export default function BookingConfirmationPage() {
   }, [isPaymentCallback, paymentBookingId]);
 
   // ========== EFFECT 2: Load foods từ API ==========
-  // Trong useEffect load foods (dòng 168-185)
   useEffect(() => {
     axios
       .get("http://localhost:5000/api/foods")
       .then((res) => {
-        // Format giá tiền cho mỗi food
         const formattedFoods = res.data.map((food) => ({
           ...food,
-          // Làm tròn giá trước khi format
-          price: Math.round(parseFloat(food.price)), // Ghi đè price thành số nguyên
+          price: Math.round(parseFloat(food.price)),
           price_formatted:
             Math.round(parseFloat(food.price)).toLocaleString("vi-VN") + "₫",
         }));
@@ -280,17 +348,16 @@ export default function BookingConfirmationPage() {
 
   // ========== EFFECT 3: Redirect nếu không có dữ liệu và không phải callback ==========
   useEffect(() => {
-    // CHỈ redirect nếu:
-    // 1. KHÔNG phải callback thanh toán
-    // 2. VÀ không có dữ liệu showtime hoặc seats
     if (!isPaymentCallback && (!showtime || seats.length === 0)) {
       console.log("No data and not callback, redirecting to movies");
       navigate("/movies");
     }
   }, [isPaymentCallback, showtime, seats, navigate]);
+  
   const formatCurrency = (amount) => {
     return amount.toLocaleString("vi-VN") + "₫";
   };
+  
   // ========== TÍNH TOÁN GIÁ ==========
   const ticketTotal = seats.reduce(
     (sum, s) => sum + getShowtimeSeatPrice(showtime, String(s?.type || "").toLowerCase()),
@@ -311,216 +378,235 @@ export default function BookingConfirmationPage() {
   };
 
   const handleApplyPromo = async () => {
-    const normalizedCode = promoCode.trim().toUpperCase();
+  const normalizedCode = promoCode.trim().toUpperCase();
 
-    if (!normalizedCode) {
-      setPromoError("Vui lòng nhập mã khuyến mãi");
-      setPromoApplied(false);
-      setPromoDiscountAmount(0);
-      return;
+  if (!normalizedCode) {
+    setPromoError("Vui lòng nhập mã khuyến mãi");
+    setPromoApplied(false);
+    setPromoDiscountAmount(0);
+    return;
+  }
+
+  try {
+    const params = new URLSearchParams({
+      code: normalizedCode,
+      originalPrice: String(ticketTotal),
+    });
+
+    const showtimeCinemaId = showtime?.cinema_id ?? showtime?.cinemaId;
+    if (showtimeCinemaId !== undefined && showtimeCinemaId !== null) {
+      params.set("cinemaId", String(showtimeCinemaId));
     }
 
-    try {
-      const params = new URLSearchParams({
-        code: normalizedCode,
-        originalPrice: String(ticketTotal),
-      });
+    // ✅ SỬA LỖI: lấy ngày từ showtime object
+    const showtimeDate = formatDateTime(showtime);
+    if (showtimeDate) {
+      params.set("date", showtimeDate.toISOString().split("T")[0]);
+    }
 
-      const showtimeCinemaId = showtime?.cinema_id ?? showtime?.cinemaId;
-      if (showtimeCinemaId !== undefined && showtimeCinemaId !== null) {
-        params.set("cinemaId", String(showtimeCinemaId));
-      }
+    const res = await fetch(
+      `http://localhost:5000/api/promotions/calculate?${params.toString()}`
+    );
+    const data = await res.json();
 
-      const startTime = showtime?.start_time ?? showtime?.startTime;
-      if (startTime) {
-        params.set(
-          "date",
-          new Date(startTime).toISOString().split("T")[0]
-        );
-      }
-
-      const res = await fetch(
-        `http://localhost:5000/api/promotions/calculate?${params.toString()}`
+    if (res.ok && data?.success) {
+      setPromoApplied(true);
+      setPromoDiscountAmount(Number(data.discountAmount || 0));
+      setPromoError("");
+    } else {
+      setPromoError(
+        data?.message ||
+          data?.error ||
+          "Mã khuyến mãi không hợp lệ hoặc đã hết hạn"
       );
-      const data = await res.json();
-
-      if (res.ok && data?.success) {
-        setPromoApplied(true);
-        setPromoDiscountAmount(Number(data.discountAmount || 0));
-        setPromoError("");
-      } else {
-        setPromoError(
-          data?.message ||
-            data?.error ||
-            "Mã khuyến mãi không hợp lệ hoặc đã hết hạn"
-        );
-        setPromoApplied(false);
-        setPromoDiscountAmount(0);
-      }
-    } catch (e) {
-      setPromoError("Không thể kết nối đến server");
       setPromoApplied(false);
       setPromoDiscountAmount(0);
     }
-  };
+  } catch (e) {
+    setPromoError("Không thể kết nối đến server");
+    setPromoApplied(false);
+    setPromoDiscountAmount(0);
+  }
+};
 
   const handleConfirm = async () => {
-    const actualShowtimeId = showtime?.showtime_id || showtime?.id;
+  const actualShowtimeId = showtime?.showtime_id || showtime?.id;
 
-    if (!actualShowtimeId) {
-      console.error("❌ Không tìm thấy showtime_id!");
-      alert(
-        "Lỗi: Không tìm thấy thông tin suất chiếu. Vui lòng quay lại chọn lại.",
-      );
+  if (!actualShowtimeId) {
+    console.error("❌ Không tìm thấy showtime_id!");
+    alert("Lỗi: Không tìm thấy thông tin suất chiếu.");
+    return;
+  }
+
+  setPaying(true);
+
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      alert("Bạn chưa đăng nhập!");
+      setPaying(false);
       return;
     }
 
-    if (comboTotal > 0) {
-      alert(
-        "Combo bắp nước hiện chưa hỗ trợ trong thanh toán. Vui lòng bỏ chọn combo để tiếp tục.",
-      );
-      return;
+    const token = await user.getIdToken(true);
+    const method = selectedPaymentMethod?.toLowerCase().trim();
+
+    // Tính tổng tiền vé
+    let ticketTotalCalc = 0;
+    for (const seat of seats) {
+      const seatPrice = getShowtimeSeatPrice(showtime, String(seat?.type || "").toLowerCase());
+      ticketTotalCalc += seatPrice;
     }
 
-    setPaying(true);
-
-    try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-
-      if (!user) {
-        alert("Bạn chưa đăng nhập!");
-        setPaying(false);
-        return;
-      }
-
-      const token = await user.getIdToken(true);
-      const method = selectedPaymentMethod?.toLowerCase().trim();
-
-      // Tính giá ghế
-      const calculateSeatPrice = (seatType, basePrice = 75000) => {
-        if (seatType === "vip") return Math.round(basePrice * 1.3);
-        if (seatType === "couple") return Math.round(basePrice * 1.5);
-        return basePrice;
-      };
-
-      // Chuẩn bị dữ liệu foods
-      const selectedFoods = foods
-        .filter((food) => (comboCounts[food.food_id] || 0) > 0)
-        .map((food) => ({
+    // Tính tổng tiền combo
+    let comboTotalCalc = 0;
+    const selectedFoods = [];
+    for (const food of foods) {
+      const quantity = comboCounts[food.food_id] || 0;
+      if (quantity > 0) {
+        const foodTotal = food.price * quantity;
+        comboTotalCalc += foodTotal;
+        selectedFoods.push({
           food_id: food.food_id,
-          quantity: comboCounts[food.food_id],
+          quantity: quantity,
           price: food.price,
-        }));
+        });
+      }
+    }
 
-      // 1. CREATE BOOKING
-      const bookingRes = await axios.post(
-        "http://localhost:5000/api/bookings",
-        {
-          user_id: user.user_id,
-          showtime_id: actualShowtimeId,
-          total_price: grandTotal,
-          seats: seats.map((s) => ({
-            id: s.id,
-            price: getShowtimeSeatPrice(showtime, String(s.type || "").toLowerCase()),
-          })),
-          payment_method: method,
-          promo_code: promoApplied ? promoCode : null,
-          foods: selectedFoods, // ✅ Thêm foods vào đây
+    const discountCalc = promoApplied ? promoDiscountAmount : 0;
+    const finalGrandTotal = ticketTotalCalc + comboTotalCalc - discountCalc;
+
+    console.log("💰 CHI TIẾT THANH TOÁN:", {
+      ticketTotal: ticketTotalCalc,
+      comboTotal: comboTotalCalc,
+      discount: discountCalc,
+      grandTotal: finalGrandTotal,
+      selectedFoods: selectedFoods
+    });
+
+    // 1. Tạo booking với total_price đã tính đủ
+    const bookingPayload = {
+      user_id: user.user_id,
+      showtime_id: actualShowtimeId,
+      total_price: finalGrandTotal, // ✅ Gửi total đã bao gồm combo
+      seats: seats.map((s) => ({
+        id: s.id,
+        price: getShowtimeSeatPrice(showtime, String(s.type || "").toLowerCase()),
+      })),
+      payment_method: method,
+      promo_code: promoApplied ? promoCode : null,
+      foods: selectedFoods,
+    };
+
+    console.log("📦 Booking payload:", bookingPayload);
+
+    const bookingRes = await axios.post(
+      "http://localhost:5000/api/bookings",
+      bookingPayload,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+
+    const bookingId = bookingRes.data?.booking_id ?? bookingRes.data?.insertId;
+    
+    // ✅ Dùng total đã tính ở frontend
+    const payableAmount = finalGrandTotal;
+
+    console.log("✅ Booking created:", { bookingId, payableAmount });
+
+    if (!bookingId) {
+      throw new Error("Không lấy được booking_id từ server");
+    }
+
+    // 2. Lưu booking_foods riêng (nếu có)
+    if (selectedFoods.length > 0) {
+      const foodsPayload = {
+        booking_id: bookingId,
+        foods: selectedFoods.map((f) => ({
+          food_id: f.food_id,
+          quantity: f.quantity,
+        })),
+      };
+      console.log("🍿 Foods payload:", foodsPayload);
+      
+      await axios.post(
+        "http://localhost:5000/api/booking-foods",
+        foodsPayload,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+    }
+
+    // 3. Xử lý thanh toán
+    if (method === "vnpay") {
+      const res = await axios.post(
+        "http://localhost:5000/api/payments/vnpay",
+        { 
+          booking_id: bookingId, 
+          amount: payableAmount,
+          order_info: `Thanh toan ve xem phim + combo` 
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      const bookingId =
-        bookingRes.data?.booking_id ?? bookingRes.data?.insertId;
-
-      const payableAmount = bookingRes.data?.total_price ?? grandTotal;
-
-      if (!bookingId) {
-        throw new Error("Không lấy được booking_id từ server");
+      if (!res.data?.paymentUrl) {
+        throw new Error("Không nhận được paymentUrl");
       }
+      window.location.href = res.data.paymentUrl;
+      return;
+    }
 
-      // 2. Nếu có foods, lưu vào booking_food
-      if (selectedFoods.length > 0) {
-        await axios.post(
-          "http://localhost:5000/api/booking-foods",
-          {
-            booking_id: bookingId,
-            foods: selectedFoods.map((f) => ({
-              food_id: f.food_id,
-              quantity: f.quantity,
-            })),
-          },
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-      }
-
-      // 2. XỬ LÝ THEO PHƯƠNG THỨC THANH TOÁN
-      if (method === "vnpay") {
-        const res = await axios.post(
-          "http://localhost:5000/api/payments/vnpay",
-          { booking_id: bookingId, amount: payableAmount },
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-
-        if (!res.data?.paymentUrl) {
-          throw new Error("Không nhận được paymentUrl");
-        }
-        window.location.href = res.data.paymentUrl;
-        return;
-      }
-
-      if (method === "momo") {
-        const res = await axios.post(
-          "http://localhost:5000/api/payment/momo",
-          {
-            booking_id: bookingId,
-            amount: payableAmount,
-            orderInfo: `Thanh toan booking ${bookingId}`,
-          },
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-
-        if (!res.data?.payUrl) {
-          throw new Error("Không nhận được payUrl từ MoMo");
-        }
-
-        window.location.href = res.data.payUrl;
-        return;
-      }
-
-      // CÁC PHƯƠNG THỨC KHÁC (thanh toán ngay)
-      const ticketCode =
-        bookingRes.data?.bookingCode || `CS${Date.now().toString().slice(-8)}`;
-      setBookingCode(ticketCode);
-
-      // Fetch booking seats để hiển thị
-      const seatsRes = await axios.get(
-        `http://localhost:5000/api/booking-seats/booking/${bookingId}`,
+    if (method === "momo") {
+      const res = await axios.post(
+        "http://localhost:5000/api/payment/momo",
+        {
+          booking_id: bookingId,
+          amount: payableAmount,
+          orderInfo: `Thanh toan booking ${bookingId} - Ve xem phim va combo`,
+        },
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      setBookingData({
-        booking: bookingRes.data,
-        seats: seatsRes.data || [],
-        showtime: showtime,
-        movie: movie,
-        bookingCode: ticketCode,
-      });
-
-      setStep("success");
-      setShowConfetti(true);
-    } catch (err) {
-      console.error("❌ Thanh toán thất bại:", err);
-      if (err.response) {
-        alert(err.response.data?.message || "Backend lỗi");
-      } else {
-        alert(err.message || "Thanh toán thất bại.");
+      if (!res.data?.payUrl) {
+        throw new Error("Không nhận được payUrl từ MoMo");
       }
+
+      window.location.href = res.data.payUrl;
+      return;
     }
 
-    setPaying(false);
-  };
+    // Các phương thức thanh toán khác...
+    const ticketCode = `CS${Date.now().toString().slice(-8)}`;
+    setBookingCode(ticketCode);
+
+    const seatsRes = await axios.get(
+      `http://localhost:5000/api/booking-seats/booking/${bookingId}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+
+    setBookingData({
+      booking: { ...bookingRes.data, total_price: payableAmount },
+      seats: seatsRes.data || [],
+      showtime: showtime,
+      movie: movie,
+      bookingCode: ticketCode,
+    });
+
+    setStep("success");
+    setShowConfetti(true);
+  } catch (err) {
+    console.error("❌ Thanh toán thất bại:", err);
+    if (err.response) {
+      console.error("Response error:", err.response.data);
+      alert(err.response.data?.message || "Backend lỗi");
+    } else {
+      alert(err.message || "Thanh toán thất bại.");
+    }
+  }
+
+  setPaying(false);
+};
 
   // ========== RENDER LOADING STATE (callback) ==========
   if (isPaymentCallback && isFetchingBooking) {
@@ -672,20 +758,12 @@ export default function BookingConfirmationPage() {
                     {
                       icon: Calendar,
                       label: "Ngày",
-                      value: displayShowtime?.start_time
-                        ? new Date(
-                            displayShowtime.start_time,
-                          ).toLocaleDateString("vi-VN")
-                        : "Đang cập nhật",
+  value: formatDateVI(displayShowtime),
                     },
                     {
                       icon: Clock,
                       label: "Giờ chiếu",
-                      value: displayShowtime?.start_time
-                        ? new Date(
-                            displayShowtime.start_time,
-                          ).toLocaleTimeString("vi-VN")
-                        : "Đang cập nhật",
+  value: formatTimeVI(displayShowtime),
                     },
                     {
                       icon: Film,
@@ -694,16 +772,9 @@ export default function BookingConfirmationPage() {
                     },
                   ].map((row) => (
                     <div key={row.label} className="flex items-center gap-2.5">
-                      <row.icon
-                        size={12}
-                        style={{ color: "#e50914", opacity: 0.8 }}
-                      />
-                      <span className="text-zinc-400 text-xs min-w-[64px]">
-                        {row.label}
-                      </span>
-                      <span className="text-white text-xs font-semibold">
-                        {row.value}
-                      </span>
+                      <row.icon size={12} style={{ color: "#e50914", opacity: 0.8 }} />
+                      <span className="text-zinc-400 text-xs min-w-[64px]">{row.label}</span>
+                      <span className="text-white text-xs font-semibold">{row.value}</span>
                     </div>
                   ))}
                 </div>
@@ -893,9 +964,7 @@ export default function BookingConfirmationPage() {
                   {displayMovie?.title}
                 </p>
                 <p className="text-zinc-400 text-xs mb-4">
-                  {displayShowtime?.start_time
-                    ? new Date(displayShowtime.start_time).toLocaleString()
-                    : ""}
+                  {formatDateTimeVI(displayShowtime?.start_time)}
                 </p>
                 <div className="text-white text-xl tracking-wider mb-4 font-mono font-black">
                   {displayBookingCode}
@@ -950,7 +1019,7 @@ export default function BookingConfirmationPage() {
     );
   }
 
-  // Render form xác nhận thanh toán
+  // ========== RENDER CONFIRMATION STATE (bình thường) - CÓ ẢNH FOOD ==========
   return (
     <div className="min-h-screen pt-16" style={{ background: "var(--color-cinema-bg)" }}>
       {/* Header */}
@@ -1028,21 +1097,24 @@ export default function BookingConfirmationPage() {
                     <div>
                       <p className="text-zinc-400 text-xs">Rạp chiếu</p>
                       <p className="text-zinc-200 text-xs font-semibold">
-                        {showtime.cinema_name || "CGV"}
+                        {showtime?.cinema_name || "CGV"}
                       </p>
                     </div>
                     <div>
                       <p className="text-zinc-400 text-xs">Suất chiếu</p>
                       <p className="text-zinc-200 text-xs font-semibold">
-                        {new Date(showtime.start_time).toLocaleTimeString(
-                          "vi-VN",
-                        )}
+{formatTimeVI(showtime)}                      </p>
+                    </div>
+                    <div>
+                      <p className="text-zinc-400 text-xs">Ngày chiếu</p>
+                      <p className="text-zinc-200 text-xs font-semibold">
+  {formatDateVI(showtime)}
                       </p>
                     </div>
                     <div>
                       <p className="text-zinc-400 text-xs">Phòng</p>
                       <p className="text-zinc-200 text-xs font-semibold">
-                        {showtime.room_id || "1"}
+                        {showtime?.room_id || "1"}
                       </p>
                     </div>
                     <div>
@@ -1056,7 +1128,7 @@ export default function BookingConfirmationPage() {
               </div>
             </div>
 
-            {/* Combos */}
+            {/* Combos - HIỂN THỊ CÓ ẢNH */}
             <div
               className="rounded-2xl p-5"
               style={{
@@ -1064,45 +1136,82 @@ export default function BookingConfirmationPage() {
                 border: "1px solid rgba(255,255,255,0.07)",
               }}
             >
-              <h3 className="text-white font-semibold mb-4">
+              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
                 🍿 Thêm combo bắp nước (tuỳ chọn)
               </h3>
               <div className="space-y-3">
                 {foods.map((food) => {
                   const count = comboCounts[food.food_id] || 0;
                   return (
-                    <div
+                    <motion.div
                       key={food.food_id}
-                      className="flex items-center justify-between p-3 rounded-xl bg-zinc-900 border border-zinc-700"
+                      whileHover={{ scale: 1.01 }}
+                      className="flex items-center justify-between p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-red-500/30 transition-all"
                     >
-                      <div>
-                        <p className="text-zinc-200 text-sm">{food.name}</p>
-                        <p className="text-red-400 text-xs font-semibold mt-0.5">
-                          {food.price_formatted}{" "}
-                        </p>
+                      <div className="flex items-center gap-3 flex-1">
+                        {/* ẢNH FOOD */}
+                        <div 
+                          className="w-12 h-12 rounded-lg overflow-hidden bg-zinc-800 flex-shrink-0 cursor-pointer relative group/image"
+                          onClick={() => {
+                            if (food.image) {
+                              setSelectedFoodImage(food);
+                              setShowFoodImageModal(true);
+                            }
+                          }}
+                        >
+                          {food.image ? (
+                            <>
+                              <img
+                                src={food.image}
+                                alt={food.name}
+                                className="w-full h-full object-cover transition-transform group-hover/image:scale-110"
+                              />
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
+                                <ImageIcon size={14} className="text-white" />
+                              </div>
+                            </>
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-800">
+                              <ImageIcon size={20} className="text-zinc-500" />
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex-1">
+                          <p className="text-zinc-200 text-sm font-medium">{food.name}</p>
+                          <p className="text-red-400 text-xs font-semibold mt-0.5">
+                            {food.price_formatted}
+                          </p>
+                        </div>
                       </div>
+                      
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => updateCombo(food.food_id, -1)}
                           disabled={count === 0}
-                          className="w-7 h-7 rounded-full bg-zinc-700 flex items-center justify-center text-white disabled:opacity-30 hover:bg-zinc-600 transition"
+                          className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-white disabled:opacity-30 hover:bg-zinc-600 transition-all hover:scale-110"
                         >
-                          <Minus className="w-3 h-3" />
+                          <Minus className="w-3.5 h-3.5" />
                         </button>
-                        <span className="w-5 text-center text-white text-sm font-bold">
+                        <span className="w-6 text-center text-white text-sm font-bold">
                           {count}
                         </span>
                         <button
                           onClick={() => updateCombo(food.food_id, 1)}
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:opacity-90 bg-red-600"
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white hover:scale-110 transition-all bg-red-600 hover:bg-red-500"
                         >
-                          <Plus className="w-3 h-3" />
+                          <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
+              {foods.length === 0 && (
+                <p className="text-zinc-500 text-sm text-center py-4">
+                  Đang tải danh sách combo...
+                </p>
+              )}
             </div>
 
             {/* Promo Code */}
@@ -1271,6 +1380,49 @@ export default function BookingConfirmationPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal phóng to ảnh food */}
+      <AnimatePresence>
+        {showFoodImageModal && selectedFoodImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+            onClick={() => setShowFoodImageModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="relative max-w-lg w-full rounded-2xl overflow-hidden"
+              style={{
+                background: "var(--color-cinema-surface)",
+                border: "1px solid rgba(255,255,255,0.1)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative">
+                <img
+                  src={selectedFoodImage.image}
+                  alt={selectedFoodImage.name}
+                  className="w-full h-auto max-h-[70vh] object-contain"
+                />
+                <button
+                  onClick={() => setShowFoodImageModal(false)}
+                  className="absolute top-3 right-3 p-2 rounded-full bg-black/50 hover:bg-black/70 transition text-white"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="p-4 text-center">
+                <h3 className="text-white font-bold text-lg">{selectedFoodImage.name}</h3>
+                <p className="text-red-400 font-semibold mt-1">{selectedFoodImage.price_formatted}</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ✅ CUSTOM NAVIGATION GUARD MODAL */}
       <AnimatePresence>
