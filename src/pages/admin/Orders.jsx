@@ -1,18 +1,15 @@
-// src/pages/Orders.jsx - Phiên bản đã thêm cột Combo/Đồ ăn
+// src/pages/Orders.jsx - Phiên bản sửa lỗi đọc ghế
 
 import { useState, useEffect } from "react";
 import {
   Search,
   Eye,
   CheckCircle,
-  XCircle,
-  Clock,
   CreditCard,
   Ticket,
   CalendarDays,
   DollarSign,
   Download,
-  Filter,
   ChevronLeft,
   ChevronRight,
   Package,
@@ -23,7 +20,6 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -76,14 +72,67 @@ const Orders = () => {
   };
 
   const fetchBookingSeats = async (bookingId) => {
-    const seatsData = await fetchAPI(
-      `http://localhost:5000/api/booking-seats/booking/${bookingId}`,
-    );
-    if (Array.isArray(seatsData)) {
-      return seatsData.map((seat) => seat.seat_id);
+  try {
+    console.log(`🔍 Đang fetch ghế cho booking ${bookingId}...`);
+    
+    const token = getAuthToken();
+    const response = await fetch(`http://localhost:5000/api/booking-seats/booking/${bookingId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log(`📡 Response status:`, response.status);
+    
+    const rawText = await response.text();
+    console.log(`📄 Raw response:`, rawText);
+    
+    // Nếu response rỗng hoặc không phải JSON
+    if (!rawText || rawText.trim() === '') {
+      console.log(`⚠️ Empty response for booking ${bookingId}`);
+      return [];
     }
+    
+    let data;
+    try {
+      data = JSON.parse(rawText);
+      console.log(`📊 Parsed data:`, JSON.stringify(data, null, 2));
+    } catch (e) {
+      console.error(`❌ Parse error:`, e);
+      return [];
+    }
+    
+    let seatIds = [];
+    
+    // Xử lý các cấu trúc dữ liệu khác nhau
+    if (data && data.data && Array.isArray(data.data)) {
+      seatIds = data.data.map(seat => {
+        const seatId = seat.seat_id || seat.seatId || seat.id;
+        return String(seatId);
+      });
+    } else if (Array.isArray(data)) {
+      seatIds = data.map(seat => {
+        const seatId = seat.seat_id || seat.seatId || seat.id;
+        return String(seatId);
+      });
+    } else if (data && typeof data === 'object') {
+      // Nếu data là object nhưng có chứa seat_ids
+      if (data.seat_ids) seatIds = data.seat_ids.map(s => String(s));
+      else if (data.seats) seatIds = data.seats.map(s => String(s));
+    }
+    
+    // Lọc và log kết quả
+    const validSeats = seatIds.filter(id => id && id !== 'null' && id !== 'undefined');
+    console.log(`✅ Final seats for booking ${bookingId}:`, validSeats);
+    
+    return validSeats;
+    
+  } catch (error) {
+    console.error(`❌ Error:`, error);
     return [];
-  };
+  }
+};
 
   const fetchBookingFoods = async (bookingId) => {
     const foodsData = await fetchAPI(
@@ -122,9 +171,13 @@ const Orders = () => {
     let seatIds = [];
     let foods = [];
 
+    // Fetch seats - đã được cải thiện
     seatIds = await fetchBookingSeats(booking.booking_id);
+    
+    // Fetch foods
     foods = await fetchBookingFoods(booking.booking_id);
-    console.log(`💺 Booking ${booking.booking_id} seats:`, seatIds);
+    
+    console.log(`💺 Booking ${booking.booking_id} final seats:`, seatIds);
     console.log(`🍿 Booking ${booking.booking_id} foods:`, foods);
 
     if (booking.showtime_id) {
@@ -300,12 +353,17 @@ const Orders = () => {
 
       console.log("✅ Final orders with details:", ordersWithDetails);
 
-      ordersWithDetails.sort(
+      // Chỉ lọc các đơn đã thanh toán
+      const paidOrders = ordersWithDetails.filter(order => order.status === "paid");
+      
+      console.log(`💰 Paid orders: ${paidOrders.length}`);
+      
+      paidOrders.sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at),
       );
 
-      setOrders(ordersWithDetails);
-      setTotalPages(Math.ceil(ordersWithDetails.length / itemsPerPage));
+      setOrders(paidOrders);
+      setTotalPages(Math.ceil(paidOrders.length / itemsPerPage));
     } catch (err) {
       console.error("Error fetching orders:", err);
       setOrders([]);
@@ -318,6 +376,7 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
+  // Chỉ lọc theo searchTerm
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.booking_id
@@ -326,60 +385,13 @@ const Orders = () => {
         .includes(searchTerm.toLowerCase()) ||
       order.movie?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.user_id?.toString().includes(searchTerm);
-    const matchesStatus =
-      statusFilter === "all" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
   const paginatedOrders = filteredOrders.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "paid":
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
-            <CheckCircle className="w-3 h-3" />
-            Đã thanh toán
-          </span>
-        );
-      case "pending":
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-            <Clock className="w-3 h-3" />
-            Chờ thanh toán
-          </span>
-        );
-      case "cancelled":
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">
-            <XCircle className="w-3 h-3" />
-            Đã hủy
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400 border border-gray-500/30">
-            {status}
-          </span>
-        );
-    }
-  };
-
-  const getPaymentMethodIcon = (method) => {
-    switch (method?.toLowerCase()) {
-      case "vnpay":
-        return <CreditCard className="w-4 h-4" />;
-      case "momo":
-        return <div className="w-4 h-4 font-bold text-purple-400">M</div>;
-      case "zalopay":
-        return <div className="w-4 h-4 font-bold text-blue-400">Z</div>;
-      default:
-        return <CreditCard className="w-4 h-4" />;
-    }
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -410,23 +422,6 @@ const Orders = () => {
     }).format(amount);
   };
 
-  const getFoodsDisplay = (foods) => {
-    if (!foods || foods.length === 0) {
-      return <span className="text-zinc-500 text-sm">Không có</span>;
-    }
-    return (
-      <div className="flex flex-col gap-1">
-        {foods.map((food, idx) => (
-          <div key={idx} className="flex items-center gap-1 text-sm">
-            <Package className="w-3 h-3 text-red-400" />
-            <span className="text-zinc-300">{food.name}</span>
-            <span className="text-zinc-500">x{food.quantity}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
     setShowDetailModal(true);
@@ -438,14 +433,11 @@ const Orders = () => {
       "Khách hàng",
       "Phim",
       "Ngày chiếu",
-      "Suất chiếu",
       "Rạp",
       "Phòng chiếu",
       "Số vé",
-      "Combo/Đồ ăn",
+      "Danh sách ghế",
       "Tổng tiền",
-      "Trạng thái",
-      "PT thanh toán",
       "Ngày đặt",
     ];
     const rows = filteredOrders.map((order) => [
@@ -453,15 +445,11 @@ const Orders = () => {
       `User ${order.user_id}`,
       order.movie?.title || "N/A",
       formatShowDate(order.formatted_show_date),
-      order.formatted_show_time?.slice(0, 5) || "N/A",
       order.formatted_cinema || "N/A",
       order.room_name || "N/A",
       order.seat_ids?.length || 0,
-      order.foods?.map((f) => `${f.name} x${f.quantity}`).join("; ") ||
-        "Không có",
+      order.seat_ids?.join(", ") || "",
       order.total_amount,
-      order.status === "paid" ? "Đã thanh toán" : "Chờ thanh toán",
-      order.payment_method?.toUpperCase() || "N/A",
       formatDate(order.created_at),
     ]);
 
@@ -500,144 +488,98 @@ const Orders = () => {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-cinema-bg)" }}>
-      <div className="mx-auto w-full px-3 py-6 sm:px-6 lg:px-10">
+      <div className="mx-auto w-full px-4 py-6 sm:px-8 lg:px-12">
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">Quản lý đơn hàng</h1>
-            <p className="text-zinc-400 text-sm mt-1">
-              Quản lý tất cả đơn đặt vé của khách hàng
+            <h1 className="text-3xl font-bold text-white">Quản lý đơn hàng đã thanh toán</h1>
+            <p className="text-zinc-400 text-base mt-2">
+              Danh sách các đơn đặt vé đã được thanh toán thành công
             </p>
           </div>
           <button
             onClick={exportToCSV}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white transition-colors"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white transition-colors text-base"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-5 h-5" />
             Xuất CSV
           </button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+          <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-zinc-400 text-sm">Tổng đơn hàng</p>
-                <p className="text-2xl font-bold text-white">{orders.length}</p>
+                <p className="text-zinc-400 text-base">Tổng đơn đã thanh toán</p>
+                <p className="text-4xl font-bold text-white mt-2">{orders.length}</p>
               </div>
-              <Ticket className="w-8 h-8 text-red-500 opacity-50" />
+              <Ticket className="w-12 h-12 text-red-500 opacity-50" />
             </div>
           </div>
-          <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4">
+          <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-zinc-400 text-sm">Đã thanh toán</p>
-                <p className="text-2xl font-bold text-green-400">
-                  {orders.filter((o) => o.status === "paid").length}
-                </p>
-              </div>
-              <CheckCircle className="w-8 h-8 text-green-500 opacity-50" />
-            </div>
-          </div>
-          <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-zinc-400 text-sm">Chờ thanh toán</p>
-                <p className="text-2xl font-bold text-yellow-400">
-                  {orders.filter((o) => o.status === "pending").length}
-                </p>
-              </div>
-              <Clock className="w-8 h-8 text-yellow-500 opacity-50" />
-            </div>
-          </div>
-          <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-zinc-400 text-sm">Doanh thu</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-zinc-400 text-base">Tổng doanh thu</p>
+                <p className="text-4xl font-bold text-green-400 mt-2">
                   {formatCurrency(
-                    orders
-                      .filter((o) => o.status === "paid")
-                      .reduce((sum, o) => sum + (o.total_amount || 0), 0),
+                    orders.reduce((sum, o) => sum + (o.total_amount || 0), 0),
                   )}
                 </p>
               </div>
-              <DollarSign className="w-8 h-8 text-yellow-500 opacity-50" />
+              <DollarSign className="w-12 h-12 text-yellow-500 opacity-50" />
             </div>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+        {/* Search */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
             <input
               type="text"
               placeholder="Tìm kiếm theo mã đơn, phim, khách hàng..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-white placeholder-zinc-400 focus:outline-none focus:border-red-500 transition-colors"
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700 text-white placeholder-zinc-400 focus:outline-none focus:border-red-500 transition-colors text-base"
             />
-          </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-zinc-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-white focus:outline-none focus:border-red-500"
-            >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="paid">Đã thanh toán</option>
-              <option value="pending">Chờ thanh toán</option>
-              <option value="cancelled">Đã hủy</option>
-            </select>
           </div>
         </div>
 
         {/* Orders Table */}
         {filteredOrders.length === 0 ? (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-12 text-center">
-            <Ticket className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-            <p className="text-zinc-400">Chưa có đơn hàng nào</p>
-            <p className="text-zinc-500 text-sm mt-1">
-              Đơn hàng sẽ hiển thị sau khi khách hàng đặt vé
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-16 text-center">
+            <Ticket className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
+            <p className="text-zinc-400 text-lg">Chưa có đơn hàng đã thanh toán nào</p>
+            <p className="text-zinc-500 text-base mt-2">
+              Đơn hàng sẽ hiển thị sau khi khách hàng thanh toán thành công
             </p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/50">
-              <table className="w-full min-w-[1100px]">
+              <table className="w-full min-w-[900px]">
                 <thead className="border-b border-zinc-800 bg-zinc-900">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-zinc-400 uppercase">
                       Mã đơn
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-zinc-400 uppercase">
                       Phim
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-zinc-400 uppercase">
                       Ngày chiếu
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
-                      Suất chiếu
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-zinc-400 uppercase">
                       Rạp
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-zinc-400 uppercase">
                       Số vé
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
-                      Combo/Đồ ăn
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-zinc-400 uppercase">
                       Tổng tiền
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
-                      Trạng thái
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
+                    <th className="px-6 py-4 text-left text-sm font-medium text-zinc-400 uppercase">
                       Thao tác
                     </th>
                   </tr>
@@ -648,72 +590,67 @@ const Orders = () => {
                       key={order.booking_id}
                       className="border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors"
                     >
-                      <td className="px-4 py-3">
-                        <span className="text-white font-mono text-sm">
+                      <td className="px-6 py-4">
+                        <span className="text-white font-mono text-base font-semibold">
                           #{order.booking_id}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <p className="text-white text-sm font-medium">
+                      <td className="px-6 py-4">
+                        <p className="text-white text-base font-medium">
                           {order.movie?.title ||
                             order.showtime?.movieTitle ||
                             "Đang tải..."}
                         </p>
-                        <p className="text-zinc-400 text-xs">
+                        <p className="text-zinc-400 text-sm mt-1">
                           {order.movie?.duration
                             ? `${order.movie.duration} phút`
                             : order.showtime?.type
                               ? `${order.showtime.type}`
                               : ""}
                         </p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 text-zinc-300 text-sm">
-                          <CalendarDays className="w-3 h-3 text-zinc-400" />
+                       </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-zinc-300 text-base">
+                          <CalendarDays className="w-4 h-4 text-zinc-400" />
                           {formatShowDate(order.formatted_show_date)}
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 text-zinc-300 text-sm">
-                          <Clock className="w-3 h-3 text-zinc-400" />
-                          {order.formatted_show_time?.slice(0, 5) ||
-                            "Đang tải..."}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-zinc-300 text-sm">
+                       </td>
+                      <td className="px-6 py-4">
+                        <span className="text-zinc-300 text-base">
                           {order.formatted_cinema ||
                             order.showtime?.cinemaName ||
                             "Đang tải..."}
                         </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 text-zinc-300 text-sm">
-                          <Ticket className="w-3 h-3 text-zinc-400" />
-                          {order.seat_ids?.length || 0} vé
+                        <p className="text-zinc-500 text-sm mt-1">
+                          {order.room_name || ""}
+                        </p>
+                       </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-zinc-300 text-base">
+                          <Ticket className="w-4 h-4 text-zinc-400" />
+                          <span className="font-semibold text-white">{order.seat_ids?.length || 0}</span> vé
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {getFoodsDisplay(order.foods)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-white font-semibold">
+                        {order.seat_ids && order.seat_ids.length > 0 && (
+                          <div className="text-zinc-500 text-xs mt-1 truncate max-w-[150px]">
+                            ({order.seat_ids.join(", ")})
+                          </div>
+                        )}
+                       </td>
+                      <td className="px-6 py-4">
+                        <span className="text-white font-bold text-lg">
                           {formatCurrency(order.total_amount)}
                         </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {getStatusBadge(order.status)}
-                      </td>
-                      <td className="px-4 py-3">
+                       </td>
+                      <td className="px-6 py-4">
                         <button
                           onClick={() => handleViewDetails(order)}
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors text-sm"
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium border border-blue-500/20"
                         >
-                          <Eye className="w-3 h-3" />
+                          <Eye className="w-4 h-4" />
                           Chi tiết
                         </button>
-                      </td>
-                    </tr>
+                       </td>
+                     </tr>
                   ))}
                 </tbody>
               </table>
@@ -722,20 +659,20 @@ const Orders = () => {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-6 flex items-center justify-between">
-                <p className="text-sm text-zinc-400">
+                <p className="text-base text-zinc-400">
                   Hiển thị {(currentPage - 1) * itemsPerPage + 1} -{" "}
                   {Math.min(currentPage * itemsPerPage, filteredOrders.length)}{" "}
                   trên {filteredOrders.length} đơn
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                     className="p-2 rounded-lg bg-zinc-800 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-700 transition-colors"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-5 h-5" />
                   </button>
-                  <span className="text-white text-sm">
+                  <span className="text-white text-base font-medium">
                     Trang {currentPage} / {totalPages}
                   </span>
                   <button
@@ -745,7 +682,7 @@ const Orders = () => {
                     disabled={currentPage === totalPages}
                     className="p-2 rounded-lg bg-zinc-800 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-700 transition-colors"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
               </div>
@@ -761,82 +698,89 @@ const Orders = () => {
           onClick={() => setShowDetailModal(false)}
         >
           <div
-            className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl"
+            className="relative max-w-3xl w-full max-h-[90vh] overflow-y-auto rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="text-2xl font-bold text-white">
                   Chi tiết đơn hàng #{selectedOrder.booking_id}
                 </h2>
                 <button
                   onClick={() => setShowDetailModal(false)}
                   className="text-zinc-400 hover:text-white transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
 
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-zinc-400 text-xs uppercase">
+                    <label className="text-zinc-400 text-sm uppercase font-semibold">
                       Mã đơn hàng
                     </label>
-                    <p className="text-white font-mono">
+                    <p className="text-white font-mono text-lg mt-1">
                       {selectedOrder.booking_id}
                     </p>
                   </div>
                   <div>
-                    <label className="text-zinc-400 text-xs uppercase">
+                    <label className="text-zinc-400 text-sm uppercase font-semibold">
                       Trạng thái
                     </label>
-                    <div>{getStatusBadge(selectedOrder.status)}</div>
+                    <div className="mt-1">
+                      <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-green-500/20 text-green-400 border border-green-500/30">
+                        <CheckCircle className="w-4 h-4" />
+                        Đã thanh toán
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-zinc-400 text-xs uppercase">
+                  <label className="text-zinc-400 text-sm uppercase font-semibold">
                     Thông tin phim
                   </label>
-                  <div className="mt-1 p-3 rounded-lg bg-zinc-800/50">
-                    <p className="text-white font-medium">
+                  <div className="mt-1 p-4 rounded-lg bg-zinc-800/50">
+                    <p className="text-white font-semibold text-lg">
                       {selectedOrder.movie?.title ||
                         selectedOrder.showtime?.movieTitle ||
                         "Không có dữ liệu"}
                     </p>
-                    {selectedOrder.movie?.duration && (
-                      <p className="text-zinc-400 text-sm">
-                        Thời lượng: {selectedOrder.movie.duration} phút
-                      </p>
-                    )}
-                    {selectedOrder.showtime?.type && (
-                      <p className="text-zinc-400 text-sm">
-                        Định dạng: {selectedOrder.showtime.type}
-                      </p>
-                    )}
-                    {selectedOrder.movie?.director && (
-                      <p className="text-zinc-400 text-sm">
-                        Đạo diễn: {selectedOrder.movie.director}
-                      </p>
-                    )}
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                      {selectedOrder.movie?.duration && (
+                        <p className="text-zinc-400 text-sm">
+                          Thời lượng: {selectedOrder.movie.duration} phút
+                        </p>
+                      )}
+                      {selectedOrder.showtime?.type && (
+                        <p className="text-zinc-400 text-sm">
+                          Định dạng: {selectedOrder.showtime.type}
+                        </p>
+                      )}
+                      {selectedOrder.movie?.director && (
+                        <p className="text-zinc-400 text-sm">
+                          Đạo diễn: {selectedOrder.movie.director}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-zinc-400 text-xs uppercase">
+                    <label className="text-zinc-400 text-sm uppercase font-semibold">
                       Ngày chiếu
                     </label>
-                    <p className="text-white">
+                    <p className="text-white text-base mt-1">
                       {formatShowDate(selectedOrder.formatted_show_date)}
                     </p>
                   </div>
                   <div>
-                    <label className="text-zinc-400 text-xs uppercase">
+                    <label className="text-zinc-400 text-sm uppercase font-semibold">
                       Suất chiếu
                     </label>
-                    <p className="text-white">
+                    <p className="text-white text-base mt-1">
                       {selectedOrder.formatted_show_time?.slice(0, 5) ||
                         "Không có dữ liệu"}
                     </p>
@@ -845,20 +789,20 @@ const Orders = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-zinc-400 text-xs uppercase">
+                    <label className="text-zinc-400 text-sm uppercase font-semibold">
                       Rạp
                     </label>
-                    <p className="text-white">
+                    <p className="text-white text-base mt-1">
                       {selectedOrder.formatted_cinema ||
                         selectedOrder.showtime?.cinemaName ||
                         "Không có dữ liệu"}
                     </p>
                   </div>
                   <div>
-                    <label className="text-zinc-400 text-xs uppercase">
+                    <label className="text-zinc-400 text-sm uppercase font-semibold">
                       Phòng chiếu
                     </label>
-                    <p className="text-white">
+                    <p className="text-white text-base mt-1">
                       {selectedOrder.room_name ||
                         selectedOrder.showtime?.roomName ||
                         "Không có dữ liệu"}
@@ -868,34 +812,37 @@ const Orders = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-zinc-400 text-xs uppercase">
+                    <label className="text-zinc-400 text-sm uppercase font-semibold">
                       Danh sách ghế
                     </label>
-                    <p className="text-white">
+                    <p className="text-white text-base mt-1">
                       {selectedOrder.seat_ids?.length > 0
                         ? selectedOrder.seat_ids.join(", ")
                         : "Không có dữ liệu"}
                     </p>
+                    <p className="text-zinc-500 text-sm mt-1">
+                      Tổng số: {selectedOrder.seat_ids?.length || 0} vé
+                    </p>
                   </div>
                   <div>
-                    <label className="text-zinc-400 text-xs uppercase">
+                    <label className="text-zinc-400 text-sm uppercase font-semibold">
                       Phương thức thanh toán
                     </label>
                     <div className="flex items-center gap-2 mt-1">
-                      {getPaymentMethodIcon(selectedOrder.payment_method)}
-                      <span className="text-white">
+                      <CreditCard className="w-4 h-4 text-zinc-400" />
+                      <span className="text-white text-base">
                         {selectedOrder.payment_method?.toUpperCase() || "N/A"}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Thêm phần hiển thị Combo/Đồ ăn trong modal */}
+                {/* Combo & Đồ ăn */}
                 <div>
-                  <label className="text-zinc-400 text-xs uppercase">
+                  <label className="text-zinc-400 text-sm uppercase font-semibold">
                     Combo & Đồ ăn
                   </label>
-                  <div className="mt-1 p-3 rounded-lg bg-zinc-800/50">
+                  <div className="mt-1 p-4 rounded-lg bg-zinc-800/50">
                     {selectedOrder.foods && selectedOrder.foods.length > 0 ? (
                       <div className="space-y-2">
                         {selectedOrder.foods.map((food, idx) => (
@@ -904,23 +851,23 @@ const Orders = () => {
                             className="flex items-center justify-between"
                           >
                             <div className="flex items-center gap-2">
-                              <Package className="w-4 h-4 text-red-400" />
-                              <span className="text-white">{food.name}</span>
+                              <Package className="w-4 h-4 text-zinc-400" />
+                              <span className="text-white text-base">{food.name}</span>
                               <span className="text-zinc-400 text-sm">
                                 x{food.quantity}
                               </span>
                             </div>
-                            <span className="text-red-400 font-semibold">
+                            <span className="text-white font-semibold text-base">
                               {formatCurrency(food.total)}
                             </span>
                           </div>
                         ))}
                         <div className="border-t border-zinc-700 pt-2 mt-2">
                           <div className="flex justify-between items-center">
-                            <span className="text-zinc-400">
+                            <span className="text-zinc-400 text-base">
                               Tổng tiền đồ ăn:
                             </span>
-                            <span className="text-white font-semibold">
+                            <span className="text-white font-semibold text-base">
                               {formatCurrency(
                                 selectedOrder.foods.reduce(
                                   (sum, f) => sum + f.total,
@@ -932,31 +879,31 @@ const Orders = () => {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-zinc-500">Không có đặt thêm đồ ăn</p>
+                      <p className="text-zinc-500 text-base">Không có đặt thêm đồ ăn</p>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-zinc-400 text-xs uppercase">
+                  <label className="text-zinc-400 text-sm uppercase font-semibold">
                     Ngày đặt
                   </label>
-                  <p className="text-white">
+                  <p className="text-white text-base mt-1">
                     {formatDate(selectedOrder.created_at)}
                   </p>
                 </div>
 
-                <div className="border-t border-zinc-800 pt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-zinc-400">Số lượng vé:</span>
-                    <span className="text-white font-medium">
+                <div className="border-t border-zinc-800 pt-4 mt-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-zinc-400 text-base">Số lượng vé:</span>
+                    <span className="text-white font-semibold text-base">
                       {selectedOrder.seat_ids?.length || 0} vé
                     </span>
                   </div>
                   {selectedOrder.foods && selectedOrder.foods.length > 0 && (
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="text-zinc-400">Tiền đồ ăn:</span>
-                      <span className="text-white font-medium">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-zinc-400 text-base">Tiền đồ ăn:</span>
+                      <span className="text-white font-semibold text-base">
                         {formatCurrency(
                           selectedOrder.foods.reduce(
                             (sum, f) => sum + f.total,
@@ -966,9 +913,9 @@ const Orders = () => {
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-zinc-400">Tổng tiền:</span>
-                    <span className="text-2xl font-bold text-red-500">
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="text-zinc-400 text-lg font-semibold">Tổng tiền:</span>
+                    <span className="text-3xl font-bold text-white">
                       {formatCurrency(selectedOrder.total_amount)}
                     </span>
                   </div>
@@ -978,7 +925,7 @@ const Orders = () => {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="flex-1 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white transition-colors"
+                  className="flex-1 py-3 rounded-xl bg-zinc-700 hover:bg-zinc-600 text-white font-semibold transition-colors text-base"
                 >
                   Đóng
                 </button>
