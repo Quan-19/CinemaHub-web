@@ -837,7 +837,7 @@ export const CinemaSelectionPage = () => {
                                 </span>
                               </div>
                               <span className="text-zinc-400 text-xs">
-                                {st.price.toLocaleString()}đ
+                                {Math.round(Number(st.price || 0)).toLocaleString("vi-VN")}đ
                               </span>
                               <div className="flex items-center gap-1 mt-1">
                                 <Users className="w-3 h-3 text-zinc-400" />

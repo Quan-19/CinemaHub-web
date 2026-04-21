@@ -10,6 +10,7 @@ export default function PaymentResultPage() {
   const [message, setMessage] = useState("Đang xử lý thanh toán...");
   const hasRedirected = useRef(false);
   const isProcessed = useRef(false);
+  const redirectInfo = useRef({ bookingId: null, method: "" });
 
   useLayoutEffect(() => {
     if (isProcessed.current) return;
@@ -117,7 +118,17 @@ export default function PaymentResultPage() {
     const timer = setTimeout(() => {
       hasRedirected.current = true;
       if (status === "success") {
-        navigate("/profile/my-tickets", { replace: true });
+        const bookingId = redirectInfo.current?.bookingId;
+        const method = redirectInfo.current?.method;
+
+        if (bookingId) {
+          navigate(
+            `/booking/confirm?payment_status=success&booking_id=${encodeURIComponent(bookingId)}${method ? `&method=${encodeURIComponent(method)}` : ""}`,
+            { replace: true },
+          );
+        } else {
+          navigate("/profile/my-tickets", { replace: true });
+        }
       } else if (status === "error") {
         navigate("/movies", { replace: true });
       }

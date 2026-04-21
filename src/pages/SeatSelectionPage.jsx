@@ -741,7 +741,7 @@ export const SeatSelectionPage = () => {
                 <span className="text-zinc-500 font-bold text-sm">Tổng tiền</span>
                 <div className="text-right">
                   <span className="text-red-500 font-black text-2xl tracking-tighter shadow-red-500/10">
-                    {total.toLocaleString()}
+                    {Math.round(Number(total || 0)).toLocaleString("vi-VN")}
                     <span className="text-sm ml-0.5">đ</span>
                   </span>
                 </div>

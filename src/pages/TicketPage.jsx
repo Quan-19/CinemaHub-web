@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { CheckCircle, MapPin, Calendar, Clock, Star, Film, Armchair, User, Hash, ChevronLeft } from "lucide-react";
+import axios from "axios";
 
 const SEAT_TYPE_LABEL = {
   standard: "Thường",
@@ -18,6 +19,9 @@ const SEAT_TYPE_COLOR = {
 const RATING_COLOR = {
   P: "#22c55e", T13: "#3b82f6", T16: "#f59e0b", T18: "#ef4444",
 };
+
+const POSTER_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='100'%3E%3Crect fill='%23222230' width='72' height='100' rx='8'/%3E%3Ctext x='36' y='55' text-anchor='middle' fill='%23555' font-size='28'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E";
 
 // Fake barcode made of CSS bars
 const Barcode = ({ value }) => {
@@ -48,6 +52,61 @@ const Barcode = ({ value }) => {
   );
 };
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+const formatVnd = (value) => {
+  const numeric = Number(value);
+  const safe = Number.isFinite(numeric) ? Math.round(numeric) : 0;
+  return `${safe.toLocaleString("vi-VN")}₫`;
+};
+
+const normalizeSeatLabel = (value) => {
+  const raw = String(value ?? "");
+  if (!raw) return "";
+  return raw.includes("_") ? raw.slice(raw.lastIndexOf("_") + 1) : raw;
+};
+
+const parseDateTime = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  // MySQL DATETIME often comes as "YYYY-MM-DD HH:mm:ss" (not ISO)
+  const isoLike = raw.includes(" ") && !raw.includes("T") ? raw.replace(" ", "T") : raw;
+  const date = new Date(isoLike);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+};
+
+const stripDiacritics = (text) => {
+  try {
+    return String(text || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  } catch {
+    return String(text || "");
+  }
+};
+
+const normalizeSeatType = (value) => {
+  const raw = stripDiacritics(String(value ?? "")).toLowerCase().trim();
+  if (!raw) return "standard";
+  if (raw.includes("vip")) return "vip";
+  if (raw.includes("couple") || raw.includes("double") || raw.includes("doi")) return "couple";
+  if (raw.includes("standard") || raw.includes("normal") || raw.includes("regular") || raw.includes("thuong")) return "standard";
+  return raw;
+};
+
+const normalizeAgeRating = (value) => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "P";
+  if (/^T\d+$/i.test(raw)) return raw.toUpperCase();
+  if (/^\d+$/.test(raw)) return `T${raw}`;
+  return raw.toUpperCase();
+};
+
 export const TicketPage = () => {
   const { bookingCode: code } = useParams();
   const navigate = useNavigate();
@@ -56,16 +115,87 @@ export const TicketPage = () => {
   const [showScanAnim, setShowScanAnim] = useState(true);
 
   useEffect(() => {
-    if (!code) { setNotFound(true); return; }
-    const raw = localStorage.getItem(`ticket_${code}`);
-    if (!raw) { setNotFound(true); return; }
-    try {
-      setTicket(JSON.parse(raw));
-    } catch {
-      setNotFound(true);
-    }
-    const t = setTimeout(() => setShowScanAnim(false), 1200);
-    return () => clearTimeout(t);
+    let timeoutId;
+
+    const load = async () => {
+      if (!code) {
+        setNotFound(true);
+        return;
+      }
+
+      setNotFound(false);
+      setTicket(null);
+      setShowScanAnim(true);
+
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/tickets/${encodeURIComponent(code)}`);
+        const data = res.data;
+
+        const startTime = parseDateTime(data?.showtime?.start_time || data?.showtime?.startTime || data?.start_time);
+        const createdAt = parseDateTime(data?.created_at || data?.createdAt);
+
+        const parseGenre = (raw) => {
+          if (!raw) return [];
+          if (Array.isArray(raw)) return raw;
+          const text = String(raw);
+          try {
+            const parsed = JSON.parse(text);
+            if (Array.isArray(parsed)) return parsed;
+          } catch {}
+          return text
+            .split(/,|\|/g)
+            .map((s) => s.trim())
+            .filter(Boolean);
+        };
+
+        const mapped = {
+          bookingCode: data?.ticket_code || data?.booking_code || data?.code || code,
+          customerName: data?.customer_name || data?.customerName || "",
+          cinemaName: data?.cinema?.name || data?.cinema_name || data?.cinemaName || "",
+          cinemaAddress: data?.cinema?.address || data?.cinema_address || data?.cinemaAddress || "",
+          date: startTime ? startTime.toLocaleDateString("vi-VN") : "",
+          time: startTime
+            ? startTime.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+            : "",
+          roomId:
+            data?.showtime?.room?.room_id ??
+            data?.showtime?.room_id ??
+            data?.room_id ??
+            "",
+          roomName:
+            data?.showtime?.room?.name ||
+            data?.showtime?.room_name ||
+            data?.room_name ||
+            "",
+          showtimeType: data?.showtime?.format || data?.showtime?.show_format || data?.showtime?.room?.type || "",
+          movieTitle: data?.movie?.title || data?.movie_title || "",
+          movieOriginalTitle: data?.movie?.original_title || data?.original_title || "",
+          moviePoster: data?.movie?.poster || data?.movie_poster || "",
+          movieDuration: Number(data?.movie?.duration || data?.duration || 0),
+          movieGenre: parseGenre(data?.movie?.genre || data?.genre),
+          movieRating: normalizeAgeRating(data?.movie?.age_rating || data?.age_rating),
+          grandTotal: Math.round(Number(data?.total_price || 0)),
+          issuedAt: createdAt ? createdAt.toLocaleString("vi-VN") : "",
+          seats: (data?.seats || []).map((s) => ({
+            id: normalizeSeatLabel(s.label || s.seat_number || s.seat_id || s.id),
+            type: normalizeSeatType(s.seat_type || s.type),
+          })),
+        };
+
+        setTicket(mapped);
+      } catch (e) {
+        console.error("Failed to load ticket by code:", e);
+        setNotFound(true);
+      }
+
+      timeoutId = setTimeout(() => setShowScanAnim(false), 1200);
+    };
+
+    load();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [code]);
 
   if (notFound) {
@@ -93,7 +223,8 @@ export const TicketPage = () => {
     );
   }
 
-  const ticketUrl = `${window.location.origin}/ticket/${ticket.bookingCode}`;
+  const webBaseUrl = (import.meta.env.VITE_PUBLIC_URL || window.location.origin).replace(/\/$/, "");
+  const ticketUrl = `${webBaseUrl}/ticket/${ticket.bookingCode}`;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start py-8 px-4"
@@ -167,12 +298,12 @@ export const TicketPage = () => {
             {/* Poster */}
             <div className="flex-shrink-0">
               <img
-                src={ticket.moviePoster}
+                src={ticket.moviePoster || POSTER_PLACEHOLDER}
                 alt={ticket.movieTitle}
                 className="rounded-xl object-cover"
                 style={{ width: 72, height: 100, border: "2px solid rgba(255,255,255,0.08)" }}
                 onError={e => {
-                  e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='100'%3E%3Crect fill='%23222230' width='72' height='100' rx='8'/%3E%3Ctext x='36' y='55' text-anchor='middle' fill='%23555' font-size='28'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E";
+                  e.target.src = POSTER_PLACEHOLDER;
                 }}
               />
             </div>
@@ -241,7 +372,7 @@ export const TicketPage = () => {
               {
                 icon: <Film size={13} />,
                 label: "Phòng chiếu",
-                value: ticket.roomId,
+                value: ticket.roomName || ticket.roomId,
                 sub: null,
                 color: "#8b5cf6",
               },
@@ -268,19 +399,22 @@ export const TicketPage = () => {
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>GHẾ ĐÃ ĐẶT</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {ticket.seats.map(seat => (
+              {ticket.seats.map((seat) => {
+                const seatTypeKey = SEAT_TYPE_LABEL[seat.type] ? seat.type : "standard";
+                return (
                 <div key={seat.id}
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
                   style={{
-                    background: seat.type === "vip" ? "rgba(245,158,11,0.12)" : seat.type === "couple" ? "rgba(229,9,20,0.12)" : "rgba(255,255,255,0.06)",
-                    border: `1px solid ${seat.type === "vip" ? "rgba(245,158,11,0.3)" : seat.type === "couple" ? "rgba(229,9,20,0.3)" : "rgba(255,255,255,0.1)"}`,
+                    background: seatTypeKey === "vip" ? "rgba(245,158,11,0.12)" : seatTypeKey === "couple" ? "rgba(229,9,20,0.12)" : "rgba(255,255,255,0.06)",
+                    border: `1px solid ${seatTypeKey === "vip" ? "rgba(245,158,11,0.3)" : seatTypeKey === "couple" ? "rgba(229,9,20,0.3)" : "rgba(255,255,255,0.1)"}`,
                   }}>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: SEAT_TYPE_COLOR[seat.type] }}>{seat.id}</span>
-                  <span className="px-1 py-0.5 rounded text-xs" style={{ fontSize: 9, background: "rgba(0,0,0,0.3)", color: SEAT_TYPE_COLOR[seat.type] }}>
-                    {SEAT_TYPE_LABEL[seat.type]}
+                  <span style={{ fontSize: 14, fontWeight: 800, color: SEAT_TYPE_COLOR[seatTypeKey] }}>{seat.id}</span>
+                  <span className="px-1 py-0.5 rounded text-xs" style={{ fontSize: 9, background: "rgba(0,0,0,0.3)", color: SEAT_TYPE_COLOR[seatTypeKey] }}>
+                    {SEAT_TYPE_LABEL[seatTypeKey]}
                   </span>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -298,7 +432,7 @@ export const TicketPage = () => {
             </div>
             <div className="text-right">
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Tổng thanh toán</div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: "#f59e0b" }}>{ticket.grandTotal.toLocaleString()}₫</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "#f59e0b" }}>{formatVnd(ticket.grandTotal)}</div>
             </div>
           </div>
         </div>
