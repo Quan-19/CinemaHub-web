@@ -32,26 +32,22 @@ import {
   useBlocker,
 } from "react-router-dom";
 
-// Helper functions để xử lý date - SỬA LẠI HOÀN CHỈNH
+// Helper functions để xử lý date
 const formatDateTime = (showtimeData) => {
   if (!showtimeData) return null;
   
-  // Trường hợp có start_time hoặc startTime
   let dateTimeString = showtimeData.start_time || showtimeData.startTime;
   
-  // Nếu không có, lấy từ date + time
   if (!dateTimeString && showtimeData.date && showtimeData.time) {
     dateTimeString = `${showtimeData.date}T${showtimeData.time}`;
   }
   
-  // Nếu chỉ có date (không có time)
   if (!dateTimeString && showtimeData.date) {
     dateTimeString = showtimeData.date;
   }
 
   if (!dateTimeString) return null;
 
-  // Xử lý format
   let safeString = dateTimeString;
   if (safeString.includes(' ') && !safeString.includes('T')) {
     safeString = safeString.replace(' ', 'T');
@@ -91,22 +87,16 @@ const formatDateTimeVI = (showtimeData) => {
   });
 };
 
+const formatCurrency = (amount) => {
+  return (amount || 0).toLocaleString("vi-VN") + "₫";
+};
+
 // Constants
 const PAYMENT_METHODS = [
   { id: "momo", label: "Ví MoMo", icon: "💜", desc: "Thanh toán qua ví MoMo" },
   { id: "vnpay", label: "VNPay QR", icon: "🔵", desc: "Quét mã QR VNPay" },
-  {
-    id: "card",
-    label: "Thẻ tín dụng",
-    icon: "💳",
-    desc: "Visa / Mastercard / JCB",
-  },
-  {
-    id: "zalopay",
-    label: "ZaloPay",
-    icon: "🟢",
-    desc: "Thanh toán qua ZaloPay",
-  },
+  { id: "card", label: "Thẻ tín dụng", icon: "💳", desc: "Visa / Mastercard / JCB" },
+  { id: "zalopay", label: "ZaloPay", icon: "🟢", desc: "Thanh toán qua ZaloPay" },
 ];
 
 // Confetti component
@@ -180,22 +170,38 @@ export default function BookingConfirmationPage() {
   const seats = state?.seats || [];
   const movie = state?.movie;
 
-  // ✅ CẢNH BÁO KHI THOÁT TRANG (Dùng useBlocker)
+  // ========== DEBUG LOG URL PARAMS ==========
+  useEffect(() => {
+    console.log("=== URL PARAMS DEBUG ===");
+    console.log("payment_status:", paymentStatus);
+    console.log("booking_id:", paymentBookingId);
+    console.log("method:", paymentMethod);
+    console.log("isPaymentCallback:", isPaymentCallback);
+    console.log("full URL:", window.location.href);
+    console.log("========================");
+  }, [paymentStatus, paymentBookingId, paymentMethod, isPaymentCallback]);
+
+  // ========== DEBUG LOG STATE ==========
+  useEffect(() => {
+    console.log("=== COMPONENT STATE ===");
+    console.log("step:", step);
+    console.log("bookingData:", bookingData);
+    console.log("isFetchingBooking:", isFetchingBooking);
+    console.log("fetchError:", fetchError);
+    console.log("showtime:", showtime);
+    console.log("seats:", seats);
+    console.log("movie:", movie);
+    console.log("======================");
+  }, [step, bookingData, isFetchingBooking, fetchError, showtime, seats, movie]);
+
+  // ✅ CẢNH BÁO KHI THOÁT TRANG
   const blocker = useBlocker(({ nextLocation }) => {
     return (
       step === "confirm" && !paying && seats.length > 0 && !isPaymentCallback
     );
   });
-// Thêm function debug này sau các helper functions
-const debugShowtimeData = (showtime) => {
-  console.log("=== DEBUG SHOWTIME DATA ===");
-  console.log("Raw start_time:", showtime?.start_time);
-  console.log("Type of start_time:", typeof showtime?.start_time);
-  console.log("Formatted date:", formatDateVI(showtime?.start_time));
-  console.log("Formatted time:", formatTimeVI(showtime?.start_time));
-  console.log("==========================");
-};
-  // Sự kiện BeforeUnload vẫn giữ cho đóng tab/refresh
+
+  // Sự kiện BeforeUnload cho đóng tab/refresh
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (step === "confirm" && seats.length > 0 && !isPaymentCallback) {
@@ -207,27 +213,6 @@ const debugShowtimeData = (showtime) => {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [step, seats.length, isPaymentCallback]);
 
-  // ========== DEBUG LOG ==========
-  // Thêm useEffect này để debug showtime data
-useEffect(() => {
-  if (showtime) {
-    console.log("=== SHOWTIME DATA DEBUG ===");
-    console.log("Raw showtime:", showtime);
-    console.log("start_time:", showtime.start_time);
-    console.log("startTime:", showtime.startTime);
-    console.log("show_date:", showtime.show_date);
-    console.log("date:", showtime.date);
-    console.log("Formatted date from start_time:", formatDateVI(showtime.start_time));
-    console.log("Formatted time from start_time:", formatTimeVI(showtime.start_time));
-    console.log("==========================");
-  }
-}, [showtime]);
-useEffect(() => {
-  if (showtime?.start_time) {
-    debugShowtimeData(showtime);
-  }
-  console.log("Full showtime object:", showtime);
-}, [showtime]);
   // ========== EFFECT 1: Fetch booking data khi callback ==========
   useEffect(() => {
     const fetchBookingData = async () => {
@@ -247,6 +232,7 @@ useEffect(() => {
         if (!user) {
           console.error("User not logged in");
           setFetchError("Vui lòng đăng nhập lại");
+          setTimeout(() => navigate("/login"), 2000);
           return;
         }
 
@@ -255,10 +241,10 @@ useEffect(() => {
         // Fetch booking details
         const bookingRes = await axios.get(
           `http://localhost:5000/api/bookings/${paymentBookingId}`,
-          { headers: { Authorization: `Bearer ${token}` } },
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        console.log("Booking data:", bookingRes.data);
+        console.log("Booking data response:", bookingRes.data);
 
         if (!bookingRes.data) {
           throw new Error("Không tìm thấy thông tin booking");
@@ -267,10 +253,10 @@ useEffect(() => {
         // Fetch booking seats
         const seatsRes = await axios.get(
           `http://localhost:5000/api/booking-seats/booking/${paymentBookingId}`,
-          { headers: { Authorization: `Bearer ${token}` } },
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        console.log("Seats data:", seatsRes.data);
+        console.log("Seats data response:", seatsRes.data);
 
         // Fetch showtime details
         const showtimeId = bookingRes.data?.showtime_id;
@@ -280,7 +266,7 @@ useEffect(() => {
         if (showtimeId) {
           const showtimeRes = await axios.get(
             `http://localhost:5000/api/showtimes/${showtimeId}`,
-            { headers: { Authorization: `Bearer ${token}` } },
+            { headers: { Authorization: `Bearer ${token}` } }
           );
           showtimeData = showtimeRes.data;
           console.log("Showtime data:", showtimeData);
@@ -288,16 +274,22 @@ useEffect(() => {
           if (showtimeData?.movie_id) {
             const movieRes = await axios.get(
               `http://localhost:5000/api/movies/${showtimeData.movie_id}`,
-              { headers: { Authorization: `Bearer ${token}` } },
+              { headers: { Authorization: `Bearer ${token}` } }
             );
             movieData = movieRes.data;
             console.log("Movie data:", movieData);
           }
         }
 
+        // Format seats data
+        const formattedSeats = (seatsRes.data || []).map(seat => ({
+          id: seat.seat_number || seat.seat_id || seat.id,
+          type: seat.seat_type || 'standard'
+        }));
+
         const newBookingData = {
           booking: bookingRes.data,
-          seats: seatsRes.data || [],
+          seats: formattedSeats,
           showtime: showtimeData,
           movie: movieData,
           bookingCode: bookingRes.data?.ticket_code || `CS${paymentBookingId}`,
@@ -307,13 +299,15 @@ useEffect(() => {
         setStep("success");
         setShowConfetti(true);
 
-        console.log("✅ Booking data loaded successfully");
+        console.log("✅ Booking data loaded successfully, step set to success");
+        console.log("Booking data object:", newBookingData);
+
       } catch (error) {
         console.error("Failed to fetch booking data:", error);
         setFetchError(
           error.response?.data?.message ||
             error.message ||
-            "Không thể tải thông tin vé",
+            "Không thể tải thông tin vé"
         );
       } finally {
         setIsFetchingBooking(false);
@@ -321,7 +315,7 @@ useEffect(() => {
     };
 
     fetchBookingData();
-  }, [isPaymentCallback, paymentBookingId]);
+  }, [isPaymentCallback, paymentBookingId, navigate]);
 
   // ========== EFFECT 2: Load foods từ API ==========
   useEffect(() => {
@@ -353,15 +347,11 @@ useEffect(() => {
       navigate("/movies");
     }
   }, [isPaymentCallback, showtime, seats, navigate]);
-  
-  const formatCurrency = (amount) => {
-    return amount.toLocaleString("vi-VN") + "₫";
-  };
-  
+
   // ========== TÍNH TOÁN GIÁ ==========
   const ticketTotal = seats.reduce(
     (sum, s) => sum + getShowtimeSeatPrice(showtime, String(s?.type || "").toLowerCase()),
-    0,
+    0
   );
   const comboTotal = foods.reduce((sum, f) => {
     return sum + f.price * (comboCounts[f.food_id] || 0);
@@ -378,288 +368,236 @@ useEffect(() => {
   };
 
   const handleApplyPromo = async () => {
-  const normalizedCode = promoCode.trim().toUpperCase();
+    const normalizedCode = promoCode.trim().toUpperCase();
 
-  if (!normalizedCode) {
-    setPromoError("Vui lòng nhập mã khuyến mãi");
-    setPromoApplied(false);
-    setPromoDiscountAmount(0);
-    return;
-  }
-
-  try {
-    const params = new URLSearchParams({
-      code: normalizedCode,
-      originalPrice: String(ticketTotal),
-    });
-
-    const showtimeCinemaId = showtime?.cinema_id ?? showtime?.cinemaId;
-    if (showtimeCinemaId !== undefined && showtimeCinemaId !== null) {
-      params.set("cinemaId", String(showtimeCinemaId));
+    if (!normalizedCode) {
+      setPromoError("Vui lòng nhập mã khuyến mãi");
+      setPromoApplied(false);
+      setPromoDiscountAmount(0);
+      return;
     }
 
-    // ✅ SỬA LỖI: lấy ngày từ showtime object
-    const showtimeDate = formatDateTime(showtime);
-    if (showtimeDate) {
-      params.set("date", showtimeDate.toISOString().split("T")[0]);
-    }
+    try {
+      const params = new URLSearchParams({
+        code: normalizedCode,
+        originalPrice: String(ticketTotal),
+      });
 
-    const res = await fetch(
-      `http://localhost:5000/api/promotions/calculate?${params.toString()}`
-    );
-    const data = await res.json();
+      const showtimeCinemaId = showtime?.cinema_id ?? showtime?.cinemaId;
+      if (showtimeCinemaId !== undefined && showtimeCinemaId !== null) {
+        params.set("cinemaId", String(showtimeCinemaId));
+      }
 
-    if (res.ok && data?.success) {
-      setPromoApplied(true);
-      setPromoDiscountAmount(Number(data.discountAmount || 0));
-      setPromoError("");
-    } else {
-      setPromoError(
-        data?.message ||
-          data?.error ||
-          "Mã khuyến mãi không hợp lệ hoặc đã hết hạn"
+      const showtimeDate = formatDateTime(showtime);
+      if (showtimeDate) {
+        params.set("date", showtimeDate.toISOString().split("T")[0]);
+      }
+
+      const res = await fetch(
+        `http://localhost:5000/api/promotions/calculate?${params.toString()}`
       );
+      const data = await res.json();
+
+      if (res.ok && data?.success) {
+        setPromoApplied(true);
+        setPromoDiscountAmount(Number(data.discountAmount || 0));
+        setPromoError("");
+      } else {
+        setPromoError(
+          data?.message || data?.error || "Mã khuyến mãi không hợp lệ hoặc đã hết hạn"
+        );
+        setPromoApplied(false);
+        setPromoDiscountAmount(0);
+      }
+    } catch (e) {
+      setPromoError("Không thể kết nối đến server");
       setPromoApplied(false);
       setPromoDiscountAmount(0);
     }
-  } catch (e) {
-    setPromoError("Không thể kết nối đến server");
-    setPromoApplied(false);
-    setPromoDiscountAmount(0);
-  }
-};
+  };
 
   const handleConfirm = async () => {
-  const actualShowtimeId = showtime?.showtime_id || showtime?.id;
+    const actualShowtimeId = showtime?.showtime_id || showtime?.id;
 
-  if (!actualShowtimeId) {
-    console.error("❌ Không tìm thấy showtime_id!");
-    alert("Lỗi: Không tìm thấy thông tin suất chiếu.");
-    return;
-  }
-
-  setPaying(true);
-
-  try {
-    const auth = getAuth();
-    const user = auth.currentUser;
-
-    if (!user) {
-      alert("Bạn chưa đăng nhập!");
-      setPaying(false);
+    if (!actualShowtimeId) {
+      console.error("❌ Không tìm thấy showtime_id!");
+      alert("Lỗi: Không tìm thấy thông tin suất chiếu.");
       return;
     }
 
-    const token = await user.getIdToken(true);
-    const method = selectedPaymentMethod?.toLowerCase().trim();
+    setPaying(true);
 
-    // Tính tổng tiền vé
-    let ticketTotalCalc = 0;
-    for (const seat of seats) {
-      const seatPrice = getShowtimeSeatPrice(showtime, String(seat?.type || "").toLowerCase());
-      ticketTotalCalc += seatPrice;
-    }
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
 
-    // Tính tổng tiền combo
-    let comboTotalCalc = 0;
-    const selectedFoods = [];
-    for (const food of foods) {
-      const quantity = comboCounts[food.food_id] || 0;
-      if (quantity > 0) {
-        const foodTotal = food.price * quantity;
-        comboTotalCalc += foodTotal;
-        selectedFoods.push({
-          food_id: food.food_id,
-          quantity: quantity,
-          price: food.price,
-        });
+      if (!user) {
+        alert("Bạn chưa đăng nhập!");
+        setPaying(false);
+        return;
       }
-    }
 
-    const discountCalc = promoApplied ? promoDiscountAmount : 0;
-    const finalGrandTotal = ticketTotalCalc + comboTotalCalc - discountCalc;
+      const token = await user.getIdToken(true);
+      const method = selectedPaymentMethod?.toLowerCase().trim();
 
-    console.log("💰 CHI TIẾT THANH TOÁN:", {
-      ticketTotal: ticketTotalCalc,
-      comboTotal: comboTotalCalc,
-      discount: discountCalc,
-      grandTotal: finalGrandTotal,
-      selectedFoods: selectedFoods
-    });
+      // Tính tổng tiền vé
+      let ticketTotalCalc = 0;
+      for (const seat of seats) {
+        const seatPrice = getShowtimeSeatPrice(showtime, String(seat?.type || "").toLowerCase());
+        ticketTotalCalc += seatPrice;
+      }
 
-    // 1. Tạo booking với total_price đã tính đủ
-    const bookingPayload = {
-      user_id: user.user_id,
-      showtime_id: actualShowtimeId,
-      total_price: finalGrandTotal, // ✅ Gửi total đã bao gồm combo
-      seats: seats.map((s) => ({
-        id: s.id,
-        price: getShowtimeSeatPrice(showtime, String(s.type || "").toLowerCase()),
-      })),
-      payment_method: method,
-      promo_code: promoApplied ? promoCode : null,
-      foods: selectedFoods,
-    };
+      // Tính tổng tiền combo
+      let comboTotalCalc = 0;
+      const selectedFoods = [];
+      for (const food of foods) {
+        const quantity = comboCounts[food.food_id] || 0;
+        if (quantity > 0) {
+          const foodTotal = food.price * quantity;
+          comboTotalCalc += foodTotal;
+          selectedFoods.push({
+            food_id: food.food_id,
+            quantity: quantity,
+            price: food.price,
+          });
+        }
+      }
 
-    console.log("📦 Booking payload:", bookingPayload);
+      const discountCalc = promoApplied ? promoDiscountAmount : 0;
+      const finalGrandTotal = ticketTotalCalc + comboTotalCalc - discountCalc;
 
-    const bookingRes = await axios.post(
-      "http://localhost:5000/api/bookings",
-      bookingPayload,
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
+      console.log("💰 CHI TIẾT THANH TOÁN:", {
+        ticketTotal: ticketTotalCalc,
+        comboTotal: comboTotalCalc,
+        discount: discountCalc,
+        grandTotal: finalGrandTotal,
+        selectedFoods: selectedFoods
+      });
 
-    const bookingId = bookingRes.data?.booking_id ?? bookingRes.data?.insertId;
-    
-    // ✅ Dùng total đã tính ở frontend
-    const payableAmount = finalGrandTotal;
-
-    console.log("✅ Booking created:", { bookingId, payableAmount });
-
-    if (!bookingId) {
-      throw new Error("Không lấy được booking_id từ server");
-    }
-
-    // 2. Lưu booking_foods riêng (nếu có)
-    if (selectedFoods.length > 0) {
-      const foodsPayload = {
-        booking_id: bookingId,
-        foods: selectedFoods.map((f) => ({
-          food_id: f.food_id,
-          quantity: f.quantity,
+      // 1. Tạo booking với total_price đã tính đủ
+      const bookingPayload = {
+        user_id: user.user_id,
+        showtime_id: actualShowtimeId,
+        total_price: finalGrandTotal,
+        seats: seats.map((s) => ({
+          id: s.id,
+          price: getShowtimeSeatPrice(showtime, String(s.type || "").toLowerCase()),
         })),
+        payment_method: method,
+        promo_code: promoApplied ? promoCode : null,
+        foods: selectedFoods,
       };
-      console.log("🍿 Foods payload:", foodsPayload);
-      
-      await axios.post(
-        "http://localhost:5000/api/booking-foods",
-        foodsPayload,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-    }
 
-    // 3. Xử lý thanh toán
-    if (method === "vnpay") {
-      const res = await axios.post(
-        "http://localhost:5000/api/payments/vnpay",
-        { 
-          booking_id: bookingId, 
-          amount: payableAmount,
-          order_info: `Thanh toan ve xem phim + combo` 
-        },
-        { headers: { Authorization: `Bearer ${token}` } },
+      console.log("📦 Booking payload:", bookingPayload);
+
+      const bookingRes = await axios.post(
+        "http://localhost:5000/api/bookings",
+        bookingPayload,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      if (!res.data?.paymentUrl) {
-        throw new Error("Không nhận được paymentUrl");
+      const bookingId = bookingRes.data?.booking_id ?? bookingRes.data?.insertId;
+      const payableAmount = finalGrandTotal;
+
+      console.log("✅ Booking created:", { bookingId, payableAmount });
+
+      if (!bookingId) {
+        throw new Error("Không lấy được booking_id từ server");
       }
-      window.location.href = res.data.paymentUrl;
-      return;
-    }
 
-    if (method === "momo") {
-      const res = await axios.post(
-        "http://localhost:5000/api/payment/momo",
-        {
+      // 2. Lưu booking_foods riêng (nếu có)
+      if (selectedFoods.length > 0) {
+        const foodsPayload = {
           booking_id: bookingId,
-          amount: payableAmount,
-          orderInfo: `Thanh toan booking ${bookingId} - Ve xem phim va combo`,
-        },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-
-      if (!res.data?.payUrl) {
-        throw new Error("Không nhận được payUrl từ MoMo");
+          foods: selectedFoods.map((f) => ({
+            food_id: f.food_id,
+            quantity: f.quantity,
+          })),
+        };
+        console.log("🍿 Foods payload:", foodsPayload);
+        
+        await axios.post(
+          "http://localhost:5000/api/booking-foods",
+          foodsPayload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       }
 
-      window.location.href = res.data.payUrl;
-      return;
+      // 3. Xử lý thanh toán
+      if (method === "vnpay") {
+        const res = await axios.post(
+          "http://localhost:5000/api/payments/vnpay",
+          { 
+            booking_id: bookingId, 
+            amount: payableAmount,
+            order_info: `Thanh toan ve xem phim + combo` 
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (!res.data?.paymentUrl) {
+          throw new Error("Không nhận được paymentUrl");
+        }
+        window.location.href = res.data.paymentUrl;
+        return;
+      }
+
+      if (method === "momo") {
+        const res = await axios.post(
+          "http://localhost:5000/api/payment/momo",
+          {
+            booking_id: bookingId,
+            amount: payableAmount,
+            orderInfo: `Thanh toan booking ${bookingId} - Ve xem phim va combo`,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (!res.data?.payUrl) {
+          throw new Error("Không nhận được payUrl từ MoMo");
+        }
+
+        window.location.href = res.data.payUrl;
+        return;
+      }
+
+      // Các phương thức thanh toán khác...
+      const ticketCode = `CS${Date.now().toString().slice(-8)}`;
+      setBookingCode(ticketCode);
+
+      const seatsRes = await axios.get(
+        `http://localhost:5000/api/booking-seats/booking/${bookingId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setBookingData({
+        booking: { ...bookingRes.data, total_price: payableAmount },
+        seats: seatsRes.data || [],
+        showtime: showtime,
+        movie: movie,
+        bookingCode: ticketCode,
+      });
+
+      setStep("success");
+      setShowConfetti(true);
+    } catch (err) {
+      console.error("❌ Thanh toán thất bại:", err);
+      if (err.response) {
+        console.error("Response error:", err.response.data);
+        alert(err.response.data?.message || "Backend lỗi");
+      } else {
+        alert(err.message || "Thanh toán thất bại.");
+      }
     }
 
-    // Các phương thức thanh toán khác...
-    const ticketCode = `CS${Date.now().toString().slice(-8)}`;
-    setBookingCode(ticketCode);
-
-    const seatsRes = await axios.get(
-      `http://localhost:5000/api/booking-seats/booking/${bookingId}`,
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
-
-    setBookingData({
-      booking: { ...bookingRes.data, total_price: payableAmount },
-      seats: seatsRes.data || [],
-      showtime: showtime,
-      movie: movie,
-      bookingCode: ticketCode,
-    });
-
-    setStep("success");
-    setShowConfetti(true);
-  } catch (err) {
-    console.error("❌ Thanh toán thất bại:", err);
-    if (err.response) {
-      console.error("Response error:", err.response.data);
-      alert(err.response.data?.message || "Backend lỗi");
-    } else {
-      alert(err.message || "Thanh toán thất bại.");
-    }
-  }
-
-  setPaying(false);
-};
-
-  // ========== RENDER LOADING STATE (callback) ==========
-  if (isPaymentCallback && isFetchingBooking) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--color-cinema-bg)" }}
-      >
-        <div className="text-center">
-          <div className="w-12 h-12 rounded-full border-3 border-red-500 border-t-transparent animate-spin mx-auto mb-4" />
-          <p className="text-white mb-2">Đang tải thông tin vé của bạn...</p>
-          <p className="text-zinc-500 text-sm">Vui lòng chờ trong giây lát</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ========== RENDER ERROR STATE (callback) ==========
-  if (isPaymentCallback && fetchError) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--color-cinema-bg)" }}
-      >
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-white text-xl font-bold mb-2">Có lỗi xảy ra</h2>
-          <p className="text-zinc-400 mb-4">{fetchError}</p>
-          <div className="flex gap-3 justify-center">
-            <button
-              onClick={() => window.location.reload()}
-              className="px-6 py-2 rounded-xl bg-zinc-700 text-white hover:bg-zinc-600 transition"
-            >
-              Thử lại
-            </button>
-            <button
-              onClick={() => navigate("/movies")}
-              className="px-6 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition"
-            >
-              Về trang chủ
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+    setPaying(false);
+  };
 
   // ========== RENDER SUCCESS STATE ==========
   if (step === "success" && bookingData) {
     const displayMovie = bookingData.movie;
     const displayShowtime = bookingData.showtime;
-    const displaySeats =
-      bookingData.seats?.map((s) => ({ id: s.seat_id || s.id })) || [];
+    const displaySeats = bookingData.seats || [];
     const displayBookingCode = bookingData.bookingCode;
     const displayTicketTotal = bookingData.booking?.total_price || 0;
     const ticketUrl = `${window.location.origin}/ticket/${displayBookingCode}`;
@@ -750,26 +688,10 @@ useEffect(() => {
 
                 <div className="space-y-2.5">
                   {[
-                    {
-                      icon: MapPin,
-                      label: "Rạp",
-                      value: displayShowtime?.cinema_name || "CGV",
-                    },
-                    {
-                      icon: Calendar,
-                      label: "Ngày",
-  value: formatDateVI(displayShowtime),
-                    },
-                    {
-                      icon: Clock,
-                      label: "Giờ chiếu",
-  value: formatTimeVI(displayShowtime),
-                    },
-                    {
-                      icon: Film,
-                      label: "Phòng",
-                      value: displayShowtime?.room_id || "1",
-                    },
+                    { icon: MapPin, label: "Rạp", value: displayShowtime?.cinema_name || "CGV" },
+                    { icon: Calendar, label: "Ngày", value: formatDateVI(displayShowtime) },
+                    { icon: Clock, label: "Giờ chiếu", value: formatTimeVI(displayShowtime) },
+                    { icon: Film, label: "Phòng", value: displayShowtime?.room_id || "1" },
                   ].map((row) => (
                     <div key={row.label} className="flex items-center gap-2.5">
                       <row.icon size={12} style={{ color: "#e50914", opacity: 0.8 }} />
@@ -781,10 +703,7 @@ useEffect(() => {
 
                 <div className="mt-3 pt-3 border-t border-white/10">
                   <div className="flex items-center gap-1.5 mb-2">
-                    <Armchair
-                      size={12}
-                      style={{ color: "rgba(255,255,255,0.4)" }}
-                    />
+                    <Armchair size={12} style={{ color: "rgba(255,255,255,0.4)" }} />
                     <span className="text-xs text-white/40">Ghế đã đặt</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -807,18 +726,14 @@ useEffect(() => {
                   border: "1px solid rgba(255,255,255,0.07)",
                 }}
               >
-                <h3 className="text-white font-bold text-sm mb-3">
-                  Chi tiết thanh toán
-                </h3>
+                <h3 className="text-white font-bold text-sm mb-3">Chi tiết thanh toán</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-zinc-400">
                     <span>{displaySeats.length} vé xem phim</span>
                     <span>{formatCurrency(displayTicketTotal)}</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-white/10">
-                    <span className="text-white font-bold">
-                      Tổng thanh toán
-                    </span>
+                    <span className="text-white font-bold">Tổng thanh toán</span>
                     <span className="text-orange-400 font-bold text-base">
                       {formatCurrency(displayTicketTotal)}
                     </span>
@@ -876,9 +791,7 @@ useEffect(() => {
               >
                 <div className="px-5 py-3 flex items-center gap-2 bg-gradient-to-r from-red-500/15 to-red-500/05 border-b border-red-500/15">
                   <QrCode size={16} style={{ color: "#e50914" }} />
-                  <span className="text-white text-sm font-bold">
-                    Vé điện tử (E-Ticket)
-                  </span>
+                  <span className="text-white text-sm font-bold">Vé điện tử (E-Ticket)</span>
                 </div>
                 <div className="p-5 flex flex-col items-center">
                   <div className="p-3 rounded-2xl mb-3 bg-white">
@@ -983,9 +896,54 @@ useEffect(() => {
     );
   }
 
-  // ========== RENDER CONFIRMATION STATE (bình thường) ==========
-  // Nếu đang trong callback nhưng chưa có dữ liệu, hiển thị loading
-  if (isPaymentCallback && !bookingData && !isFetchingBooking) {
+  // ========== RENDER CALLBACK LOADING STATE ==========
+  if (isPaymentCallback && isFetchingBooking) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "var(--color-cinema-bg)" }}
+      >
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-3 border-red-500 border-t-transparent animate-spin mx-auto mb-4" />
+          <p className="text-white mb-2">Đang tải thông tin vé của bạn...</p>
+          <p className="text-zinc-500 text-sm">Vui lòng chờ trong giây lát</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ========== RENDER CALLBACK ERROR STATE ==========
+  if (isPaymentCallback && fetchError) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "var(--color-cinema-bg)" }}
+      >
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-white text-xl font-bold mb-2">Có lỗi xảy ra</h2>
+          <p className="text-zinc-400 mb-4">{fetchError}</p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 rounded-xl bg-zinc-700 text-white hover:bg-zinc-600 transition"
+            >
+              Thử lại
+            </button>
+            <button
+              onClick={() => navigate("/movies")}
+              className="px-6 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition"
+            >
+              Về trang chủ
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ========== RENDER CALLBACK PENDING STATE ==========
+  if (isPaymentCallback && !bookingData && !isFetchingBooking && !fetchError) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -999,7 +957,7 @@ useEffect(() => {
     );
   }
 
-  // Nếu không có dữ liệu (không phải callback), hiển thị thông báo
+  // ========== RENDER NO DATA STATE ==========
   if (!showtime || !movie) {
     return (
       <div
@@ -1019,7 +977,7 @@ useEffect(() => {
     );
   }
 
-  // ========== RENDER CONFIRMATION STATE (bình thường) - CÓ ẢNH FOOD ==========
+  // ========== RENDER CONFIRMATION STATE (bình thường) ==========
   return (
     <div className="min-h-screen pt-16" style={{ background: "var(--color-cinema-bg)" }}>
       {/* Header */}
@@ -1103,12 +1061,13 @@ useEffect(() => {
                     <div>
                       <p className="text-zinc-400 text-xs">Suất chiếu</p>
                       <p className="text-zinc-200 text-xs font-semibold">
-{formatTimeVI(showtime)}                      </p>
+                        {formatTimeVI(showtime)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-zinc-400 text-xs">Ngày chiếu</p>
                       <p className="text-zinc-200 text-xs font-semibold">
-  {formatDateVI(showtime)}
+                        {formatDateVI(showtime)}
                       </p>
                     </div>
                     <div>
@@ -1128,7 +1087,7 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Combos - HIỂN THỊ CÓ ẢNH */}
+            {/* Combos */}
             <div
               className="rounded-2xl p-5"
               style={{
@@ -1149,7 +1108,6 @@ useEffect(() => {
                       className="flex items-center justify-between p-3 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-red-500/30 transition-all"
                     >
                       <div className="flex items-center gap-3 flex-1">
-                        {/* ẢNH FOOD */}
                         <div 
                           className="w-12 h-12 rounded-lg overflow-hidden bg-zinc-800 flex-shrink-0 cursor-pointer relative group/image"
                           onClick={() => {
@@ -1424,7 +1382,7 @@ useEffect(() => {
         )}
       </AnimatePresence>
 
-      {/* ✅ CUSTOM NAVIGATION GUARD MODAL */}
+      {/* Navigation Guard Modal */}
       <AnimatePresence>
         {blocker.state === "blocked" && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
