@@ -32,7 +32,7 @@ import {
   useBlocker,
 } from "react-router-dom";
 
-// Helper functions để xử lý date - SỬA LẠI HOÀN CHỈNH
+// Helper functions để xử lý date
 const formatDateTime = (showtimeData) => {
   if (!showtimeData) return null;
 
@@ -51,7 +51,6 @@ const formatDateTime = (showtimeData) => {
 
   if (!dateTimeString) return null;
 
-  // Xử lý format
   let safeString = dateTimeString;
   if (safeString.includes(' ') && !safeString.includes('T')) {
     safeString = safeString.replace(' ', 'T');
@@ -91,22 +90,16 @@ const formatDateTimeVI = (showtimeData) => {
   });
 };
 
+const formatCurrency = (amount) => {
+  return (amount || 0).toLocaleString("vi-VN") + "₫";
+};
+
 // Constants
 const PAYMENT_METHODS = [
   { id: "momo", label: "Ví MoMo", icon: "💜", desc: "Thanh toán qua ví MoMo" },
   { id: "vnpay", label: "VNPay QR", icon: "🔵", desc: "Quét mã QR VNPay" },
-  {
-    id: "card",
-    label: "Thẻ tín dụng",
-    icon: "💳",
-    desc: "Visa / Mastercard / JCB",
-  },
-  {
-    id: "zalopay",
-    label: "ZaloPay",
-    icon: "🟢",
-    desc: "Thanh toán qua ZaloPay",
-  },
+  { id: "card", label: "Thẻ tín dụng", icon: "💳", desc: "Visa / Mastercard / JCB" },
+  { id: "zalopay", label: "ZaloPay", icon: "🟢", desc: "Thanh toán qua ZaloPay" },
 ];
 
 // Confetti component
@@ -182,7 +175,31 @@ export default function BookingConfirmationPage() {
   const seats = state?.seats || [];
   const movie = state?.movie;
 
-  // ✅ CẢNH BÁO KHI THOÁT TRANG (Dùng useBlocker)
+  // ========== DEBUG LOG URL PARAMS ==========
+  useEffect(() => {
+    console.log("=== URL PARAMS DEBUG ===");
+    console.log("payment_status:", paymentStatus);
+    console.log("booking_id:", paymentBookingId);
+    console.log("method:", paymentMethod);
+    console.log("isPaymentCallback:", isPaymentCallback);
+    console.log("full URL:", window.location.href);
+    console.log("========================");
+  }, [paymentStatus, paymentBookingId, paymentMethod, isPaymentCallback]);
+
+  // ========== DEBUG LOG STATE ==========
+  useEffect(() => {
+    console.log("=== COMPONENT STATE ===");
+    console.log("step:", step);
+    console.log("bookingData:", bookingData);
+    console.log("isFetchingBooking:", isFetchingBooking);
+    console.log("fetchError:", fetchError);
+    console.log("showtime:", showtime);
+    console.log("seats:", seats);
+    console.log("movie:", movie);
+    console.log("======================");
+  }, [step, bookingData, isFetchingBooking, fetchError, showtime, seats, movie]);
+
+  // ✅ CẢNH BÁO KHI THOÁT TRANG
   const blocker = useBlocker(({ nextLocation }) => {
     return (
       step === "confirm" && !paying && seats.length > 0 && !isPaymentCallback
@@ -249,6 +266,7 @@ export default function BookingConfirmationPage() {
         if (!user) {
           console.error("User not logged in");
           setFetchError("Vui lòng đăng nhập lại");
+          setTimeout(() => navigate("/login"), 2000);
           return;
         }
 
@@ -257,10 +275,10 @@ export default function BookingConfirmationPage() {
         // Fetch booking details
         const bookingRes = await axios.get(
           `http://localhost:5000/api/bookings/${paymentBookingId}`,
-          { headers: { Authorization: `Bearer ${token}` } },
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        console.log("Booking data:", bookingRes.data);
+        console.log("Booking data response:", bookingRes.data);
 
         if (!bookingRes.data) {
           throw new Error("Không tìm thấy thông tin booking");
@@ -269,10 +287,10 @@ export default function BookingConfirmationPage() {
         // Fetch booking seats
         const seatsRes = await axios.get(
           `http://localhost:5000/api/booking-seats/booking/${paymentBookingId}`,
-          { headers: { Authorization: `Bearer ${token}` } },
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        console.log("Seats data:", seatsRes.data);
+        console.log("Seats data response:", seatsRes.data);
 
         // Fetch showtime details
         const showtimeId = bookingRes.data?.showtime_id;
@@ -282,7 +300,7 @@ export default function BookingConfirmationPage() {
         if (showtimeId) {
           const showtimeRes = await axios.get(
             `http://localhost:5000/api/showtimes/${showtimeId}`,
-            { headers: { Authorization: `Bearer ${token}` } },
+            { headers: { Authorization: `Bearer ${token}` } }
           );
           showtimeData = showtimeRes.data;
           console.log("Showtime data:", showtimeData);
@@ -290,16 +308,22 @@ export default function BookingConfirmationPage() {
           if (showtimeData?.movie_id) {
             const movieRes = await axios.get(
               `http://localhost:5000/api/movies/${showtimeData.movie_id}`,
-              { headers: { Authorization: `Bearer ${token}` } },
+              { headers: { Authorization: `Bearer ${token}` } }
             );
             movieData = movieRes.data;
             console.log("Movie data:", movieData);
           }
         }
 
+        // Format seats data
+        const formattedSeats = (seatsRes.data || []).map(seat => ({
+          id: seat.seat_number || seat.seat_id || seat.id,
+          type: seat.seat_type || 'standard'
+        }));
+
         const newBookingData = {
           booking: bookingRes.data,
-          seats: seatsRes.data || [],
+          seats: formattedSeats,
           showtime: showtimeData,
           movie: movieData,
           bookingCode: bookingRes.data?.ticket_code || `CS${paymentBookingId}`,
@@ -314,7 +338,9 @@ export default function BookingConfirmationPage() {
           setStep("failed");
         }
 
-        console.log("✅ Booking data loaded successfully");
+        console.log("✅ Booking data loaded successfully, step set to success");
+        console.log("Booking data object:", newBookingData);
+
       } catch (error) {
         console.error("Failed to fetch booking data:", error);
         setFetchError(
@@ -328,7 +354,7 @@ export default function BookingConfirmationPage() {
     };
 
     fetchBookingData();
-  }, [isPaymentCallback, paymentBookingId]);
+  }, [isPaymentCallback, paymentBookingId, navigate]);
 
   // ========== EFFECT 2: Load foods từ API ==========
   useEffect(() => {
@@ -368,7 +394,7 @@ export default function BookingConfirmationPage() {
   // ========== TÍNH TOÁN GIÁ ==========
   const ticketTotal = seats.reduce(
     (sum, s) => sum + getShowtimeSeatPrice(showtime, String(s?.type || "").toLowerCase()),
-    0,
+    0
   );
   const comboTotal = foods.reduce((sum, f) => {
     return sum + f.price * (comboCounts[f.food_id] || 0);
@@ -765,8 +791,7 @@ export default function BookingConfirmationPage() {
   if (step === "success" && bookingData) {
     const displayMovie = bookingData.movie;
     const displayShowtime = bookingData.showtime;
-    const displaySeats =
-      bookingData.seats?.map((s) => ({ id: s.seat_id || s.id })) || [];
+    const displaySeats = bookingData.seats || [];
     const displayBookingCode = bookingData.bookingCode;
     const displayTicketTotal = bookingData.booking?.total_price || 0;
     const ticketUrl = `${window.location.origin}/ticket/${displayBookingCode}`;
@@ -888,10 +913,7 @@ export default function BookingConfirmationPage() {
 
                 <div className="mt-3 pt-3 border-t border-white/10">
                   <div className="flex items-center gap-1.5 mb-2">
-                    <Armchair
-                      size={12}
-                      style={{ color: "rgba(255,255,255,0.4)" }}
-                    />
+                    <Armchair size={12} style={{ color: "rgba(255,255,255,0.4)" }} />
                     <span className="text-xs text-white/40">Ghế đã đặt</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -914,18 +936,14 @@ export default function BookingConfirmationPage() {
                   border: "1px solid rgba(255,255,255,0.07)",
                 }}
               >
-                <h3 className="text-white font-bold text-sm mb-3">
-                  Chi tiết thanh toán
-                </h3>
+                <h3 className="text-white font-bold text-sm mb-3">Chi tiết thanh toán</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-zinc-400">
                     <span>{displaySeats.length} vé xem phim</span>
                     <span>{formatCurrency(displayTicketTotal)}</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-white/10">
-                    <span className="text-white font-bold">
-                      Tổng thanh toán
-                    </span>
+                    <span className="text-white font-bold">Tổng thanh toán</span>
                     <span className="text-orange-400 font-bold text-base">
                       {formatCurrency(displayTicketTotal)}
                     </span>
@@ -983,9 +1001,7 @@ export default function BookingConfirmationPage() {
               >
                 <div className="px-5 py-3 flex items-center gap-2 bg-gradient-to-r from-red-500/15 to-red-500/05 border-b border-red-500/15">
                   <QrCode size={16} style={{ color: "#e50914" }} />
-                  <span className="text-white text-sm font-bold">
-                    Vé điện tử (E-Ticket)
-                  </span>
+                  <span className="text-white text-sm font-bold">Vé điện tử (E-Ticket)</span>
                 </div>
                 <div className="p-5 flex flex-col items-center">
                   <div className="p-3 rounded-2xl mb-3 bg-white">
@@ -1090,9 +1106,54 @@ export default function BookingConfirmationPage() {
     );
   }
 
-  // ========== RENDER CONFIRMATION STATE (bình thường) ==========
-  // Nếu đang trong callback nhưng chưa có dữ liệu, hiển thị loading
-  if (isPaymentCallback && !bookingData && !isFetchingBooking) {
+  // ========== RENDER CALLBACK LOADING STATE ==========
+  if (isPaymentCallback && isFetchingBooking) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "var(--color-cinema-bg)" }}
+      >
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-3 border-red-500 border-t-transparent animate-spin mx-auto mb-4" />
+          <p className="text-white mb-2">Đang tải thông tin vé của bạn...</p>
+          <p className="text-zinc-500 text-sm">Vui lòng chờ trong giây lát</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ========== RENDER CALLBACK ERROR STATE ==========
+  if (isPaymentCallback && fetchError) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "var(--color-cinema-bg)" }}
+      >
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-white text-xl font-bold mb-2">Có lỗi xảy ra</h2>
+          <p className="text-zinc-400 mb-4">{fetchError}</p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 rounded-xl bg-zinc-700 text-white hover:bg-zinc-600 transition"
+            >
+              Thử lại
+            </button>
+            <button
+              onClick={() => navigate("/movies")}
+              className="px-6 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition"
+            >
+              Về trang chủ
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ========== RENDER CALLBACK PENDING STATE ==========
+  if (isPaymentCallback && !bookingData && !isFetchingBooking && !fetchError) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -1106,7 +1167,7 @@ export default function BookingConfirmationPage() {
     );
   }
 
-  // Nếu không có dữ liệu (không phải callback), hiển thị thông báo
+  // ========== RENDER NO DATA STATE ==========
   if (!showtime || !movie) {
     return (
       <div
@@ -1126,7 +1187,7 @@ export default function BookingConfirmationPage() {
     );
   }
 
-  // ========== RENDER CONFIRMATION STATE (bình thường) - CÓ ẢNH FOOD ==========
+  // ========== RENDER CONFIRMATION STATE (bình thường) ==========
   return (
     <div className="min-h-screen pt-16" style={{ background: "var(--color-cinema-bg)" }}>
       {/* Header */}
@@ -1234,7 +1295,7 @@ export default function BookingConfirmationPage() {
               </div>
             </div>
 
-            {/* Combos - HIỂN THỊ CÓ ẢNH */}
+            {/* Combos */}
             <div
               className="rounded-2xl p-5"
               style={{
@@ -1529,7 +1590,7 @@ export default function BookingConfirmationPage() {
         )}
       </AnimatePresence>
 
-      {/* ✅ CUSTOM NAVIGATION GUARD MODAL */}
+      {/* Navigation Guard Modal */}
       <AnimatePresence>
         {blocker.state === "blocked" && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
