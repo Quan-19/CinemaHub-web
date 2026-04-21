@@ -91,8 +91,15 @@ const formatDateTimeVI = (showtimeData) => {
 };
 
 const formatCurrency = (amount) => {
-  return (amount || 0).toLocaleString("vi-VN") + "₫";
+  const numeric = Number(amount);
+  const safe = Number.isFinite(numeric) ? Math.round(numeric) : 0;
+  return safe.toLocaleString("vi-VN") + "₫";
 };
+
+const POSTER_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='100'%3E%3Crect fill='%23222230' width='72' height='100' rx='8'/%3E%3Ctext x='36' y='55' text-anchor='middle' fill='%23555' font-size='28'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 // Constants
 const PAYMENT_METHODS = [
@@ -140,12 +147,20 @@ export default function BookingConfirmationPage() {
   const [searchParams] = useSearchParams();
 
   // Lấy params từ URL (callback từ MoMo/VNPay)
-  const paymentStatus = searchParams.get("payment_status") || searchParams.get("status");
-  const paymentBookingId = searchParams.get("booking_id") || searchParams.get("paymentId");
+  const paymentStatus =
+    searchParams.get("payment_status") || searchParams.get("status");
+
+  const bookingIdParam = searchParams.get("booking_id");
+  const paymentIdParam = searchParams.get("paymentId");
+  const paymentBookingId =
+    bookingIdParam ||
+    (paymentIdParam && /^\d+$/.test(paymentIdParam) ? paymentIdParam : null);
   const paymentMethod = searchParams.get("method");
 
   // Kiểm tra xem có đang trong callback thanh toán không
-  const isPaymentSuccess = paymentStatus === "success" && paymentBookingId;
+  const isPaymentSuccess =
+    (paymentStatus === "success" || paymentStatus === "paid") &&
+    paymentBookingId;
   const isPaymentFailed = paymentStatus === "failed" && paymentBookingId;
   const isPaymentCallback = isPaymentSuccess || isPaymentFailed;
 
@@ -274,7 +289,7 @@ export default function BookingConfirmationPage() {
 
         // Fetch booking details
         const bookingRes = await axios.get(
-          `http://localhost:5000/api/bookings/${paymentBookingId}`,
+          `${API_BASE_URL}/api/bookings/${paymentBookingId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -286,7 +301,7 @@ export default function BookingConfirmationPage() {
 
         // Fetch booking seats
         const seatsRes = await axios.get(
-          `http://localhost:5000/api/booking-seats/booking/${paymentBookingId}`,
+          `${API_BASE_URL}/api/booking-seats/booking/${paymentBookingId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -299,33 +314,71 @@ export default function BookingConfirmationPage() {
 
         if (showtimeId) {
           const showtimeRes = await axios.get(
-            `http://localhost:5000/api/showtimes/${showtimeId}`,
+            `${API_BASE_URL}/api/showtimes/${showtimeId}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           showtimeData = showtimeRes.data;
           console.log("Showtime data:", showtimeData);
 
-          if (showtimeData?.movie_id) {
+          // Prefer movie info embedded in showtime response (if present)
+          if (showtimeData?.movie?.title) {
+            movieData = {
+              ...showtimeData.movie,
+              // Normalize a few fields the UI expects
+              title: showtimeData.movie.title,
+              poster: showtimeData.movie.poster,
+              rating:
+                showtimeData.movie.rating ||
+                showtimeData.movie.age_rating ||
+                showtimeData.movie.ageRating,
+              originalTitle:
+                showtimeData.movie.originalTitle ||
+                showtimeData.movie.original_title,
+            };
+          }
+
+          // Fallback: fetch movie by id (API may use camelCase movieId)
+          const movieId =
+            showtimeData?.movie_id ||
+            showtimeData?.movieId ||
+            showtimeData?.movieID;
+
+          if (!movieData && movieId) {
             const movieRes = await axios.get(
-              `http://localhost:5000/api/movies/${showtimeData.movie_id}`,
+              `${API_BASE_URL}/api/movies/${movieId}`,
               { headers: { Authorization: `Bearer ${token}` } }
             );
-            movieData = movieRes.data;
+            const rawMovie = movieRes.data;
+            movieData = {
+              ...rawMovie,
+              title: rawMovie?.title || rawMovie?.movieTitle,
+              poster: rawMovie?.poster || rawMovie?.moviePoster,
+              rating:
+                rawMovie?.rating || rawMovie?.age_rating || rawMovie?.ageRating,
+              originalTitle:
+                rawMovie?.originalTitle || rawMovie?.original_title,
+            };
             console.log("Movie data:", movieData);
           }
         }
 
         // Format seats data
-        const formattedSeats = (seatsRes.data || []).map(seat => ({
-          id: seat.seat_number || seat.seat_id || seat.id,
-          type: seat.seat_type || 'standard'
+        const normalizeSeatLabel = (value) => {
+          const raw = String(value ?? "");
+          if (!raw) return "";
+          return raw.includes("_") ? raw.slice(raw.lastIndexOf("_") + 1) : raw;
+        };
+
+        const formattedSeats = (seatsRes.data || []).map((seat) => ({
+          id: normalizeSeatLabel(seat.seat_number || seat.seat_id || seat.id),
+          type: seat.seat_type || "standard",
         }));
 
         const newBookingData = {
           booking: bookingRes.data,
           seats: formattedSeats,
           showtime: showtimeData,
-          movie: movieData,
+          movie: movieData || showtimeData?.movie || null,
           bookingCode: bookingRes.data?.ticket_code || `CS${paymentBookingId}`,
         };
 
@@ -359,7 +412,7 @@ export default function BookingConfirmationPage() {
   // ========== EFFECT 2: Load foods từ API ==========
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/foods")
+      .get(`${API_BASE_URL}/api/foods`)
       .then((res) => {
         const formattedFoods = res.data.map((food) => ({
           ...food,
@@ -388,7 +441,9 @@ export default function BookingConfirmationPage() {
   }, [isPaymentCallback, showtime, seats, navigate]);
 
   const formatCurrency = (amount) => {
-    return amount.toLocaleString("vi-VN") + "₫";
+    const numeric = Number(amount);
+    const safe = Number.isFinite(numeric) ? Math.round(numeric) : 0;
+    return safe.toLocaleString("vi-VN") + "₫";
   };
 
   // ========== TÍNH TOÁN GIÁ ==========
@@ -438,7 +493,7 @@ export default function BookingConfirmationPage() {
       }
 
       const res = await fetch(
-        `http://localhost:5000/api/promotions/calculate?${params.toString()}`
+        `${API_BASE_URL}/api/promotions/calculate?${params.toString()}`
       );
       const data = await res.json();
 
@@ -537,7 +592,7 @@ export default function BookingConfirmationPage() {
       console.log("📦 Booking payload:", bookingPayload);
 
       const bookingRes = await axios.post(
-        "http://localhost:5000/api/bookings",
+        `${API_BASE_URL}/api/bookings`,
         bookingPayload,
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -565,7 +620,7 @@ export default function BookingConfirmationPage() {
         console.log("🍿 Foods payload:", foodsPayload);
 
         await axios.post(
-          "http://localhost:5000/api/booking-foods",
+          `${API_BASE_URL}/api/booking-foods`,
           foodsPayload,
           { headers: { Authorization: `Bearer ${token}` } },
         );
@@ -574,7 +629,7 @@ export default function BookingConfirmationPage() {
       // 3. Xử lý thanh toán
       if (method === "vnpay") {
         const res = await axios.post(
-          "http://localhost:5000/api/payments/vnpay",
+          `${API_BASE_URL}/api/payments/vnpay`,
           {
             booking_id: bookingId,
             amount: payableAmount,
@@ -592,7 +647,7 @@ export default function BookingConfirmationPage() {
 
       if (method === "momo") {
         const res = await axios.post(
-          "http://localhost:5000/api/payment/momo",
+          `${API_BASE_URL}/api/payment/momo`,
           {
             booking_id: bookingId,
             amount: payableAmount,
@@ -614,7 +669,7 @@ export default function BookingConfirmationPage() {
       setBookingCode(ticketCode);
 
       const seatsRes = await axios.get(
-        `http://localhost:5000/api/booking-seats/booking/${bookingId}`,
+        `${API_BASE_URL}/api/booking-seats/booking/${bookingId}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
@@ -754,11 +809,14 @@ export default function BookingConfirmationPage() {
               </div>
 
               <div className="flex gap-3 mb-4">
-                {displayMovie?.poster && (
+                {displayMovie && (
                   <img
-                    src={displayMovie.poster}
+                    src={typeof displayMovie?.poster === "string" && displayMovie.poster ? displayMovie.poster : POSTER_PLACEHOLDER}
                     alt={displayMovie.title}
                     className="w-16 h-22 object-cover rounded-xl opacity-50"
+                    onError={(e) => {
+                      e.currentTarget.src = POSTER_PLACEHOLDER;
+                    }}
                   />
                 )}
                 <div className="flex-1">
@@ -794,7 +852,8 @@ export default function BookingConfirmationPage() {
     const displaySeats = bookingData.seats || [];
     const displayBookingCode = bookingData.bookingCode;
     const displayTicketTotal = bookingData.booking?.total_price || 0;
-    const ticketUrl = `${window.location.origin}/ticket/${displayBookingCode}`;
+    const webBaseUrl = (import.meta.env.VITE_PUBLIC_URL || window.location.origin).replace(/\/$/, "");
+    const ticketUrl = `${webBaseUrl}/ticket/${displayBookingCode}`;
 
     return (
       <div className="min-h-screen pt-16" style={{ background: "var(--color-cinema-bg)" }}>
@@ -861,11 +920,14 @@ export default function BookingConfirmationPage() {
                 </div>
 
                 <div className="flex gap-3 mb-4">
-                  {displayMovie?.poster && (
+                  {displayMovie && (
                     <img
-                      src={displayMovie.poster}
+                      src={typeof displayMovie?.poster === "string" && displayMovie.poster ? displayMovie.poster : POSTER_PLACEHOLDER}
                       alt={displayMovie.title}
                       className="w-16 h-22 object-cover rounded-xl"
+                      onError={(e) => {
+                        e.currentTarget.src = POSTER_PLACEHOLDER;
+                      }}
                     />
                   )}
                   <div className="flex-1">
@@ -900,7 +962,13 @@ export default function BookingConfirmationPage() {
                     {
                       icon: Film,
                       label: "Phòng",
-                      value: displayShowtime?.room_id || "1",
+                      value:
+                        displayShowtime?.room?.name ||
+                        displayShowtime?.roomName ||
+                        displayShowtime?.room_name ||
+                        displayShowtime?.room_id ||
+                        displayShowtime?.roomId ||
+                        "1",
                     },
                   ].map((row) => (
                     <div key={row.label} className="flex items-center gap-2.5">
@@ -1065,7 +1133,7 @@ export default function BookingConfirmationPage() {
               >
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-red-500 font-bold">CINE STAR</span>
+                    <span className="text-red-500 font-bold">EBIZ CINEMA</span>
                   </div>
                   <button
                     onClick={() => setShowQRModal(false)}
@@ -1281,7 +1349,12 @@ export default function BookingConfirmationPage() {
                     <div>
                       <p className="text-zinc-400 text-xs">Phòng</p>
                       <p className="text-zinc-200 text-xs font-semibold">
-                        {showtime?.room_id || "1"}
+                        {showtime?.room?.name ||
+                          showtime?.roomName ||
+                          showtime?.room_name ||
+                          showtime?.room_id ||
+                          showtime?.roomId ||
+                          "1"}
                       </p>
                     </div>
                     <div>

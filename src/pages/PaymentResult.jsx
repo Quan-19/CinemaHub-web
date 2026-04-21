@@ -10,6 +10,7 @@ export default function PaymentResultPage() {
   const [message, setMessage] = useState("Đang xử lý thanh toán...");
   const hasRedirected = useRef(false);
   const isProcessed = useRef(false);
+  const redirectInfo = useRef({ bookingId: null, method: "" });
 
   useLayoutEffect(() => {
     if (isProcessed.current) return;
@@ -28,33 +29,39 @@ export default function PaymentResultPage() {
     
     // Lấy params chung
     const paymentStatus = params.get("payment_status");
+    const bookingId = params.get("booking_id") || params.get("bookingId");
     
     console.log("=== Payment Result Debug ===");
     console.log("VnPay - status:", vnpStatus);
     console.log("VnPay - code:", vnpCode);
     console.log("MoMo - resultCode:", momoResultCode);
     console.log("payment_status:", paymentStatus);
+    console.log("booking_id:", bookingId);
     console.log("All params:", Object.fromEntries(params.entries()));
     
     // ✅ KIỂM TRA VNPAY THÀNH CÔNG
     let isSuccess = false;
     let statusMessage = "";
+    let method = "";
     
     if (vnpStatus === "paid" && vnpCode === "00") {
       isSuccess = true;
       statusMessage = "✅ Thanh toán VnPay thành công!";
+      method = "vnpay";
       console.log("✅ VnPay payment success!");
     } 
     // ✅ KIỂM TRA MOMO THÀNH CÔNG
     else if (momoResultCode === "0") {
       isSuccess = true;
       statusMessage = "✅ Thanh toán MoMo thành công!";
+      method = "momo";
       console.log("✅ MoMo payment success!");
     }
     // ✅ KIỂM TRA CUSTOM STATUS
     else if (paymentStatus === "success") {
       isSuccess = true;
       statusMessage = "✅ Thanh toán thành công!";
+      method = params.get("method") || "";
       console.log("✅ Custom payment success!");
     }
     // ❌ THẤT BẠI
@@ -81,6 +88,9 @@ export default function PaymentResultPage() {
       setStatus("error");
       setMessage(statusMessage);
     }
+
+    // Lưu info để redirect đúng
+    redirectInfo.current = { bookingId, method };
   }, [search]);
 
   // Xử lý redirect
@@ -91,7 +101,17 @@ export default function PaymentResultPage() {
     const timer = setTimeout(() => {
       hasRedirected.current = true;
       if (status === "success") {
-        navigate("/profile/my-tickets", { replace: true });
+        const bookingId = redirectInfo.current?.bookingId;
+        const method = redirectInfo.current?.method;
+
+        if (bookingId) {
+          navigate(
+            `/booking/confirm?payment_status=success&booking_id=${encodeURIComponent(bookingId)}${method ? `&method=${encodeURIComponent(method)}` : ""}`,
+            { replace: true },
+          );
+        } else {
+          navigate("/profile/my-tickets", { replace: true });
+        }
       } else if (status === "error") {
         navigate("/movies", { replace: true });
       }

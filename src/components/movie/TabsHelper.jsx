@@ -144,7 +144,9 @@ export const ShowtimesTab = ({ showtimes }) => {
                           }`}>{st.type}</span>
                         </div>
                         <div className={`font-semibold text-xs mb-1.5 ${isExpired ? 'text-zinc-600' : 'text-zinc-300'}`}>
-                          {st.prices?.Thường?.toLocaleString() || "90.000"}đ
+                          {(Number(st.prices?.Thường || 0) > 0
+                            ? Math.round(Number(st.prices.Thường)).toLocaleString("vi-VN")
+                            : "90.000")}đ
                         </div>
                         <div className={`text-[11px] flex items-center gap-1.5 font-medium ${isExpired ? 'text-zinc-600' : 'text-zinc-500'}`}>
                           <User className="w-3.5 h-3.5" />
