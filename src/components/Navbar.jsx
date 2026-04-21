@@ -12,6 +12,9 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useNotification } from "../context/NotificationContext";
+import NotificationDropdown from "./NotificationDropdown";
+
 
 const navLinks = [
   { label: "Trang chủ", path: "/" },
@@ -33,10 +36,15 @@ function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const userMenuRef = useRef(null);
+
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotification();
+
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,11 +83,10 @@ function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-        isScrolled
-          ? "bg-cinema-bg/95 backdrop-blur-xl border-b border-white/10 py-2 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
-          : "bg-gradient-to-b from-cinema-bg/80 via-cinema-bg/40 to-transparent py-4 md:py-5"
-      }`}
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled
+        ? "bg-cinema-bg/95 backdrop-blur-xl border-b border-white/10 py-2 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
+        : "bg-gradient-to-b from-cinema-bg/80 via-cinema-bg/40 to-transparent py-4 md:py-5"
+        }`}
     >
       <div className="flex items-center justify-between gap-4 lg:gap-8 px-4 sm:px-6 lg:px-8 max-w-[1920px] mx-auto">
         <Link to="/" className="flex items-center gap-2">
@@ -162,13 +169,25 @@ function Navbar() {
             )}
           </div>
 
-          <button
-            className="relative rounded-full p-2.5 text-white/90 transition-colors hover:bg-white/10 hover:text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
-            aria-label="Thông báo"
-          >
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setNotifOpen(!notifOpen)}
+              className="relative rounded-full p-2.5 text-white/90 transition-colors hover:bg-white/10 hover:text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+              aria-label="Thông báo"
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute right-2 top-2 h-4 w-4 flex items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-[0_0_8px_rgba(239,68,68,0.8)]">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </button>
+            <NotificationDropdown
+              isOpen={notifOpen}
+              onClose={() => setNotifOpen(false)}
+            />
+          </div>
+
 
           <Link
             to="/movies"
