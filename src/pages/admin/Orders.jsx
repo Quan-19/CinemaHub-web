@@ -1,6 +1,6 @@
-// src/pages/Orders.jsx - Phiên bản sửa lỗi đọc ghế
+// src/pages/Orders.jsx - Phiên bản tối ưu hiệu suất
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Search,
   Eye,
@@ -14,11 +14,13 @@ import {
   ChevronRight,
   Package,
   X,
+  Loader2,
 } from "lucide-react";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -26,11 +28,38 @@ const Orders = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const itemsPerPage = 10;
 
+  // Cache system
+  const cache = useMemo(() => ({
+    data: new Map(),
+    ttl: 5 * 60 * 1000, // 5 minutes
+    
+    get(key) {
+      const item = this.data.get(key);
+      if (!item) return null;
+      if (Date.now() > item.expiry) {
+        this.data.delete(key);
+        return null;
+      }
+      return item.value;
+    },
+    
+    set(key, value) {
+      this.data.set(key, {
+        value,
+        expiry: Date.now() + this.ttl
+      });
+    },
+    
+    clear() {
+      this.data.clear();
+    }
+  }), []);
+
   const getAuthToken = () => {
     return localStorage.getItem("token") || sessionStorage.getItem("token");
   };
 
-  const fetchAPI = async (url, options = {}) => {
+  const fetchAPI = useCallback(async (url, options = {}) => {
     const token = getAuthToken();
     const headers = {
       "Content-Type": "application/json",
@@ -38,6 +67,16 @@ const Orders = () => {
     };
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    // Check cache first
+    const cacheKey = url;
+    if (!options.skipCache) {
+      const cached = cache.get(cacheKey);
+      if (cached) {
+        console.log(`🔄 Using cached: ${url}`);
+        return cached;
+      }
     }
 
     try {
@@ -57,7 +96,14 @@ const Orders = () => {
 
       try {
         const data = JSON.parse(text);
-        return data.data || data;
+        const result = data.data || data;
+        
+        // Store in cache
+        if (result && !options.skipCache) {
+          cache.set(cacheKey, result);
+        }
+        
+        return result;
       } catch (parseError) {
         console.warn(
           `⚠️ API ${url} returned non-JSON response:`,
@@ -69,75 +115,58 @@ const Orders = () => {
       console.error(`❌ Fetch error (${url}):`, error);
       return null;
     }
-  };
+  }, [cache]);
 
-  const fetchBookingSeats = async (bookingId) => {
-  try {
-    console.log(`🔍 Đang fetch ghế cho booking ${bookingId}...`);
-    
-    const token = getAuthToken();
-    const response = await fetch(`http://localhost:5000/api/booking-seats/booking/${bookingId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    console.log(`📡 Response status:`, response.status);
-    
-    const rawText = await response.text();
-    console.log(`📄 Raw response:`, rawText);
-    
-    // Nếu response rỗng hoặc không phải JSON
-    if (!rawText || rawText.trim() === '') {
-      console.log(`⚠️ Empty response for booking ${bookingId}`);
-      return [];
-    }
-    
-    let data;
+  // Tối ưu fetch booking seats - gọi 1 lần duy nhất
+  const fetchBookingSeats = useCallback(async (bookingId) => {
     try {
-      data = JSON.parse(rawText);
-      console.log(`📊 Parsed data:`, JSON.stringify(data, null, 2));
-    } catch (e) {
-      console.error(`❌ Parse error:`, e);
+      const token = getAuthToken();
+      const response = await fetch(`http://localhost:5000/api/booking-seats/booking/${bookingId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) return [];
+      
+      const rawText = await response.text();
+      if (!rawText || rawText.trim() === '') return [];
+      
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (e) {
+        return [];
+      }
+      
+      let seatIds = [];
+      
+      if (data && data.data && Array.isArray(data.data)) {
+        seatIds = data.data.map(seat => {
+          const seatId = seat.seat_id || seat.seatId || seat.id;
+          return String(seatId);
+        });
+      } else if (Array.isArray(data)) {
+        seatIds = data.map(seat => {
+          const seatId = seat.seat_id || seat.seatId || seat.id;
+          return String(seatId);
+        });
+      } else if (data && typeof data === 'object') {
+        if (data.seat_ids) seatIds = data.seat_ids.map(s => String(s));
+        else if (data.seats) seatIds = data.seats.map(s => String(s));
+      }
+      
+      return seatIds.filter(id => id && id !== 'null' && id !== 'undefined');
+      
+    } catch (error) {
+      console.error(`❌ Error fetching seats:`, error);
       return [];
     }
-    
-    let seatIds = [];
-    
-    // Xử lý các cấu trúc dữ liệu khác nhau
-    if (data && data.data && Array.isArray(data.data)) {
-      seatIds = data.data.map(seat => {
-        const seatId = seat.seat_id || seat.seatId || seat.id;
-        return String(seatId);
-      });
-    } else if (Array.isArray(data)) {
-      seatIds = data.map(seat => {
-        const seatId = seat.seat_id || seat.seatId || seat.id;
-        return String(seatId);
-      });
-    } else if (data && typeof data === 'object') {
-      // Nếu data là object nhưng có chứa seat_ids
-      if (data.seat_ids) seatIds = data.seat_ids.map(s => String(s));
-      else if (data.seats) seatIds = data.seats.map(s => String(s));
-    }
-    
-    // Lọc và log kết quả
-    const validSeats = seatIds.filter(id => id && id !== 'null' && id !== 'undefined');
-    console.log(`✅ Final seats for booking ${bookingId}:`, validSeats);
-    
-    return validSeats;
-    
-  } catch (error) {
-    console.error(`❌ Error:`, error);
-    return [];
-  }
-};
+  }, []);
 
-  const fetchBookingFoods = async (bookingId) => {
-    const foodsData = await fetchAPI(
-      `http://localhost:5000/api/booking-foods/booking/${bookingId}`,
-    );
+  const fetchBookingFoods = useCallback(async (bookingId) => {
+    const foodsData = await fetchAPI(`http://localhost:5000/api/booking-foods/booking/${bookingId}`);
     if (Array.isArray(foodsData)) {
       return foodsData.map((food) => ({
         id: food.id,
@@ -148,153 +177,66 @@ const Orders = () => {
       }));
     }
     return [];
-  };
+  }, [fetchAPI]);
 
-  const fetchOrderDetails = async (
-    booking,
-    showtimesCache,
-    moviesCache,
-    cinemasCache,
-    roomsCache,
-  ) => {
-    console.log(`📦 Processing booking ID: ${booking.booking_id}`, booking);
-
+  // Tối ưu fetch order details - gọi song song
+  const fetchOrderDetailsOptimized = useCallback(async (booking) => {
+    console.log(`📦 Processing booking ID: ${booking.booking_id}`);
+    
+    // Gọi tất cả API song song
+    const [seatsData, foodsData, paymentData, showtimeData] = await Promise.allSettled([
+      fetchBookingSeats(booking.booking_id),
+      fetchBookingFoods(booking.booking_id),
+      fetchAPI(`http://localhost:5000/api/payments/booking/${booking.booking_id}`),
+      booking.showtime_id ? fetchAPI(`http://localhost:5000/api/showtimes/${booking.showtime_id}`) : Promise.resolve(null)
+    ]);
+    
+    const seatIds = seatsData.status === 'fulfilled' ? seatsData.value : [];
+    const foods = foodsData.status === 'fulfilled' ? foodsData.value : [];
+    const payment = paymentData.status === 'fulfilled' ? paymentData.value : null;
+    const showtime = showtimeData.status === 'fulfilled' ? showtimeData.value : null;
+    
+    let movie = null, cinemaName = null, roomName = null, showDate = null, showTime = null;
+    
+    if (showtime) {
+      const movieId = showtime.movieId || showtime.movie_id;
+      const roomId = showtime.roomId || showtime.room_id;
+      
+      const [movieData, roomData] = await Promise.allSettled([
+        movieId ? fetchAPI(`http://localhost:5000/api/movies/${movieId}`) : Promise.resolve(null),
+        roomId ? fetchAPI(`http://localhost:5000/api/rooms/${roomId}`) : Promise.resolve(null)
+      ]);
+      
+      movie = movieData.status === 'fulfilled' ? movieData.value : null;
+      const room = roomData.status === 'fulfilled' ? roomData.value : null;
+      
+      if (room && (room.cinema_id || room.cinemaId)) {
+        const cinemaId = room.cinema_id || room.cinemaId;
+        const cinemaData = await fetchAPI(`http://localhost:5000/api/cinemas/${cinemaId}`);
+        cinemaName = cinemaData?.name || "Đang cập nhật";
+      }
+      roomName = room?.name;
+      
+      const showDateRaw = showtime.show_date || showtime.date;
+      if (showDateRaw) showDate = new Date(showDateRaw);
+      showTime = showtime.start_time || showtime.time;
+    }
+    
     let totalPrice = booking.total_price ?? booking.total_amount ?? 0;
     let paymentMethod = booking.payment_method;
     let paymentStatus = booking.status;
-    let showtime = null;
-    let movie = null;
-    let cinemaName = null;
-    let roomName = null;
-    let showDate = null;
-    let showTime = null;
-    let seatIds = [];
-    let foods = [];
-
-    // Fetch seats - đã được cải thiện
-    seatIds = await fetchBookingSeats(booking.booking_id);
     
-    // Fetch foods
-    foods = await fetchBookingFoods(booking.booking_id);
+    if (payment) {
+      if (payment.amount && payment.amount > 0) totalPrice = payment.amount;
+      paymentMethod = payment.method || booking.payment_method;
+      paymentStatus = payment.status;
+    }
     
-    console.log(`💺 Booking ${booking.booking_id} final seats:`, seatIds);
-    console.log(`🍿 Booking ${booking.booking_id} foods:`, foods);
-
-    if (booking.showtime_id) {
-      if (showtimesCache[booking.showtime_id]) {
-        showtime = showtimesCache[booking.showtime_id];
-      } else {
-        console.log(`📽️ Fetching showtime ${booking.showtime_id}...`);
-        showtime = await fetchAPI(
-          `http://localhost:5000/api/showtimes/${booking.showtime_id}`,
-        );
-        console.log(`📽️ Showtime response:`, showtime);
-        if (showtime) showtimesCache[booking.showtime_id] = showtime;
-      }
-
-      if (showtime) {
-        const movieId = showtime.movieId || showtime.movie_id;
-        if (movieId) {
-          if (moviesCache[movieId]) {
-            movie = moviesCache[movieId];
-          } else {
-            console.log(`🎬 Fetching movie ${movieId}...`);
-            movie = await fetchAPI(
-              `http://localhost:5000/api/movies/${movieId}`,
-            );
-            console.log(`🎬 Movie response:`, movie);
-            if (movie) moviesCache[movieId] = movie;
-          }
-        }
-
-        const roomId = showtime.roomId || showtime.room_id;
-        if (roomId) {
-          if (roomsCache[roomId]) {
-            const room = roomsCache[roomId];
-            if (room?.cinema_id || room?.cinemaId) {
-              const cinemaId = room.cinema_id || room.cinemaId;
-              if (cinemasCache[cinemaId]) {
-                cinemaName = cinemasCache[cinemaId].name;
-              } else {
-                console.log(`🏢 Fetching cinema ${cinemaId}...`);
-                const cinema = await fetchAPI(
-                  `http://localhost:5000/api/cinemas/${cinemaId}`,
-                );
-                console.log(`🏢 Cinema response:`, cinema);
-                cinemaName = cinema?.name || "Đang cập nhật";
-                if (cinema) cinemasCache[cinemaId] = cinema;
-              }
-            }
-            roomName = room?.name;
-          } else {
-            console.log(`🏠 Fetching room ${roomId}...`);
-            const room = await fetchAPI(
-              `http://localhost:5000/api/rooms/${roomId}`,
-            );
-            console.log(`🏠 Room response:`, room);
-            if (room) {
-              roomsCache[roomId] = room;
-              const cinemaId = room.cinema_id || room.cinemaId;
-              if (cinemaId) {
-                if (cinemasCache[cinemaId]) {
-                  cinemaName = cinemasCache[cinemaId].name;
-                } else {
-                  console.log(`🏢 Fetching cinema ${cinemaId}...`);
-                  const cinema = await fetchAPI(
-                    `http://localhost:5000/api/cinemas/${cinemaId}`,
-                  );
-                  console.log(`🏢 Cinema response:`, cinema);
-                  cinemaName = cinema?.name || "Đang cập nhật";
-                  if (cinema) cinemasCache[cinemaId] = cinema;
-                }
-              }
-            }
-          }
-        }
-
-        const showDateRaw = showtime.show_date || showtime.date;
-        if (showDateRaw) {
-          showDate = new Date(showDateRaw);
-        }
-
-        showTime = showtime.start_time || showtime.time;
-      }
-    } else {
-      console.warn(`⚠️ Booking ${booking.booking_id} has NO showtime_id!`);
-    }
-
-    // Lấy thông tin thanh toán
-    try {
-      const payment = await fetchAPI(
-        `http://localhost:5000/api/payments/booking/${booking.booking_id}`,
-      );
-      if (payment) {
-        paymentMethod = payment.method || booking.payment_method;
-        paymentStatus = payment.status;
-        if (payment.amount && payment.amount > 0) {
-          totalPrice = payment.amount;
-        }
-      }
-    } catch (err) {
-      console.log(`No payment data for booking ${booking.booking_id}`);
-    }
-
-    let finalStatus = "pending";
-    if (
-      paymentStatus === "paid" ||
-      booking.booking_status === "confirmed" ||
-      booking.status === "paid"
-    ) {
-      finalStatus = "paid";
-    } else if (
-      paymentStatus === "cancelled" ||
-      booking.booking_status === "cancelled"
-    ) {
-      finalStatus = "cancelled";
-    }
-
+    const finalStatus = paymentStatus === "paid" || booking.booking_status === "confirmed" ? "paid" : 
+                       (paymentStatus === "cancelled" || booking.booking_status === "cancelled") ? "cancelled" : "pending";
+    
     const totalAmountNum = parseFloat(totalPrice) || 0;
-
+    
     return {
       booking_id: booking.booking_id,
       user_id: booking.user_id,
@@ -316,84 +258,128 @@ const Orders = () => {
       formatted_cinema: cinemaName,
       room_name: roomName,
     };
-  };
+  }, [fetchBookingSeats, fetchBookingFoods, fetchAPI]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const showtimesCache = {};
-      const moviesCache = {};
-      const cinemasCache = {};
-      const roomsCache = {};
-
       console.log("🔄 Fetching bookings from API...");
       const bookings = await fetchAPI("http://localhost:5000/api/bookings");
-      console.log("📋 Raw bookings response:", bookings);
-
+      
       if (!bookings || !Array.isArray(bookings)) {
         console.error("❌ Bookings is not an array:", bookings);
         setOrders([]);
         setLoading(false);
         return;
       }
-
-      console.log(`📋 Found ${bookings.length} bookings`);
-
-      const ordersWithDetails = await Promise.all(
-        bookings.map((booking) =>
-          fetchOrderDetails(
-            booking,
-            showtimesCache,
-            moviesCache,
-            cinemasCache,
-            roomsCache,
-          ),
-        ),
-      );
-
-      console.log("✅ Final orders with details:", ordersWithDetails);
-
-      // Chỉ lọc các đơn đã thanh toán
-      const paidOrders = ordersWithDetails.filter(order => order.status === "paid");
       
+      console.log(`📋 Found ${bookings.length} bookings`);
+      
+      // Giới hạn số lượng đơn cần xử lý (50 đơn gần nhất)
+      const recentBookings = bookings.slice(0, 50);
+      
+      // Xử lý theo batch, mỗi batch 5 đơn để tránh quá tải
+      const batchSize = 5;
+      const ordersWithDetails = [];
+      
+      for (let i = 0; i < recentBookings.length; i += batchSize) {
+        const batch = recentBookings.slice(i, i + batchSize);
+        const batchResults = await Promise.all(
+          batch.map(booking => fetchOrderDetailsOptimized(booking))
+        );
+        ordersWithDetails.push(...batchResults);
+        
+        // Cập nhật UI dần dần
+        if (ordersWithDetails.length % 10 === 0 && ordersWithDetails.length < recentBookings.length) {
+          const paidOrders = ordersWithDetails.filter(order => order.status === "paid");
+          setOrders(paidOrders);
+        }
+      }
+      
+      console.log("✅ Final orders with details:", ordersWithDetails);
+      
+      const paidOrders = ordersWithDetails.filter(order => order.status === "paid");
       console.log(`💰 Paid orders: ${paidOrders.length}`);
       
-      paidOrders.sort(
-        (a, b) => new Date(b.created_at) - new Date(a.created_at),
-      );
-
+      paidOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      
       setOrders(paidOrders);
       setTotalPages(Math.ceil(paidOrders.length / itemsPerPage));
+      setCurrentPage(1);
+      
     } catch (err) {
       console.error("Error fetching orders:", err);
       setOrders([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchAPI, fetchOrderDetailsOptimized]);
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    let isMounted = true;
+    
+    const loadOrders = async () => {
+      if (!isMounted) return;
+      await fetchOrders();
+    };
+    
+    loadOrders();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchOrders]);
 
-  // Chỉ lọc theo searchTerm
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.booking_id
-        ?.toString()
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      order.movie?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.user_id?.toString().includes(searchTerm);
-    return matchesSearch;
-  });
+  // Lazy load chi tiết đơn hàng khi click
+  const handleViewDetails = useCallback(async (order) => {
+    setLoadingDetail(true);
+    
+    try {
+      // Nếu đã có đủ thông tin thì hiển thị luôn
+      if (order.movie && order.seat_ids?.length > 0 && order.foods) {
+        setSelectedOrder(order);
+        setShowDetailModal(true);
+        setLoadingDetail(false);
+        return;
+      }
+      
+      // Nếu chưa có, fetch chi tiết
+      const fullOrder = await fetchOrderDetailsOptimized({ 
+        booking_id: order.booking_id,
+        ...order 
+      });
+      setSelectedOrder(fullOrder);
+      setShowDetailModal(true);
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+    } finally {
+      setLoadingDetail(false);
+    }
+  }, [fetchOrderDetailsOptimized]);
 
-  const paginatedOrders = filteredOrders.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
+  // Filter orders
+  const filteredOrders = useMemo(() => {
+    if (!searchTerm.trim()) return orders;
+    
+    return orders.filter((order) => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        order.booking_id?.toString().toLowerCase().includes(searchLower) ||
+        order.movie?.title?.toLowerCase().includes(searchLower) ||
+        order.user_id?.toString().includes(searchLower) ||
+        order.seat_ids?.some(seat => seat.toLowerCase().includes(searchLower))
+      );
+    });
+  }, [orders, searchTerm]);
 
-  const formatDate = (dateString) => {
+  const paginatedOrders = useMemo(() => {
+    return filteredOrders.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+  }, [filteredOrders, currentPage]);
+
+  const formatDate = useCallback((dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleDateString("vi-VN", {
@@ -403,25 +389,26 @@ const Orders = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
+  }, []);
 
-  const formatShowDate = (date) => {
+  const formatShowDate = useCallback((date) => {
     if (!date) return "N/A";
     return date.toLocaleDateString("vi-VN", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
     });
-  };
+  }, []);
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = useCallback((amount) => {
     if (amount === undefined || amount === null) return "0 ₫";
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
     }).format(amount);
-  };
+  }, []);
 
+<<<<<<< HEAD
   const formatSeatLabel = (seatId) => {
     if (seatId === undefined || seatId === null) return "";
     const raw = String(seatId);
@@ -442,6 +429,9 @@ const Orders = () => {
   };
 
   const exportToCSV = () => {
+=======
+  const exportToCSV = useCallback(() => {
+>>>>>>> b42218c9d7389a8518f67d69301a5522196a19f0
     const headers = [
       "Mã đơn",
       "Khách hàng",
@@ -454,6 +444,7 @@ const Orders = () => {
       "Tổng tiền",
       "Ngày đặt",
     ];
+    
     const rows = filteredOrders.map((order) => [
       order.booking_id,
       `User ${order.user_id}`,
@@ -470,26 +461,60 @@ const Orders = () => {
     const csvContent = [headers, ...rows]
       .map((row) => row.join(","))
       .join("\n");
+      
     const blob = new Blob(["\uFEFF" + csvContent], {
       type: "text/csv;charset=utf-8;",
     });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.href = url;
-    link.setAttribute(
-      "download",
-      `orders_${new Date().toISOString().slice(0, 19)}.csv`,
-    );
+    link.setAttribute("download", `orders_${new Date().toISOString().slice(0, 19)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  };
+  }, [filteredOrders, formatShowDate, formatDate]);
+
+  // Skeleton loading component
+  const OrderSkeleton = () => (
+    <div className="animate-pulse">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px]">
+            <tbody>
+              {[...Array(5)].map((_, i) => (
+                <tr key={i} className="border-b border-zinc-800">
+                  <td className="px-6 py-4"><div className="h-6 bg-zinc-800 rounded w-24"></div></td>
+                  <td className="px-6 py-4"><div className="h-6 bg-zinc-800 rounded w-32"></div></td>
+                  <td className="px-6 py-4"><div className="h-6 bg-zinc-800 rounded w-28"></div></td>
+                  <td className="px-6 py-4"><div className="h-6 bg-zinc-800 rounded w-36"></div></td>
+                  <td className="px-6 py-4"><div className="h-6 bg-zinc-800 rounded w-16"></div></td>
+                  <td className="px-6 py-4"><div className="h-6 bg-zinc-800 rounded w-24"></div></td>
+                  <td className="px-6 py-4"><div className="h-8 bg-zinc-800 rounded w-20"></div></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
+<<<<<<< HEAD
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+=======
+      <div className="min-h-screen" style={{ background: "var(--color-cinema-bg)" }}>
+        <div className="mx-auto w-full px-4 py-6 sm:px-8 lg:px-12">
+          <div className="mb-8">
+            <div className="h-8 bg-zinc-800 rounded w-64 mb-2"></div>
+            <div className="h-4 bg-zinc-800 rounded w-96"></div>
+          </div>
+          <OrderSkeleton />
+        </div>
+>>>>>>> b42218c9d7389a8518f67d69301a5522196a19f0
       </div>
     );
   }
@@ -619,6 +644,7 @@ const Orders = () => {
                               ? `${order.showtime.type}`
                               : ""}
                         </p>
+<<<<<<< HEAD
                        </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 text-white/70 text-sm">
@@ -628,6 +654,17 @@ const Orders = () => {
                        </td>
                       <td className="px-4 py-3">
                         <span className="text-white/70 text-sm">
+=======
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-zinc-300 text-base">
+                          <CalendarDays className="w-4 h-4 text-zinc-400" />
+                          {formatShowDate(order.formatted_show_date)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-zinc-300 text-base">
+>>>>>>> b42218c9d7389a8518f67d69301a5522196a19f0
                           {order.formatted_cinema ||
                             order.showtime?.cinemaName ||
                             "Đang tải..."}
@@ -635,10 +672,17 @@ const Orders = () => {
                         <p className="text-white/40 text-xs mt-1">
                           {order.room_name || ""}
                         </p>
+<<<<<<< HEAD
                        </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 text-white/70 text-sm">
                           <Ticket className="w-4 h-4 text-white/40" />
+=======
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-zinc-300 text-base">
+                          <Ticket className="w-4 h-4 text-zinc-400" />
+>>>>>>> b42218c9d7389a8518f67d69301a5522196a19f0
                           <span className="font-semibold text-white">{order.seat_ids?.length || 0}</span> vé
                         </div>
                         {order.seat_ids && order.seat_ids.length > 0 && (
@@ -646,6 +690,7 @@ const Orders = () => {
                             ({formatSeatList(order.seat_ids).join(", ")})
                           </div>
                         )}
+<<<<<<< HEAD
                        </td>
                       <td className="px-4 py-3">
                         <span className="text-white font-bold text-base">
@@ -656,12 +701,29 @@ const Orders = () => {
                         <button
                           onClick={() => handleViewDetails(order)}
                           className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium border border-blue-500/20"
+=======
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-white font-bold text-lg">
+                          {formatCurrency(order.total_amount)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleViewDetails(order)}
+                          disabled={loadingDetail}
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium border border-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+>>>>>>> b42218c9d7389a8518f67d69301a5522196a19f0
                         >
-                          <Eye className="w-4 h-4" />
+                          {loadingDetail ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
                           Chi tiết
                         </button>
-                       </td>
-                     </tr>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
@@ -670,8 +732,13 @@ const Orders = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
+<<<<<<< HEAD
               <div className="flex items-center justify-between">
                 <p className="text-sm text-white/40">
+=======
+              <div className="mt-6 flex items-center justify-between flex-wrap gap-4">
+                <p className="text-base text-zinc-400">
+>>>>>>> b42218c9d7389a8518f67d69301a5522196a19f0
                   Hiển thị {(currentPage - 1) * itemsPerPage + 1} -{" "}
                   {Math.min(currentPage * itemsPerPage, filteredOrders.length)}{" "}
                   trên {filteredOrders.length} đơn

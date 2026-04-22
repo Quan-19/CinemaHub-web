@@ -17,69 +17,89 @@ export default function PaymentResultPage() {
     isProcessed.current = true;
 
     const params = new URLSearchParams(search);
-    
+
     // Lấy params từ VnPay
-    const vnpStatus = params.get("status"); // VnPay: "paid"
-    const vnpCode = params.get("code"); // VnPay: "00"
+    const vnpStatus = params.get("status");
+    const vnpCode = params.get("code");
     const vnpPaymentId = params.get("paymentId");
-    
+
     // Lấy params từ MoMo
-    const momoResultCode = params.get("resultCode"); // MoMo: "0"
+    const momoResultCode = params.get("resultCode");
     const momoOrderId = params.get("orderId");
-    
+
+    // ✅ Lấy params từ ZaloPay
+    const zalopayStatus = params.get("status");
+    const zalopayCode = params.get("code");
+    const zalopayPaymentId = params.get("paymentId");
+    const zalopayMethod = params.get("method");
+
     // Lấy params chung
     const paymentStatus = params.get("payment_status");
-    const bookingId = params.get("booking_id") || params.get("bookingId");
-    
+
     console.log("=== Payment Result Debug ===");
-    console.log("VnPay - status:", vnpStatus);
-    console.log("VnPay - code:", vnpCode);
+    console.log("VnPay - status:", vnpStatus, "code:", vnpCode);
     console.log("MoMo - resultCode:", momoResultCode);
+    console.log(
+      "ZaloPay - status:",
+      zalopayStatus,
+      "code:",
+      zalopayCode,
+      "method:",
+      zalopayMethod,
+    );
     console.log("payment_status:", paymentStatus);
-    console.log("booking_id:", bookingId);
     console.log("All params:", Object.fromEntries(params.entries()));
-    
-    // ✅ KIỂM TRA VNPAY THÀNH CÔNG
+
     let isSuccess = false;
     let statusMessage = "";
-    let method = "";
-    
-    if (vnpStatus === "paid" && vnpCode === "00") {
+
+    // ✅ KIỂM TRA ZALOPAY THÀNH CÔNG
+    if (
+      zalopayMethod === "zalopay" &&
+      zalopayStatus === "paid" &&
+      zalopayCode === "1"
+    ) {
+      isSuccess = true;
+      statusMessage = "✅ Thanh toán ZaloPay thành công!";
+      console.log("✅ ZaloPay payment success!");
+    }
+    // KIỂM TRA VNPAY THÀNH CÔNG
+    else if (vnpStatus === "paid" && vnpCode === "00") {
       isSuccess = true;
       statusMessage = "✅ Thanh toán VnPay thành công!";
-      method = "vnpay";
       console.log("✅ VnPay payment success!");
-    } 
-    // ✅ KIỂM TRA MOMO THÀNH CÔNG
+    }
+    // KIỂM TRA MOMO THÀNH CÔNG
     else if (momoResultCode === "0") {
       isSuccess = true;
       statusMessage = "✅ Thanh toán MoMo thành công!";
-      method = "momo";
       console.log("✅ MoMo payment success!");
     }
-    // ✅ KIỂM TRA CUSTOM STATUS
+    // KIỂM TRA CUSTOM STATUS
     else if (paymentStatus === "success") {
       isSuccess = true;
       statusMessage = "✅ Thanh toán thành công!";
-      method = params.get("method") || "";
       console.log("✅ Custom payment success!");
     }
     // ❌ THẤT BẠI
     else {
+      // Kiểm tra lỗi ZaloPay
+      if (zalopayMethod === "zalopay" && zalopayCode && zalopayCode !== "1") {
+        statusMessage = `❌ Thanh toán ZaloPay thất bại. Mã lỗi: ${zalopayCode}`;
+      }
       // Kiểm tra lỗi VnPay
-      if (vnpCode && vnpCode !== "00") {
+      else if (vnpCode && vnpCode !== "00") {
         statusMessage = `❌ Thanh toán VnPay thất bại. Mã lỗi: ${vnpCode}`;
-      } 
+      }
       // Kiểm tra lỗi MoMo
       else if (momoResultCode && momoResultCode !== "0") {
         statusMessage = `❌ Thanh toán MoMo thất bại. Mã lỗi: ${momoResultCode}`;
-      }
-      else {
+      } else {
         statusMessage = "❌ Thanh toán thất bại. Vui lòng thử lại.";
       }
       console.log("❌ Payment failed");
     }
-    
+
     // Cập nhật state
     if (isSuccess) {
       setStatus("success");
@@ -88,16 +108,13 @@ export default function PaymentResultPage() {
       setStatus("error");
       setMessage(statusMessage);
     }
-
-    // Lưu info để redirect đúng
-    redirectInfo.current = { bookingId, method };
   }, [search]);
 
   // Xử lý redirect
   useEffect(() => {
     if (status === "processing") return;
     if (hasRedirected.current) return;
-    
+
     const timer = setTimeout(() => {
       hasRedirected.current = true;
       if (status === "success") {
@@ -116,7 +133,7 @@ export default function PaymentResultPage() {
         navigate("/movies", { replace: true });
       }
     }, 5000);
-    
+
     // Countdown effect
     const countdownTimer = setInterval(() => {
       setCountdown((prev) => {
@@ -127,7 +144,7 @@ export default function PaymentResultPage() {
         return prev - 1;
       });
     }, 1000);
-    
+
     return () => {
       clearTimeout(timer);
       clearInterval(countdownTimer);
