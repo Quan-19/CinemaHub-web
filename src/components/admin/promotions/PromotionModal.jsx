@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { X, Percent, DollarSign, Calendar, Tag, Users } from "lucide-react";
 
 const seatTypes = [
@@ -17,8 +17,34 @@ const weekDays = [
   { value: 6, label: "Thứ 7" },
 ];
 
-export default function PromotionModal({ show, onClose, onSave, editingItem }) {
-  const [form, setForm] = useState({
+const toDateInputValue = (value) => {
+  if (!value) return "";
+  const raw = String(value);
+  return raw.includes("T") ? raw.split("T")[0] : raw;
+};
+
+const buildInitialForm = (editingItem) => {
+  if (editingItem) {
+    return {
+      title: editingItem.title || "",
+      description: editingItem.description || "",
+      code: editingItem.code || "",
+      image: editingItem.image || "",
+      discount_type: editingItem.discount_type || "percent",
+      discount_value: editingItem.discount_value || "",
+      min_order: editingItem.min_order || "",
+      start_date: toDateInputValue(editingItem.start_date),
+      end_date: toDateInputValue(editingItem.end_date),
+      status: editingItem.status || "active",
+      cinema_id: editingItem.cinema_id || null,
+      apply_days: editingItem.apply_days || [0, 1, 2, 3, 4, 5, 6],
+      usage_limit: editingItem.usage_limit || "",
+      apply_seat_types:
+        editingItem.apply_seat_types || ["Thường", "VIP", "Couple"],
+    };
+  }
+
+  return {
     title: "",
     description: "",
     code: "",
@@ -33,48 +59,13 @@ export default function PromotionModal({ show, onClose, onSave, editingItem }) {
     apply_days: [0, 1, 2, 3, 4, 5, 6],
     usage_limit: "",
     apply_seat_types: ["Thường", "VIP", "Couple"],
-  });
+  };
+};
+
+export default function PromotionModal({ show, onClose, onSave, editingItem }) {
+  const [form, setForm] = useState(() => buildInitialForm(editingItem));
 
   const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    if (editingItem) {
-      setForm({
-        title: editingItem.title || "",
-        description: editingItem.description || "",
-        code: editingItem.code || "",
-        image: editingItem.image || "",
-        discount_type: editingItem.discount_type || "percent",
-        discount_value: editingItem.discount_value || "",
-        min_order: editingItem.min_order || "",
-        start_date: editingItem.start_date || "",
-        end_date: editingItem.end_date || "",
-        status: editingItem.status || "active",
-        cinema_id: editingItem.cinema_id || null,
-        apply_days: editingItem.apply_days || [0, 1, 2, 3, 4, 5, 6],
-        usage_limit: editingItem.usage_limit || "",
-        apply_seat_types: editingItem.apply_seat_types || ["Thường", "VIP", "Couple"],
-      });
-    } else {
-      setForm({
-        title: "",
-        description: "",
-        code: "",
-        image: "",
-        discount_type: "percent",
-        discount_value: "",
-        min_order: "",
-        start_date: "",
-        end_date: "",
-        status: "active",
-        cinema_id: null,
-        apply_days: [0, 1, 2, 3, 4, 5, 6],
-        usage_limit: "",
-        apply_seat_types: ["Thường", "VIP", "Couple"],
-      });
-    }
-    setErrors({});
-  }, [editingItem, show]);
 
   if (!show) return null;
 
@@ -112,6 +103,8 @@ export default function PromotionModal({ show, onClose, onSave, editingItem }) {
       discount_value: Number(form.discount_value) || 0,
       min_order: Number(form.min_order) || 0,
       usage_limit: Number(form.usage_limit) || 0,
+      start_date: toDateInputValue(form.start_date),
+      end_date: toDateInputValue(form.end_date),
     };
     
     onSave(submitData);

@@ -467,31 +467,6 @@ export default function AdminPricingPage() {
         </button>
       </div>
 
-      {/* Quick Explanation */}
-      <div className="mb-6 p-4 bg-[#0d0d1a] rounded-xl border border-white/10">
-        <div className="text-sm font-medium text-white mb-1">
-          Bạn đang quản lý gì?
-        </div>
-        <div className="text-sm text-gray-400">
-          Mỗi <span className="text-white">quy tắc giá</span> là một cấu hình
-          giá vé theo điều kiện áp dụng.
-        </div>
-        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="bg-cinema-bg p-3 rounded-lg border border-white/10">
-            <div className="text-xs text-gray-400 mb-1">Quy tắc thường</div>
-            <div className="text-sm text-gray-300">
-              Loại phòng + loại ghế + loại ngày + khung giờ → giá áp dụng.
-            </div>
-          </div>
-          <div className="bg-cinema-bg p-3 rounded-lg border border-white/10">
-            <div className="text-xs text-gray-400 mb-1">Quy tắc ngày lễ</div>
-            <div className="text-sm text-gray-300">
-              Loại phòng + khoảng ngày + các thứ áp dụng → giá theo từng loại
-              ghế.
-            </div>
-          </div>
-        </div>
-      </div>
 
       {showFilters && (
         <div className="mb-6 p-4 bg-cinema-surface rounded-xl border border-white/10">
