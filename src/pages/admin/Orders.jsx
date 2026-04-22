@@ -408,30 +408,7 @@ const Orders = () => {
     }).format(amount);
   }, []);
 
-<<<<<<< HEAD
-  const formatSeatLabel = (seatId) => {
-    if (seatId === undefined || seatId === null) return "";
-    const raw = String(seatId);
-    const underscoreIndex = raw.lastIndexOf("_");
-    if (underscoreIndex === -1) return raw;
-    const label = raw.slice(underscoreIndex + 1);
-    return label || raw;
-  };
-
-  const formatSeatList = (seatIds) => {
-    if (!Array.isArray(seatIds)) return [];
-    return seatIds.map(formatSeatLabel).filter(Boolean);
-  };
-
-  const handleViewDetails = (order) => {
-    setSelectedOrder(order);
-    setShowDetailModal(true);
-  };
-
-  const exportToCSV = () => {
-=======
   const exportToCSV = useCallback(() => {
->>>>>>> b42218c9d7389a8518f67d69301a5522196a19f0
     const headers = [
       "Mã đơn",
       "Khách hàng",
@@ -502,10 +479,6 @@ const Orders = () => {
 
   if (loading) {
     return (
-<<<<<<< HEAD
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-=======
       <div className="min-h-screen" style={{ background: "var(--color-cinema-bg)" }}>
         <div className="mx-auto w-full px-4 py-6 sm:px-8 lg:px-12">
           <div className="mb-8">
@@ -514,7 +487,6 @@ const Orders = () => {
           </div>
           <OrderSkeleton />
         </div>
->>>>>>> b42218c9d7389a8518f67d69301a5522196a19f0
       </div>
     );
   }
@@ -644,17 +616,6 @@ const Orders = () => {
                               ? `${order.showtime.type}`
                               : ""}
                         </p>
-<<<<<<< HEAD
-                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2 text-white/70 text-sm">
-                          <CalendarDays className="w-4 h-4 text-white/40" />
-                          {formatShowDate(order.formatted_show_date)}
-                        </div>
-                       </td>
-                      <td className="px-4 py-3">
-                        <span className="text-white/70 text-sm">
-=======
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2 text-zinc-300 text-base">
@@ -664,7 +625,6 @@ const Orders = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-zinc-300 text-base">
->>>>>>> b42218c9d7389a8518f67d69301a5522196a19f0
                           {order.formatted_cinema ||
                             order.showtime?.cinemaName ||
                             "Đang tải..."}
@@ -672,17 +632,10 @@ const Orders = () => {
                         <p className="text-white/40 text-xs mt-1">
                           {order.room_name || ""}
                         </p>
-<<<<<<< HEAD
-                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2 text-white/70 text-sm">
-                          <Ticket className="w-4 h-4 text-white/40" />
-=======
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2 text-zinc-300 text-base">
                           <Ticket className="w-4 h-4 text-zinc-400" />
->>>>>>> b42218c9d7389a8518f67d69301a5522196a19f0
                           <span className="font-semibold text-white">{order.seat_ids?.length || 0}</span> vé
                         </div>
                         {order.seat_ids && order.seat_ids.length > 0 && (
@@ -690,18 +643,6 @@ const Orders = () => {
                             ({formatSeatList(order.seat_ids).join(", ")})
                           </div>
                         )}
-<<<<<<< HEAD
-                       </td>
-                      <td className="px-4 py-3">
-                        <span className="text-white font-bold text-base">
-                          {formatCurrency(order.total_amount)}
-                        </span>
-                       </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleViewDetails(order)}
-                          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium border border-blue-500/20"
-=======
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-white font-bold text-lg">
@@ -713,7 +654,6 @@ const Orders = () => {
                           onClick={() => handleViewDetails(order)}
                           disabled={loadingDetail}
                           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium border border-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
->>>>>>> b42218c9d7389a8518f67d69301a5522196a19f0
                         >
                           {loadingDetail ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -732,13 +672,8 @@ const Orders = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-<<<<<<< HEAD
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-white/40">
-=======
               <div className="mt-6 flex items-center justify-between flex-wrap gap-4">
                 <p className="text-base text-zinc-400">
->>>>>>> b42218c9d7389a8518f67d69301a5522196a19f0
                   Hiển thị {(currentPage - 1) * itemsPerPage + 1} -{" "}
                   {Math.min(currentPage * itemsPerPage, filteredOrders.length)}{" "}
                   trên {filteredOrders.length} đơn
