@@ -101,7 +101,7 @@ const MOCK_ARTICLES = [
   },
   {
     id: "a6",
-    title: "Hướng dẫn đặt vé online trên CineStar",
+    title: "Hướng dẫn đặt vé online trên EbizCinema",
     slug: "/blog/huong-dan-dat-ve-online",
     category: "news",
     author: "Support Team",
