@@ -195,7 +195,10 @@ function ProfilePage() {
             booking_date: bookingDate,
             booking_date_raw: booking.booking_date,
             total_amount: parseFloat(booking.total_amount || 0),
+            original_ticket_amount: parseFloat(booking.original_ticket_amount || 0),
             ticket_amount: parseFloat(booking.ticket_amount || 0),
+            discount_amount: parseFloat(booking.discount_amount || 0),
+            promo_code: booking.promo_code,
             foods_amount: parseFloat(booking.foods_amount || 0),
             food_items: booking.food_items,
             payment_status: booking.booking_status,
@@ -497,8 +500,8 @@ function ProfilePage() {
                     <div>
                       <h4 className="text-lg font-bold text-white leading-tight mb-1">{selectedBooking.movie_name}</h4>
                       <span className={`inline-block px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wider ${selectedBooking.payment_status === 'paid' ? 'bg-emerald-500/10 text-emerald-500' :
-                          selectedBooking.payment_status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
-                            'bg-rose-500/10 text-rose-500'
+                        selectedBooking.payment_status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
+                          'bg-rose-500/10 text-rose-500'
                         }`}>
                         {selectedBooking.payment_status === 'paid' ? 'Đã xác nhận' :
                           selectedBooking.payment_status === 'pending' ? 'Chờ xử lý' : 'Đã hủy'}
@@ -538,8 +541,18 @@ function ProfilePage() {
                       <p className="text-[10px] font-bold uppercase text-zinc-500 tracking-wider">Chi tiết thanh toán</p>
                       <div className="flex justify-between items-center text-[11px]">
                         <span className="text-zinc-400">Tiền vé:</span>
-                        <span className="text-white font-bold">{formatCurrency(selectedBooking.ticket_amount)}</span>
+                        <span className="text-white font-bold">{formatCurrency(selectedBooking.original_ticket_amount > 0 ? selectedBooking.original_ticket_amount : selectedBooking.ticket_amount)}</span>
                       </div>
+                      {selectedBooking.discount_amount > 0 && (
+                        <div className="flex justify-between items-start gap-4 pt-1.5 border-t border-white/5 text-[11px]">
+                          <span className="text-zinc-400 font-medium leading-relaxed italic">
+                            Khuyến mãi ({selectedBooking.promo_code}):
+                          </span>
+                          <span className="text-emerald-500 font-bold whitespace-nowrap">
+                            -{formatCurrency(selectedBooking.discount_amount)}
+                          </span>
+                        </div>
+                      )}
                       {selectedBooking.foods_amount > 0 && (
                         <div className="flex justify-between items-start gap-4 pt-1.5 border-t border-white/5 text-[11px]">
                           <span className="text-zinc-400 font-medium leading-relaxed italic">
