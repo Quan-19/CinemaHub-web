@@ -257,7 +257,7 @@ export const TicketPage = () => {
               </div>
             </div>
             <p className="text-white text-lg" style={{ fontWeight: 700 }}>Xác thực vé thành công</p>
-            <p className="text-zinc-400 text-sm mt-1">Chào mừng đến CineStar!</p>
+            <p className="text-zinc-400 text-sm mt-1">Chào mừng đến EbizCinema!</p>
           </div>
         </div>
       )}
@@ -505,7 +505,7 @@ export const TicketPage = () => {
           <div className="mt-4 pt-3 flex justify-between"
             style={{ borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 10, color: "rgba(255,255,255,0.2)" }}>
             <span>Cấp: {ticket.issuedAt}</span>
-            <span>CineStar © 2026</span>
+            <span>EbizCinema © 2026</span>
           </div>
         </div>
       </div>

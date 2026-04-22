@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
-import { Plus, Edit, Trash2, Package, Search, X, Upload, Image as ImageIcon } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Search, X, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 export default function Foods() {
   const [foods, setFoods] = useState([]);
@@ -15,8 +15,8 @@ export default function Foods() {
   const [formData, setFormData] = useState({
     name: "",
     price: "",
-    image: null,        // Thay đổi: lưu File object thay vì URL
-    imagePreview: "",   // Thêm preview cho ảnh
+    image: null,        
+    imagePreview: "",  
     status: "available",
   });
 
@@ -175,145 +175,145 @@ export default function Foods() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-zinc-400">Đang tải...</div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#0a0a0f" }}>
-      <div className="mx-auto w-full px-3 py-6 sm:px-6 lg:px-10">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white">
-              Quản lý Combo & Đồ ăn
-            </h1>
-            <p className="text-zinc-400 text-sm mt-1">
-              Quản lý danh sách đồ ăn, combo bắp nước
-            </p>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Combo & Đồ ăn</h1>
+          <p className="text-sm text-gray-400 mt-1">
+            Quản lý danh sách đồ ăn, combo bắp nước
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            resetForm();
+            setShowModal(true);
+          }}
+          className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap"
+        >
+          <Plus size={16} /> Thêm món
+        </button>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="rounded-xl bg-cinema-surface border border-white/10 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-white/40">Tổng sản phẩm</p>
+              <p className="text-2xl font-bold text-white mt-1">
+                {foods.length}
+              </p>
+            </div>
+            <Package className="w-8 h-8 text-red-500 opacity-50" />
           </div>
-          <button
-            onClick={() => {
-              resetForm();
-              setShowModal(true);
-            }}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:opacity-90 text-white transition-all duration-200 shadow-lg shadow-red-500/20"
-          >
-            <Plus size={18} />
-            Thêm món mới
-          </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-zinc-400 text-sm">Tổng sản phẩm</p>
-                <p className="text-2xl font-bold text-white">{foods.length}</p>
-              </div>
-              <Package className="w-8 h-8 text-red-500 opacity-50" />
+        <div className="rounded-xl bg-cinema-surface border border-white/10 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-white/40">Đang bán</p>
+              <p className="text-2xl font-bold text-green-400 mt-1">
+                {foods.filter((f) => f.status === "available").length}
+              </p>
             </div>
-          </div>
-          <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-zinc-400 text-sm">Đang bán</p>
-                <p className="text-2xl font-bold text-green-400">
-                  {foods.filter((f) => f.status === "available").length}
-                </p>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-green-400"></div>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-zinc-400 text-sm">Tạm dừng</p>
-                <p className="text-2xl font-bold text-yellow-400">
-                  {foods.filter((f) => f.status === "out_of_stock").length}
-                </p>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-zinc-400 text-sm">Giá trung bình</p>
-                <p className="text-2xl font-bold text-white">
-                  {formatCurrency(
-                    foods.reduce((sum, f) => sum + (f.price_raw || 0), 0) /
-                      foods.length || 0,
-                  )}
-                </p>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <span className="text-blue-400 text-xs">₫</span>
-              </div>
+            <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+              <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
             </div>
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo tên món..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-white placeholder-zinc-400 focus:outline-none focus:border-red-500 transition-colors"
-            />
+        <div className="rounded-xl bg-cinema-surface border border-white/10 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-white/40">Tạm dừng</p>
+              <p className="text-2xl font-bold text-yellow-400 mt-1">
+                {foods.filter((f) => f.status === "out_of_stock").length}
+              </p>
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
+              <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+            </div>
           </div>
         </div>
 
-        {/* Products Grid */}
-        {filteredFoods.length === 0 ? (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-12 text-center">
-            <Package className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-            <p className="text-zinc-400">Không tìm thấy sản phẩm nào</p>
-            <p className="text-zinc-500 text-sm mt-1">
-              Hãy thêm sản phẩm mới bằng nút "Thêm món mới"
-            </p>
+        <div className="rounded-xl bg-cinema-surface border border-white/10 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-white/40">Giá trung bình</p>
+              <p className="text-2xl font-bold text-white mt-1">
+                {formatCurrency(
+                  foods.reduce((sum, f) => sum + (f.price_raw || 0), 0) /
+                    foods.length || 0,
+                )}
+              </p>
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+              <span className="text-blue-400 text-sm font-semibold">₫</span>
+            </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filteredFoods.map((food) => (
-              <div
-                key={food.food_id}
-                className="group rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-red-500/10"
-                style={{
-                  background: "#12121f",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                }}
-              >
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1 relative">
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Tìm kiếm theo tên món..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white placeholder-gray-500 outline-none transition-colors focus:border-red-500/50"
+          />
+        </div>
+      </div>
+
+      {/* Products */}
+      {filteredFoods.length === 0 ? (
+        <div className="rounded-xl border border-white/10 bg-cinema-surface p-12 text-center">
+          <Package className="w-12 h-12 text-white/20 mx-auto mb-3" />
+          <p className="text-white/60">Không tìm thấy sản phẩm nào</p>
+          <p className="text-white/40 text-sm mt-1">
+            Thử đổi từ khóa hoặc thêm món mới
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredFoods.map((food) => (
+            <div
+              key={food.food_id}
+              className="group rounded-xl overflow-hidden border border-white/10 bg-cinema-surface transition-colors hover:border-white/20"
+            >
                 {/* Image */}
-                <div className="relative h-40 overflow-hidden bg-gradient-to-br from-zinc-800 to-zinc-900">
+                <div className="relative h-40 overflow-hidden bg-zinc-900">
                   {food.image ? (
                     <img
                       src={food.image}
                       alt={food.name}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Package size={48} className="text-zinc-700" />
+                      <Package size={48} className="text-white/15" />
                     </div>
                   )}
                   <div className="absolute top-2 right-2">
                     <span
-                      className={`inline-block px-2 py-1 rounded-lg text-xs font-medium ${
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
                         food.status === "available"
-                          ? "bg-green-500/90 text-white"
-                          : "bg-red-500/90 text-white"
+                          ? "bg-green-500/15 text-green-400 border-green-500/20"
+                          : "bg-yellow-500/15 text-yellow-400 border-yellow-500/20"
                       }`}
                     >
                       {food.status === "available" ? "Đang bán" : "Hết hàng"}
@@ -323,10 +323,10 @@ export default function Foods() {
 
                 {/* Content */}
                 <div className="p-4">
-                  <h3 className="text-white font-bold text-base line-clamp-1">
+                  <h3 className="text-white font-semibold text-sm line-clamp-1">
                     {food.name}
                   </h3>
-                  <p className="text-red-500 text-xl font-bold mt-2">
+                  <p className="text-red-500 text-lg font-bold mt-2">
                     {food.price_formatted || formatCurrency(food.price)}
                   </p>
 
@@ -334,38 +334,33 @@ export default function Foods() {
                   <div className="flex gap-2 mt-4 pt-3 border-t border-white/10">
                     <button
                       onClick={() => openEditModal(food)}
-                      className="flex-1 py-2 rounded-xl text-sm font-medium bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all duration-200 flex items-center justify-center gap-1"
+                      className="flex-1 py-2 rounded-lg text-sm font-medium bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors flex items-center justify-center gap-1"
                     >
                       <Edit size={14} />
                       Sửa
                     </button>
                     <button
                       onClick={() => handleDelete(food.food_id)}
-                      className="flex-1 py-2 rounded-xl text-sm font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all duration-200 flex items-center justify-center gap-1"
+                      className="flex-1 py-2 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1"
                     >
                       <Trash2 size={14} />
                       Xóa
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Modal Thêm/Sửa */}
       {showModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
           onClick={() => setShowModal(false)}
         >
           <div
-            className="relative w-full max-w-md rounded-2xl shadow-2xl"
-            style={{
-              background: "#12121f",
-              border: "1px solid rgba(255,255,255,0.1)",
-            }}
+            className="relative w-full max-w-md rounded-2xl bg-cinema-surface border border-white/10 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-5 border-b border-white/10">
@@ -374,7 +369,7 @@ export default function Foods() {
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-zinc-400 hover:text-white transition-colors"
+                className="text-white/60 hover:text-white transition-colors"
               >
                 <X size={20} />
               </button>
@@ -393,7 +388,7 @@ export default function Foods() {
                       setFormData({ ...formData, name: e.target.value })
                     }
                     placeholder="Nhập tên món"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 transition-colors"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 transition-colors"
                     required
                   />
                 </div>
@@ -409,7 +404,7 @@ export default function Foods() {
                       setFormData({ ...formData, price: e.target.value })
                     }
                     placeholder="Ví dụ: 50000"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 transition-colors"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 transition-colors"
                     required
                   />
                 </div>
@@ -423,7 +418,7 @@ export default function Foods() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-white transition-colors"
                     >
                       <Upload size={16} />
                       Chọn ảnh
@@ -475,7 +470,7 @@ export default function Foods() {
                     onChange={(e) =>
                       setFormData({ ...formData, status: e.target.value })
                     }
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-red-500 transition-colors"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-red-500/50 transition-colors"
                   >
                     <option value="available">Đang bán</option>
                     <option value="out_of_stock">Hết hàng</option>
@@ -487,14 +482,14 @@ export default function Foods() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white transition-colors"
+                  className="flex-1 py-2.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-white transition-colors"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:opacity-90 text-white font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {uploading ? "Đang xử lý..." : (editingFood ? "Cập nhật" : "Thêm mới")}
                 </button>

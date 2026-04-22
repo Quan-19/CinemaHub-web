@@ -14,7 +14,7 @@ const mockBanners = [
   { id: "BN002", title: "Khuyến mãi Thứ 4 Vui Vẻ", image: "https://images.unsplash.com/photo-1742822050771-588f61785322?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=80&w=800&h=300", link: "/promotions", position: "home-hero", status: "active", startDate: "01/01/2026", endDate: "31/12/2026", clicks: 1560, views: 32100, order: 2 },
   { id: "BN003", title: "Combo Cặp Đôi Đặc Biệt", image: "https://images.unsplash.com/photo-1608170825938-a8ea0305d46c?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=80&w=800&h=300", link: "/promotions", position: "home-middle", status: "active", startDate: "14/02/2026", endDate: "14/03/2026", clicks: 890, views: 18500, order: 1 },
   { id: "BN004", title: "Biệt Đội Chiến Thần — Ra rạp", image: "https://images.unsplash.com/photo-1742274317501-57e147afc0c4?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=80&w=800&h=300", link: "/movies/1", position: "movie-list", status: "inactive", startDate: "14/02/2026", endDate: "14/03/2026", clicks: 420, views: 9800, order: 1 },
-  { id: "BN005", title: "Ứng dụng CineStar Mobile", image: "https://images.unsplash.com/photo-1766267190781-73203979c4ac?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=80&w=400&h=600", link: "#download", position: "sidebar", status: "active", startDate: "01/01/2026", endDate: "31/12/2026", clicks: 320, views: 72000, order: 1 },
+  { id: "BN005", title: "Ứng dụng EbizCinema Mobile", image: "https://images.unsplash.com/photo-1766267190781-73203979c4ac?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=80&w=400&h=600", link: "#download", position: "sidebar", status: "active", startDate: "01/01/2026", endDate: "31/12/2026", clicks: 320, views: 72000, order: 1 },
 ];
 
 export const AdminBannersPage = () => {
