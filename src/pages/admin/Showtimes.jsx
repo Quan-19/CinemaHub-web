@@ -554,13 +554,11 @@ export default function ShowtimesPage() {
       const { conflict, with: conflictingShow } = checkConflict(finalFormData);
 
       if (conflict) {
-        const confirm = window.confirm(
-          `Suất chiếu này xung đột với "${conflictingShow.movieTitle}" lúc ${conflictingShow.time}. Bạn có muốn tiếp tục?`
+        toast.error(
+          `Xung đột lịch: Phòng đã có suất "${conflictingShow.movieTitle}" lúc ${conflictingShow.time}.`
         );
-        if (!confirm) {
-          setLoading(false);
-          return;
-        }
+        setLoading(false);
+        return;
       }
 
       // Xử lý endTime
@@ -587,11 +585,11 @@ export default function ShowtimesPage() {
         type: finalFormData.type,
         base_price: finalFormData.isSpecial
           ? finalFormData.specialPrices?.Thường ||
-            finalFormData.prices?.Thường ||
-            90000
+          finalFormData.prices?.Thường ||
+          90000
           : finalFormData.regularPrices?.Thường ||
-            finalFormData.prices?.Thường ||
-            90000,
+          finalFormData.prices?.Thường ||
+          90000,
         regular_prices: finalFormData.regularPrices || finalFormData.prices,
         special_prices: finalFormData.isSpecial
           ? finalFormData.specialPrices || finalFormData.prices
@@ -757,9 +755,9 @@ export default function ShowtimesPage() {
     try {
       setExporting(true);
       const token = sessionStorage.getItem("token") || localStorage.getItem("token");
-      
-      const cinemaName = cinemaFilter === 'all' 
-        ? 'Tất cả rạp' 
+
+      const cinemaName = cinemaFilter === 'all'
+        ? 'Tất cả rạp'
         : cinemas.find(c => c.id == cinemaFilter)?.name || `Rạp ${cinemaFilter}`;
 
       const response = await fetch("http://localhost:5000/api/reports/showtimes/export", {
@@ -808,8 +806,8 @@ export default function ShowtimesPage() {
       setExportingPDF(true);
       const token = sessionStorage.getItem("token") || localStorage.getItem("token");
 
-      const cinemaName = cinemaFilter === 'all' 
-        ? 'Tất cả rạp' 
+      const cinemaName = cinemaFilter === 'all'
+        ? 'Tất cả rạp'
         : cinemas.find(c => c.id == cinemaFilter)?.name || `Rạp ${cinemaFilter}`;
 
       const response = await fetch("http://localhost:5000/api/reports/showtimes/export/pdf", {
@@ -897,10 +895,10 @@ export default function ShowtimesPage() {
           </thead>
           <tbody>
             ${filtered
-              .map((s) => {
-                const isSpecialShowtime = Boolean(s.isSpecial || s.special);
+        .map((s) => {
+          const isSpecialShowtime = Boolean(s.isSpecial || s.special);
 
-                return `
+          return `
               <tr>
                 <td>${s.movieTitle || ""}</td>
                 <td>${s.cinemaName || ""}</td>
@@ -909,21 +907,18 @@ export default function ShowtimesPage() {
                 <td>${s.time || ""}</td>
                 <td>${s.endTime || ""}</td>
                 <td>${s.type || ""}</td>
-                <td>${
-                  isSpecialShowtime
-                    ? "---"
-                    : formatPriceMap(s.regularPrices || s.prices)
-                }</td>
-                <td>${
-                  isSpecialShowtime ? formatPriceMap(s.specialPrices) : "---"
-                }</td>
-                <td>${
-                  statusConfig[s.status]?.label || s.status || "Sắp chiếu"
-                }</td>
+                <td>${isSpecialShowtime
+              ? "---"
+              : formatPriceMap(s.regularPrices || s.prices)
+            }</td>
+                <td>${isSpecialShowtime ? formatPriceMap(s.specialPrices) : "---"
+            }</td>
+                <td>${statusConfig[s.status]?.label || s.status || "Sắp chiếu"
+            }</td>
               </tr>
             `;
-              })
-              .join("")}
+        })
+        .join("")}
           </tbody>
         </table>
       </body></html>
@@ -1109,7 +1104,7 @@ export default function ShowtimesPage() {
 
       {/* PDF PREVIEW MODAL */}
       {isPreviewOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm transition-all duration-300"
           aria-modal="true"
           role="dialog"
@@ -1123,17 +1118,17 @@ export default function ShowtimesPage() {
                 </h3>
                 <p className="text-[10px] text-zinc-400 mt-0.5 uppercase font-bold tracking-widest italic">TẬP ĐOÀN GIẢI TRÍ EBIZCINEMA — CHUẨN DOANH NGHIỆP</p>
               </div>
-              <button 
+              <button
                 onClick={closePreview}
                 className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all transform hover:rotate-90"
               >
                 <X size={20} />
               </button>
             </header>
-            
+
             <div className="flex-1 bg-zinc-950 p-1 sm:p-2 min-h-0">
               {pdfUrl ? (
-                <iframe 
+                <iframe
                   src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
                   className="w-full h-full rounded-lg border border-white/5 shadow-inner"
                   title="PDF Preview content"
@@ -1144,13 +1139,13 @@ export default function ShowtimesPage() {
             </div>
 
             <footer className="p-4 border-t border-white/5 bg-zinc-900/50 flex flex-wrap items-center justify-end gap-3">
-              <button 
+              <button
                 onClick={closePreview}
                 className="px-5 py-2.5 rounded-xl text-sm font-bold text-zinc-400 hover:text-white transition-all"
               >
                 Hủy bỏ
               </button>
-              <button 
+              <button
                 onClick={confirmDownloadPDF}
                 className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-8 py-2.5 text-sm font-bold text-white transition-all hover:bg-red-700 active:scale-95 shadow-lg shadow-red-600/20"
               >
@@ -1161,7 +1156,7 @@ export default function ShowtimesPage() {
           </div>
         </div>
       )}
-      
+
       <ShowtimeDetailModal
         showtime={selectedDetailShowtime}
         isOpen={showDetailModal}

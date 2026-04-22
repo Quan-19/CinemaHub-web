@@ -18,6 +18,84 @@ const normalizeMovieStatus = (status) => {
   return normalized;
 };
 
+const CustomTimePicker24h = ({ value, onChange, label }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+  const hour = value ? value.split(":")[0] : "00";
+  const minute = value ? value.split(":")[1] : "00";
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const hours = Array.from({ length: 24 }).map((_, i) => String(i).padStart(2, "0"));
+  const minutes = Array.from({ length: 60 }).map((_, i) => String(i).padStart(2, "0"));
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
+        {label}
+      </label>
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className="h-11 flex items-center bg-zinc-900 border border-white/10 rounded-xl px-4 cursor-pointer hover:border-white/20 transition-all group"
+      >
+        <span className="text-sm font-medium text-white group-hover:text-red-400 transition-colors">
+          {hour} : {minute}
+        </span>
+        <div className="ml-auto text-zinc-500 group-hover:text-zinc-300">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-[63] bottom-full mb-2 w-48 bg-white border border-zinc-200 rounded-2xl shadow-2xl p-3 flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="flex-1 max-h-64 overflow-y-auto custom-scrollbar pr-1">
+            <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold mb-2 px-2">Giờ</div>
+            {hours.map((h) => (
+              <button
+                key={h}
+                type="button"
+                onClick={() => onChange(`${h}:${minute}`)}
+                className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors mb-0.5 ${hour === h ? "bg-red-50 text-red-600 font-bold" : "text-zinc-700 hover:bg-zinc-100"
+                  }`}
+              >
+                {h}h
+              </button>
+            ))}
+          </div>
+          <div className="w-px bg-zinc-100 self-stretch" />
+          <div className="flex-1 max-h-64 overflow-y-auto custom-scrollbar pr-1">
+            <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold mb-2 px-2">Phút</div>
+            {minutes.filter(m => parseInt(m) % 5 === 0).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => {
+                  onChange(`${hour}:${m}`);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors mb-0.5 ${minute === m ? "bg-red-50 text-red-600 font-bold" : "text-zinc-700 hover:bg-zinc-100"
+                  }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function ShowtimeModal({
   show,
   onClose,
@@ -283,10 +361,10 @@ export default function ShowtimeModal({
   if (!show) return null;
 
   const inputClass =
-    "w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30";
+    "h-11 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 text-white text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition placeholder:text-white/30";
 
   const selectClass =
-    "w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition [&>option]:bg-zinc-900 [&>option]:text-white";
+    "h-11 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 text-white text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition [&>option]:bg-zinc-900 [&>option]:text-white";
 
   const handleMovieSelect = (movie) => {
     const selectedMovieStatus = normalizeMovieStatus(movie?.status);
@@ -433,9 +511,9 @@ export default function ShowtimeModal({
   );
   const holidayRuleOptions = selectedHolidayRule
     ? [selectedHolidayRule, ...applicableHolidayRules].filter(
-        (rule, index, list) =>
-          list.findIndex((r) => Number(r?.id) === Number(rule?.id)) === index
-      )
+      (rule, index, list) =>
+        list.findIndex((r) => Number(r?.id) === Number(rule?.id)) === index
+    )
     : applicableHolidayRules;
 
   const handleHolidayRuleSelect = (ruleId) => {
@@ -545,9 +623,9 @@ export default function ShowtimeModal({
     {
       key: "Thường",
       label: "Ghế Thường",
-      color: "text-gray-300",
-      bg: "bg-gray-500/10",
-      border: "border-gray-500/20",
+      color: "text-zinc-400",
+      bg: "bg-zinc-500/10",
+      border: "border-zinc-500/20",
     },
     {
       key: "VIP",
@@ -591,31 +669,29 @@ export default function ShowtimeModal({
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-2">
         {seatTypes.map((seat) => (
           <div
             key={`${title}-${seat.key}`}
-            className={`rounded-xl border ${seat.border} ${seat.bg} p-3`}
+            className={`rounded-xl border ${seat.border} ${seat.bg} p-2.5 flex items-center justify-between transition-colors`}
           >
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <label
-                  className={`block text-sm font-medium ${seat.color} leading-5`}
-                >
-                  {seat.label}
-                </label>
-                <p className="text-[10px] text-white/35 mt-0.5">
-                  {seat.key === "Thường"
-                    ? "Giá chuẩn"
-                    : seat.key === "VIP"
+            <div>
+              <label
+                className={`block text-xs font-semibold ${seat.color} leading-5`}
+              >
+                {seat.label}
+              </label>
+              <p className="text-[10px] text-white/35">
+                {seat.key === "Thường" || seat.key === "Standard"
+                  ? "Giá chuẩn"
+                  : seat.key === "VIP"
                     ? "Ghế cao cấp"
                     : "Ghế đôi"}
-                </p>
-              </div>
+              </p>
             </div>
 
-            <div className="relative mt-2">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">
+            <div className="relative w-36">
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40 text-xs font-medium">
                 ₫
               </span>
               <input
@@ -623,16 +699,19 @@ export default function ShowtimeModal({
                 inputMode="numeric"
                 pattern="[0-9,]*"
                 placeholder="0"
-                value={formatVndWithCommas(priceMap?.[seat.key])}
+                value={
+                  locked
+                    ? (priceMap?.[seat.key] || priceMap?.["Standard"] || 0).toLocaleString("en-US")
+                    : formatVndWithCommas(priceMap?.[seat.key] || priceMap?.["Standard"])
+                }
                 onChange={
                   locked
                     ? undefined
                     : (e) => onChange(seat.key, parseVndInput(e.target.value))
                 }
                 readOnly={locked}
-                className={`w-full bg-zinc-900 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition text-right tabular-nums ${
-                  locked ? "cursor-not-allowed" : ""
-                }`}
+                className={`w-full bg-zinc-900 border border-white/10 rounded-lg pl-7 pr-3 py-1.5 text-white text-xs outline-none focus:ring-1 focus:ring-red-500/30 transition text-right tabular-nums font-semibold ${locked ? "cursor-not-allowed opacity-60" : ""
+                  }`}
               />
             </div>
           </div>
@@ -642,8 +721,12 @@ export default function ShowtimeModal({
   );
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="w-full max-w-lg sm:max-w-2xl lg:max-w-5xl bg-cinema-surface border border-white/10 rounded-2xl max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-lg sm:max-w-2xl lg:max-w-4xl rounded-2xl border border-white/10 bg-cinema-surface shadow-2xl flex flex-col max-h-[92vh]">
         <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10 flex-shrink-0">
           <h2 className="text-lg font-bold text-white">
             {isEdit ? "Chỉnh sửa suất chiếu" : "Thêm suất chiếu"}
@@ -657,22 +740,22 @@ export default function ShowtimeModal({
         </div>
 
         <div className="p-5 overflow-y-auto flex-1">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-6 space-y-4">
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                 <div className="text-xs font-semibold text-white/70 mb-3">
-                  Thông tin suất chiếu
+                  Thông tin phim
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2 relative">
-                    <label className="block text-xs text-white/55 mb-1.5">
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
                       Phim *
                     </label>
                     <div className="relative">
-                      <div className="relative">
+                      <div className="relative border border-white/10 bg-zinc-900 rounded-xl overflow-hidden">
                         <Search
                           size={16}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35"
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
                         />
                         <input
                           ref={movieInputRef}
@@ -683,7 +766,7 @@ export default function ShowtimeModal({
                           }
                           onFocus={() => setShowMovieDropdown(true)}
                           placeholder="Gõ tên phim để tìm kiếm..."
-                          className="w-full bg-zinc-900 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
+                          className="w-full bg-transparent h-11 pl-9 pr-3 text-white text-sm outline-none placeholder:text-zinc-500"
                         />
                         {searchMovieTerm && (
                           <button
@@ -754,7 +837,7 @@ export default function ShowtimeModal({
                   </div>
 
                   <div>
-                    <label className="block text-xs text-white/55 mb-1.5">
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
                       Rạp chiếu *
                     </label>
                     <select
@@ -789,7 +872,7 @@ export default function ShowtimeModal({
                   </div>
 
                   <div>
-                    <label className="block text-xs text-white/55 mb-1.5">
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
                       Phòng chiếu *
                     </label>
                     <select
@@ -804,8 +887,8 @@ export default function ShowtimeModal({
                         {!form?.cinemaId
                           ? "Chọn rạp trước"
                           : !hasRooms
-                          ? "Rạp này chưa có phòng"
-                          : "Chọn phòng"}
+                            ? "Rạp này chưa có phòng"
+                            : "Chọn phòng"}
                       </option>
                       {availableRooms.map((room) => (
                         <option
@@ -840,7 +923,7 @@ export default function ShowtimeModal({
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs text-white/55 mb-1.5">
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
                       Ngày chiếu *
                     </label>
                     <input
@@ -857,30 +940,21 @@ export default function ShowtimeModal({
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs text-white/55 mb-1.5">
-                      Giờ bắt đầu *
-                    </label>
-                    <input
-                      type="time"
-                      value={form?.time || ""}
-                      onChange={(e) => handleTimeChange(e.target.value)}
-                      className={inputClass}
-                      required
-                      style={{ colorScheme: "dark" }}
-                    />
-                  </div>
+                  <CustomTimePicker24h
+                    label="Giờ bắt đầu *"
+                    value={form?.time || ""}
+                    onChange={(timeStr) => handleTimeChange(timeStr)}
+                  />
 
                   <div>
-                    <label className="block text-xs text-white/55 mb-1.5">
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
                       Giờ kết thúc
                     </label>
                     <div
-                      className={`w-full border rounded-lg px-3 py-2 text-sm ${
-                        form?.endTime && form.endTime.includes("ngày hôm sau")
-                          ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/30"
-                          : "text-white bg-zinc-900 border-white/10"
-                      }`}
+                      className={`h-11 w-full border rounded-xl px-3 flex items-center text-sm ${form?.endTime && form.endTime.includes("ngày hôm sau")
+                        ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/30"
+                        : "text-white bg-zinc-900 border-white/10"
+                        }`}
                     >
                       {form?.endTime ||
                         (form?.movieDuration
@@ -903,13 +977,12 @@ export default function ShowtimeModal({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label className="block text-xs text-white/55 mb-1.5">
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
                       Định dạng
                     </label>
                     <div
-                      className={`w-full border rounded-lg px-3 py-2 text-sm ${
-                        form?.type ? "text-white" : "text-white/40"
-                      } bg-zinc-900 border-white/10`}
+                      className={`h-11 w-full border rounded-xl px-3 flex items-center text-sm ${form?.type ? "text-white" : "text-white/40"
+                        } bg-zinc-900 border-white/10`}
                     >
                       {form?.type || "Chưa chọn phòng"}
                     </div>
@@ -923,10 +996,10 @@ export default function ShowtimeModal({
                   </div>
 
                   <div>
-                    <label className="block text-xs text-white/55 mb-1.5">
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
                       Số ghế
                     </label>
-                    <div className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm">
+                    <div className="h-11 w-full border rounded-xl px-3 flex items-center text-sm text-white bg-zinc-900 border-white/10">
                       {form?.totalSeats || 0} ghế
                     </div>
                   </div>
@@ -940,7 +1013,7 @@ export default function ShowtimeModal({
                   Loại & giá vé
                 </div>
 
-                <label className="block text-xs text-white/55 mb-1.5">
+                <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
                   <Sparkles size={12} className="inline mr-1 text-yellow-400" />
                   Loại suất chiếu *
                 </label>
@@ -951,13 +1024,12 @@ export default function ShowtimeModal({
                       handleSpecialToggle(false);
                     }}
                     disabled={isComingSoonMovie}
-                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                      isComingSoonMovie
-                        ? "bg-zinc-900 text-zinc-500 border border-white/10 cursor-not-allowed"
-                        : !form?.isSpecial
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${isComingSoonMovie
+                      ? "bg-zinc-900 text-zinc-500 border border-white/10 cursor-not-allowed"
+                      : !form?.isSpecial
                         ? "bg-green-600 text-white shadow-lg shadow-green-600/30"
                         : "bg-zinc-900 text-gray-400 hover:text-white border border-white/10 hover:bg-zinc-800"
-                    }`}
+                      }`}
                   >
                     Suất chiếu thường
                   </button>
@@ -966,11 +1038,10 @@ export default function ShowtimeModal({
                     onClick={() => {
                       handleSpecialToggle(true);
                     }}
-                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                      form?.isSpecial
-                        ? "bg-yellow-600 text-white shadow-lg shadow-yellow-600/30"
-                        : "bg-zinc-900 text-gray-400 hover:text-white border border-white/10 hover:bg-zinc-800"
-                    }`}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${form?.isSpecial
+                      ? "bg-yellow-600 text-white shadow-lg shadow-yellow-600/30"
+                      : "bg-zinc-900 text-gray-400 hover:text-white border border-white/10 hover:bg-zinc-800"
+                      }`}
                   >
                     <Sparkles size={12} className="inline mr-1" />
                     Suất chiếu đặc biệt
@@ -1005,7 +1076,7 @@ export default function ShowtimeModal({
                     </p>
 
                     <div>
-                      <label className="block text-xs text-white/55 mb-1.5">
+                      <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
                         Loại giá vé (từ trang Giá vé)
                       </label>
                       <select
@@ -1055,8 +1126,8 @@ export default function ShowtimeModal({
                     pricingLoading
                       ? "Đang tải..."
                       : form?.regularPricingError
-                      ? "Chưa có quy tắc"
-                      : "Tự động"
+                        ? "Chưa có quy tắc"
+                        : "Tự động"
                   )}
 
                 {form?.isSpecial ? (
@@ -1077,8 +1148,8 @@ export default function ShowtimeModal({
                           ? "Tự động"
                           : "Đã có giá"
                         : form?.specialPricingRuleId
-                        ? "Chưa có giá"
-                        : "Chưa chọn loại giá"
+                          ? "Chưa có giá"
+                          : "Chưa chọn loại giá"
                     )}
                   </div>
                 ) : (
@@ -1109,7 +1180,7 @@ export default function ShowtimeModal({
                 <div className="text-xs font-semibold text-white/70 mb-3">
                   Trạng thái
                 </div>
-                <label className="block text-xs text-white/55 mb-1.5">
+                <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
                   Trạng thái
                 </label>
                 <select
@@ -1175,11 +1246,11 @@ export default function ShowtimeModal({
           </div>
         </div>
 
-        <div className="flex gap-3 p-6 pt-4 border-t border-white/10 flex-shrink-0">
+        <div className="flex gap-3 px-6 py-4 border-t border-white/10 flex-shrink-0 justify-end">
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition disabled:opacity-50"
+            className="h-11 rounded-xl border border-white/10 bg-zinc-900 px-5 text-sm font-semibold text-zinc-200 hover:bg-zinc-800 transition shadow-sm disabled:opacity-50"
           >
             Huỷ
           </button>
@@ -1195,8 +1266,7 @@ export default function ShowtimeModal({
               (!form?.isSpecial && Boolean(form?.regularPricingError)) ||
               (form?.isSpecial && !form?.specialPrices)
             }
-            className={`flex-1 py-2.5 rounded-lg text-white text-sm font-medium transition ${
-              loading ||
+            className={`h-11 rounded-xl px-5 text-sm font-semibold transition shadow-lg ${loading ||
               !form?.movieId ||
               !form?.cinemaId ||
               !form?.roomId ||
@@ -1204,20 +1274,20 @@ export default function ShowtimeModal({
               !form?.time ||
               (!form?.isSpecial && Boolean(form?.regularPricingError)) ||
               (form?.isSpecial && !form?.specialPrices)
-                ? "bg-gray-600 cursor-not-allowed opacity-50"
-                : "bg-red-600 hover:bg-red-700"
-            }`}
+              ? "bg-gray-600 cursor-not-allowed opacity-50 text-white"
+              : "bg-red-600 hover:bg-red-700 text-white shadow-red-600/20"
+              }`}
             title={
               form?.isSpecial && !form?.specialPrices
                 ? "Vui lòng chọn giá ngày lễ trước khi thêm"
                 : !form?.isSpecial && form?.regularPricingError
-                ? form.regularPricingError
-                : !form?.isSpecial && !form?.regularPrices
-                ? "Đang tải giá..."
-                : ""
+                  ? form.regularPricingError
+                  : !form?.isSpecial && !form?.regularPrices
+                    ? "Đang tải giá..."
+                    : ""
             }
           >
-            {loading ? "Đang xử lý..." : isEdit ? "Lưu thay đổi" : "Thêm suất"}
+            {loading ? "Đang xử lý..." : isEdit ? "Lưu thay đổi" : "Thêm suất chiếu"}
           </button>
         </div>
       </div>

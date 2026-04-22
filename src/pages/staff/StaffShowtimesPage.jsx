@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useRef } from "react";
 import {
   CalendarDays,
   Clock4,
@@ -55,7 +55,7 @@ function normalizeStaffStatus(status) {
   return "open";
 }
 
-function normalizeMovieStatus(status) {
+const normalizeMovieStatus = (status) => {
   const normalized = String(status ?? "")
     .trim()
     .toLowerCase();
@@ -63,7 +63,87 @@ function normalizeMovieStatus(status) {
   if (normalized === "coming-soon") return "coming_soon";
   if (normalized === "now-showing") return "now_showing";
   return normalized;
-}
+};
+
+const CustomTimePicker24h = ({ value, onChange, label, activeColorClass = "ring-cinema-primary/30" }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+  const hour = value ? value.split(":")[0] : "00";
+  const minute = value ? value.split(":")[1] : "00";
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const hours = Array.from({ length: 24 }).map((_, i) => String(i).padStart(2, "0"));
+  const minutes = Array.from({ length: 60 }).map((_, i) => String(i).padStart(2, "0"));
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
+        {label}
+      </label>
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className={`h-11 flex items-center bg-zinc-900/40 border border-zinc-700 rounded-xl px-4 cursor-pointer hover:border-zinc-500 transition-all group ${isOpen ? "ring-2 " + activeColorClass : ""}`}
+      >
+        <span className="text-sm font-medium text-zinc-100 group-hover:text-cinema-primary transition-colors">
+          {hour} : {minute}
+        </span>
+        <div className="ml-auto text-zinc-500 group-hover:text-zinc-300">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-[63] bottom-full mb-2 w-48 bg-white border border-zinc-200 rounded-2xl shadow-2xl p-3 flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="flex-1 max-h-64 overflow-y-auto custom-scrollbar pr-1">
+            <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold mb-2 px-2">Giờ</div>
+            {hours.map((h) => (
+              <button
+                key={h}
+                type="button"
+                onClick={() => onChange(`${h}:${minute}`)}
+                className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors mb-0.5 ${hour === h ? "bg-cinema-primary/10 text-cinema-primary font-bold" : "text-zinc-700 hover:bg-zinc-100"
+                  }`}
+              >
+                {h}h
+              </button>
+            ))}
+          </div>
+          <div className="w-px bg-zinc-100 self-stretch" />
+          <div className="flex-1 max-h-64 overflow-y-auto custom-scrollbar pr-1">
+            <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold mb-2 px-2">Phút</div>
+            {minutes.filter(m => parseInt(m) % 5 === 0).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => {
+                  onChange(`${hour}:${m}`);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors mb-0.5 ${minute === m ? "bg-cinema-primary/10 text-cinema-primary font-bold" : "text-zinc-700 hover:bg-zinc-100"
+                  }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// StaffShowtimesPage content follows
 
 function isPastCalendarDate(dateValue) {
   if (!dateValue) return false;
@@ -189,7 +269,8 @@ function durationToEnd(startIso, duration) {
 
   const start = new Date(year, month - 1, day, hour, minute);
   const end = new Date(start);
-  end.setMinutes(start.getMinutes() + duration);
+  // Thêm thời lượng phim + 15 phút dọn dẹp/quảng cáo
+  end.setMinutes(start.getMinutes() + duration + 15);
 
   // Format back to YYYY-MM-DDTHH:MM:00
   const yyyy = end.getFullYear();
@@ -359,8 +440,8 @@ function CalendarPicker({ selectedDate, onSelectDate, onClose }) {
                 isSelectedDate
                   ? "bg-cinema-primary text-white"
                   : isTodayDate
-                  ? "bg-cinema-primary/20 text-cinema-primary border border-cinema-primary/30"
-                  : "hover:bg-zinc-800 text-zinc-300",
+                    ? "bg-cinema-primary/20 text-cinema-primary border border-cinema-primary/30"
+                    : "hover:bg-zinc-800 text-zinc-300",
               ].join(" ")}
             >
               {dayNumber}
@@ -415,6 +496,10 @@ function ShowtimeCard({ showtime, onEdit, onDelete }) {
             </span>
             <span>{showtime.language}</span>
             <span>{showtime.duration} phút</span>
+            <span className="h-1 w-1 rounded-full bg-zinc-700" />
+            <span className="font-bold text-cinema-primary">
+              Từ {(showtime.prices?.Thường || 0).toLocaleString()}đ
+            </span>
           </div>
         </div>
 
@@ -464,15 +549,24 @@ function EditShowtimeModal({
   const format = initial.format;
   const [language, setLanguage] = useState(
     initial.languageCode ||
-      initial.language ||
-      languageOptions[0]?.value ||
-      DEFAULT_LANGUAGE_OPTION.value
+    initial.language ||
+    languageOptions[0]?.value ||
+    DEFAULT_LANGUAGE_OPTION.value
   );
   const [isSpecial, setIsSpecial] = useState(
     Boolean(initial.isSpecial || initial.special || initial.is_special || false)
   );
   const [status, setStatus] = useState(normalizeStaffStatus(initial.status));
   const [error, setError] = useState(null);
+
+  // Pricing states
+  const [holidayPromos, setHolidayPromos] = useState([]);
+  const [selectedPromoId, setSelectedPromoId] = useState(
+    initial.promotionId || ""
+  );
+  const [previewPrices, setPreviewPrices] = useState(null);
+  const [isFetchingPrices, setIsFetchingPrices] = useState(false);
+  const [priceError, setPriceError] = useState(null);
 
   const movieOptions = useMemo(() => {
     return movies.map((m) => ({
@@ -528,6 +622,133 @@ function EditShowtimeModal({
       ? language
       : modalLanguageOptions[0]?.value || DEFAULT_LANGUAGE_OPTION.value;
   }, [language, modalLanguageOptions]);
+
+  const selectedRoom = roomOptions.find(
+    (room) => String(room.id) === String(resolvedRoomId)
+  );
+  const roomType = selectedRoom?.type || "2D";
+
+  // Fetch holiday promotions for the selected date
+  useEffect(() => {
+    if (!effectiveIsSpecial) {
+      setHolidayPromos([]);
+      return;
+    }
+
+    const fetchHolidayPromos = async () => {
+      try {
+        const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+        const res = await fetch("http://localhost:5000/api/pricing", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const json = await res.json();
+
+        if (json?.success && Array.isArray(json?.data)) {
+          const rules = json.data.filter(
+            (r) => r?.pricing_type === "HOLIDAY" || r?.type === "HOLIDAY"
+          );
+
+          const applicableRules = rules.filter((rule) => {
+            if (!(rule.active ?? rule.is_active ?? false)) return false;
+
+            if (roomType && rule.holiday_room_type && rule.holiday_room_type !== roomType) {
+              return false;
+            }
+
+            if (date && rule.start_date && rule.end_date) {
+              const showDate = new Date(date);
+              const start = new Date(rule.start_date);
+              start.setHours(0, 0, 0, 0);
+              const end = new Date(rule.end_date);
+              end.setHours(23, 59, 59, 999);
+              if (showDate < start || showDate > end) return false;
+
+              if (Array.isArray(rule.apply_days)) {
+                const day = showDate.getDay();
+                if (!rule.apply_days.includes(day)) return false;
+              }
+            }
+            return true;
+          });
+
+          setHolidayPromos(applicableRules);
+          // Auto-select first promo if none selected
+          if (!selectedPromoId && applicableRules.length > 0) {
+            setSelectedPromoId(applicableRules[0].id);
+          }
+        }
+      } catch (err) {
+        console.error("Fetch holiday promos error:", err);
+      }
+    };
+
+    fetchHolidayPromos();
+  }, [date, roomType, effectiveIsSpecial]);
+
+  // Fetch preview prices
+  useEffect(() => {
+    if (effectiveIsSpecial) {
+      const rule = holidayPromos.find((r) => String(r.id) === String(selectedPromoId));
+      if (rule) {
+        const prices = { Thường: 0, VIP: 0, Couple: 0 };
+        const list = Array.isArray(rule?.holiday_prices) ? rule.holiday_prices : [];
+        for (const item of list) {
+          const seatType = item?.seat_type;
+          const price = Number(item?.price);
+          if (seatType && Number.isFinite(price) && price > 0) {
+            prices[seatType] = price;
+          }
+        }
+        setPreviewPrices(prices);
+        setPriceError(null);
+      } else {
+        setPreviewPrices(null);
+        setPriceError("Vui lòng chọn loại giá vé đặc biệt");
+      }
+      return;
+    }
+
+    if (!date || !roomType || !start) {
+      setPreviewPrices(null);
+      return;
+    }
+
+    const fetchPrices = async () => {
+      try {
+        setIsFetchingPrices(true);
+        setPriceError(null);
+        const url = new URL("http://localhost:5000/api/pricing/preview-prices");
+        url.searchParams.append("type", roomType);
+        url.searchParams.append("date", date);
+        url.searchParams.append("time", start);
+        // Only regular prices here anyway:
+        url.searchParams.append("special", "false");
+
+        const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+        const res = await fetch(url.toString(), {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          const prices = { Thường: 0, VIP: 0, Couple: 0, ...json.data };
+          setPreviewPrices(prices);
+        } else {
+          setPreviewPrices(null);
+          setPriceError(json.message);
+        }
+      } catch (err) {
+        console.error("Fetch pricing error:", err);
+        setPriceError("Không thể lấy thông tin giá vé");
+      } finally {
+        setIsFetchingPrices(false);
+      }
+    };
+
+    // Use a small delay to avoid excessive calls
+    const timer = setTimeout(fetchPrices, 300);
+    return () => clearTimeout(timer);
+  }, [date, roomType, start, effectiveIsSpecial, selectedPromoId]);
 
   // ✅ Validate duration to prevent negative numbers
   const handleDurationChange = (e) => {
@@ -595,12 +816,13 @@ function EditShowtimeModal({
       duration: durationNumber,
       roomId: resolvedRoomId,
       room: selectedRoom?.name || initial.room,
-      format: selectedRoom?.type || format,
+      format: roomType || format,
       language: resolvedLanguage,
       languageLabel: normalizeLanguageOption(resolvedLanguage).label,
       isSpecial: effectiveIsSpecial,
       special: effectiveIsSpecial,
       status,
+      prices: previewPrices,
     });
   };
 
@@ -608,7 +830,7 @@ function EditShowtimeModal({
     <StaffCenteredModalShell
       title={mode === "create" ? "Thêm suất chiếu" : "Chỉnh sửa suất chiếu"}
       onClose={onCancel}
-      maxWidthClassName="max-w-3xl"
+      maxWidthClassName="max-w-4xl w-full"
     >
       <div className="space-y-4">
         {error ? (
@@ -617,189 +839,337 @@ function EditShowtimeModal({
           </div>
         ) : null}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <div className="text-xs font-semibold text-zinc-400">Phim</div>
-            <div className="rounded-2xl border border-zinc-700 bg-zinc-900/40">
-              <div className="flex items-center gap-2 border-b border-zinc-700 px-3 py-2 text-sm text-zinc-400">
-                <Search className="h-4 w-4" /> Chọn phim
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* CỘT TRÁI: Thông tin cơ bản & Lịch chiếu */}
+          <div className="lg:col-span-6 space-y-4">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="text-xs font-semibold text-white/70 mb-3">
+                Thông tin phim
               </div>
-              <div className="max-h-56 overflow-auto">
-                {movieOptions.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => {
-                      setMovieId(m.id);
-                      setDuration(m.duration || "");
-                      if (m.languageOptions?.length > 0) {
-                        setLanguage(m.languageOptions[0].value);
-                      }
-                      if (normalizeMovieStatus(m.status) === "coming_soon") {
-                        setIsSpecial(true);
-                      }
-                    }}
-                    className={[
-                      "flex w-full items-center justify-between px-3 py-2 text-left text-sm transition",
-                      String(movieId) === String(m.id)
-                        ? "bg-cinema-primary/15 text-white"
-                        : "hover:bg-zinc-900/60 text-zinc-200",
-                    ].join(" ")}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
+                    Phim *
+                  </label>
+                  <div className="rounded-2xl border border-zinc-700 bg-zinc-900/40">
+                    <div className="flex items-center gap-2 border-b border-zinc-700 px-3 py-2 text-sm text-zinc-400">
+                      <Search className="h-4 w-4" /> Chọn phim
+                    </div>
+                    <div className="max-h-[160px] overflow-auto">
+                      {movieOptions.map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            setMovieId(m.id);
+                            setDuration(m.duration || "");
+                            if (m.languageOptions?.length > 0) {
+                              setLanguage(m.languageOptions[0].value);
+                            }
+                            if (normalizeMovieStatus(m.status) === "coming_soon") {
+                              setIsSpecial(true);
+                            }
+                          }}
+                          className={[
+                            "flex w-full items-center justify-between px-3 py-2 text-left text-sm transition",
+                            String(movieId) === String(m.id)
+                              ? "bg-cinema-primary/15 text-white"
+                              : "hover:bg-zinc-900/60 text-zinc-200",
+                          ].join(" ")}
+                        >
+                          <span className="truncate">{m.title}</span>
+                          <span className="text-xs text-zinc-400">{m.duration}p</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
+                    Ngôn ngữ
+                  </label>
+                  <select
+                    value={resolvedLanguage}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
                   >
-                    <span className="truncate">{m.title}</span>
-                    <span className="text-xs text-zinc-400">{m.duration}p</span>
-                  </button>
-                ))}
+                    {modalLanguageOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="text-xs font-semibold text-white/70 mb-3">
+                Lịch chiếu & Phòng
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
+                    Phòng chiếu *
+                  </label>
+                  <select
+                    value={resolvedRoomId}
+                    onChange={(e) => setRoomId(e.target.value)}
+                    className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
+                  >
+                    {roomOptions.length === 0 ? (
+                      <option value="" disabled>
+                        Không có phòng chiếu
+                      </option>
+                    ) : null}
+                    {roomOptions.map((room) => (
+                      <option key={room.id} value={room.id}>
+                        {room.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
+                      Ngày chiếu *
+                    </label>
+                    <input
+                      type="date"
+                      value={date}
+                      min={getTodayDateInputValue()}
+                      onChange={(e) => {
+                        const nextDate = e.target.value;
+                        setDate(nextDate);
+
+                        if (isPastCalendarDate(nextDate)) {
+                          setError(STAFF_PAST_DATE_ERROR);
+                          return;
+                        }
+
+                        setError((prev) =>
+                          prev === STAFF_PAST_DATE_ERROR ? null : prev
+                        );
+                      }}
+                      className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100"
+                    />
+                  </div>
+
+                  <CustomTimePicker24h
+                    label="Giờ bắt đầu *"
+                    value={start || ""}
+                    onChange={(val) => setStart(val)}
+                    activeColorClass="ring-cinema-primary/30"
+                  />
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
+                      Giờ kết thúc
+                    </label>
+                    <div className="h-11 w-full border rounded-xl px-3 flex items-center text-sm text-white bg-zinc-900/40 border-zinc-700">
+                      {date && start && duration ? (
+                        (() => {
+                          const startIso = `${date}T${start}:00`;
+                          const endIso = durationToEnd(startIso, parseInt(duration, 10));
+                          const endDateObj = new Date(endIso);
+                          const h = endDateObj.getHours().toString().padStart(2, "0");
+                          const m = endDateObj.getMinutes().toString().padStart(2, "0");
+                          const isNextDay = endDateObj.getDate() !== new Date(startIso).getDate();
+                          return `${h}:${m} ${isNextDay ? "(Hôm sau)" : ""}`;
+                        })()
+                      ) : "Chọn phim và giờ"}
+                    </div>
+                    {duration ? (
+                      <p className="text-[10px] text-blue-400 mt-1">
+                        ⏱️ {duration} phút + 15' quảng cáo
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div>
-              <div className="text-xs font-semibold text-zinc-400">
-                Ngày chiếu
+          {/* CỘT PHẢI: Giá vé & Trạng thái */}
+          <div className="lg:col-span-6 space-y-4">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="text-xs font-semibold text-white/70 mb-3">
+                Loại & Giá vé
               </div>
-              <input
-                type="date"
-                value={date}
-                min={getTodayDateInputValue()}
-                onChange={(e) => {
-                  const nextDate = e.target.value;
-                  setDate(nextDate);
 
-                  if (isPastCalendarDate(nextDate)) {
-                    setError(STAFF_PAST_DATE_ERROR);
-                    return;
-                  }
-
-                  setError((prev) =>
-                    prev === STAFF_PAST_DATE_ERROR ? null : prev
-                  );
-                }}
-                className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
               <div>
-                <div className="text-xs font-semibold text-zinc-400">
-                  Giờ bắt đầu
-                </div>
-                <input
-                  type="time"
-                  value={start}
-                  onChange={(e) => setStart(e.target.value)}
-                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100"
-                />
-              </div>
-              <div>
-                <div className="text-xs font-semibold text-zinc-400">
-                  Thời lượng (phút)
-                </div>
-                <input
-                  type="number"
-                  min="30"
-                  max="480"
-                  step="15"
-                  value={duration}
-                  onChange={handleDurationChange}
-                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-3">
-              <div>
-                <div className="text-xs font-semibold text-zinc-400">Phòng</div>
-                <select
-                  value={resolvedRoomId}
-                  onChange={(e) => setRoomId(e.target.value)}
-                  className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
-                >
-                  {roomOptions.length === 0 ? (
-                    <option value="" disabled>
-                      Không có phòng chiếu
-                    </option>
-                  ) : null}
-                  {roomOptions.map((room) => (
-                    <option key={room.id} value={room.id}>
-                      {room.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-zinc-400">
-                Ngôn ngữ
-              </div>
-              <select
-                value={resolvedLanguage}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
-              >
-                {modalLanguageOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
-                <Sparkles className="inline mr-1 h-3.5 w-3.5 text-yellow-400" />
-                Loại suất chiếu
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!isComingSoonMovie) {
-                      setIsSpecial(false);
-                    }
-                  }}
-                  disabled={isComingSoonMovie}
-                  className={[
-                    "h-10 rounded-xl border text-sm font-semibold transition",
-                    isComingSoonMovie
-                      ? "border-zinc-700 bg-zinc-900/30 text-zinc-500 cursor-not-allowed"
+                <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
+                  <Sparkles className="inline mr-1 h-3.5 w-3.5 text-yellow-400" />
+                  Loại suất chiếu *
+                </label>
+                <div className="flex gap-3 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isComingSoonMovie) {
+                        setIsSpecial(false);
+                      }
+                    }}
+                    disabled={isComingSoonMovie}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${isComingSoonMovie
+                      ? "bg-zinc-900 text-zinc-500 border border-white/10 cursor-not-allowed"
                       : !effectiveIsSpecial
-                      ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
-                      : "border-zinc-700 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900",
-                  ].join(" ")}
-                >
-                  Suất thường
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsSpecial(true)}
-                  className={[
-                    "h-10 rounded-xl border text-sm font-semibold transition",
-                    effectiveIsSpecial
-                      ? "border-yellow-500/40 bg-yellow-500/15 text-yellow-300"
-                      : "border-zinc-700 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900",
-                  ].join(" ")}
-                >
-                  <Sparkles className="inline mr-1 h-3.5 w-3.5" />
-                  Suất đặc biệt
-                </button>
+                        ? "bg-green-600 text-white shadow-lg shadow-green-600/30"
+                        : "bg-zinc-900 text-gray-400 hover:text-white border border-white/10 hover:bg-zinc-800"
+                      }`}
+                  >
+                    Suất chiếu thường
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsSpecial(true)}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${effectiveIsSpecial
+                      ? "bg-yellow-600 text-white shadow-lg shadow-yellow-600/30"
+                      : "bg-zinc-900 text-gray-400 hover:text-white border border-white/10 hover:bg-zinc-800"
+                      }`}
+                  >
+                    <Sparkles size={12} className="inline mr-1" />
+                    Suất chiếu đặc biệt
+                  </button>
+                </div>
+                <p className="text-[11px] text-zinc-500">
+                  {isComingSoonMovie
+                    ? "Phim sắp chiếu chỉ được tạo suất chiếu đặc biệt."
+                    : effectiveIsSpecial
+                      ? "Suất này sẽ được đánh dấu là suất chiếu đặc biệt."
+                      : "Suất này là suất chiếu thường."}
+                </p>
               </div>
-              <p className="mt-1 text-[11px] text-zinc-500">
-                {isComingSoonMovie
-                  ? "Phim sắp chiếu chỉ được tạo suất chiếu đặc biệt."
-                  : effectiveIsSpecial
-                  ? "Suất này sẽ được đánh dấu là suất chiếu đặc biệt."
-                  : "Suất này là suất chiếu thường."}
-              </p>
+
+              {effectiveIsSpecial && holidayPromos.length > 0 && (
+                <div className="space-y-2 mt-4">
+                  <label className="block text-[12px] text-yellow-400 flex items-center gap-1 font-semibold mb-1">
+                    <Sparkles size={12} />
+                    Nhập giá vé đặc biệt theo từng loại ghế
+                  </label>
+                  <div>
+                    <select
+                      value={selectedPromoId}
+                      onChange={(e) => setSelectedPromoId(e.target.value)}
+                      className="w-full bg-zinc-900 border border-red-500/50 rounded-lg px-3 py-2.5 text-white text-sm outline-none focus:border-red-500/80 transition [&>option]:bg-zinc-900 [&>option]:text-white"
+                    >
+                      <option value="" className="bg-zinc-900 text-white/70">
+                        Chọn loại giá vé đặc biệt
+                      </option>
+                      {holidayPromos.map((promo) => (
+                        <option key={promo.id} value={promo.id}>
+                          {promo.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[10px] text-white/40 mt-1.5">
+                      Chọn để tự đổ giá vào mục bên dưới.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div
+                className={`p-4 rounded-xl border mt-4 ${effectiveIsSpecial
+                  ? "border-yellow-500/15 bg-yellow-500/5"
+                  : "border-green-500/15 bg-green-500/5"
+                  }`}
+              >
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h3
+                      className={`text-sm font-semibold ${effectiveIsSpecial ? "text-yellow-300" : "text-green-300"
+                        }`}
+                    >
+                      {effectiveIsSpecial ? "Giá suất chiếu đặc biệt" : "Giá suất chiếu thường"}
+                    </h3>
+                    <p className="text-[10px] text-white/40 mt-1">
+                      {effectiveIsSpecial
+                        ? "Tự động theo loại giá đã chọn"
+                        : "Tự động áp dụng từ bảng giá"}
+                    </p>
+                  </div>
+                  {isFetchingPrices ? (
+                    <span className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-white/45 border border-white/10 animate-pulse">
+                      Đang cập nhật...
+                    </span>
+                  ) : (
+                    <span className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-white/45 border border-white/10">
+                      Tự động
+                    </span>
+                  )}
+                </div>
+
+                {priceError ? (
+                  <div className="text-xs text-red-500/80 italic mt-2">
+                    ✕ {priceError}
+                  </div>
+                ) : previewPrices ? (
+                  <div className="grid grid-cols-1 gap-2">
+                    {Object.entries(previewPrices).map(([seat, price]) => {
+                      let color = "text-gray-300";
+                      let bg = "bg-gray-500/10";
+                      let border = "border-gray-500/20";
+                      let desc = "Giá chuẩn";
+                      if (seat === "VIP") {
+                        color = "text-amber-400";
+                        bg = "bg-amber-500/10";
+                        border = "border-amber-500/20";
+                        desc = "Ghế cao cấp";
+                      } else if (seat === "Couple") {
+                        color = "text-pink-400";
+                        bg = "bg-pink-500/10";
+                        border = "border-pink-500/20";
+                        desc = "Ghế đôi";
+                      }
+
+                      return (
+                        <div
+                          key={seat}
+                          className={`rounded-xl border ${border} ${bg} p-2.5 flex items-center justify-between`}
+                        >
+                          <div>
+                            <label className={`block text-xs font-semibold ${color} leading-5`}>
+                              Ghế {seat}
+                            </label>
+                            <span className="text-[10px] text-white/40">{desc}</span>
+                          </div>
+                          <div className="relative w-32">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white/40 text-xs">
+                              ₫
+                            </span>
+                            <input
+                              type="text"
+                              value={(price || 0).toLocaleString("en-US")}
+                              readOnly
+                              className="w-full bg-zinc-900/80 border border-white/5 rounded-lg pl-6 pr-2 py-1.5 text-white text-xs outline-none text-right tabular-nums cursor-not-allowed font-medium"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-xs text-white/50 italic mt-2">
+                    Vui lòng chọn thông tin để xem giá vé
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div>
-              <div className="text-xs font-semibold text-zinc-400">
-                Trạng thái
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="text-xs font-semibold text-white/70 mb-3">
+                Cập nhật trạng thái
               </div>
+              <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
+                Trạng thái suất chiếu
+              </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="mt-1 h-11 w-full rounded-2xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
+                className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
               >
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -811,18 +1181,18 @@ function EditShowtimeModal({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-2">
+        <div className="flex items-center justify-end gap-3 pt-6 pb-2">
           <button
             type="button"
             onClick={onCancel}
-            className="h-11 rounded-2xl border border-zinc-700 bg-zinc-900/40 px-4 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
+            className="h-11 rounded-xl border border-zinc-700 bg-zinc-900/40 px-5 text-sm font-semibold text-zinc-200 hover:bg-zinc-800 transition shadow-sm"
           >
             Hủy
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="h-11 rounded-2xl bg-cinema-primary px-4 text-sm font-semibold text-white hover:opacity-95"
+            className="h-11 rounded-xl bg-red-600 px-5 text-sm font-semibold text-white hover:bg-red-700 transition shadow-lg shadow-red-600/20"
           >
             {mode === "create" ? "Thêm suất chiếu" : "Lưu thay đổi"}
           </button>
@@ -832,7 +1202,7 @@ function EditShowtimeModal({
   );
 }
 
-function StaffShowtimesPage() {
+export default function StaffShowtimesPage() {
   const { subtitle } = useOutletContext();
   const { user } = useAuth();
   const cinemaName = useMemo(() => {
@@ -1061,6 +1431,7 @@ function StaffShowtimesPage() {
             end: `${formattedDate}T${formattedEndTime}:00`,
             startTime: formattedTime,
             duration: duration,
+            prices: s.prices || (isSpecialShowtime ? s.special_prices : null) || { Thường: 50000 },
           };
         })
         .filter((s) => {
@@ -1161,6 +1532,27 @@ function StaffShowtimesPage() {
         throw new Error(STAFF_PAST_DATE_ERROR);
       }
 
+      // ✅ Kiểm tra chồng lấn suất chiếu (Conflict Detection)
+      const conflictingShow = showtimes.find((st) => {
+        if (st.id === next.id) return false; // Bỏ qua chính nó khi sửa
+        if (String(st.roomId) !== String(next.roomId)) return false;
+        if (st.date !== next.date) return false;
+        if (st.status === "cancelled") return false;
+
+        const startA = new Date(st.start).getTime();
+        const endA = new Date(st.end).getTime();
+        const startB = new Date(next.start).getTime();
+        const endB = new Date(next.end).getTime();
+
+        return startB < endA && endB > startA;
+      });
+
+      if (conflictingShow) {
+        throw new Error(
+          `Xung đột lịch: Phòng đã có suất "${conflictingShow.movieTitle}" lúc ${conflictingShow.startTime}.`
+        );
+      }
+
       const auth = getAuth();
       const currentToken = await auth.currentUser?.getIdToken();
       if (!currentToken) {
@@ -1187,14 +1579,8 @@ function StaffShowtimesPage() {
         type: next.format,
         language: next.language || DEFAULT_LANGUAGE_OPTION.value,
         is_special: Boolean(next.isSpecial),
-        special_prices: next.isSpecial
-          ? {
-              Thường: 50000,
-            }
-          : null,
-        prices: {
-          Thường: 50000,
-        },
+        special_prices: next.isSpecial ? next.prices : null,
+        prices: next.prices,
         status:
           normalizeStaffStatus(next.status) === "open"
             ? "available"
@@ -1480,5 +1866,3 @@ function StaffShowtimesPage() {
     </div>
   );
 }
-
-export default StaffShowtimesPage;
