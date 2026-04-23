@@ -114,8 +114,6 @@ function SeatLegendItem({ colorClassName, label }) {
   );
 }
 
-
-
 export const SeatSelectionPage = () => {
   const { showtimeId } = useParams();
   const navigate = useNavigate();
@@ -137,6 +135,7 @@ export const SeatSelectionPage = () => {
   const [roomLayout, setRoomLayout] = useState(null);
   const [maintenanceSeats, setMaintenanceSeats] = useState(new Set());
   const [currentUser, setCurrentUser] = useState(null);
+  const [showLoginAlert, setShowLoginAlert] = useState(false);
 
   // ✅ THEO DÕI TRẠNG THÁI ĐĂNG NHẬP
   useEffect(() => {
@@ -367,6 +366,21 @@ export const SeatSelectionPage = () => {
 
   // ========== TOGGLE SEAT ==========
   const toggleSeat = async (id, type) => {
+    // 🔐 KIỂM TRA ĐĂNG NHẬP TRƯỚC KHI CHO PHÉP CHỌN GHẾ
+    const auth = getAuth();
+    const user = auth.currentUser;
+    
+    if (!user) {
+      // Hiển thị thông báo đăng nhập
+      setShowLoginAlert(true);
+      setTimeout(() => {
+        setShowLoginAlert(false);
+        // Chuyển hướng về trang chủ sau 2 giây
+        navigate("/");
+      }, 2000);
+      return;
+    }
+
     if (occupiedSeats.has(id) || maintenanceSeats.has(id)) return;
 
     const isSelected = picked.find((s) => s.id === id);
@@ -374,17 +388,13 @@ export const SeatSelectionPage = () => {
     if (isSelected) {
       // 🚀 NẾU BỎ CHỌN: Gọi API giải phóng ghế ở DB ngay lập tức
       try {
-        const auth = getAuth();
-        const user = auth.currentUser;
-        if (user) {
-          const token = await user.getIdToken();
-          await axios.post(
-            "http://localhost:5000/api/seats/release-my-locks",
-            { showtime_id: showtimeId, seat_label: id },
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          console.log(`✅ Released seat ${id} from DB`);
-        }
+        const token = await user.getIdToken();
+        await axios.post(
+          "http://localhost:5000/api/seats/release-my-locks",
+          { showtime_id: showtimeId, seat_label: id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.log(`✅ Released seat ${id} from DB`);
       } catch (err) {
         console.error("Error releasing single seat:", err);
       }
@@ -402,6 +412,19 @@ export const SeatSelectionPage = () => {
   // ========== HANDLE CONTINUE ==========
   const handleContinue = async () => {
     if (picked.length === 0) return;
+
+    // Kiểm tra lại đăng nhập trước khi lock ghế
+    const auth = getAuth();
+    const user = auth.currentUser;
+    
+    if (!user) {
+      setShowLoginAlert(true);
+      setTimeout(() => {
+        setShowLoginAlert(false);
+        navigate("/");
+      }, 2000);
+      return;
+    }
 
     const locked = await lockSelectedSeats(picked, showtimeId);
 
@@ -812,6 +835,43 @@ export const SeatSelectionPage = () => {
                     Thoát
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ✅ LOGIN ALERT MODAL */}
+      <AnimatePresence>
+        {showLoginAlert && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-sm overflow-hidden"
+              style={{
+                background: "var(--color-cinema-surface)",
+                border: "1px solid rgba(229, 9, 20, 0.3)",
+                borderRadius: "28px",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+              }}
+            >
+              <div className="p-8 text-center">
+                <div className="w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center mx-auto mb-5 border border-yellow-500/20">
+                  <AlertCircle size={32} className="text-yellow-500" />
+                </div>
+                
+                <h3 className="text-white text-xl font-bold mb-3 tracking-tight">Yêu cầu đăng nhập</h3>
+                <p className="text-zinc-400 text-sm leading-relaxed mb-8">
+                  Vui lòng đăng nhập để chọn ghế và đặt vé.
+                </p>
               </div>
             </motion.div>
           </div>
