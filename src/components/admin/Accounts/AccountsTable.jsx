@@ -1,6 +1,6 @@
 import { Edit2, Trash2 } from "lucide-react";
 
-export default function AccountsTable({ data, onEdit, onDelete }) {
+export default function AccountsTable({ data, onEdit, onDelete, currentUserEmail }) {
   const roleMap = {
     admin: {
       label: "Admin",
@@ -27,6 +27,11 @@ export default function AccountsTable({ data, onEdit, onDelete }) {
     },
   };
 
+  // Kiểm tra xem có phải là admin đang đăng nhập không
+  const isCurrentAdmin = (account) => {
+    return account.role === "admin" && account.email === currentUserEmail;
+  };
+
   return (
     <div className="bg-cinema-surface border border-white/10 rounded-xl overflow-x-auto overscroll-x-contain mb-6">
       <table className="w-full min-w-[980px]">
@@ -49,6 +54,7 @@ export default function AccountsTable({ data, onEdit, onDelete }) {
           {data.map((a) => {
             const role = roleMap[a.role] || roleMap.customer;
             const status = statusMap[a.status?.toLowerCase()] || statusMap.active;
+            const isCurrentAdminAccount = isCurrentAdmin(a);
 
             return (
               <tr
@@ -76,6 +82,9 @@ export default function AccountsTable({ data, onEdit, onDelete }) {
                     <div className="min-w-0">
                       <div className="text-white text-sm font-medium truncate">
                         {a.name}
+                        {isCurrentAdminAccount && (
+                          <span className="ml-2 text-xs text-yellow-400">(Bạn)</span>
+                        )}
                       </div>
                       <div className="text-white/50 text-xs truncate">{a.email}</div>
                     </div>
@@ -105,20 +114,29 @@ export default function AccountsTable({ data, onEdit, onDelete }) {
 
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => onEdit(a)}
-                      className="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 transition"
-                      title="Chỉnh sửa"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => onDelete(a)}
-                      className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition"
-                      title="Xoá"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    {/* Ẩn nút sửa nếu là admin đang đăng nhập */}
+                    {!isCurrentAdminAccount && (
+                      <>
+                        <button
+                          onClick={() => onEdit(a)}
+                          className="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 transition"
+                          title="Chỉnh sửa"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => onDelete(a)}
+                          className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition"
+                          title="Xoá"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
+                    )}
+                    {/* Nếu là admin đang đăng nhập, hiển thị text thay vì nút */}
+                    {isCurrentAdminAccount && (
+                      <span className="text-xs text-white/40 px-2">Không thể thao tác</span>
+                    )}
                   </div>
                 </td>
               </tr>

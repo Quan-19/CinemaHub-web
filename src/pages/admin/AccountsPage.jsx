@@ -15,6 +15,7 @@ export default function AccountsPage() {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentUserEmail, setCurrentUserEmail] = useState(null);
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -30,7 +31,16 @@ export default function AccountsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(8);
 
-  // 🔥 FETCH FUNCTION (ĐƯA RA NGOÀI)
+  // 🔥 LẤY THÔNG TIN USER HIỆN TẠI
+  useEffect(() => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (user) {
+      setCurrentUserEmail(user.email);
+    }
+  }, []);
+
+  // 🔥 FETCH FUNCTION
   const fetchAccounts = async () => {
     try {
       setError(null);
@@ -100,7 +110,7 @@ export default function AccountsPage() {
     setCurrentPage(1);
   }, [search, roleFilter, statusFilter, itemsPerPage]);
 
-  // FILTER
+  // FILTER - Có thể lọc cả admin nhưng không hiển thị nút thao tác
   const filteredAccounts = accounts.filter((a) => {
     const q = search.trim().toLowerCase();
     const matchesSearch =
@@ -133,6 +143,11 @@ export default function AccountsPage() {
 
   // HANDLERS
   const handleEditAccount = (account) => {
+    // Không cho phép sửa admin
+    if (account.role === "admin") {
+      toast.error("Không thể chỉnh sửa tài khoản Admin!");
+      return;
+    }
     setEditAccount(account);
     setShowModal(true);
   };
@@ -182,9 +197,7 @@ export default function AccountsPage() {
         throw new Error(raw || `Request failed (${res.status})`);
       }
 
-      // 🔥 LOAD LẠI DATA
       await fetchAccounts();
-
       setShowModal(false);
       setEditAccount(null);
       toast.success(isEdit ? "Cập nhật tài khoản thành công!" : "Tạo tài khoản thành công!");
@@ -195,6 +208,11 @@ export default function AccountsPage() {
   };
 
   const handleDeleteClick = (account) => {
+    // Không cho phép xóa admin
+    if (account.role === "admin") {
+      toast.error("Không thể xóa tài khoản Admin!");
+      return;
+    }
     setDeleteAccount(account);
     setShowDeleteModal(true);
   };
@@ -276,6 +294,7 @@ export default function AccountsPage() {
             data={paginatedAccounts}
             onEdit={handleEditAccount}
             onDelete={handleDeleteClick}
+            currentUserEmail={currentUserEmail}
           />
 
           {/* Pagination */}
