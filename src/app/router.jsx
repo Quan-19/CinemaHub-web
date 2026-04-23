@@ -45,6 +45,7 @@ import StaffShowtimesPage from "../pages/staff/StaffShowtimesPage.jsx";
 import StaffRevenuePage from "../pages/staff/StaffRevenuePage.jsx";
 import StaffBannersPage from "../pages/staff/StaffBannersPage.jsx";
 import StaffArticlesPage from "../pages/staff/StaffArticlesPage.jsx";
+import StaffScannerPage from "../pages/staff/StaffScannerPage.jsx";
 
 // ✅ AuthContext hook
 import { useAuth } from "../context/AuthContext.jsx";
@@ -146,6 +147,7 @@ export const router = createBrowserRouter([
       { path: "revenue", element: <StaffRevenuePage /> },
       { path: "rooms", element: <StaffRoomsPage /> },
       { path: "promotions", element: <StaffPromotionsPage /> },
+      { path: "scanner", element: <StaffScannerPage /> },
     ],
   },
 ]);

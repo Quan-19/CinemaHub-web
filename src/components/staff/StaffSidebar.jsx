@@ -13,6 +13,7 @@ import {
   X,
   FileText,
   DollarSign,
+  QrCode,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 
@@ -171,6 +172,13 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
           </div>
         )}
         <nav className="space-y-1">
+          <SidebarLink
+            to="/staff/scanner"
+            icon={QrCode}
+            label="Kiểm soát vé"
+            collapsed={collapsed}
+            onNavigate={handleNavigate}
+          />
           <SidebarLink
             to="/staff/banners"
             icon={Megaphone}

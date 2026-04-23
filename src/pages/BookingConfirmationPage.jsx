@@ -422,6 +422,7 @@ export default function BookingConfirmationPage() {
           showtime: showtimeData,
           movie: movieData || showtimeData?.movie || null,
           bookingCode: bookingRes.data?.ticket_code || `CS${paymentBookingId}`,
+          qrToken: bookingRes.data?.qr_token,
         };
 
         setBookingData(newBookingData);
@@ -754,6 +755,7 @@ export default function BookingConfirmationPage() {
         showtime: showtime,
         movie: movie,
         bookingCode: ticketCode,
+        qrToken: bookingRes.data?.qr_token,
       });
 
       setStep("success");
@@ -984,10 +986,7 @@ export default function BookingConfirmationPage() {
       displayGrandTotal = dbTotal;
     }
 
-    const webBaseUrl = (
-      import.meta.env.VITE_PUBLIC_URL || window.location.origin
-    ).replace(/\/$/, "");
-    const ticketUrl = `${webBaseUrl}/ticket/${displayBookingCode}`;
+    const ticketUrl = bookingData.qrToken || displayBookingCode;
 
     return (
       <div

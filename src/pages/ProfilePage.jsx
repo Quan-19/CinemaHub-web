@@ -25,7 +25,9 @@ import {
   Armchair,
   Search,
   Filter,
+  QrCode,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -210,6 +212,8 @@ function ProfilePage() {
             seats: booking.seats || [],
             start_time: startTime,
             start_time_raw: booking.start_time,
+            ticket_code: booking.ticket_code,
+            qr_token: booking.qr_token,
             formatted_show_time: startTime ? startTime.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : null,
             formatted_show_date: startTime ? startTime.toLocaleDateString("vi-VN") : null,
           });
@@ -516,8 +520,8 @@ function ProfilePage() {
                       </div>
                       <div className="flex items-center gap-2 text-[11px]">
                         <Ticket className="w-3.5 h-3.5 text-cinema-primary" />
-                        <span className="text-zinc-400">Mã vé:</span>
-                        <span className="text-white font-bold">#{selectedBooking.booking_id}</span>
+                        <span className="text-zinc-400">Mã đặt vé:</span>
+                        <span className="text-white font-bold">{selectedBooking.ticket_code || `#${selectedBooking.booking_id}`}</span>
                       </div>
                       <div className="flex items-start gap-2 text-[11px]">
                         <MapPin className="w-3.5 h-3.5 text-cinema-primary mt-0.5" />
@@ -566,7 +570,18 @@ function ProfilePage() {
                     </div>
                   </div>
 
-                  <div className="text-right flex flex-col justify-between h-full py-1">
+                  <div className="flex flex-col items-center justify-center p-3 bg-white/5 rounded-2xl border border-white/10 shrink-0">
+                    <div className="bg-white p-1.5 rounded-lg mb-2">
+                      <QRCodeSVG
+                        value={selectedBooking.qr_token || selectedBooking.ticket_code || String(selectedBooking.booking_id)}
+                        size={85}
+                        level="H"
+                      />
+                    </div>
+                    <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Mã vé Check-in</p>
+                  </div>
+
+                  <div className="text-right flex flex-col justify-between h-full py-1 leading-none">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Tổng thanh toán</p>
                       <p className="text-3xl font-bold text-cinema-primary leading-none tracking-tight">{formatCurrency(selectedBooking.total_amount)}</p>

@@ -141,7 +141,7 @@ export const TicketPage = () => {
           try {
             const parsed = JSON.parse(text);
             if (Array.isArray(parsed)) return parsed;
-          } catch {}
+          } catch { }
           return text
             .split(/,|\|/g)
             .map((s) => s.trim())
@@ -180,6 +180,7 @@ export const TicketPage = () => {
             id: normalizeSeatLabel(s.label || s.seat_number || s.seat_id || s.id),
             type: normalizeSeatType(s.seat_type || s.type),
           })),
+          qrToken: data?.qr_token,
         };
 
         setTicket(mapped);
@@ -223,8 +224,7 @@ export const TicketPage = () => {
     );
   }
 
-  const webBaseUrl = (import.meta.env.VITE_PUBLIC_URL || window.location.origin).replace(/\/$/, "");
-  const ticketUrl = `${webBaseUrl}/ticket/${ticket.bookingCode}`;
+  const ticketUrl = ticket.qrToken || ticket.bookingCode;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start py-8 px-4"
@@ -402,17 +402,17 @@ export const TicketPage = () => {
               {ticket.seats.map((seat) => {
                 const seatTypeKey = SEAT_TYPE_LABEL[seat.type] ? seat.type : "standard";
                 return (
-                <div key={seat.id}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: seatTypeKey === "vip" ? "rgba(245,158,11,0.12)" : seatTypeKey === "couple" ? "rgba(229,9,20,0.12)" : "rgba(255,255,255,0.06)",
-                    border: `1px solid ${seatTypeKey === "vip" ? "rgba(245,158,11,0.3)" : seatTypeKey === "couple" ? "rgba(229,9,20,0.3)" : "rgba(255,255,255,0.1)"}`,
-                  }}>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: SEAT_TYPE_COLOR[seatTypeKey] }}>{seat.id}</span>
-                  <span className="px-1 py-0.5 rounded text-xs" style={{ fontSize: 9, background: "rgba(0,0,0,0.3)", color: SEAT_TYPE_COLOR[seatTypeKey] }}>
-                    {SEAT_TYPE_LABEL[seatTypeKey]}
-                  </span>
-                </div>
+                  <div key={seat.id}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                      background: seatTypeKey === "vip" ? "rgba(245,158,11,0.12)" : seatTypeKey === "couple" ? "rgba(229,9,20,0.12)" : "rgba(255,255,255,0.06)",
+                      border: `1px solid ${seatTypeKey === "vip" ? "rgba(245,158,11,0.3)" : seatTypeKey === "couple" ? "rgba(229,9,20,0.3)" : "rgba(255,255,255,0.1)"}`,
+                    }}>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: SEAT_TYPE_COLOR[seatTypeKey] }}>{seat.id}</span>
+                    <span className="px-1 py-0.5 rounded text-xs" style={{ fontSize: 9, background: "rgba(0,0,0,0.3)", color: SEAT_TYPE_COLOR[seatTypeKey] }}>
+                      {SEAT_TYPE_LABEL[seatTypeKey]}
+                    </span>
+                  </div>
                 );
               })}
             </div>
