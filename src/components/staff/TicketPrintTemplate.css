@@ -1,0 +1,46 @@
+/* TicketPrintTemplate.css */
+@media print {
+
+    /* Hide everything by default when printing */
+    body * {
+        visibility: hidden;
+    }
+
+    /* Only show the ticket container */
+    .printable-ticket-container,
+    .printable-ticket-container * {
+        visibility: visible;
+    }
+
+    .printable-ticket-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        background: white !important;
+        color: black !important;
+    }
+
+    /* Page setup for 80mm thermal printer */
+    @page {
+        size: 80mm auto;
+        margin: 0;
+    }
+
+    /* Hide background graphics to save ink and ensure readability */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
+/* Screen-only styles for the preview */
+.ticket-preview-wrapper {
+    font-family: 'Courier New', Courier, monospace;
+    background: white;
+    color: black;
+    line-height: 1.2;
+}
