@@ -73,7 +73,7 @@ export default function AccountModal({ data, onClose, onSave }) {
               <label className="text-white/70 text-sm">Họ và tên</label>
               <input
                 type="text"
-                placeholder="Nhập họ và tên" // ✅ THÊM placeholder từ Code 2
+                placeholder="Nhập họ và tên" 
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 required
@@ -86,7 +86,7 @@ export default function AccountModal({ data, onClose, onSave }) {
               <label className="text-white/70 text-sm">Email</label>
               <input
                 type="email"
-                placeholder="email@example.com" // ✅ THÊM placeholder
+                placeholder="email@example.com"
                 value={formData.email}
                 onChange={(e) => handleChange("email", e.target.value)}
                 required
@@ -99,7 +99,7 @@ export default function AccountModal({ data, onClose, onSave }) {
               <label className="text-white/70 text-sm">Số điện thoại</label>
               <input
                 type="tel"
-                placeholder="0912 345 678" // ✅ THÊM placeholder
+                placeholder="0912 345 678" 
                 value={formData.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
                 className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition placeholder:text-white/30"
@@ -114,9 +114,9 @@ export default function AccountModal({ data, onClose, onSave }) {
                 onChange={(e) => handleChange("role", e.target.value)}
                 className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white text-sm outline-none focus:border-red-500/50 transition appearance-none cursor-pointer"
               >
-                <option value="admin">Admin</option>
+                {/* <option value="admin">Admin</option> */}
                 <option value="staff">Nhân viên</option>
-                <option value="customer">Khách hàng</option> {/* ✅ GIỮ customer từ Code 1 */}
+                <option value="customer">Khách hàng</option>
               </select>
             </div>
 
@@ -149,7 +149,7 @@ export default function AccountModal({ data, onClose, onSave }) {
               type="submit"
               className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition" // ✅ THÊM hover từ Code 2
             >
-              {data ? "Cập nhật" : "Tạo tài khoản"} {/* ✅ GIỮ text từ Code 2 */}
+              {data ? "Cập nhật" : "Tạo tài khoản"} 
             </button>
           </div>
         </form>

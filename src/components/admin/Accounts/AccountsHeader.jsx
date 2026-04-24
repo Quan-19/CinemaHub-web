@@ -6,12 +6,12 @@ export default function AccountsHeader({ total, onAdd }) {
         <p className="text-white/50 text-sm mt-1">Tổng: {total} tài khoản</p>
       </div>
 
-      <button
+      {/* <button
         onClick={onAdd}
         className="w-full sm:w-auto bg-red-600 hover:bg-red-700 px-5 py-2.5 rounded-lg text-white font-medium flex items-center justify-center gap-2 transition"
       >
         <span className="text-lg">+</span> Thêm tài khoản
-      </button>
+      </button> */}
     </div>
   );
 }
