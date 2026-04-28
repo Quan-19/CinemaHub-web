@@ -656,24 +656,6 @@ export default function BookingConfirmationPage() {
         throw new Error("Không lấy được booking_id từ server");
       }
 
-      // 2. Lưu booking_foods riêng (nếu có)
-      if (selectedFoods.length > 0) {
-        const foodsPayload = {
-          booking_id: bookingId,
-          foods: selectedFoods.map((f) => ({
-            food_id: f.food_id,
-            quantity: f.quantity,
-          })),
-        };
-        console.log("🍿 Foods payload:", foodsPayload);
-
-        await axios.post(
-          "http://localhost:5000/api/booking-foods",
-          foodsPayload,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-      }
-
       // 3. Xử lý thanh toán theo phương thức
       if (method === "vnpay") {
         const res = await axios.post(

@@ -15,11 +15,20 @@ import {
     RefreshCw,
     Camera,
     Play,
-    StopCircle
+    StopCircle,
+    Hash,
+    Search,
+    Printer,
+    X,
+    Utensils,
+    Coffee,
+    CreditCard,
+    Tag
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { getAuth } from "firebase/auth";
+import TicketPrintTemplate from "../../components/staff/TicketPrintTemplate";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -30,6 +39,9 @@ export default function StaffScannerPage() {
     const [error, setError] = useState(null);
     const [cameraActive, setCameraActive] = useState(false);
     const [cameraLoading, setCameraLoading] = useState(false);
+    const [manualCode, setManualCode] = useState("");
+    const [manualLoading, setManualLoading] = useState(false);
+    const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
     const html5QrCodeRef = useRef(null);
     const scannerId = "reader";
@@ -116,6 +128,41 @@ export default function StaffScannerPage() {
         }
     };
 
+    const handleManualLookup = async (e) => {
+        e?.preventDefault();
+        const code = manualCode.trim().toUpperCase();
+        if (!code) {
+            toast.error("Vui lòng nhập mã đặt vé");
+            return;
+        }
+
+        setManualLoading(true);
+        setError(null);
+        setScanResult(null);
+
+        try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+            const token = await user?.getIdToken();
+
+            const response = await axios.get(
+                `${API_BASE_URL}/api/tickets/${encodeURIComponent(code)}?source=manual`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            setScanResult(response.data);
+            toast.success("Xác thực vé thành công!");
+            setManualCode("");
+        } catch (err) {
+            console.error("Manual lookup error:", err);
+            const msg = err.response?.data?.message;
+            setError(msg || "Không tìm thấy mã vé. Vui lòng kiểm tra lại.");
+            toast.error("Xác thực thất bại");
+        } finally {
+            setManualLoading(false);
+        }
+    };
+
     const handleCheckIn = async () => {
         if (!scanResult) return;
 
@@ -125,14 +172,14 @@ export default function StaffScannerPage() {
             const user = auth.currentUser;
             const token = await user?.getIdToken();
 
-            await axios.patch(`${API_BASE_URL}/api/bookings/${scanResult.booking_id}/status`,
+            await axios.put(`${API_BASE_URL}/api/bookings/${scanResult.booking_id}/status`,
                 { status: 'confirmed' },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
             toast.success("Check-in thành công!");
-            setScanResult(null);
-            startScanner();
+            // Refresh scan result to get confirmed status
+            setScanResult(prev => ({ ...prev, booking_status: 'confirmed' }));
         } catch (err) {
             toast.error("Lỗi khi cập nhật trạng thái check-in");
         } finally {
@@ -140,26 +187,30 @@ export default function StaffScannerPage() {
         }
     };
 
+    const handlePrint = () => {
+        window.print();
+    };
+
     return (
         <div className="space-y-6 max-w-5xl mx-auto px-4">
-            <div>
-                <h1 className="text-2xl font-bold sm:text-3xl flex items-center gap-3">
-                    <div className="p-2 bg-cinema-primary/10 rounded-xl">
-                        <QrCode className="text-cinema-primary w-6 h-6" />
+            <div className="flex items-center justify-between mb-4">
+                <h1 className="text-xl font-bold sm:text-2xl flex items-center gap-2">
+                    <div className="p-1.5 bg-cinema-primary/10 rounded-lg">
+                        <QrCode className="text-cinema-primary w-5 h-5" />
                     </div>
                     Kiểm soát vé
                 </h1>
-                <p className="mt-1 text-sm text-zinc-400 font-medium">{subtitle}</p>
+                <p className="text-xs text-zinc-500 font-medium">{subtitle}</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 {/* Scanner Card */}
-                <div className="lg:col-span-5 cinema-surface p-6 overflow-hidden">
-                    <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">Máy quét QR</h3>
-                        <div className={`flex items-center gap-2 text-xs ${cameraActive ? 'text-green-500' : 'text-zinc-500'}`}>
-                            <div className={`w-2 h-2 rounded-full ${cameraActive ? 'bg-green-500 animate-pulse' : 'bg-zinc-700'}`} />
-                            {cameraActive ? 'Camera đang bật' : 'Camera đang tắt'}
+                <div className="lg:col-span-5 cinema-surface p-5 overflow-hidden">
+                    <div className="mb-3 flex items-center justify-between">
+                        <h3 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Máy quét QR</h3>
+                        <div className={`flex items-center gap-1.5 text-[10px] ${cameraActive ? 'text-green-500' : 'text-zinc-500'}`}>
+                            <div className={`w-1.5 h-1.5 rounded-full ${cameraActive ? 'bg-green-500 animate-pulse' : 'bg-zinc-700'}`} />
+                            {cameraActive ? 'Đang bật' : 'Đang tắt'}
                         </div>
                     </div>
 
@@ -208,149 +259,276 @@ export default function StaffScannerPage() {
                             </button>
                         )}
                     </div>
+
+                    {/* Manual Code Input */}
+                    <div className="mt-6 border-t border-white/5 pt-6">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Hash size={14} className="text-zinc-500" />
+                            <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">Nhập mã vé thủ công</p>
+                        </div>
+                        <form onSubmit={handleManualLookup} className="flex gap-2">
+                            <input
+                                type="text"
+                                value={manualCode}
+                                onChange={(e) => setManualCode(e.target.value.toUpperCase())}
+                                placeholder="VD: CS1234567890"
+                                className="flex-1 bg-zinc-900 border border-white/10 focus:border-cinema-primary/60 focus:ring-2 focus:ring-cinema-primary/20 rounded-xl px-4 py-2.5 text-sm font-mono text-white placeholder-zinc-600 outline-none transition-all"
+                                disabled={manualLoading}
+                                maxLength={20}
+                                autoComplete="off"
+                                spellCheck={false}
+                            />
+                            <button
+                                type="submit"
+                                disabled={manualLoading || !manualCode.trim()}
+                                className="px-4 py-2.5 bg-cinema-primary hover:bg-cinema-primary-dark disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-cinema-primary/20 active:scale-95 whitespace-nowrap"
+                            >
+                                {manualLoading
+                                    ? <Loader2 size={16} className="animate-spin" />
+                                    : <Search size={16} />}
+                                Xác thực
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 {/* Info Card */}
-                <div className="lg:col-span-7 cinema-surface p-6 min-h-[400px] flex flex-col">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 mb-6 border-b border-white/5 pb-2">Thông tin vé</h3>
+                <div className="lg:col-span-7 cinema-surface p-5 min-h-[400px] flex flex-col">
+                    <h3 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-4 border-b border-white/5 pb-2">Thông tin vé</h3>
 
                     <div className="flex-1 flex flex-col">
                         {loading && !scanResult && (
-                            <div className="flex-1 flex flex-col items-center justify-center py-12">
-                                <div className="relative">
-                                    <Loader2 className="w-12 h-12 text-cinema-primary animate-spin" />
-                                    <div className="absolute inset-0 blur-xl bg-cinema-primary/20 animate-pulse"></div>
-                                </div>
-                                <p className="text-zinc-400 font-bold mt-6 text-lg">Đang xác thực bảo mật...</p>
-                                <p className="text-zinc-500 text-sm mt-1">Đang giải mã token...</p>
-                            </div>
-                        )}
-
-                        {error && (
-                            <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
-                                <div className="p-6 bg-red-500/10 rounded-full mb-6 ring-2 ring-red-500/20">
-                                    <XCircle className="w-16 h-16 text-red-500" />
-                                </div>
-                                <h4 className="text-red-500 font-black text-xl mb-3 tracking-tight">XÁC THỰC THẤT BẠI</h4>
-                                <div className="max-w-md mx-auto p-4 bg-red-500/5 rounded-2xl border border-red-500/10">
-                                    <p className="text-zinc-300 text-sm leading-relaxed">{error}</p>
-                                </div>
-                                <button
-                                    onClick={startScanner}
-                                    className="mt-8 px-8 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-sm font-bold transition-all shadow-xl"
-                                >
-                                    Quét lại mã khác
-                                </button>
+                            <div className="flex-1 flex flex-col items-center justify-center p-10 text-zinc-500 space-y-4">
+                                <Loader2 className="w-10 h-10 animate-spin text-cinema-primary" />
+                                <p className="text-sm font-medium animate-pulse">Đang kiểm tra thông tin vé...</p>
                             </div>
                         )}
 
                         {!loading && !scanResult && !error && (
-                            <div className="flex-1 flex flex-col items-center justify-center py-12 text-center space-y-6">
-                                <div className="relative group">
-                                    <div className="absolute inset-0 bg-cinema-primary/10 rounded-full blur-3xl group-hover:bg-cinema-primary/20 transition-all duration-700"></div>
-                                    <Ticket className="w-20 h-20 text-zinc-800 relative z-10 opacity-30" />
+                            <div className="flex-1 flex flex-col items-center justify-center p-10 text-zinc-500 space-y-4">
+                                <div className="p-5 bg-zinc-900 rounded-full">
+                                    <QrCode className="w-12 h-12 opacity-20" />
                                 </div>
-                                <div className="space-y-2">
-                                    <p className="text-zinc-400 font-bold text-lg">Sẵn sàng kiểm tra</p>
-                                    <p className="text-zinc-600 text-sm max-w-[280px] mx-auto">Vui lòng quét mã QR trên vé của khách hàng để hiển thị thông tin xác thực.</p>
+                                <p className="text-sm font-medium">Vui lòng quét mã QR hoặc nhập mã vé để đối soát</p>
+                            </div>
+                        )}
+
+                        {error && !scanResult && (
+                            <div className="flex-1 flex flex-col items-center justify-center p-10 text-red-500 bg-red-500/5 rounded-2xl border border-red-500/10 space-y-4">
+                                <div className="p-4 bg-red-500/10 rounded-full">
+                                    <XCircle className="w-10 h-10" />
                                 </div>
+                                <p className="text-sm font-bold text-center leading-relaxed max-w-xs">{error}</p>
+                                <button
+                                    onClick={() => { setError(null); startScanner(); }}
+                                    className="px-6 py-2 bg-red-500 text-white rounded-full text-xs font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-900/20"
+                                >
+                                    Thử lại
+                                </button>
                             </div>
                         )}
 
                         {scanResult && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 flex-1 flex flex-col">
-                                <div className="flex items-center justify-between bg-zinc-950/40 p-4 rounded-2xl border border-white/5 shadow-inner">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Trạng thái đặt vé</p>
-                                        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-tight ${scanResult.booking_status === 'paid' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-yellow-500/20 text-yellow-500'
+                            <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-500 flex-1 flex flex-col">
+                                <div className="flex items-center justify-between bg-zinc-950/40 p-2 rounded-lg border border-white/5 shadow-inner">
+                                    <div className="space-y-0.5">
+                                        <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Trạng thái</p>
+                                        <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-tight ${scanResult.booking_status === 'paid' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-500'
                                             }`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${scanResult.booking_status === 'paid' ? 'bg-emerald-500' : 'bg-yellow-500'}`} />
-                                            {scanResult.booking_status === 'paid' ? 'Hợp lệ' : scanResult.booking_status}
+                                            <div className={`w-1 h-1 rounded-full ${scanResult.booking_status === 'paid' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                            {scanResult.booking_status === 'paid' ? 'Hợp lệ' : 'ĐÃ CHECK-IN'}
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Mã đặt vé</p>
-                                        <div className="text-white font-black text-lg">#{scanResult.ticket_code}</div>
+                                        <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Mã vé</p>
+                                        <div className="text-white font-black text-sm">#{scanResult.ticket_code}</div>
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col sm:flex-row gap-6 p-1">
-                                    <div className="relative shrink-0 group">
+                                <div className="flex flex-row gap-4 p-1">
+                                    <div className="relative shrink-0">
                                         <img
                                             src={scanResult.movie?.poster}
                                             alt={scanResult.movie?.title}
-                                            className="w-32 h-44 object-cover rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 group-hover:scale-105 transition-transform duration-500"
+                                            className="w-20 h-28 object-cover rounded-xl shadow-lg border border-white/5"
                                         />
-                                        <div className="absolute -bottom-3 -right-3 w-10 h-10 bg-cinema-primary rounded-xl flex items-center justify-center text-white font-black text-xs shadow-xl ring-4 ring-[#12121e]">
+                                        <div className="absolute bottom-1 right-1 w-6 h-6 bg-cinema-primary rounded flex items-center justify-center text-white font-bold text-[9px] shadow-lg ring-1 ring-white/20">
                                             {scanResult.movie?.age_rating || 'T13'}
                                         </div>
                                     </div>
-                                    <div className="flex-1 space-y-4">
+                                    <div className="flex-1 min-w-0 space-y-3">
                                         <div>
-                                            <h4 className="text-xl font-black text-white leading-tight mb-1">{scanResult.movie?.title}</h4>
-                                            <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-zinc-500">
-                                                <span className="px-2 py-0.5 bg-zinc-800 rounded">{scanResult.movie?.genre}</span>
+                                            <h4 className="text-base font-black text-white leading-tight truncate">{scanResult.movie?.title}</h4>
+                                            <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-zinc-500 mt-1">
+                                                <span className="px-1.5 py-0.5 bg-zinc-800 rounded">{scanResult.showtime?.format}</span>
                                                 <span>•</span>
-                                                <span>{scanResult.movie?.duration} phút</span>
+                                                <span className="truncate">{scanResult.movie?.genre}</span>
+                                                <span>•</span>
+                                                <span>{scanResult.movie?.duration}p</span>
                                             </div>
                                         </div>
 
-                                        <div className="space-y-3 pt-2">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-cinema-primary/10 rounded-lg"><User size={14} className="text-cinema-primary" /></div>
-                                                <div className="min-w-0">
-                                                    <p className="text-[10px] font-black uppercase text-zinc-500 leading-none mb-1">Khách hàng</p>
-                                                    <p className="text-sm font-bold text-white truncate">{scanResult.customer_name}</p>
+                                        <div className="grid grid-cols-2 gap-x-6 gap-y-3 pt-2 border-t border-white/5">
+                                            {[
+                                                { icon: User, val: scanResult.customer_name, color: "text-cinema-primary" },
+                                                { icon: Clock, val: new Date(scanResult.showtime?.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }), color: "text-cinema-primary" },
+                                                { icon: MapPin, val: scanResult.cinema?.name, color: "text-zinc-400" },
+                                                { icon: Calendar, val: new Date(scanResult.showtime?.start_time).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }), color: "text-zinc-400" },
+                                                { icon: Film, val: scanResult.showtime?.room?.name, color: "text-zinc-400" },
+                                                { icon: Ticket, val: scanResult.seat_labels?.join(','), color: "text-zinc-400" }
+                                            ].map((item, i) => (
+                                                <div key={i} className="flex items-center gap-2.5 min-w-0">
+                                                    <item.icon size={14} className={`${item.color} shrink-0`} />
+                                                    <p className={`text-sm font-bold truncate tracking-tight ${item.color.includes('cinema-primary') ? 'text-white' : 'text-zinc-300'}`}>
+                                                        {item.val}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Bill Details */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2 text-zinc-400">
+                                        <CreditCard size={14} />
+                                        <h4 className="text-[10px] font-bold uppercase tracking-widest">Hóa đơn chi tiết</h4>
+                                    </div>
+                                    <div className="bg-zinc-950/40 rounded-xl border border-white/5 divide-y divide-white/5">
+                                        {/* Tickets */}
+                                        <div className="p-3 space-y-2">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <Ticket size={12} className="text-cinema-primary" />
+                                                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Vé xem phim ({scanResult.seats?.length})</span>
+                                            </div>
+                                            {scanResult.seats?.map((seat, idx) => (
+                                                <div key={idx} className="flex justify-between items-center text-[13px]">
+                                                    <span className="text-zinc-300">{seat.label} <span className="text-[9px] text-zinc-500 ml-1">({seat.seat_type})</span></span>
+                                                    <span className="font-mono text-white/80">{Math.round(seat.price || 0).toLocaleString('vi-VN')} VNĐ</span>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Foods */}
+                                        {scanResult.foods?.length > 0 && (
+                                            <div className="p-3 space-y-2">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <Coffee size={12} className="text-cinema-primary" />
+                                                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Dịch vụ ăn uống ({scanResult.foods?.length})</span>
+                                                </div>
+                                                {scanResult.foods?.map((food, idx) => (
+                                                    <div key={idx} className="flex justify-between items-center text-[13px]">
+                                                        <span className="text-zinc-300 truncate max-w-[150px]">{food.name} <span className="text-[9px] text-zinc-500 ml-1">x{food.quantity}</span></span>
+                                                        <span className="font-mono text-white/80">{Math.round(food.price * food.quantity).toLocaleString('vi-VN')} VNĐ</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Promotion */}
+                                        {scanResult.promo_code && (
+                                            <div className="p-3 space-y-2">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <Tag size={12} className="text-emerald-500" />
+                                                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Khuyến mãi</span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-[13px]">
+                                                    <span className="text-emerald-400 font-bold uppercase tracking-tight">{scanResult.promo_code}</span>
+                                                    <span className="font-mono text-emerald-400">-{Math.round(scanResult.discount_amount || 0).toLocaleString('vi-VN')} VNĐ</span>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-cinema-primary/10 rounded-lg"><MapPin size={14} className="text-cinema-primary" /></div>
-                                                <div className="min-w-0">
-                                                    <p className="text-[10px] font-black uppercase text-zinc-500 leading-none mb-1">Địa điểm</p>
-                                                    <p className="text-sm font-bold text-white truncate">{scanResult.cinema?.name}</p>
-                                                </div>
+                                        )}
+
+                                        {/* Total */}
+                                        <div className="p-3 bg-cinema-primary/5 rounded-b-xl">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-white">TỔNG CỘNG</span>
+                                                <span className="text-base font-black text-cinema-primary">{Math.round(scanResult.total_price || 0).toLocaleString('vi-VN')} VNĐ</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                    {[
-                                        { icon: Calendar, label: "Ngày", val: new Date(scanResult.showtime?.start_time).toLocaleDateString('vi-VN') },
-                                        { icon: Clock, label: "Giờ", val: new Date(scanResult.showtime?.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) },
-                                        { icon: Film, label: "Phòng", val: scanResult.showtime?.room?.name },
-                                        { icon: Ticket, label: "Ghế", val: scanResult.seat_labels?.join(', ') }
-                                    ].map((item, i) => (
-                                        <div key={i} className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col items-center text-center">
-                                            <item.icon size={14} className="text-cinema-primary mb-2" />
-                                            <p className="text-[9px] font-black uppercase text-zinc-500 leading-none mb-1.5">{item.label}</p>
-                                            <p className="text-xs font-black text-white">{item.val}</p>
-                                        </div>
-                                    ))}
-                                </div>
 
-                                <div className="mt-auto pt-6 flex gap-3">
-                                    <button
-                                        onClick={handleCheckIn}
-                                        disabled={loading || scanResult.booking_status === 'confirmed'}
-                                        className="flex-1 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black transition-all flex items-center justify-center gap-3 shadow-xl shadow-emerald-900/20 active:scale-95"
-                                    >
-                                        <CheckCircle2 size={24} />
-                                        XÁC NHẬN VÉ HỢP LỆ
-                                    </button>
-                                    <button
-                                        onClick={stopScanner}
-                                        className="p-4 rounded-2xl border border-white/10 text-zinc-500 hover:bg-white/5 hover:text-white transition-all"
-                                        title="Hủy"
-                                    >
-                                        <RefreshCw size={24} />
-                                    </button>
+
+                                <div className="mt-auto pt-4 flex flex-col gap-2">
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={handleCheckIn}
+                                            disabled={loading || scanResult.booking_status === 'confirmed'}
+                                            className={`flex-1 py-3 rounded-xl font-black transition-all flex items-center justify-center gap-2 shadow-md active:scale-95 ${scanResult.booking_status === 'confirmed'
+                                                ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-white/5'
+                                                : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                                }`}
+                                        >
+                                            <CheckCircle2 size={18} />
+                                            <span className="text-xs">{scanResult.booking_status === 'confirmed' ? 'ĐÃ CHECK-IN' : 'XÁC NHẬN VÉ'}</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setScanResult(null);
+                                                setError(null);
+                                                startScanner();
+                                            }}
+                                            className="p-3 rounded-xl border border-white/10 text-zinc-500 hover:bg-white/5 hover:text-white transition-all"
+                                            title="Quét lại"
+                                        >
+                                            <RefreshCw size={18} />
+                                        </button>
+                                    </div>
+
+                                    {scanResult.booking_status === 'confirmed' && (
+                                        <button
+                                            onClick={() => setIsPrintModalOpen(true)}
+                                            className="w-full py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-black transition-all flex items-center justify-center gap-2 shadow-md active:scale-95 border border-white/10"
+                                        >
+                                            <Printer size={18} />
+                                            <span className="text-xs">IN VÉ GIẤY</span>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )}
                     </div>
                 </div>
-            </div>
+            </div >
+
+
+            {/* Print Preview Modal */}
+            {
+                isPrintModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/40 backdrop-blur-md p-4 animate-in fade-in duration-300">
+                        <div className="bg-white text-black w-full max-w-md rounded-3xl overflow-hidden flex flex-col shadow-2xl animate-in zoom-in-95 duration-300">
+                            <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                                <h3 className="font-bold flex items-center gap-2"><Printer size={18} /> Xem trước bản in</h3>
+                                <button onClick={() => setIsPrintModalOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Ticket Content (The printable part) */}
+                            <div id="printable-ticket" className="flex-1 overflow-auto bg-white">
+                                <TicketPrintTemplate scanResult={scanResult} />
+                            </div>
+
+                            <div className="p-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+                                <button
+                                    onClick={() => setIsPrintModalOpen(false)}
+                                    className="flex-1 py-3 border border-gray-300 rounded-xl font-bold hover:bg-gray-100 transition-colors"
+                                >
+                                    Đóng
+                                </button>
+                                <button
+                                    onClick={handlePrint}
+                                    className="flex-1 py-3 bg-cinema-primary text-white rounded-xl font-bold shadow-lg shadow-cinema-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Printer size={18} /> In ngay
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
             <style>{`
         @keyframes scanner-line {
@@ -363,6 +541,6 @@ export default function StaffScannerPage() {
             animation: scanner-line 2.5s infinite linear;
         }
       `}</style>
-        </div>
+        </div >
     );
 }
