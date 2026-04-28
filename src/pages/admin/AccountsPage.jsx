@@ -31,7 +31,7 @@ export default function AccountsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(8);
 
-  // 🔥 LẤY THÔNG TIN USER HIỆN TẠI
+  // LẤY THÔNG TIN USER HIỆN TẠI
   useEffect(() => {
     const auth = getAuth();
     const user = auth.currentUser;
@@ -40,7 +40,7 @@ export default function AccountsPage() {
     }
   }, []);
 
-  // 🔥 FETCH FUNCTION
+  // FETCH FUNCTION
   const fetchAccounts = async () => {
     try {
       setError(null);
@@ -101,7 +101,7 @@ export default function AccountsPage() {
     }
   };
 
-  // 🔥 LOAD DATA
+  // LOAD DATA
   useEffect(() => {
     fetchAccounts();
   }, []);
@@ -110,7 +110,7 @@ export default function AccountsPage() {
     setCurrentPage(1);
   }, [search, roleFilter, statusFilter, itemsPerPage]);
 
-  // FILTER - Có thể lọc cả admin nhưng không hiển thị nút thao tác
+  // FILTER
   const filteredAccounts = accounts.filter((a) => {
     const q = search.trim().toLowerCase();
     const matchesSearch =
@@ -162,7 +162,7 @@ export default function AccountsPage() {
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) {
-        alert("Bạn chưa đăng nhập");
+        toast.error("Bạn chưa đăng nhập");
         return;
       }
       const token = await user.getIdToken();
@@ -225,7 +225,7 @@ export default function AccountsPage() {
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) {
-        alert("Bạn chưa đăng nhập");
+        toast.error("Bạn chưa đăng nhập");
         return;
       }
       const token = await user.getIdToken();
@@ -298,7 +298,7 @@ export default function AccountsPage() {
           />
 
           {/* Pagination */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 mt-6">
             <div className="text-white/60 text-sm">
               Hiển thị {paginatedAccounts.length} / {filteredAccounts.length} kết quả
             </div>
