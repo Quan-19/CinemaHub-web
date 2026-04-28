@@ -35,14 +35,14 @@ const normalizeRegionKey = (value = "") =>
     .toLowerCase()
     .replace(/\./g, " ")
     .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9\-]/g, "")
-    .replace(/\-+/g, "-")
-    .replace(/^\-|-$/g, "");
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 
 const normalizeCityText = (value = "") =>
   removeDiacritics(value)
     .toLowerCase()
-    .replace(/[\.,;:()\[\]{}]/g, " ")
+    .replace(/[.,;:()[\]{}]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -107,7 +107,13 @@ const VN_AREA_DEFINITIONS = [
   {
     label: "Thành phố Đà Nẵng",
     id: "da-nang",
-    aliases: ["da nang", "danang", "tp da nang", "thanh pho da nang", "quang nam"],
+    aliases: [
+      "da nang",
+      "danang",
+      "tp da nang",
+      "thanh pho da nang",
+      "quang nam",
+    ],
   },
   {
     label: "Thành phố Cần Thơ",
@@ -129,7 +135,11 @@ const VN_AREA_DEFINITIONS = [
   { label: "Tỉnh Sơn La", id: "son-la", aliases: ["son la"] },
   { label: "Tỉnh Lạng Sơn", id: "lang-son", aliases: ["lang son"] },
   { label: "Tỉnh Quảng Ninh", id: "quang-ninh", aliases: ["quang ninh"] },
-  { label: "Tỉnh Thanh Hoá", id: "thanh-hoa", aliases: ["thanh hoa", "thanh hoá"] },
+  {
+    label: "Tỉnh Thanh Hoá",
+    id: "thanh-hoa",
+    aliases: ["thanh hoa", "thanh hoá"],
+  },
   { label: "Tỉnh Nghệ An", id: "nghe-an", aliases: ["nghe an"] },
   { label: "Tỉnh Hà Tĩnh", id: "ha-tinh", aliases: ["ha tinh"] },
   { label: "Tỉnh Cao Bằng", id: "cao-bang", aliases: ["cao bang"] },
@@ -191,7 +201,14 @@ const VN_AREA_DEFINITIONS = [
   {
     label: "Tỉnh Lâm Đồng",
     id: "lam-dong",
-    aliases: ["lam dong", "dak nong", "đak nong", "dak nông", "binh thuan", "bình thuận"],
+    aliases: [
+      "lam dong",
+      "dak nong",
+      "đak nong",
+      "dak nông",
+      "binh thuan",
+      "bình thuận",
+    ],
   },
   {
     label: "Tỉnh Đắk Lắk",
@@ -255,7 +272,9 @@ const VIETNAM_CITY_ENTRIES = (() => {
     const normalizedCanonical = { ...canonical, id: canonicalId };
 
     // Always include canonical label.
-    baseVariants(normalizedCanonical.label).forEach((v) => addEntry(normalizedCanonical, v));
+    baseVariants(normalizedCanonical.label).forEach((v) =>
+      addEntry(normalizedCanonical, v)
+    );
 
     // Include label without the "tinh"/"thanh pho" prefix, since admin may store short names.
     const shortLabel = normalizeCityText(normalizedCanonical.label)
@@ -269,9 +288,15 @@ const VIETNAM_CITY_ENTRIES = (() => {
       baseVariants(alias).forEach((v) => addEntry(normalizedCanonical, v));
 
       // Also accept common prefixes.
-      baseVariants(`tinh ${alias}`).forEach((v) => addEntry(normalizedCanonical, v));
-      baseVariants(`tp ${alias}`).forEach((v) => addEntry(normalizedCanonical, v));
-      baseVariants(`thanh pho ${alias}`).forEach((v) => addEntry(normalizedCanonical, v));
+      baseVariants(`tinh ${alias}`).forEach((v) =>
+        addEntry(normalizedCanonical, v)
+      );
+      baseVariants(`tp ${alias}`).forEach((v) =>
+        addEntry(normalizedCanonical, v)
+      );
+      baseVariants(`thanh pho ${alias}`).forEach((v) =>
+        addEntry(normalizedCanonical, v)
+      );
     });
   });
 
@@ -287,10 +312,16 @@ const matchVietnamCity = (text = "") => {
 
   for (const entry of VIETNAM_CITY_ENTRIES) {
     if (entry.alias.length >= 3) {
-      const boundaryRegex = new RegExp(`(^|\\s)${entry.alias.replace(/[-/\\^$*+?.()|[\\]{}]/g, "\\$&")}(\\s|$)`);
+      const boundaryRegex = new RegExp(
+        `(^|\\s)${entry.alias.replace(/[-/\\^$*+?.()|[\\]{}]/g, "\\$&")}(\\s|$)`
+      );
       if (boundaryRegex.test(normalized)) return entry;
     }
-    if (entry.flatAlias && entry.flatAlias.length >= 4 && flat.includes(entry.flatAlias)) {
+    if (
+      entry.flatAlias &&
+      entry.flatAlias.length >= 4 &&
+      flat.includes(entry.flatAlias)
+    ) {
       return entry;
     }
   }
@@ -336,7 +367,7 @@ function CinemaPage() {
   const navigate = useNavigate();
   const [cinemas, setCinemas] = useState([]);
   const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedCinemaId, setSelectedCinemaId] = useState("");
 
@@ -357,8 +388,8 @@ function CinemaPage() {
           movieRes.json(),
         ]);
 
-        const cinemaList = unwrapArrayResponse(cinemaPayload)
-          .filter(isActiveCinema);
+        const cinemaList =
+          unwrapArrayResponse(cinemaPayload).filter(isActiveCinema);
 
         setCinemas(cinemaList);
         setMovies(unwrapArrayResponse(moviePayload));
@@ -405,13 +436,13 @@ function CinemaPage() {
   // ✅ GIỮ ID naming từ Code 1
   const selectedCinema =
     displayedCinemas.find(
-      (c) => String(c.cinema_id ?? c.id) === String(selectedCinemaId),
+      (c) => String(c.cinema_id ?? c.id) === String(selectedCinemaId)
     ) || null;
 
   // ✅ GIỮ movie status từ Code 1 (underscore)
   const nowShowingMovies = useMemo(
     () => movies.filter((m) => m.status === "now_showing"),
-    [movies],
+    [movies]
   );
 
   // ✅ THÊM loading indicator
@@ -430,7 +461,10 @@ function CinemaPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--color-cinema-bg)" }}>
+    <div
+      className="min-h-screen"
+      style={{ background: "var(--color-cinema-bg)" }}
+    >
       <div
         className="py-10 border-b border-zinc-700"
         style={{
@@ -593,7 +627,9 @@ function CinemaPage() {
                           <button
                             onClick={() =>
                               navigate(
-                                `/booking/${movie.id || movie.movie_id}?cinemaId=${selectedCinema.cinema_id}`,
+                                `/booking/${
+                                  movie.id || movie.movie_id
+                                }?cinemaId=${selectedCinema.cinema_id}`
                               )
                             }
                             className="w-full py-2 rounded-lg text-xs text-white hover:opacity-90 transition-opacity"
