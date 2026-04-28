@@ -315,7 +315,7 @@ export default function BookingConfirmationPage() {
         if (!user) {
           console.error("User not logged in");
           setFetchError("Vui lòng đăng nhập lại");
-          setTimeout(() => navigate("/login"), 2000);
+          setTimeout(() => navigate("/auth"), 2000);
           return;
         }
 

@@ -17,6 +17,20 @@ const aboutLinks = [
   'FAQ',
 ]
 
+const cinemaLinks = [
+  { label: 'CGV Cinemas', path: '/cinemas?cinemaId=1' },
+  { label: 'Lotte Cinema', path: '/cinemas?cinemaId=2' },
+  { label: 'BHD Star Cineplex', path: '/cinemas?cinemaId=3' },
+  { label: 'Galaxy Cinema', path: '/cinemas?cinemaId=4' },
+]
+
+const supportLinks = [
+  { label: 'Hỗ trợ khách hàng', path: '#' },
+  { label: 'Chính sách hoàn vé', path: '#' },
+  { label: 'Câu hỏi thường gặp', path: '#' },
+  { label: 'Liên hệ quảng cáo', path: '#' },
+]
+
 const genres = [
   'Hành động',
   'Kinh dị',
@@ -32,8 +46,8 @@ function Footer() {
   return (
     <footer className="mt-16 rounded-t-3xl border-t border-zinc-700 bg-zinc-950/80">
       <div className="px-4 py-12 sm:px-6 lg:px-10 2xl:px-14">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="lg:col-span-2">
             <Link to="/" className="mb-4 flex items-center gap-2">
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-cinema-primary to-cinema-primary-dark">
                 <Film className="h-4 w-4 text-white" />
@@ -42,9 +56,9 @@ function Footer() {
                 Cinema<span className="text-cinema-primary">Hub</span>
               </span>
             </Link>
-            <p className="mb-4 text-sm leading-relaxed text-zinc-400">
+            <p className="mb-4 text-sm leading-relaxed text-zinc-400 max-w-sm">
               Hệ thống rạp chiếu phim hiện đại với trải nghiệm điện ảnh đỉnh cao.
-              Đặt vé dễ dàng, nhanh chóng trong vài giây.
+              Đặt vé dễ dàng, nhanh chóng trong vài giây. Hơn 50 rạp trên toàn quốc.
             </p>
             <div className="flex items-center gap-2.5">
               {[Facebook, Youtube, Instagram].map((Icon, i) => (
@@ -61,14 +75,17 @@ function Footer() {
 
           <div>
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-wide text-white">
-              Về chúng tôi
+              Hệ thống rạp
             </h4>
             <ul className="space-y-2">
-              {aboutLinks.map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-sm text-zinc-400 transition-colors hover:text-white">
-                    {item}
-                  </a>
+              {cinemaLinks.map((item) => (
+                <li key={item.label}>
+                  <Link
+                    to={item.path}
+                    className="text-sm text-zinc-400 transition-colors hover:text-white"
+                  >
+                    {item.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -76,17 +93,14 @@ function Footer() {
 
           <div>
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-wide text-white">
-              Thể loại phim
+              Hỗ trợ
             </h4>
             <ul className="space-y-2">
-              {genres.map((item) => (
-                <li key={item}>
-                  <Link
-                    to={`/movies?genre=${encodeURIComponent(item)}`}
-                    className="text-sm text-zinc-400 transition-colors hover:text-white"
-                  >
-                    {item}
-                  </Link>
+              {supportLinks.map((item) => (
+                <li key={item.label}>
+                  <a href={item.path} className="text-sm text-zinc-400 transition-colors hover:text-white">
+                    {item.label}
+                  </a>
                 </li>
               ))}
             </ul>

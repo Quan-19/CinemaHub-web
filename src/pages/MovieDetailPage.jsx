@@ -1007,7 +1007,6 @@ export const MovieDetailPage = () => {
                       </span>
                     ))}
                   </div>
-                  <p className="text-zinc-500 text-[11px] mt-1">Tâm lý</p>
                 </div>
 
                 <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto lg:border-l border-zinc-800/60 lg:pl-6">

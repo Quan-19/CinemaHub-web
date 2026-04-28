@@ -283,11 +283,11 @@ export const TicketPage = () => {
                 <Star size={14} fill="white" color="white" />
               </div>
               <div>
-                <span style={{ color: "#fff", fontWeight: 800, fontSize: 15, letterSpacing: 1 }}>CINE</span>
-                <span style={{ color: "rgba(255,255,255,0.7)", fontWeight: 800, fontSize: 15, letterSpacing: 1 }}>STAR</span>
+                <span style={{ color: "#fff", fontWeight: 800, fontSize: 15, letterSpacing: 1 }}>Ebiz</span>
+                <span style={{ color: "rgba(255,255,255,0.7)", fontWeight: 800, fontSize: 15, letterSpacing: 1 }}>Cinema</span>
               </div>
             </div>
-            <div className="text-right">
+          <div className="text-right">
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.6)" }}>VÉ ĐIỆN TỬ</div>
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>E-TICKET</div>
             </div>

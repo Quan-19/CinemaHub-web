@@ -1,4 +1,4 @@
-# CinemaHub Web
+# EbizCinema Web
 
 Bo khung giao dien duoc khoi tao bang React va Vite, su dung JavaScript.
 
@@ -21,13 +21,13 @@ Bo khung giao dien duoc khoi tao bang React va Vite, su dung JavaScript.
 
 De QR code quet ra mo dung trang ve, va trang ve goi dung backend khi deploy, hay khai bao bien moi truong Vite:
 
-- `VITE_PUBLIC_URL`: base URL cua frontend (vi du: `https://cinemahub-web.web.app`). Neu khong set se dung `window.location.origin`.
-- `VITE_API_URL`: base URL cua backend (vi du: `https://api.cinemahub.com`). Neu khong set se dung `http://localhost:5000`.
+- `VITE_PUBLIC_URL`: base URL cua frontend (vi du: `https://ebizcinema-web.web.app`). Neu khong set se dung `window.location.origin`.
+- `VITE_API_URL`: base URL cua backend (vi du: `https://api.ebizcinema.com`). Neu khong set se dung `http://localhost:5000`.
 
-Tao file `.env` trong thu muc `CinemaHub-web/` (khong commit) vi du:
+Tao file `.env` trong thu muc frontend (khong commit) vi du:
 
 ```
-VITE_PUBLIC_URL=https://cinemahub-web.web.app
-VITE_API_URL=https://cinemahub-api.onrender.com
+VITE_PUBLIC_URL=https://ebizcinema-web.web.app
+VITE_API_URL=https://ebizcinema-api.onrender.com
 ```
 

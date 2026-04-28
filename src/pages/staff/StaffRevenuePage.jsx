@@ -68,7 +68,7 @@ function StaffRevenuePage() {
 
   // Dynamic document title for SEO/standards
   useEffect(() => {
-    document.title = "Báo cáo doanh thu | CinemaHub Staff";
+    document.title = "Báo cáo doanh thu | EbizCinema Staff";
   }, []);
 
   const years = useMemo(() => {
@@ -490,7 +490,7 @@ function StaffRevenuePage() {
             <header className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
               <div>
                 <h3 className="text-lg font-bold text-zinc-100 italic tracking-tight">Cổng xem trước báo cáo PDF</h3>
-                <p className="text-[10px] text-zinc-400 mt-0.5 uppercase font-bold tracking-widest">Dữ liệu nội bộ - CinemaHub Entertainment</p>
+                <p className="text-[10px] text-zinc-400 mt-0.5 uppercase font-bold tracking-widest">Dữ liệu nội bộ - EbizCinema Entertainment</p>
               </div>
               <button 
                 onClick={closePreview}

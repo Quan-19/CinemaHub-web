@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { MapPin, Phone, Clock, ChevronLeft } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -334,6 +334,7 @@ const inferCinemaCity = (cinema) => {
 
 function CinemaPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [cinemas, setCinemas] = useState([]);
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true); 
@@ -362,6 +363,20 @@ function CinemaPage() {
 
         setCinemas(cinemaList);
         setMovies(unwrapArrayResponse(moviePayload));
+
+        // Auto-select cinema from URL query param
+        const urlCinemaId = searchParams.get("cinemaId");
+        if (urlCinemaId && cinemaList.length > 0) {
+          const targetCinema = cinemaList.find(
+            (c) => String(c.cinema_id ?? c.id) === String(urlCinemaId)
+          );
+          if (targetCinema) {
+            const inferred = inferCinemaCity(targetCinema);
+            const regionKey = inferred?.id || "other";
+            setSelectedRegion(regionKey);
+            setSelectedCinemaId(String(urlCinemaId));
+          }
+        }
       } catch (err) {
         console.error("Lỗi tải dữ liệu:", err);
       } finally {
@@ -369,7 +384,7 @@ function CinemaPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [searchParams]);
 
   // Regions are built dynamically from API cinemas.
   const regions = useMemo(() => {

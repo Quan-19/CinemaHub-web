@@ -21,86 +21,86 @@ export default function PaymentResultPage() {
     // Lấy params từ VnPay
     const vnpStatus = params.get("status");
     const vnpCode = params.get("code");
-    const vnpPaymentId = params.get("paymentId");
 
     // Lấy params từ MoMo
     const momoResultCode = params.get("resultCode");
-    const momoOrderId = params.get("orderId");
+    const momoBookingId = params.get("booking_id");
 
-    // ✅ Lấy params từ ZaloPay
-    const zalopayStatus = params.get("status");
-    const zalopayCode = params.get("code");
-    const zalopayPaymentId = params.get("paymentId");
+    const zalopayStatus = params.get("payment_status"); 
+    const zalopayBookingId = params.get("booking_id");
     const zalopayMethod = params.get("method");
+    const zalopayAmount = params.get("amount");
 
     // Lấy params chung
     const paymentStatus = params.get("payment_status");
+    const commonBookingId = params.get("booking_id");
 
     console.log("=== Payment Result Debug ===");
-    console.log("VnPay - status:", vnpStatus, "code:", vnpCode);
-    console.log("MoMo - resultCode:", momoResultCode);
-    console.log(
-      "ZaloPay - status:",
-      zalopayStatus,
-      "code:",
-      zalopayCode,
-      "method:",
-      zalopayMethod,
-    );
-    console.log("payment_status:", paymentStatus);
     console.log("All params:", Object.fromEntries(params.entries()));
+    console.log("ZaloPay - payment_status:", zalopayStatus);
+    console.log("ZaloPay - booking_id:", zalopayBookingId);
+    console.log("ZaloPay - method:", zalopayMethod);
+    console.log("ZaloPay - amount:", zalopayAmount);
 
     let isSuccess = false;
     let statusMessage = "";
+    let bookingId = null;
+    let method = null;
 
-    // ✅ KIỂM TRA ZALOPAY THÀNH CÔNG
-    if (
-      zalopayMethod === "zalopay" &&
-      zalopayStatus === "paid" &&
-      zalopayCode === "1"
-    ) {
+    // ✅ KIỂM TRA ZALOPAY THÀNH CÔNG (priority đầu tiên)
+    if (zalopayStatus === "success" && zalopayBookingId) {
       isSuccess = true;
       statusMessage = "✅ Thanh toán ZaloPay thành công!";
-      console.log("✅ ZaloPay payment success!");
+      method = zalopayMethod || "zalopay";
+      bookingId = zalopayBookingId;
+      console.log(`✅ ZaloPay success! Booking ID: ${bookingId}`);
     }
     // KIỂM TRA VNPAY THÀNH CÔNG
     else if (vnpStatus === "paid" && vnpCode === "00") {
       isSuccess = true;
       statusMessage = "✅ Thanh toán VnPay thành công!";
-      console.log("✅ VnPay payment success!");
+      method = "vnpay";
+      bookingId = commonBookingId;
     }
     // KIỂM TRA MOMO THÀNH CÔNG
     else if (momoResultCode === "0") {
       isSuccess = true;
       statusMessage = "✅ Thanh toán MoMo thành công!";
-      console.log("✅ MoMo payment success!");
+      method = "momo";
+      bookingId = momoBookingId || commonBookingId;
     }
-    // KIỂM TRA CUSTOM STATUS
+    // KIỂM TRA CUSTOM STATUS (fallback)
     else if (paymentStatus === "success") {
       isSuccess = true;
       statusMessage = "✅ Thanh toán thành công!";
-      console.log("✅ Custom payment success!");
+      method = params.get("method") || "unknown";
+      bookingId = commonBookingId;
     }
-    // ❌ THẤT BẠI
+    // ❌ THẤT BẠI - ZaloPay failed
+    else if (zalopayStatus === "failed") {
+      statusMessage = `❌ Thanh toán ZaloPay thất bại. Mã lỗi: ${params.get("code") || "unknown"}`;
+      console.log("❌ ZaloPay payment failed");
+    }
+    // ❌ THẤT BẠI - Các trường hợp khác
     else {
-      // Kiểm tra lỗi ZaloPay
-      if (zalopayMethod === "zalopay" && zalopayCode && zalopayCode !== "1") {
-        statusMessage = `❌ Thanh toán ZaloPay thất bại. Mã lỗi: ${zalopayCode}`;
-      }
-      // Kiểm tra lỗi VnPay
-      else if (vnpCode && vnpCode !== "00") {
+      if (vnpCode && vnpCode !== "00") {
         statusMessage = `❌ Thanh toán VnPay thất bại. Mã lỗi: ${vnpCode}`;
-      }
-      // Kiểm tra lỗi MoMo
-      else if (momoResultCode && momoResultCode !== "0") {
+      } else if (momoResultCode && momoResultCode !== "0") {
         statusMessage = `❌ Thanh toán MoMo thất bại. Mã lỗi: ${momoResultCode}`;
+      } else if (zalopayStatus === "error") {
+        statusMessage = "❌ Thanh toán ZaloPay thất bại. Vui lòng thử lại.";
       } else {
         statusMessage = "❌ Thanh toán thất bại. Vui lòng thử lại.";
       }
       console.log("❌ Payment failed");
     }
 
-    // Cập nhật state
+    // Lưu thông tin để redirect
+    if (bookingId) {
+      redirectInfo.current = { bookingId, method };
+      console.log(`📦 Saved redirect info:`, redirectInfo.current);
+    }
+
     if (isSuccess) {
       setStatus("success");
       setMessage(statusMessage);
@@ -121,12 +121,16 @@ export default function PaymentResultPage() {
         const bookingId = redirectInfo.current?.bookingId;
         const method = redirectInfo.current?.method;
 
+        console.log(`🔄 Redirecting with bookingId: ${bookingId}, method: ${method}`);
+
         if (bookingId) {
+          // ✅ Redirect sang trang confirm vé (giống MoMo)
           navigate(
             `/booking/confirm?payment_status=success&booking_id=${encodeURIComponent(bookingId)}${method ? `&method=${encodeURIComponent(method)}` : ""}`,
             { replace: true },
           );
         } else {
+          console.warn("⚠️ No bookingId found, redirecting to tickets page");
           navigate("/profile/my-tickets", { replace: true });
         }
       } else if (status === "error") {
@@ -151,7 +155,7 @@ export default function PaymentResultPage() {
     };
   }, [status, navigate]);
 
-  // UI Components
+  // UI Components (giữ nguyên)
   const getIcon = () => {
     if (status === "success") {
       return <CheckCircle size={64} className="text-green-500" />;

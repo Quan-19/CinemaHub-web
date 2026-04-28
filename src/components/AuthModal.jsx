@@ -54,7 +54,7 @@ function PasswordInput({ value, onChange, placeholder, id }) {
 }
 
 // ---------- Login Form ----------
-function LoginForm({ onLogin }) {
+function LoginForm({ onLogin, notice }) {
   const { loginWithEmail, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -96,6 +96,11 @@ function LoginForm({ onLogin }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {notice && (
+        <p className="rounded-xl border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-sm text-zinc-300">
+          {notice}
+        </p>
+      )}
       {/* Email */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-zinc-300">
@@ -371,11 +376,17 @@ function getErrorMessage(code) {
 }
 
 // ---------- Auth Modal ----------
-function AuthModal({ onClose }) {
+function AuthModal({ onClose, onLoginSuccess, notice, backLabel }) {
   const navigate = useNavigate();
   const [tab, setTab] = useState("login");
 
   const handleLogin = (user) => {
+    if (typeof onLoginSuccess === "function") {
+      onLoginSuccess(user);
+      onClose();
+      return;
+    }
+
     const role = user?.role?.toLowerCase();
     if (role === "admin") navigate("/admin/dashboard");
     else if (role === "staff") navigate("/staff");
@@ -396,7 +407,7 @@ function AuthModal({ onClose }) {
           onClick={onClose}
           className="absolute left-4 top-4 flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white"
         >
-          ← Trang chủ
+          ← {backLabel || "Trang chủ"}
         </button>
         <button
           onClick={onClose}
@@ -439,7 +450,7 @@ function AuthModal({ onClose }) {
         </div>
 
         {tab === "login" ? (
-          <LoginForm onLogin={handleLogin} />
+          <LoginForm onLogin={handleLogin} notice={notice} />
         ) : (
           <RegisterForm
             onSuccess={() => {
