@@ -1,6 +1,17 @@
+// components/AuthModal.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Film, Lock, Mail, Phone, User, X } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Film,
+  Lock,
+  Mail,
+  Phone,
+  User,
+  X,
+  Shield,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 // ---------- Google Icon ----------
@@ -53,13 +64,135 @@ function PasswordInput({ value, onChange, placeholder, id }) {
   );
 }
 
+// ---------- 2FA Verify Component ----------
+function TwoFactorVerify({ email, onVerify, onBack }) {
+  const [code, setCode] = useState("");
+  const [backupCode, setBackupCode] = useState("");
+  const [useBackup, setUseBackup] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!useBackup && code.length !== 6) {
+      setError("Vui lòng nhập mã 6 số");
+      return;
+    }
+
+    if (useBackup && !backupCode) {
+      setError("Vui lòng nhập mã dự phòng");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onVerify(useBackup ? null : code, useBackup ? backupCode : null);
+    } catch (err) {
+      setError(err.message || "Mã xác thực không đúng");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cinema-primary/10">
+          <Shield className="h-8 w-8 text-cinema-primary" />
+        </div>
+        <h3 className="text-xl font-semibold text-white">Xác thực 2 yếu tố</h3>
+        <p className="mt-2 text-sm text-zinc-400">
+          Vui lòng nhập mã xác thực từ ứng dụng Google Authenticator
+        </p>
+        {email && (
+          <p className="mt-1 text-xs text-zinc-500">Tài khoản: {email}</p>
+        )}
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {!useBackup ? (
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-zinc-300">
+              Mã xác thực (6 số)
+            </label>
+            <input
+              type="text"
+              value={code}
+              onChange={(e) =>
+                setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }
+              placeholder="000000"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 text-center text-2xl font-mono text-white placeholder:text-zinc-500 focus:border-cinema-primary focus:outline-none"
+              maxLength={6}
+              autoFocus
+              disabled={loading}
+            />
+          </div>
+        ) : (
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-zinc-300">
+              Mã dự phòng
+            </label>
+            <input
+              type="text"
+              value={backupCode}
+              onChange={(e) => setBackupCode(e.target.value.toUpperCase())}
+              placeholder="XXXX-XXXX"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 px-4 text-center font-mono text-white placeholder:text-zinc-500 focus:border-cinema-primary focus:outline-none"
+              autoFocus
+              disabled={loading}
+            />
+          </div>
+        )}
+
+        {error && (
+          <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading || (!useBackup && code.length !== 6)}
+          className="cinema-btn-primary w-full justify-center py-3 disabled:opacity-60"
+        >
+          {loading ? "Đang xác thực..." : "Xác thực"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setUseBackup(!useBackup);
+            setCode("");
+            setBackupCode("");
+            setError("");
+          }}
+          className="w-full text-center text-sm text-cinema-primary hover:underline"
+        >
+          {useBackup ? "← Quay lại nhập mã OTP" : "Sử dụng mã dự phòng"}
+        </button>
+
+        <button
+          type="button"
+          onClick={onBack}
+          className="w-full text-center text-sm text-zinc-500 hover:text-zinc-400"
+        >
+          ← Quay lại đăng nhập
+        </button>
+      </form>
+    </div>
+  );
+}
+
 // ---------- Login Form ----------
-function LoginForm({ onLogin }) {
+function LoginForm({ onLogin, on2FARequired }) {
   const { loginWithEmail, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(
-    () => localStorage.getItem("rememberLogin") === "true"
+    () => localStorage.getItem("rememberLogin") === "true",
   );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -72,7 +205,12 @@ function LoginForm({ onLogin }) {
     setLoading(true);
     try {
       const user = await loginWithEmail(email, password, remember);
-      onLogin(user); // 🔥 trả user cho modal xử lý navigate
+      if (user === null) {
+        // Need 2FA
+        on2FARequired(email);
+      } else {
+        onLogin(user);
+      }
     } catch (err) {
       setError(getErrorMessage(err.code));
     } finally {
@@ -85,7 +223,13 @@ function LoginForm({ onLogin }) {
     setLoading(true);
     try {
       const user = await loginWithGoogle(remember);
-      onLogin(user); // 🔥 trả user cho modal xử lý navigate
+      if (user === null) {
+        // Need 2FA
+        const savedEmail = localStorage.getItem("savedEmail");
+        on2FARequired(savedEmail || "");
+      } else {
+        onLogin(user);
+      }
     } catch (err) {
       if (err.code !== "auth/popup-closed-by-user")
         setError(getErrorMessage(err.code));
@@ -96,7 +240,6 @@ function LoginForm({ onLogin }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Email */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-zinc-300">
           Email
@@ -115,7 +258,6 @@ function LoginForm({ onLogin }) {
         </div>
       </div>
 
-      {/* Password */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-zinc-300">
           Mật khẩu
@@ -127,7 +269,6 @@ function LoginForm({ onLogin }) {
         />
       </div>
 
-      {/* Options */}
       <div className="flex items-center justify-between">
         <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-400">
           <input
@@ -160,7 +301,6 @@ function LoginForm({ onLogin }) {
         {loading ? "Đang đăng nhập..." : "Đăng nhập"}
       </button>
 
-      {/* Hoặc Google */}
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-zinc-700" />
         <span className="text-xs text-zinc-400">hoặc</span>
@@ -220,8 +360,8 @@ function RegisterForm({ onSuccess }) {
 
     setLoading(true);
     try {
-      await registerWithEmail(email, password, name);
-      onSuccess(); // 🔥 gọi sau khi đăng ký thành công
+      await registerWithEmail(email, password, name, phone);
+      onSuccess();
       navigate("/");
     } catch (err) {
       setError(getErrorMessage(err.code));
@@ -232,7 +372,6 @@ function RegisterForm({ onSuccess }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Họ và tên */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-zinc-300">
           Họ và Tên
@@ -251,7 +390,6 @@ function RegisterForm({ onSuccess }) {
         </div>
       </div>
 
-      {/* Email */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-zinc-300">
           Email
@@ -270,7 +408,6 @@ function RegisterForm({ onSuccess }) {
         </div>
       </div>
 
-      {/* Số điện thoại */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-zinc-300">
           Số điện thoại
@@ -294,7 +431,6 @@ function RegisterForm({ onSuccess }) {
         )}
       </div>
 
-      {/* Password / Confirm */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-zinc-300">
@@ -318,7 +454,6 @@ function RegisterForm({ onSuccess }) {
         </div>
       </div>
 
-      {/* Agree */}
       <label className="flex cursor-pointer items-start gap-2 text-sm text-zinc-400">
         <input
           type="checkbox"
@@ -373,15 +508,77 @@ function getErrorMessage(code) {
 // ---------- Auth Modal ----------
 function AuthModal({ onClose }) {
   const navigate = useNavigate();
+  const { verify2FALogin } = useAuth();
   const [tab, setTab] = useState("login");
+  const [show2FA, setShow2FA] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
 
   const handleLogin = (user) => {
     const role = user?.role?.toLowerCase();
     if (role === "admin") navigate("/admin/dashboard");
     else if (role === "staff") navigate("/staff");
     else navigate("/");
-    onClose(); // 🔥 đóng modal sau khi navigate
+    onClose();
   };
+
+  const handle2FARequired = (email) => {
+    setPendingEmail(email);
+    setShow2FA(true);
+  };
+
+  const handleVerify2FA = async (token, backupCode) => {
+    const user = await verify2FALogin(pendingEmail, token, backupCode);
+    if (user) {
+      const role = user?.role?.toLowerCase();
+      if (role === "admin") navigate("/admin/dashboard");
+      else if (role === "staff") navigate("/staff");
+      else navigate("/");
+      onClose();
+    }
+  };
+
+  if (show2FA) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{
+          backgroundColor: "rgba(0,0,0,0.75)",
+          backdropFilter: "blur(4px)",
+        }}
+      >
+        <div className="relative w-full max-w-md rounded-2xl border border-zinc-700 bg-cinema-surface p-8 shadow-2xl">
+          <button
+            onClick={onClose}
+            className="absolute left-4 top-4 flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white"
+          >
+            ← Trang chủ
+          </button>
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 rounded-lg p-1.5 text-zinc-400 hover:bg-white/10 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          <div className="mb-6 flex flex-col items-center gap-2 pt-4">
+            <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-cinema-primary to-cinema-primary-dark shadow-lg">
+              <Film className="h-6 w-6 text-white" />
+            </span>
+            <h1 className="text-2xl font-bold text-white">EbizCinema</h1>
+          </div>
+
+          <TwoFactorVerify
+            email={pendingEmail}
+            onVerify={handleVerify2FA}
+            onBack={() => {
+              setShow2FA(false);
+              setPendingEmail("");
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -401,7 +598,6 @@ function AuthModal({ onClose }) {
         <button
           onClick={onClose}
           className="absolute right-4 top-4 rounded-lg p-1.5 text-zinc-400 hover:bg-white/10 hover:text-white"
-          aria-label="Đóng"
         >
           <X className="h-4 w-4" />
         </button>
@@ -414,7 +610,6 @@ function AuthModal({ onClose }) {
           <p className="text-sm text-zinc-400">Đặt vé xem phim dễ dàng</p>
         </div>
 
-        {/* Tab switcher */}
         <div className="mb-6 flex rounded-xl border border-zinc-700 bg-zinc-800/50 p-1">
           <button
             onClick={() => setTab("login")}
@@ -439,7 +634,7 @@ function AuthModal({ onClose }) {
         </div>
 
         {tab === "login" ? (
-          <LoginForm onLogin={handleLogin} />
+          <LoginForm onLogin={handleLogin} on2FARequired={handle2FARequired} />
         ) : (
           <RegisterForm
             onSuccess={() => {

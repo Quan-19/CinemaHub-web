@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-
+import { useLocation } from "react-router-dom";
 // Layouts
 import MainLayout from "../layouts/MainLayout.jsx";
 import AdminLayout from "../layouts/AdminLayout.jsx";
@@ -34,7 +34,7 @@ import Cinemas from "../pages/admin/Cinemas.jsx";
 import AccountsPage from "../pages/admin/AccountsPage.jsx";
 import AdminPromotionsPage from "../pages/admin/AdminPromotionsPage";
 import Foods from "../pages/admin/Foods.jsx";
-
+import TwoFAPage from "../pages/TwoFAPage.jsx";
 // Staff pages
 import StaffDashboardPage from "../pages/staff/StaffDashboardPage.jsx";
 import StaffMoviesPage from "../pages/staff/StaffMoviesPage.jsx";
@@ -50,40 +50,48 @@ import StaffScannerPage from "../pages/staff/StaffScannerPage.jsx";
 // ✅ AuthContext hook
 import { useAuth } from "../context/AuthContext.jsx";
 
-// ❌ Không gọi hook trực tiếp khi export router
-// ✅ Sửa ProtectedRoute thành function component
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
+
+  const twoFactorVerified = 
+    localStorage.getItem('twoFactorVerified') === 'true' || 
+    sessionStorage.getItem('twoFactorVerified') === 'true';
+
+  console.log("🔵 ProtectedRoute - path:", location.pathname, "2FA:", twoFactorVerified, "user:", user?.email);
 
   if (loading) {
-    return (
-      <div className="p-8 text-center text-zinc-400">
-        Đang kiểm tra quyền...
-      </div>
-    );
+    return <div className="p-8 text-center text-zinc-400">Đang kiểm tra quyền...</div>;
+  }
+
+  // 🔥 TUYỆT ĐỐI KHÔNG REDIRECT NẾU ĐANG Ở TRANG 2FA HOẶC AUTH
+  if (location.pathname === "/2fa" || location.pathname === "/auth") {
+    console.log("🔵 On 2FA or Auth page, skip redirect");
+    return children;
+  }
+
+  // Kiểm tra 2FA cho admin/staff
+  const needs2FA = user && (user.role === 'admin' || user.role === 'staff') && !twoFactorVerified;
+  
+  if (needs2FA) {
+    console.log("🔵 2FA required, redirecting to /2fa");
+    // Lưu email để dùng ở trang 2FA
+    localStorage.setItem("pending2FAEmail", user.email);
+    return <Navigate to={`/2fa?email=${encodeURIComponent(user.email)}`} replace />;
   }
 
   if (!user) {
-    // chưa login → redirect auth
     return <Navigate to="/auth" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // role không đủ → thông báo hoặc redirect về /
-    return (
-      <div className="p-8 text-center text-red-400">
-        Bạn không có quyền truy cập trang này.
-      </div>
-      // Hoặc redirect về home:
-      // return <Navigate to="/" replace />
-    );
+    return <div className="p-8 text-center text-red-400">Bạn không có quyền truy cập trang này.</div>;
   }
 
   return children;
 }
 
-// ❌ Không gọi useAuth() trực tiếp ở đây
-// ✅ Router export bình thường, chỉ bọc element bằng ProtectedRoute
+// Router export - GIỮ NGUYÊN PHẦN CÒN LẠI
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -104,10 +112,10 @@ export const router = createBrowserRouter([
       { path: "cinemas", element: <CinemaPage /> },
       { path: "promotions", element: <PromotionsPage /> },
       { path: "auth", element: <AuthPage /> },
+      { path: "2fa", element: <TwoFAPage /> },
       { path: "profile", element: <ProfilePage /> },
       { path: "notifications", element: <NotificationPage /> },
       { path: "*", element: <NotFoundPage /> },
-
     ],
   },
   {
