@@ -1,3 +1,4 @@
+// contexts/AuthContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
 import {
   signInWithEmailAndPassword,
@@ -14,6 +15,9 @@ import {
 } from "firebase/auth";
 import { auth, db, googleProvider } from "../../firebase/firebaseConfig";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import axios from "axios";
+
+const API_URL = "http://localhost:5000/api";
 
 const RANDOM_AVATARS = [
   "https://api.dicebear.com/9.x/adventurer/svg?seed=cinema1",
@@ -29,7 +33,6 @@ const RANDOM_AVATARS = [
 const AuthContext = createContext(null);
 
 const TOKEN_STORAGE_KEY = "token";
-const ROLE_STORAGE_KEY = "role";
 const REMEMBER_LOGIN_KEY = "rememberLogin";
 const USER_META_STORAGE_KEY = "authUserMeta";
 
@@ -52,13 +55,10 @@ function storeAuthState({ token, role, remember }) {
   }
 
   if (role) {
-    targetStorage.setItem(ROLE_STORAGE_KEY, role);
-  } else {
-    targetStorage.removeItem(ROLE_STORAGE_KEY);
+    targetStorage.setItem("role", role);
   }
 
   secondaryStorage.removeItem(TOKEN_STORAGE_KEY);
-  secondaryStorage.removeItem(ROLE_STORAGE_KEY);
 }
 
 function getStoredUserMeta() {
@@ -88,30 +88,13 @@ function persistUserMeta(meta, remember) {
   secondaryStorage.removeItem(USER_META_STORAGE_KEY);
 }
 
-function buildUserWithMeta(firebaseUser, meta = {}) {
-  return {
-    ...firebaseUser,
-    user_id: meta.user_id,
-    role: meta.role,
-    cinema_id: meta.cinema_id,
-    cinema_name: meta.cinema_name,
-  };
-}
-
 function clearStoredAuthState() {
   localStorage.removeItem(TOKEN_STORAGE_KEY);
-  localStorage.removeItem(ROLE_STORAGE_KEY);
   sessionStorage.removeItem(TOKEN_STORAGE_KEY);
-  sessionStorage.removeItem(ROLE_STORAGE_KEY);
   localStorage.removeItem(USER_META_STORAGE_KEY);
   sessionStorage.removeItem(USER_META_STORAGE_KEY);
   localStorage.removeItem(REMEMBER_LOGIN_KEY);
-}
-
-function createAuthError(code, message) {
-  const error = new Error(message);
-  error.code = code;
-  return error;
+  localStorage.removeItem("role");
 }
 
 async function upsertUserDocument(user, extra = {}) {
@@ -142,13 +125,15 @@ async function upsertUserDocument(user, extra = {}) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [require2FA, setRequire2FA] = useState(false);
+  const [pending2FAUser, setPending2FAUser] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
           const token = await firebaseUser.getIdToken();
-          const res = await fetch("http://localhost:5000/api/users/me", {
+          const res = await fetch(`${API_URL}/users/me`, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
@@ -160,8 +145,32 @@ export function AuthProvider({ children }) {
               role: data.role,
               cinema_id: data.cinema_id,
               cinema_name: data.cinema_name,
+              two_factor_enabled: data.two_factor_enabled,
             };
-            setUser(buildUserWithMeta(firebaseUser, meta));
+
+            // Nếu là admin/staff và chưa bật 2FA, yêu cầu setup
+            if (
+              (data.role === "admin" || data.role === "staff") &&
+              !data.two_factor_enabled
+            ) {
+              setRequire2FA(true);
+              setPending2FAUser({ email: data.email });
+              setUser(null);
+              setLoading(false);
+              return;
+            }
+
+            setUser({
+              uid: firebaseUser.uid,
+              user_id: data.user_id,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              photoURL: firebaseUser.photoURL,
+              role: data.role,
+              cinema_id: data.cinema_id,
+              cinema_name: data.cinema_name,
+              two_factor_enabled: data.two_factor_enabled,
+            });
 
             storeAuthState({
               token,
@@ -170,15 +179,22 @@ export function AuthProvider({ children }) {
             });
             persistUserMeta(meta, remember);
           } else if (res.status === 401 || res.status === 403) {
-            // Token thực sự không hợp lệ -> đăng xuất
             await signOut(auth);
             clearStoredAuthState();
             setUser(null);
           } else {
-            // Backend tạm lỗi: giữ phiên Firebase và fallback dữ liệu đã cache
             const meta = getStoredUserMeta();
             if (meta?.role) {
-              setUser(buildUserWithMeta(firebaseUser, meta));
+              setUser({
+                uid: firebaseUser.uid,
+                user_id: meta.user_id,
+                email: firebaseUser.email,
+                displayName: firebaseUser.displayName,
+                photoURL: firebaseUser.photoURL,
+                role: meta.role,
+                cinema_id: meta.cinema_id,
+                cinema_name: meta.cinema_name,
+              });
             } else {
               setUser(firebaseUser);
             }
@@ -187,7 +203,16 @@ export function AuthProvider({ children }) {
           console.error("Failed to fetch user role:", err);
           const meta = getStoredUserMeta();
           if (meta?.role) {
-            setUser(buildUserWithMeta(firebaseUser, meta));
+            setUser({
+              uid: firebaseUser.uid,
+              user_id: meta.user_id,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              photoURL: firebaseUser.photoURL,
+              role: meta.role,
+              cinema_id: meta.cinema_id,
+              cinema_name: meta.cinema_name,
+            });
           } else {
             setUser(firebaseUser);
           }
@@ -201,92 +226,60 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  // ================= LOGIN =================
-  // const loginWithEmail = async (email, password, remember) => {
-  //   try {
-  //     const persistence = remember
-  //       ? browserLocalPersistence
-  //       : browserSessionPersistence;
+  const verify2FALogin = async (email, token, backupCode = null) => {
+  try {
+    console.log("🔵 Sending verify request for:", email);
+    
+    const response = await axios.post(`${API_URL}/2fa/verify-login`, {
+      email,
+      token,
+      backupCode,
+    });
 
-  //     await setPersistence(auth, persistence);
+    console.log("🔵 Response:", response.data);
 
-  //     const credential = await signInWithEmailAndPassword(
-  //       auth,
-  //       email,
-  //       password,
-  //     );
+    if (response.data.success) {
+      const firebaseToken = response.data.token;
+      const userData = response.data.user;
+      
+      // 🔥 LƯU TOKEN VÀO CẢ HAI NƠI
+      localStorage.setItem('token', firebaseToken);
+      sessionStorage.setItem('token', firebaseToken);
+      
+      // 🔥 LƯU TRẠNG THÁI ĐÃ VERIFY 2FA - DÙNG localStorage LÀ CHÍNH
+      localStorage.setItem('twoFactorVerified', 'true');
+      localStorage.setItem('twoFactorVerifiedTime', Date.now().toString());
+      sessionStorage.setItem('twoFactorVerified', 'true');
+      
+      console.log("✅ 2FA Verified successfully!");
+      console.log("twoFactorVerified (localStorage):", localStorage.getItem('twoFactorVerified'));
+      console.log("twoFactorVerified (sessionStorage):", sessionStorage.getItem('twoFactorVerified'));
+      
+      // 🔥 QUAN TRỌNG: Cập nhật user state với đầy đủ thông tin
+      setUser({
+        uid: userData.uid || email,
+        user_id: userData.user_id,
+        email: userData.email,
+        displayName: userData.name || userData.displayName,
+        photoURL: userData.photoURL || null,
+        role: userData.role,
+        cinema_id: userData.cinema_id,
+        cinema_name: userData.cinema_name,
+        two_factor_enabled: true,
+      });
 
-  //     await reload(credential.user);
+      setRequire2FA(false);
+      setPending2FAUser(null);
 
-  //     const token = await credential.user.getIdToken();
-
-  //     // 🔥 LẤY ROLE TỪ BACKEND
-  //     const res = await fetch("http://localhost:5000/api/users/me", {
-  //       method: "GET",
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     });
-
-  //     if (!res.ok) {
-  //       throw new Error("Không lấy được thông tin user từ backend");
-  //     }
-
-  //     let data = {};
-
-  //     try {
-  //       const text = await res.text();
-  //       console.log("RAW RESPONSE:", text);
-
-  //       data = text ? JSON.parse(text) : {};
-  //     } catch (e) {
-  //       console.error("❌ JSON parse error:", e);
-  //     }
-
-  //     console.log("USER DATA:", data);
-
-  //     const role = data?.role;
-
-  //     if (!role) {
-  //       throw new Error("Không lấy được role từ backend");
-  //     }
-
-  //     // lưu role
-  //     localStorage.setItem("role", role);
-
-  //     // 🔥 ADMIN BYPASS VERIFY
-  //     if (!credential.user.emailVerified && role !== "admin") {
-  //       await signOut(auth);
-  //       throw createAuthError(
-  //         "auth/email-not-verified",
-  //         "Email chưa được xác minh.",
-  //       );
-  //     }
-
-  //     // 🔥 SYNC MYSQL
-  //     await fetch("http://localhost:5000/api/auth/sync-user", {
-  //       method: "POST",
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({
-  //         name: credential.user.displayName,
-  //         avatar: credential.user.photoURL,
-  //       }),
-  //     });
-
-  //     await upsertUserDocument(credential.user);
-
-  //     return {
-  //       ...credential,
-  //       role,
-  //     };
-  //   } catch (err) {
-  //     console.error("LOGIN ERROR:", err);
-  //     throw err;
-  //   }
-  // };
+      return userData;
+    }
+    throw new Error("Xác thực thất bại");
+  } catch (error) {
+    console.error("2FA verification error:", error);
+    throw new Error(error.response?.data?.message || "Mã xác thực không đúng");
+  }
+};
+  // Login with Email
   const loginWithEmail = async (email, password, remember) => {
     try {
       const rememberLogin = Boolean(remember);
@@ -298,12 +291,12 @@ export function AuthProvider({ children }) {
       const credential = await signInWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const token = await credential.user.getIdToken();
 
       // Sync user với backend
-      await fetch("http://localhost:5000/api/auth/sync-user", {
+      await fetch(`${API_URL}/auth/sync-user`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -312,7 +305,7 @@ export function AuthProvider({ children }) {
       });
 
       // Lấy thông tin user từ backend (có role)
-      const res = await fetch("http://localhost:5000/api/users/me", {
+      const res = await fetch(`${API_URL}/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -321,28 +314,43 @@ export function AuthProvider({ children }) {
       }
 
       const data = await res.json();
-      const role = data?.role;
+      const role = data?.role; // 🔥 KHAI BÁO role TRƯỚC KHI DÙNG
+      const twoFactorEnabled = data?.two_factor_enabled;
 
       if (!role) {
         throw new Error("Không lấy được role từ backend");
       }
 
+      // Kiểm tra 2FA cho admin/staff
+      if ((role === "admin" || role === "staff") && twoFactorEnabled) {
+        // Cần 2FA, chưa set user ngay
+        console.log("🔵 2FA REQUIRED for:", email);
+        setRequire2FA(true);
+        setPending2FAUser({ email, password, remember: rememberLogin });
+        storeAuthState({ token, role, remember: rememberLogin });
+        window.location.href = `/auth?require2fa=true&email=${encodeURIComponent(email)}`;
+
+        return null;
+      }
+
+      // Login bình thường
       storeAuthState({
         token,
         role,
         remember: rememberLogin,
       });
+
       persistUserMeta(
         {
           user_id: data.user_id,
           role,
           cinema_id: data.cinema_id,
           cinema_name: data.cinema_name,
+          two_factor_enabled: twoFactorEnabled,
         },
-        rememberLogin
+        rememberLogin,
       );
 
-      // 🔥 Tạo user object có role và set vào context
       const userData = {
         uid: credential.user.uid,
         user_id: data.user_id,
@@ -352,27 +360,29 @@ export function AuthProvider({ children }) {
         role: role,
         cinema_id: data.cinema_id,
         cinema_name: data.cinema_name,
+        two_factor_enabled: twoFactorEnabled,
       };
-      setUser(userData);
 
+      setUser(userData);
       return userData;
     } catch (err) {
       console.error("LOGIN ERROR:", err);
       throw err;
     }
   };
-  // ================= REGISTER =================
+
+  // Register
   const registerWithEmail = async (
     email,
     password,
     displayName,
-    phone,
-    dob
+    phone = "",
+    dob = "",
   ) => {
     const credential = await createUserWithEmailAndPassword(
       auth,
       email,
-      password
+      password,
     );
 
     const randomAvatar =
@@ -387,8 +397,7 @@ export function AuthProvider({ children }) {
 
     const token = await credential.user.getIdToken();
 
-    // 🔥 LUÔN LÀ USER (KHÔNG SET ADMIN Ở FRONTEND)
-    await fetch("http://localhost:5000/api/auth/sync-user", {
+    await fetch(`${API_URL}/auth/sync-user`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -399,7 +408,6 @@ export function AuthProvider({ children }) {
         phone: phone,
         avatar: randomAvatar,
         dob: dob,
-        role: "user",
       }),
     });
 
@@ -408,99 +416,89 @@ export function AuthProvider({ children }) {
     return credential;
   };
 
-  // ================= RESEND VERIFY =================
-  const resendEmailVerification = async (email, password, remember = false) => {
-    if (!email || !password) {
-      throw createAuthError(
-        "auth/missing-email-for-verification",
-        "Vui lòng nhập email và mật khẩu."
-      );
-    }
-
-    const persistence = remember
-      ? browserLocalPersistence
-      : browserSessionPersistence;
-
-    await setPersistence(auth, persistence);
-
-    const credential = await signInWithEmailAndPassword(auth, email, password);
-
-    await reload(credential.user);
-
-    if (credential.user.emailVerified) {
-      await upsertUserDocument(credential.user, {
-        emailVerified: true,
-      });
-      return { alreadyVerified: true };
-    }
-
-    await sendEmailVerification(credential.user);
-    await signOut(auth);
-
-    return { verificationSent: true };
-  };
-
-  // ================= GOOGLE LOGIN =================
+  // Login with Google
+  // Login with Google
   const loginWithGoogle = async (remember = true) => {
-    const rememberLogin = Boolean(remember);
-    const persistence = rememberLogin
-      ? browserLocalPersistence
-      : browserSessionPersistence;
-    await setPersistence(auth, persistence);
+    try {
+      const rememberLogin = Boolean(remember);
+      const persistence = rememberLogin
+        ? browserLocalPersistence
+        : browserSessionPersistence;
+      await setPersistence(auth, persistence);
 
-    const credential = await signInWithPopup(auth, googleProvider);
-    const token = await credential.user.getIdToken();
+      const credential = await signInWithPopup(auth, googleProvider);
+      const token = await credential.user.getIdToken();
 
-    await fetch("http://localhost:5000/api/auth/sync-user", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+      await fetch(`${API_URL}/auth/sync-user`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-    const res = await fetch("http://localhost:5000/api/users/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+      const res = await fetch(`${API_URL}/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    if (!res.ok) {
-      throw new Error("Không lấy được thông tin user từ backend");
-    }
+      if (!res.ok) {
+        throw new Error("Không lấy được thông tin user từ backend");
+      }
 
-    const data = await res.json();
-    const role = data?.role;
+      const data = await res.json();
+      const role = data?.role; // 🔥 KHAI BÁO TRƯỚC KHI DÙNG
+      const twoFactorEnabled = data?.two_factor_enabled;
 
-    if (!role) {
-      throw new Error("Không lấy được role từ backend");
-    }
+      if (!role) {
+        throw new Error("Không lấy được role từ backend");
+      }
 
-    storeAuthState({
-      token,
-      role,
-      remember: rememberLogin,
-    });
-    persistUserMeta(
-      {
-        user_id: data.user_id,
+      // Kiểm tra 2FA cho admin/staff
+      if ((role === "admin" || role === "staff") && twoFactorEnabled) {
+        console.log("🔵 2FA REQUIRED for Google login:", data.email);
+        setRequire2FA(true);
+        setPending2FAUser({ email: data.email, remember: rememberLogin });
+        storeAuthState({ token, role, remember: rememberLogin });
+        window.location.href = `/auth?require2fa=true&email=${encodeURIComponent(email)}`;
+
+        return null;
+      }
+
+      storeAuthState({
+        token,
         role,
+        remember: rememberLogin,
+      });
+
+      persistUserMeta(
+        {
+          user_id: data.user_id,
+          role,
+          cinema_id: data.cinema_id,
+          cinema_name: data.cinema_name,
+          two_factor_enabled: twoFactorEnabled,
+        },
+        rememberLogin,
+      );
+
+      const userData = {
+        uid: credential.user.uid,
+        user_id: data.user_id,
+        email: credential.user.email,
+        displayName: credential.user.displayName,
+        photoURL: credential.user.photoURL,
+        role: role,
         cinema_id: data.cinema_id,
         cinema_name: data.cinema_name,
-      },
-      rememberLogin
-    );
+        two_factor_enabled: twoFactorEnabled,
+      };
 
-    const userData = {
-      uid: credential.user.uid,
-      user_id: data.user_id,
-      email: credential.user.email,
-      displayName: credential.user.displayName,
-      photoURL: credential.user.photoURL,
-      role: role,
-      cinema_id: data.cinema_id,
-      cinema_name: data.cinema_name,
-    };
-    setUser(userData);
-    return userData;
+      setUser(userData);
+      return userData;
+    } catch (err) {
+      console.error("Google login error:", err);
+      throw err;
+    }
   };
 
   const logout = async () => {
@@ -509,6 +507,8 @@ export function AuthProvider({ children }) {
     } finally {
       clearStoredAuthState();
       setUser(null);
+      setRequire2FA(false);
+      setPending2FAUser(null);
     }
   };
 
@@ -517,11 +517,13 @@ export function AuthProvider({ children }) {
       value={{
         user,
         loading,
+        require2FA,
+        pending2FAUser,
         loginWithEmail,
         registerWithEmail,
-        resendEmailVerification,
         loginWithGoogle,
         logout,
+        verify2FALogin,
       }}
     >
       {!loading && children}
@@ -529,5 +531,4 @@ export function AuthProvider({ children }) {
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

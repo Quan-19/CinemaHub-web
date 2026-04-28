@@ -8,16 +8,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import {
-  DollarSign,
-  Ticket,
-  Users,
-  Film,
-  Clapperboard,
-} from "lucide-react";
+import { DollarSign, Ticket, Users, Film, Clapperboard } from "lucide-react";
 
 import { useMemo, useState, useEffect } from "react";
-
+import axios from "axios";
 /* ===================== STAT CARD ===================== */
 
 const formatCurrency = (value) =>
@@ -79,7 +73,7 @@ const RevenueTooltip = ({ active, payload, label }) => {
       ? `Ngày ${labelString.slice(1)}`
       : labelString.startsWith("Q")
         ? `Quý ${labelString.slice(1)} (${getQuarterMonthRange(labelString.slice(1))})`
-      : labelString;
+        : labelString;
   return (
     <div className="rounded-xl border border-white/10 bg-zinc-950/90 px-3 py-2 text-sm backdrop-blur">
       <div className="text-xs font-semibold text-zinc-100">{labelText}</div>
@@ -96,11 +90,15 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState(() =>
+    new Date().getFullYear(),
+  );
   const [revenueView, setRevenueView] = useState("month");
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth() + 1);
+  const [selectedMonth, setSelectedMonth] = useState(
+    () => new Date().getMonth() + 1,
+  );
   const [selectedQuarter, setSelectedQuarter] = useState(
-    () => Math.floor(new Date().getMonth() / 3) + 1
+    () => Math.floor(new Date().getMonth() / 3) + 1,
   );
 
   const todayLabel = new Date().toLocaleDateString("vi-VN");
@@ -128,7 +126,7 @@ export default function Dashboard() {
 
   const revenueData = useMemo(() => {
     const monthToRevenue = new Map(
-      revenueByMonthRaw.map((r) => [Number(r.month), Number(r.revenue || 0)])
+      revenueByMonthRaw.map((r) => [Number(r.month), Number(r.revenue || 0)]),
     );
 
     return Array.from({ length: 12 }, (_, i) => {
@@ -142,7 +140,7 @@ export default function Dashboard() {
 
   const revenueByDayData = useMemo(() => {
     const dayToRevenue = new Map(
-      revenueByDayRaw.map((r) => [Number(r.day), Number(r.revenue || 0)])
+      revenueByDayRaw.map((r) => [Number(r.day), Number(r.revenue || 0)]),
     );
     const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
 
@@ -159,11 +157,11 @@ export default function Dashboard() {
     const quarterNumber = Number(selectedQuarter);
     const startMonth = (quarterNumber - 1) * 3 + 1;
     const months = [startMonth, startMonth + 1, startMonth + 2].filter(
-      (m) => m >= 1 && m <= 12
+      (m) => m >= 1 && m <= 12,
     );
 
     const monthToRevenue = new Map(
-      revenueByMonthRaw.map((r) => [Number(r.month), Number(r.revenue || 0)])
+      revenueByMonthRaw.map((r) => [Number(r.month), Number(r.revenue || 0)]),
     );
 
     return months.map((m) => ({
@@ -184,7 +182,7 @@ export default function Dashboard() {
       revenueByQuarterRaw.map((r) => [
         Number(r.quarter),
         Number(r.revenue || 0),
-      ])
+      ]),
     );
     return [1, 2, 3, 4].map((q) => ({
       quarter: q,
@@ -211,51 +209,82 @@ export default function Dashboard() {
       : [];
 
     return Array.from(new Set([selectedYear, ...fallback, ...apiYears])).sort(
-      (a, b) => b - a
+      (a, b) => b - a,
     );
   }, [data, selectedYear]);
 
-  const latestRevenuePoint =
-    revenueByMonthRaw.length ? revenueByMonthRaw[revenueByMonthRaw.length - 1] : null;
+  const latestRevenuePoint = revenueByMonthRaw.length
+    ? revenueByMonthRaw[revenueByMonthRaw.length - 1]
+    : null;
 
   const latestMonthLabel = latestRevenuePoint?.month
     ? `Tháng ${latestRevenuePoint.month}`
     : null;
-
+  // Thêm vào đầu Dashboard component
+  useEffect(() => {
+    console.log("========== STORAGE CHECK ==========");
+    console.log("localStorage token:", localStorage.getItem("token"));
+    console.log("sessionStorage token:", sessionStorage.getItem("token"));
+    console.log(
+      "localStorage twoFactorVerified:",
+      localStorage.getItem("twoFactorVerified"),
+    );
+    console.log(
+      "sessionStorage twoFactorVerified:",
+      sessionStorage.getItem("twoFactorVerified"),
+    );
+    console.log(
+      "typeof twoFactorVerified:",
+      typeof localStorage.getItem("twoFactorVerified"),
+    );
+  }, []);
   // 🔥 CALL API
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
         setLoading(true);
         setError("");
+
         const token =
-          sessionStorage.getItem("token") || localStorage.getItem("token");
+          localStorage.getItem("token") || sessionStorage.getItem("token");
+        const twoFactorVerified =
+          localStorage.getItem("twoFactorVerified") ||
+          sessionStorage.getItem("twoFactorVerified");
 
-        const params = new URLSearchParams({
-          year: String(selectedYear),
-          month: String(selectedMonth),
-        });
-        const res = await fetch(`http://localhost:5000/api/dashboard?${params}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        // 🔥 LOG ĐỂ KIỂM TRA
+        console.log("========== DASHBOARD FETCH ==========");
+        console.log("token:", token);
+        console.log("twoFactorVerified:", twoFactorVerified);
+        console.log("twoFactorVerified type:", typeof twoFactorVerified);
+        console.log(
+          'twoFactorVerified === "true":',
+          twoFactorVerified === "true",
+        );
+
+        const params = {
+          year: selectedYear,
+          month: selectedMonth,
+        };
+
+        const response = await axios.get(
+          "http://localhost:5000/api/dashboard",
+          {
+            params: params,
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "x-2fa-verified": twoFactorVerified === "true" ? "true" : "false",
+            },
           },
-        });
+        );
 
-        const result = await res.json().catch(() => null);
-        if (!res.ok) {
-          throw new Error(
-            result?.message || result?.error || `Lỗi từ hệ thống: ${res.status}`
-          );
-        }
-        setData(result);
+        setData(response.data);
       } catch (err) {
-        console.error(err);
-        setError(err?.message || "Không tải được dashboard");
+        console.error("Dashboard error:", err);
+        setError(err?.response?.data?.message || "Không tải được dashboard");
       } finally {
         setLoading(false);
       }
     };
-
     fetchDashboard();
   }, [selectedMonth, selectedYear]);
 
@@ -275,13 +304,17 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold sm:text-3xl">Dashboard</h1>
-        <p className="text-sm text-zinc-400">Cập nhật theo ngày: {todayLabel}</p>
+        <p className="text-sm text-zinc-400">
+          Cập nhật theo ngày: {todayLabel}
+        </p>
       </div>
 
       <section>
         <div className="flex items-end justify-between gap-4">
           <h2 className="text-base font-semibold">Hôm nay</h2>
-          <span className="text-xs text-zinc-400">Chỉ số phát sinh trong ngày</span>
+          <span className="text-xs text-zinc-400">
+            Chỉ số phát sinh trong ngày
+          </span>
         </div>
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
@@ -311,7 +344,9 @@ export default function Dashboard() {
       <section>
         <div className="flex items-end justify-between gap-4">
           <h2 className="text-base font-semibold">Tổng quan</h2>
-          <span className="text-xs text-zinc-400">Tích lũy (không giới hạn thời gian)</span>
+          <span className="text-xs text-zinc-400">
+            Tích lũy (không giới hạn thời gian)
+          </span>
         </div>
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
@@ -462,13 +497,19 @@ export default function Dashboard() {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="text-sm text-zinc-400">Chưa có dữ liệu doanh thu.</div>
+              <div className="text-sm text-zinc-400">
+                Chưa có dữ liệu doanh thu.
+              </div>
             )}
           </div>
 
           {revenueView === "month" && latestMonthLabel ? (
             <div className="mt-3 text-sm text-zinc-400">
-              Tháng gần nhất: <span className="font-semibold text-zinc-100">{latestMonthLabel}</span> —{" "}
+              Tháng gần nhất:{" "}
+              <span className="font-semibold text-zinc-100">
+                {latestMonthLabel}
+              </span>{" "}
+              —{" "}
               <span className="font-semibold text-zinc-100">
                 {formatCurrency(latestRevenuePoint?.revenue)}
               </span>
@@ -521,11 +562,15 @@ export default function Dashboard() {
 
           <div className="cinema-surface p-4 sm:p-5">
             <h2 className="text-base font-semibold">Doanh thu theo kỳ</h2>
-            <p className="mt-1 text-xs text-zinc-400">Rõ theo tháng / quý / năm</p>
+            <p className="mt-1 text-xs text-zinc-400">
+              Rõ theo tháng / quý / năm
+            </p>
 
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <div className="text-xs font-semibold text-zinc-400">Theo quý (Năm {selectedYear})</div>
+                <div className="text-xs font-semibold text-zinc-400">
+                  Theo quý (Năm {selectedYear})
+                </div>
                 <div className="mt-2 overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -551,7 +596,9 @@ export default function Dashboard() {
               </div>
 
               <div>
-                <div className="text-xs font-semibold text-zinc-400">Theo năm</div>
+                <div className="text-xs font-semibold text-zinc-400">
+                  Theo năm
+                </div>
                 <div className="mt-2 overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -563,7 +610,9 @@ export default function Dashboard() {
                     <tbody>
                       {revenueByYear.map((y) => (
                         <tr key={y.year} className="border-t border-white/5">
-                          <td className="py-2 font-medium text-zinc-100">{y.year}</td>
+                          <td className="py-2 font-medium text-zinc-100">
+                            {y.year}
+                          </td>
                           <td className="py-2 text-right font-semibold text-zinc-100">
                             {formatCurrency(y.revenue)}
                           </td>
@@ -572,7 +621,10 @@ export default function Dashboard() {
 
                       {!revenueByYear.length ? (
                         <tr>
-                          <td colSpan={2} className="py-3 text-sm text-zinc-400">
+                          <td
+                            colSpan={2}
+                            className="py-3 text-sm text-zinc-400"
+                          >
                             Chưa có dữ liệu.
                           </td>
                         </tr>
@@ -585,7 +637,6 @@ export default function Dashboard() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }

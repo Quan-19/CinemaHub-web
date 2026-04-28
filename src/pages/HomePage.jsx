@@ -473,13 +473,6 @@ const HomePage = () => {
   const featured = nowShowing.slice(0, 5);
   const currentHero = featured[heroIndex];
 
-  const featuredPromotion = promotions?.[0] || null;
-  const promotionDiscountLabel = featuredPromotion
-    ? (Number(featuredPromotion.discount_percent) > 0
-      ? `-${Number(featuredPromotion.discount_percent)}%`
-      : (Number(featuredPromotion.discount_value) > 0 ? `-${Number(featuredPromotion.discount_value).toLocaleString('vi-VN')}đ` : null))
-    : null;
-
   const cinemaNewsItems = [...(allMovies || [])]
     .filter((m) => m && (m.title || m.movie_id))
     .sort((a, b) => {
@@ -590,80 +583,6 @@ const HomePage = () => {
 
       {/* Main Content */}
       <div className="relative z-10 mt-16 md:mt-24">
-        {/* Full-width Promotion Banner */}
-        {featuredPromotion && (
-          <AnimatedSection>
-            <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen px-4 sm:px-6 lg:px-8 mb-12">
-              <GlowCard
-                onClick={() => navigate('/promotions')}
-                className="bg-cinema-surface border border-white/10 overflow-hidden"
-              >
-                <div className="relative">
-                  <div className="w-full h-[220px] md:h-[260px] bg-gradient-to-r from-red-900/30 via-cinema-surface to-purple-900/20" />
-                  {featuredPromotion.image && (
-                    <img
-                      src={featuredPromotion.image}
-                      alt={featuredPromotion.title}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/10" />
-
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                      <div className="max-w-2xl">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 mb-4">
-                          <Gift className="w-4 h-4 text-green-400" />
-                          <span className="text-xs font-semibold text-zinc-200">Khuyến mãi nổi bật</span>
-                        </div>
-                        <h2 className="text-2xl md:text-3xl font-black text-white leading-tight">
-                          {featuredPromotion.title}
-                        </h2>
-                        {featuredPromotion.description && (
-                          <p className="text-zinc-300 mt-2 text-sm md:text-base line-clamp-2">
-                            {featuredPromotion.description}
-                          </p>
-                        )}
-
-                        <div className="mt-5 flex flex-wrap items-center gap-3">
-                          {promotionDiscountLabel && (
-                            <span className="px-3 py-1.5 rounded-xl bg-red-600 text-white text-sm font-bold">
-                              {promotionDiscountLabel}
-                            </span>
-                          )}
-
-                          {featuredPromotion.code && (
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900/40 border border-dashed border-zinc-600 backdrop-blur-sm">
-                              <Tag className="w-4 h-4 text-red-400" />
-                              <span className="text-white text-sm font-mono font-bold">{featuredPromotion.code}</span>
-                            </div>
-                          )}
-
-                          <motion.button
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate('/promotions');
-                            }}
-                            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 text-white font-bold hover:shadow-lg hover:shadow-red-500/25 transition-all"
-                          >
-                            Xem ưu đãi
-                          </motion.button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </GlowCard>
-            </div>
-          </AnimatedSection>
-        )}
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Quick Booking Bar */}
