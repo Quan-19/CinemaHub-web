@@ -26,8 +26,7 @@ export default function PaymentResultPage() {
     const momoResultCode = params.get("resultCode");
     const momoBookingId = params.get("booking_id");
 
-    // ✅ Lấy params từ ZaloPay - ĐỌC ĐÚNG
-    const zalopayStatus = params.get("payment_status"); // "success" hoặc "failed"
+    const zalopayStatus = params.get("payment_status"); 
     const zalopayBookingId = params.get("booking_id");
     const zalopayMethod = params.get("method");
     const zalopayAmount = params.get("amount");

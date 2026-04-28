@@ -519,7 +519,7 @@ export default function Dashboard() {
 
         <div className="space-y-4">
           <div className="cinema-surface p-4 sm:p-5">
-            <h2 className="text-base font-semibold">Top phim</h2>
+            <h2 className="text-base font-semibold">Xếp hạng doanh thu phim</h2>
             <p className="mt-1 text-xs text-zinc-400">Theo số vé (tích lũy)</p>
 
             <div className="mt-4 overflow-x-auto">

@@ -506,7 +506,7 @@ function getErrorMessage(code) {
 }
 
 // ---------- Auth Modal ----------
-function AuthModal({ onClose }) {
+function AuthModal({ onClose, onLoginSuccess, notice, backLabel }) {
   const navigate = useNavigate();
   const { verify2FALogin } = useAuth();
   const [tab, setTab] = useState("login");
@@ -514,6 +514,12 @@ function AuthModal({ onClose }) {
   const [pendingEmail, setPendingEmail] = useState("");
 
   const handleLogin = (user) => {
+    if (typeof onLoginSuccess === "function") {
+      onLoginSuccess(user);
+      onClose();
+      return;
+    }
+
     const role = user?.role?.toLowerCase();
     if (role === "admin") navigate("/admin/dashboard");
     else if (role === "staff") navigate("/staff");
@@ -593,7 +599,7 @@ function AuthModal({ onClose }) {
           onClick={onClose}
           className="absolute left-4 top-4 flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white"
         >
-          ← Trang chủ
+          ← {backLabel || "Trang chủ"}
         </button>
         <button
           onClick={onClose}

@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate, useBlocker } from "react-router-dom";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useParams, useNavigate, useBlocker, useLocation } from "react-router-dom";
 import { ChevronLeft, Ticket } from "lucide-react";
 import { useBooking } from "../context/BookingContext";
 import { calculateShowtimeTotal } from "../utils/showtimePricing";
@@ -7,6 +7,7 @@ import axios from "axios";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle } from "lucide-react";
+import AuthModal from "../components/AuthModal";
 
 const MAX_SEATS = 8;
 
@@ -117,6 +118,7 @@ function SeatLegendItem({ colorClassName, label }) {
 export const SeatSelectionPage = () => {
   const { showtimeId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { 
     selectedMovie, 
     selectedCinema, 
@@ -135,7 +137,9 @@ export const SeatSelectionPage = () => {
   const [roomLayout, setRoomLayout] = useState(null);
   const [maintenanceSeats, setMaintenanceSeats] = useState(new Set());
   const [currentUser, setCurrentUser] = useState(null);
-  const [showLoginAlert, setShowLoginAlert] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const pendingAuthActionRef = useRef(null);
 
   // ✅ THEO DÕI TRẠNG THÁI ĐĂNG NHẬP
   useEffect(() => {
@@ -155,20 +159,22 @@ export const SeatSelectionPage = () => {
   // ✅ CẢNH BÁO KHI THOÁT TRANG (Dùng useBlocker cho nút Back/Chuyển hướng)
   const blocker = useBlocker(({ nextLocation }) => {
     // Chỉ chặn nếu đang có ghế được chọn VÀ không phải là đi tới trang Confirm
-    return picked.length > 0 && !nextLocation.pathname.includes("/confirm");
+    const hasActiveLock = remainingTime !== null && remainingTime > 0;
+    return hasActiveLock && picked.length > 0 && !nextLocation.pathname.includes("/confirm");
   });
 
   // Hủy block khi đóng tab/reload được xử lý riêng qua beforeunload
   useEffect(() => {
     const handleBeforeUnload = (e) => {
-      if (picked.length > 0) {
+      const hasActiveLock = remainingTime !== null && remainingTime > 0;
+      if (hasActiveLock && picked.length > 0) {
         e.preventDefault();
         e.returnValue = ""; 
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [picked.length]);
+  }, [picked.length, remainingTime]);
 
   const seatRows = useMemo(() => {
     if (!roomLayout) return [];
@@ -273,7 +279,6 @@ export const SeatSelectionPage = () => {
   }, [showtimeId, currentUser]); // picked.length được loại ra để tránh loop, nhưng check logic bên trong
 
   // ========== TIMER LOGIC ==========
-  const [remainingTime, setRemainingTime] = useState(null);
 
   useEffect(() => {
     if (remainingTime === null || remainingTime <= 0) return;
@@ -364,23 +369,24 @@ export const SeatSelectionPage = () => {
     return () => { isMounted = false; };
   }, [showtimeId, navigate, setSelectedCinema, setSelectedMovie, setSelectedShowtime]); 
 
+  const openAuthForAction = (action) => {
+    pendingAuthActionRef.current = action;
+    setAuthModalOpen(true);
+  };
+
+  const handleAuthSuccess = () => {
+    const action = pendingAuthActionRef.current;
+    pendingAuthActionRef.current = null;
+    setAuthModalOpen(false);
+
+    if (action?.type === "continue") {
+      // Give Firebase a tick to finalize currentUser.
+      Promise.resolve().then(() => handleContinue());
+    }
+  };
+
   // ========== TOGGLE SEAT ==========
   const toggleSeat = async (id, type) => {
-    // 🔐 KIỂM TRA ĐĂNG NHẬP TRƯỚC KHI CHO PHÉP CHỌN GHẾ
-    const auth = getAuth();
-    const user = auth.currentUser;
-    
-    if (!user) {
-      // Hiển thị thông báo đăng nhập
-      setShowLoginAlert(true);
-      setTimeout(() => {
-        setShowLoginAlert(false);
-        // Chuyển hướng về trang chủ sau 2 giây
-        navigate("/");
-      }, 2000);
-      return;
-    }
-
     if (occupiedSeats.has(id) || maintenanceSeats.has(id)) return;
 
     const isSelected = picked.find((s) => s.id === id);
@@ -388,13 +394,17 @@ export const SeatSelectionPage = () => {
     if (isSelected) {
       // 🚀 NẾU BỎ CHỌN: Gọi API giải phóng ghế ở DB ngay lập tức
       try {
-        const token = await user.getIdToken();
-        await axios.post(
-          "http://localhost:5000/api/seats/release-my-locks",
-          { showtime_id: showtimeId, seat_label: id },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        console.log(`✅ Released seat ${id} from DB`);
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (user) {
+          const token = await user.getIdToken();
+          await axios.post(
+            "http://localhost:5000/api/seats/release-my-locks",
+            { showtime_id: showtimeId, seat_label: id },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          console.log(`✅ Released seat ${id} from DB`);
+        }
       } catch (err) {
         console.error("Error releasing single seat:", err);
       }
@@ -418,11 +428,10 @@ export const SeatSelectionPage = () => {
     const user = auth.currentUser;
     
     if (!user) {
-      setShowLoginAlert(true);
-      setTimeout(() => {
-        setShowLoginAlert(false);
-        navigate("/");
-      }, 2000);
+      openAuthForAction({
+        type: "continue",
+        from: location.pathname,
+      });
       return;
     }
 
@@ -435,7 +444,7 @@ export const SeatSelectionPage = () => {
     // Refresh lại ghế để cập nhật bộ đếm thời gian mới nhất từ Backend (10 phút mới)
     const fetchFreshSeats = async () => {
       try {
-        const token = await currentUser?.getIdToken();
+        const token = await getAuth().currentUser?.getIdToken();
         const res = await fetch(`http://localhost:5000/api/seats/showtime/${showtimeId}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
@@ -544,6 +553,30 @@ export const SeatSelectionPage = () => {
           </div>
         </div>
       </div>
+
+      {!currentUser && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+          <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
+                <AlertCircle className="text-yellow-500" size={20} />
+              </div>
+              <div>
+                <p className="text-white font-semibold">Bạn đang xem với tư cách khách</p>
+                <p className="text-zinc-400 text-sm">
+                  Bạn có thể chọn ghế trước. Đăng nhập khi bấm “Tiếp tục” để giữ ghế và thanh toán.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              className="cinema-btn-primary px-5 py-2.5 justify-center"
+            >
+              Đăng nhập
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 font-primary">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -841,42 +874,14 @@ export const SeatSelectionPage = () => {
         )}
       </AnimatePresence>
 
-      {/* ✅ LOGIN ALERT MODAL */}
-      <AnimatePresence>
-        {showLoginAlert && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-sm overflow-hidden"
-              style={{
-                background: "var(--color-cinema-surface)",
-                border: "1px solid rgba(229, 9, 20, 0.3)",
-                borderRadius: "28px",
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
-              }}
-            >
-              <div className="p-8 text-center">
-                <div className="w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center mx-auto mb-5 border border-yellow-500/20">
-                  <AlertCircle size={32} className="text-yellow-500" />
-                </div>
-                
-                <h3 className="text-white text-xl font-bold mb-3 tracking-tight">Yêu cầu đăng nhập</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed mb-8">
-                  Vui lòng đăng nhập để chọn ghế và đặt vé.
-                </p>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {authModalOpen && (
+        <AuthModal
+          onClose={() => setAuthModalOpen(false)}
+          backLabel="Quay lại đặt vé"
+          notice="Đăng nhập để giữ ghế và thanh toán nhanh hơn."
+          onLoginSuccess={handleAuthSuccess}
+        />
+      )}
     </div>
   );
 };

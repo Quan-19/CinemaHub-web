@@ -1,151 +1,544 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Star,
-  Clock,
-  Play,
-  Ticket,
-  Tag,
-  ArrowRight,
-  Flame,
-  CalendarDays,
-} from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { MovieCard } from "../components/MovieCard";
+/* HomePage.jsx - Full Premium Cinematic Homepage (No Mock Data) */
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { 
+  ChevronDown,
+  Star, 
+  Clock, 
+  Play, 
+  Ticket, 
+  Tag, 
+  ArrowRight, 
+  Flame, 
+  CalendarDays, 
+  Sparkles, 
+  Gift,
+  MapPin,
+  X,
+  Film,
+  TrendingUp,
+  Newspaper,
+  ChevronRight as ChevronRightIcon
+} from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+// ========== COMPONENTS ==========
+
+// Premium Movie Card Component
+const PremiumMovieCard = ({ movie, index }) => {
+  const navigate = useNavigate();
+  const isNowShowing = movie.status === 'now_showing' || movie.status === 'now-showing';
+  const movieId = movie.movie_id ?? movie.id;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.5 }}
+      whileHover={{ y: -8 }}
+      className="group relative w-[200px] md:w-[220px] flex-shrink-0 cursor-pointer"
+      onClick={() => navigate(`/movies/${movieId}`)}
+    >
+      <div className="relative aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl">
+        <motion.img
+          src={movie.poster}
+          alt={movie.title}
+          className="w-full h-full object-cover"
+          whileHover={{ scale: 1.1 }}
+          transition={{ duration: 0.4 }}
+          onError={(e) => {
+            e.target.src = 'https://via.placeholder.com/300x450?text=No+Image';
+          }}
+        />
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        <div className="absolute top-3 left-3 z-10">
+          <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase backdrop-blur-md ${
+            isNowShowing 
+              ? 'bg-red-500/90 text-white' 
+              : 'bg-yellow-500/90 text-black'
+          }`}>
+            {isNowShowing ? 'Đang chiếu' : 'Sắp chiếu'}
+          </span>
+        </div>
+
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-sm">
+          <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+          <span className="text-white text-xs font-bold">{movie.rating || movie.score || 'N/A'}</span>
+        </div>
+
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/60 backdrop-blur-sm">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/movies/${movieId}`);
+            }}
+            className="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-bold flex items-center gap-2 transform scale-90 group-hover:scale-100 transition-transform"
+          >
+            <Ticket className="w-4 h-4" />
+            {isNowShowing ? 'Đặt vé' : 'Chi tiết'}
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-3 space-y-1">
+        <h3 className="text-white font-bold text-base line-clamp-1 group-hover:text-red-500 transition-colors">
+          {movie.title}
+        </h3>
+        <p className="text-zinc-500 text-xs line-clamp-1">
+          {movie.originalTitle || movie.title}
+        </p>
+        <div className="flex items-center gap-3 text-zinc-400 text-xs">
+          <div className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            <span>{movie.duration} phút</span>
+          </div>
+          <div className="w-1 h-1 rounded-full bg-zinc-600" />
+          <div className="flex items-center gap-1">
+            <span>{movie.genre?.[0] || 'Phim'}</span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Skeleton Loader Components
+const MovieCardSkeleton = () => (
+  <div className="w-[200px] md:w-[220px] flex-shrink-0">
+    <div className="aspect-[2/3] rounded-2xl bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 animate-pulse" />
+    <div className="mt-3 space-y-2">
+      <div className="h-4 bg-zinc-800 rounded-lg w-3/4 animate-pulse" />
+      <div className="h-3 bg-zinc-800 rounded-lg w-1/2 animate-pulse" />
+      <div className="h-3 bg-zinc-800 rounded-lg w-2/3 animate-pulse" />
+    </div>
+  </div>
+);
+
+const HeroSkeleton = () => (
+  <div className="h-[70vh] bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 animate-pulse" />
+);
+
+// Animated Section Component
+const AnimatedSection = ({ children, className, delay = 0, direction = 'up' }) => {
+  const [ref, inView] = useState(false);
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          inView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (sectionRef.current) observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const variants = {
+    hidden: {
+      opacity: 0,
+      y: direction === 'up' ? 50 : direction === 'down' ? -50 : 0,
+      x: direction === 'left' ? -50 : direction === 'right' ? 50 : 0,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      x: 0,
+      transition: { duration: 0.6, delay, ease: [0.21, 0.47, 0.32, 0.98] },
+    },
+  };
+
+  return (
+    <motion.div
+      ref={sectionRef}
+      initial="hidden"
+      animate={inView ? 'visible' : 'hidden'}
+      variants={variants}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Glow Card Component
+const GlowCard = ({ children, className, onClick }) => {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className={`group relative rounded-2xl overflow-hidden cursor-pointer ${className}`}
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+      <div 
+        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{ boxShadow: 'inset 0 0 0 1px rgba(229,9,20,0.5), 0 0 20px rgba(229,9,20,0.2)' }}
+      />
+      {children}
+    </motion.div>
+  );
+};
+
+// Parallax Hero Component
+const ParallaxHero = ({ movie, onBook, onTrailer }) => {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
+  const y = useTransform(scrollYProgress, [0, 1], ['0%', '40%']);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (ref.current) {
+        const rect = ref.current.getBoundingClientRect();
+        setMousePosition({
+          x: (e.clientX - rect.left) / rect.width - 0.5,
+          y: (e.clientY - rect.top) / rect.height - 0.5,
+        });
+      }
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  if (!movie) return null;
+
+  return (
+    <div ref={ref} className="relative h-[85vh] min-h-[600px] overflow-hidden">
+      <motion.div style={{ y, scale: 1.1 }} className="absolute inset-0">
+        <img
+          src={movie.backdrop || movie.poster}
+          alt={movie.title}
+          className="w-full h-full object-cover object-center"
+          onError={(e) => {
+            e.target.src = 'https://via.placeholder.com/1920x1080?text=No+Image';
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20" />
+      </motion.div>
+
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(circle at ${50 + mousePosition.x * 20}% ${50 + mousePosition.y * 20}%, rgba(229,9,20,0.15) 0%, transparent 50%)`,
+        }}
+      />
+
+      <motion.div style={{ opacity }} className="relative h-full flex items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="max-w-2xl"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 }}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 backdrop-blur-sm border border-red-500/30 mb-4"
+            >
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-xs font-semibold text-red-400">ĐANG CHIẾU</span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-4 leading-tight"
+            >
+              {movie.title}
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+              className="text-zinc-300 text-base md:text-lg mb-6 line-clamp-2"
+            >
+              {movie.description}
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="flex flex-wrap gap-4"
+            >
+              <button
+                onClick={onBook}
+                className="px-6 md:px-8 py-3 md:py-4 rounded-full font-bold text-white relative overflow-hidden group"
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-red-700 rounded-full" />
+                <span className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <span className="relative flex items-center gap-2">
+                  <Ticket className="w-4 h-4 md:w-5 md:h-5" />
+                  Đặt vé ngay
+                </span>
+              </button>
+              
+              <button
+                onClick={onTrailer}
+                className="px-6 md:px-8 py-3 md:py-4 rounded-full font-bold text-white border border-white/30 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center gap-2 group"
+              >
+                <Play className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
+                Xem trailer
+              </button>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.9 }}
+              className="flex flex-wrap gap-4 mt-6 md:mt-8"
+            >
+              <div className="flex items-center gap-2 text-zinc-300">
+                <Star className="w-4 h-4 md:w-5 md:h-5 fill-yellow-500 text-yellow-500" />
+                <span className="font-semibold">{movie.rating || movie.score}/10</span>
+                <span className="text-xs md:text-sm text-zinc-400">({movie.votes?.toLocaleString() || '0'} đánh giá)</span>
+              </div>
+              <div className="flex items-center gap-2 text-zinc-300">
+                <Clock className="w-4 h-4 md:w-5 md:h-5" />
+                <span>{movie.duration} phút</span>
+              </div>
+              <div className={`px-2 md:px-3 py-1 rounded-full text-xs font-bold ${
+                movie.age_rating === 'T18' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                movie.age_rating === 'T16' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
+                'bg-green-500/20 text-green-400 border border-green-500/30'
+              }`}>
+                {movie.age_rating || 'T13'}
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+      >
+        <div className="flex flex-col items-center gap-2 text-zinc-400 text-xs">
+          <span>Kéo xuống để khám phá</span>
+          <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+            <ChevronDown className="w-4 h-4" />
+          </motion.div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// Cinema Card Component
+const CinemaCard = ({ cinema, index }) => {
+  const navigate = useNavigate();
+  const brandColors = {
+    'CGV': '#e50914',
+    'Lotte': '#c41230',
+    'BHD': '#1e40af',
+    'Galaxy': '#7c3aed',
+  };
+  const color = brandColors[cinema.brand] || '#e50914';
+  const cinemaId = cinema.cinema_id ?? cinema.id;
+
+  const handleClick = () => {
+    if (cinemaId) {
+      navigate(`/cinemas?cinemaId=${cinemaId}`);
+    }
+  };
+
+  return (
+    <GlowCard className="bg-cinema-surface border border-white/10 p-4" onClick={handleClick}>
+      <div className="flex items-start gap-3">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
+          style={{ background: color }}
+        >
+          {cinema.brand?.[0] || 'C'}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-white font-semibold text-sm mb-1">{cinema.name}</h3>
+          <p className="text-zinc-500 text-xs line-clamp-2">{cinema.address}</p>
+        </div>
+        <div className="shrink-0 self-center">
+          <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-white transition-colors" />
+        </div>
+      </div>
+    </GlowCard>
+  );
+};
+
+// ========== MAIN HOMEPAGE COMPONENT ==========
 const HomePage = () => {
   const navigate = useNavigate();
-
-  // ========== STATE ==========
   const [heroIndex, setHeroIndex] = useState(0);
+  const [allMovies, setAllMovies] = useState([]);
   const [nowShowing, setNowShowing] = useState([]);
   const [comingSoon, setComingSoon] = useState([]);
   const [promotions, setPromotions] = useState([]);
+  const [cinemas, setCinemas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showTrailerModal, setShowTrailerModal] = useState(false);
+  const [selectedTrailer, setSelectedTrailer] = useState(null);
+  const autoSlideRef = useRef(null);
 
-  // ========== FETCH DATA FROM API (Code 1) ==========
+  // Fetch all data from API
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         // Fetch movies
-        const movieRes = await fetch("http://localhost:5000/api/movies");
+        const movieRes = await fetch(`${API_BASE_URL}/api/movies`);
         const movieData = await movieRes.json();
+        const movies = Array.isArray(movieData) ? movieData : (movieData.data || []);
 
-        // Map movies với đầy đủ fields
-        const movies = movieData.map((m) => ({
+        const formattedMovies = movies.map((m) => {
+          const rawStatus = String(m.status || '').toLowerCase();
+          const normalizedStatus = rawStatus.replace(/-/g, '_');
+          const ratingScore = Number(m.rating_score ?? m.ratingScore ?? m.rating ?? 0);
+          const tickets = Number(m.tickets ?? 0);
+          const views = Number(m.views ?? 0);
+
+          return ({
           ...m,
           movie_id: m.movie_id || m.id,
-          rating: m.rating || 0,
-          score: m.rating || 0,
-          votes: m.votes || Math.floor(Math.random() * 5000) + 1000,
+          rating: Number.isFinite(ratingScore) ? ratingScore : 0,
+          score: Number.isFinite(ratingScore) ? ratingScore : 0,
+          votes: Number.isFinite(Number(m.votes)) ? Number(m.votes) : (Number.isFinite(tickets) ? tickets : 0),
           poster: m.poster,
           backdrop: m.backdrop || m.poster,
-          description: m.description || "",
-          genre: m.genre || [],
-          originalTitle: m.originalTitle || "",
-          releaseDate: m.releaseDate || "",
+          description: m.description || '',
+          genre: Array.isArray(m.genre) ? m.genre : (m.genre?.split(',').map(g => g.trim()) || []),
+          originalTitle: m.original_title || m.originalTitle || '',
+          releaseDate: m.release_date || m.releaseDate || '',
           duration: m.duration || 120,
-        }));
+          age_rating: m.age_rating || m.ageRating || m.rating || 'T13',
+          trailer: m.trailer || '',
+          status: normalizedStatus,
+          created_at: m.created_at || m.createdAt,
+          tickets: Number.isFinite(tickets) ? tickets : 0,
+          views: Number.isFinite(views) ? views : 0,
+        });
+        });
 
-        // Phân loại phim (GIỮ underscore từ Code 1)
-        const now = movies.filter((m) => m.status === "now_showing");
-        const soon = movies.filter((m) => m.status === "coming_soon");
+        setAllMovies(formattedMovies);
 
-        setNowShowing(now);
-        setComingSoon(soon);
+        setNowShowing(formattedMovies.filter((m) => m.status === 'now_showing' || m.status === 'now-showing'));
+        setComingSoon(formattedMovies.filter((m) => m.status === 'coming_soon' || m.status === 'coming-soon'));
 
-        // Try to fetch promotions (optional)
+        // Fetch promotions
         try {
-          const promoRes = await fetch(
-            "http://localhost:5000/api/promotions?scope=public"
-          );
+          const promoRes = await fetch(`${API_BASE_URL}/api/promotions?scope=public`);
           const promoPayload = await promoRes.json();
-          const promoData = Array.isArray(promoPayload?.data)
-            ? promoPayload.data
-            : Array.isArray(promoPayload)
-            ? promoPayload
-            : [];
+          const promoData = Array.isArray(promoPayload?.data) ? promoPayload.data : (Array.isArray(promoPayload) ? promoPayload : []);
           setPromotions(promoData);
-        } catch {
-          // Fallback promotions data (từ Code 2)
-          setPromotions([
-            {
-              id: 1,
-              title: "Giảm 30% các suất chiếu sáng thứ 2-4",
-              description: "Áp dụng cho tất cả các phim đang chiếu",
-              code: "WED30",
-              discount: "30%",
-              image:
-                "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400",
-              expiry: "31/12/2024",
-            },
-            {
-              id: 2,
-              title: "Mua 2 vé tặng 1 combo bắp nước",
-              description: "Chỉ áp dụng cho các suất chiếu từ 10h-14h",
-              code: "CINE10",
-              discount: "Combo",
-              image:
-                "https://images.unsplash.com/photo-1512149177596-f817c7ef5d4c?w=400",
-              expiry: "30/11/2024",
-            },
-          ]);
+        } catch (err) {
+          console.error('Error fetching promotions:', err);
+          setPromotions([]);
         }
+
+        // Fetch cinemas
+        try {
+          const cinemaRes = await fetch(`${API_BASE_URL}/api/cinemas`);
+          const cinemaPayload = await cinemaRes.json();
+          const cinemaData = Array.isArray(cinemaPayload) ? cinemaPayload : (cinemaPayload.data || []);
+          // Filter active cinemas and take first 4
+          const activeCinemas = cinemaData.filter(c => c.status !== 'inactive').slice(0, 4);
+          setCinemas(activeCinemas);
+        } catch (err) {
+          console.error('Error fetching cinemas:', err);
+          setCinemas([]);
+        }
+
       } catch (err) {
-        console.error("Lỗi tải dữ liệu:", err);
-        // Fallback nếu API lỗi
-        setNowShowing([]);
-        setComingSoon([]);
+        console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
-  const featured = nowShowing.slice(0, 3);
-  const current = featured[heroIndex];
+  const featured = nowShowing.slice(0, 5);
+  const currentHero = featured[heroIndex];
 
-  // ========== AUTO SLIDE (Code 1) ==========
+  const cinemaNewsItems = [...(allMovies || [])]
+    .filter((m) => m && (m.title || m.movie_id))
+    .sort((a, b) => {
+      const aTime = Date.parse(a.created_at || a.releaseDate || 0) || 0;
+      const bTime = Date.parse(b.created_at || b.releaseDate || 0) || 0;
+      return bTime - aTime;
+    })
+    .slice(0, 3);
+
+  // Auto slide
   useEffect(() => {
     if (featured.length === 0) return;
-    const t = setInterval(
-      () => setHeroIndex((i) => (i + 1) % featured.length),
-      5000
-    );
-    return () => clearInterval(t);
+    autoSlideRef.current = setInterval(() => {
+      setHeroIndex((i) => (i + 1) % featured.length);
+    }, 6000);
+    return () => {
+      if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+    };
   }, [featured.length]);
 
-  // ========== LOADING STATE ==========
+  const handleTrailer = (movie) => {
+    if (movie?.trailer) {
+      setSelectedTrailer(movie);
+      setShowTrailerModal(true);
+    }
+  };
+
+  const extractYouTubeId = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return match && match[2].length === 11 ? match[2] : null;
+  };
+
   if (loading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--color-cinema-bg)" }}
-      >
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-zinc-400">Đang tải dữ liệu...</p>
+      <div className="min-h-screen bg-cinema-bg">
+        <HeroSkeleton />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex justify-between items-center mb-6">
+            <div className="h-8 w-48 bg-zinc-800 rounded-lg animate-pulse" />
+            <div className="h-10 w-24 bg-zinc-800 rounded-lg animate-pulse" />
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {[...Array(6)].map((_, i) => <MovieCardSkeleton key={i} />)}
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!current && featured.length === 0) {
+  if (!currentHero && featured.length === 0 && nowShowing.length === 0) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--color-cinema-bg)" }}
-      >
+      <div className="min-h-screen flex items-center justify-center bg-cinema-bg">
         <div className="text-center">
+          <motion.div
+            animate={{ y: [-10, 10, -10] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-6xl mb-4"
+          >
+            🎬
+          </motion.div>
           <p className="text-zinc-400 mb-4">Không có phim đang chiếu</p>
           <button
-            onClick={() => navigate("/movies")}
-            className="text-red-500 hover:underline"
+            onClick={() => navigate('/movies')}
+            className="px-6 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors"
           >
             Xem phim sắp chiếu
           </button>
@@ -155,411 +548,430 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-cinema-bg text-zinc-100">
-      {/* ========== HERO SECTION (Kết hợp UI Code 2 + Data Code 1) ========== */}
-      <div className="relative h-[74vh] min-h-[460px] overflow-hidden sm:h-[70vh] sm:min-h-[500px]">
-        <AnimatePresence mode="wait">
+    <div className="min-h-screen bg-cinema-bg">
+      {/* Hero Section */}
+      {currentHero && (
+        <ParallaxHero
+          movie={currentHero}
+          onBook={() => navigate(`/movies/${currentHero?.movie_id}`)}
+          onTrailer={() => handleTrailer(currentHero)}
+        />
+      )}
+
+      {/* Slider Navigation Dots */}
+      {featured.length > 1 && (
+        <div className="absolute left-1/2 -translate-x-1/2 z-20" style={{ top: '75vh' }}>
+          <div className="flex gap-2">
+            {featured.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+                  setHeroIndex(i);
+                  autoSlideRef.current = setInterval(() => {
+                    setHeroIndex((idx) => (idx + 1) % featured.length);
+                  }, 6000);
+                }}
+                className={`transition-all duration-300 rounded-full ${
+                  i === heroIndex ? 'w-8 h-2 bg-red-500' : 'w-2 h-2 bg-white/30 hover:bg-white/60'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="relative z-10 mt-16 md:mt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          {/* Quick Booking Bar */}
+          {nowShowing.length > 0 && (
+            <AnimatedSection>
+              <GlowCard className="bg-gradient-to-r from-red-900/20 to-red-800/5 border border-red-500/20 rounded-2xl p-5 mb-12 backdrop-blur-xl">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-red-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-bold text-lg">Đặt vé nhanh chóng</h3>
+                      <p className="text-zinc-400 text-sm">Chỉ 3 bước đơn giản để có vé xem phim</p>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        {nowShowing.slice(0, 3).map((m) => (
+                          <motion.button
+                            key={m.movie_id}
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/movies/${m.movie_id}`);
+                            }}
+                            className="px-3 py-1.5 rounded-full bg-zinc-900/50 border border-white/10 text-zinc-200 text-xs font-semibold hover:border-white/20 hover:text-white transition-colors"
+                            title={m.title}
+                          >
+                            {m.title}
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-4">
+                    {['Chọn phim', 'Chọn suất', 'Chọn ghế'].map((step, i) => (
+                      <div key={step} className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white text-sm font-bold">
+                          {i + 1}
+                        </div>
+                        <span className="text-zinc-300 text-sm hidden sm:inline">{step}</span>
+                        {i < 2 && <ChevronRightIcon className="w-4 h-4 text-zinc-500 ml-1 hidden sm:block" />}
+                      </div>
+                    ))}
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate('/movies')}
+                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 text-white font-bold hover:shadow-lg hover:shadow-red-500/25 transition-all"
+                    >
+                      Bắt đầu ngay
+                    </motion.button>
+                  </div>
+                </div>
+              </GlowCard>
+            </AnimatedSection>
+          )}
+
+          {/* Now Showing Section */}
+          {nowShowing.length > 0 && (
+            <AnimatedSection>
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-8 rounded-full bg-red-500" />
+                  <h2 className="text-xl md:text-2xl font-bold text-white">
+                    <Flame className="inline w-5 h-5 md:w-6 md:h-6 text-red-500 mr-2" />
+                    Phim Đang Chiếu
+                  </h2>
+                </div>
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  onClick={() => navigate('/movies?status=now-showing')}
+                  className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
+                >
+                  Xem tất cả
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </div>
+
+              <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-none">
+                {nowShowing.map((movie, idx) => (
+                  <PremiumMovieCard key={movie.movie_id} movie={movie} index={idx} />
+                ))}
+              </div>
+            </AnimatedSection>
+          )}
+
+          {/* Phim Hot Tuần Này */}
+          {nowShowing.length > 0 && (
+            <AnimatedSection delay={0.1}>
+              <div className="flex justify-between items-center mb-6 mt-12">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-8 rounded-full bg-orange-500" />
+                  <h2 className="text-xl md:text-2xl font-bold text-white">
+                    <TrendingUp className="inline w-5 h-5 md:w-6 md:h-6 text-orange-500 mr-2" />
+                    Phim Hot Tuần Này
+                  </h2>
+                </div>
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  onClick={() => navigate('/movies?sort=top-rated')}
+                  className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
+                >
+                  Xem tất cả
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {[...nowShowing]
+                  .sort((a, b) => (b.tickets || 0) - (a.tickets || 0)
+                    || (b.views || 0) - (a.views || 0)
+                    || (b.rating || b.score || 0) - (a.rating || a.score || 0)
+                  )
+                  .slice(0, 5)
+                  .map((movie, idx) => (
+                    <PremiumMovieCard key={`hot-${movie.movie_id}`} movie={movie} index={idx} />
+                  ))}
+              </div>
+            </AnimatedSection>
+          )}
+
+          {/* Coming Soon Section */}
+          {comingSoon.length > 0 && (
+            <AnimatedSection delay={0.2}>
+              <div className="flex justify-between items-center mb-6 mt-12">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-8 rounded-full bg-yellow-500" />
+                  <h2 className="text-xl md:text-2xl font-bold text-white">
+                    <CalendarDays className="inline w-5 h-5 md:w-6 md:h-6 text-yellow-500 mr-2" />
+                    Phim Sắp Chiếu
+                  </h2>
+                </div>
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  onClick={() => navigate('/movies?status=coming-soon')}
+                  className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
+                >
+                  Xem tất cả
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </div>
+
+              <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-none">
+                {comingSoon.map((movie, idx) => (
+                  <PremiumMovieCard key={movie.movie_id} movie={movie} index={idx} />
+                ))}
+              </div>
+            </AnimatedSection>
+          )}
+
+          {/* Featured Cinemas Section */}
+          {cinemas.length > 0 && (
+            <AnimatedSection delay={0.3}>
+              <div className="flex justify-between items-center mb-6 mt-12">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-8 rounded-full bg-purple-500" />
+                  <h2 className="text-xl md:text-2xl font-bold text-white">
+                    <MapPin className="inline w-5 h-5 md:w-6 md:h-6 text-purple-500 mr-2" />
+                    Rạp Chiếu Nổi Bật
+                  </h2>
+                </div>
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  onClick={() => navigate('/cinemas')}
+                  className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
+                >
+                  Xem tất cả
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {cinemas.map((cinema, idx) => (
+                  <CinemaCard key={cinema.cinema_id || idx} cinema={cinema} index={idx} />
+                ))}
+              </div>
+            </AnimatedSection>
+          )}
+
+          {/* Promotions Section */}
+          {promotions.length > 0 && (
+            <AnimatedSection delay={0.4}>
+              <div className="flex justify-between items-center mb-6 mt-12">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-8 rounded-full bg-green-500" />
+                  <h2 className="text-xl md:text-2xl font-bold text-white">
+                    <Gift className="inline w-5 h-5 md:w-6 md:h-6 text-green-500 mr-2" />
+                    Ưu Đãi Đặc Biệt
+                  </h2>
+                </div>
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  onClick={() => navigate('/promotions')}
+                  className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
+                >
+                  Xem tất cả
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {promotions.slice(0, 3).map((promo, idx) => (
+                  <GlowCard key={promo.promotion_id || promo.id || idx} className="bg-cinema-surface border border-white/10 overflow-hidden">
+                    <div className="relative h-48 overflow-hidden">
+                      {promo.image ? (
+                        <img
+                          src={promo.image}
+                          alt={promo.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/400x300?text=Promotion';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-red-900/30 to-purple-900/30 flex items-center justify-center">
+                          <Gift className="w-12 h-12 text-red-500/50" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      {(promo.discount_percent > 0 || promo.discount_value > 0) && (
+                        <div className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm font-bold">
+                          -{promo.discount_percent || promo.discount_value}%
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-5">
+                      <h3 className="text-white font-bold text-lg mb-2 line-clamp-1">{promo.title}</h3>
+                      <p className="text-zinc-400 text-sm mb-4 line-clamp-2">{promo.description}</p>
+                      {promo.code && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 border border-dashed border-zinc-600">
+                            <Tag className="w-4 h-4 text-red-500" />
+                            <span className="text-white text-sm font-mono font-bold">{promo.code}</span>
+                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => navigate('/movies')}
+                            className="px-4 py-2 rounded-lg bg-red-600/20 text-red-400 text-sm font-medium hover:bg-red-600/30 transition-colors"
+                          >
+                            Áp dụng
+                          </motion.button>
+                        </div>
+                      )}
+                    </div>
+                  </GlowCard>
+                ))}
+              </div>
+            </AnimatedSection>
+          )}
+
+          {/* Tin tức điện ảnh */}
+          {cinemaNewsItems.length > 0 && (
+            <AnimatedSection delay={0.45}>
+              <div className="flex justify-between items-center mb-6 mt-12">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-8 rounded-full bg-blue-500" />
+                  <h2 className="text-xl md:text-2xl font-bold text-white">
+                    <Newspaper className="inline w-5 h-5 md:w-6 md:h-6 text-blue-500 mr-2" />
+                    Tin tức điện ảnh
+                  </h2>
+                </div>
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  onClick={() => navigate('/movies')}
+                  className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
+                >
+                  Xem phim
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {cinemaNewsItems.map((m, idx) => (
+                  <GlowCard
+                    key={m.movie_id || idx}
+                    onClick={() => navigate(`/movies/${m.movie_id}`)}
+                    className="bg-cinema-surface border border-white/10 p-5"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-blue-500/15 border border-blue-500/20 flex items-center justify-center shrink-0">
+                        <Newspaper className="w-6 h-6 text-blue-400" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            m.status === 'now_showing'
+                              ? 'bg-red-500/15 text-red-300 border border-red-500/20'
+                              : 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/20'
+                          }`}>
+                            {m.status === 'now_showing' ? 'Đang chiếu' : 'Sắp chiếu'}
+                          </span>
+                          {(m.created_at || m.releaseDate) && (
+                            <span className="text-[10px] font-semibold text-zinc-500">
+                              {String(m.created_at || m.releaseDate).split('T')[0]}
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-white font-bold text-base line-clamp-2">
+                          {m.title}
+                        </h3>
+                        <p className="text-zinc-400 text-sm mt-2 line-clamp-3">
+                          {m.description || 'Khám phá thông tin chi tiết về bộ phim này.'}
+                        </p>
+                        <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-zinc-300">
+                          Xem chi tiết
+                          <ArrowRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+                  </GlowCard>
+                ))}
+              </div>
+            </AnimatedSection>
+          )}
+
+          {/* CTA Banner */}
+          <AnimatedSection delay={0.5}>
+            <div className="mt-12 mb-8 relative overflow-hidden rounded-2xl">
+              <div className="absolute inset-0 from-black/90 bg-cinema-surface" />
+              <div className="relative z-10 p-8 md:p-12 text-center">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.6, type: 'spring' }}
+                  className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4"
+                >
+                  <Film className="w-8 h-8 text-red-500" />
+                </motion.div>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+                  Trải nghiệm điện ảnh đỉnh cao
+                </h2>
+                <p className="text-zinc-300 mb-6 max-w-md mx-auto text-sm">
+                  Đặt vé nhanh chóng, thanh toán an toàn, nhận ưu đãi hấp dẫn
+                </p>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate('/movies')}
+                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 text-white font-bold hover:shadow-lg hover:shadow-red-500/25 transition-all"
+                >
+                  Đặt vé ngay
+                </motion.button>
+              </div>
+            </div>
+          </AnimatedSection>
+        </div>
+      </div>
+
+      {/* Trailer Modal */}
+      <AnimatePresence>
+        {showTrailerModal && selectedTrailer && selectedTrailer.trailer && (
           <motion.div
-            key={current?.movie_id}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md"
+            onClick={() => setShowTrailerModal(false)}
           >
-            <img
-              src={current?.backdrop}
-              alt={current?.title}
-              className="w-full h-full object-cover"
-            />
-            {/* Gradient overlays */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to right, rgba(17,24,39,0.92) 0%, rgba(17,24,39,0.55) 50%, rgba(17,24,39,0.15) 100%)",
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to top, rgba(17,24,39,1) 0%, transparent 50%)",
-              }}
-            />
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Hero Content */}
-        <div className="absolute inset-0 flex items-end sm:items-end">
-          <div className="mx-auto w-full px-3 pb-12 sm:px-6 sm:pb-16 lg:px-10 2xl:px-14">
-            <div className="max-w-xl">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={current?.movie_id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  {/* Badges */}
-                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <span className="rounded bg-cinema-primary px-2 py-0.5 text-xs font-semibold text-white">
-                      Đang chiếu
-                    </span>
-                  </div>
-
-                  <h1 className="mb-2 text-3xl leading-tight font-extrabold text-white sm:text-5xl">
-                    {current?.title}
-                  </h1>
-                  <p className="text-zinc-400 text-sm mb-1">
-                    {current?.originalTitle}
-                  </p>
-
-                  <div className="mb-3 flex flex-wrap items-center gap-3 sm:gap-4">
-                    <span className="flex items-center gap-1 text-yellow-400">
-                      <Star className="w-4 h-4 fill-current" />
-                      <span className="font-bold">{current?.rating}/10</span>
-                      <span className="text-zinc-400 text-xs">
-                        ({current?.votes?.toLocaleString()} đánh giá)
-                      </span>
-                    </span>
-                    <span className="flex items-center gap-1 text-zinc-400 text-sm">
-                      <Clock className="w-4 h-4" />
-                      {current?.duration} phút
-                    </span>
-                    <span
-                      className={`rounded px-2 py-0.5 text-xs font-bold text-white ${
-                        current?.rating === "T18"
-                          ? "bg-red-500"
-                          : current?.rating === "T16"
-                          ? "bg-orange-500"
-                          : current?.rating === "T13"
-                          ? "bg-amber-500"
-                          : "bg-green-500"
-                      }`}
-                    >
-                      {current?.rating}
-                    </span>
-                  </div>
-
-                  {current?.description && (
-                    <p className="text-zinc-400 text-sm mb-4 leading-relaxed line-clamp-3">
-                      {current?.description}
-                    </p>
-                  )}
-
-                  {/* Genre Badges (Moved here) */}
-                  <div className="mb-5 flex flex-wrap items-center gap-2">
-                    {current?.genre?.slice(0, 3).map((g) => (
-                      <span
-                        key={g}
-                        className="px-2.5 py-1 rounded-lg text-xs font-medium text-zinc-300 bg-white/5 border border-white/10 backdrop-blur-sm"
-                      >
-                        {g}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <button
-                      onClick={() => navigate(`/movies/${current?.movie_id}`)}
-                      className="cinema-btn-primary w-full justify-center sm:w-auto"
-                    >
-                      <Ticket className="w-4 h-4" />
-                      Đặt vé ngay
-                    </button>
-                    <button
-                      onClick={() => navigate(`/movies/${current?.movie_id}`)}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3 text-white transition-colors hover:bg-white/20 sm:w-auto"
-                    >
-                      <Play className="w-4 h-4" fill="white" />
-                      Xem trailer
-                    </button>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          </div>
-        </div>
-
-        {/* Slider controls */}
-        <button
-          onClick={() =>
-            setHeroIndex((i) => (i - 1 + featured.length) % featured.length)
-          }
-          className="absolute left-3 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white transition-colors hover:bg-black/60 sm:flex"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => setHeroIndex((i) => (i + 1) % featured.length)}
-          className="absolute right-3 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white transition-colors hover:bg-black/60 sm:flex"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
-
-        {/* Dots indicator */}
-        <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2 sm:bottom-6">
-          {featured.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setHeroIndex(i)}
-              className={`rounded-full transition-all ${
-                i === heroIndex
-                  ? "w-8 h-2 bg-red-500"
-                  : "w-2 h-2 bg-white/30 hover:bg-white/60"
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* Thumbnail strip */}
-        <div className="absolute bottom-6 right-6 hidden lg:flex gap-3">
-          {featured.map((m, i) => (
-            <button
-              key={m.movie_id}
-              onClick={() => setHeroIndex(i)}
-              className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${
-                i === heroIndex
-                  ? "border-red-500 opacity-100"
-                  : "border-transparent opacity-50 hover:opacity-75"
-              }`}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-4xl mx-4 rounded-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
             >
-              <img
-                src={m.poster}
-                alt={m.title}
-                className="w-full h-full object-cover"
-              />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ========== MAIN CONTENT ========== */}
-      <div className="mx-auto w-full px-3 pb-14 sm:px-6 sm:pb-16 lg:px-10 2xl:px-14">
-        {/* NOW SHOWING SECTION */}
-        <section className="mt-10">
-          <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-1 rounded-full bg-cinema-primary" />
-              <h2 className="text-xl font-bold text-white">
-                <Flame className="inline w-5 h-5 text-red-500 mr-1.5" />
-                Phim Đang Chiếu
-              </h2>
-            </div>
-            <button
-              onClick={() => navigate("/movies")}
-              className="flex items-center gap-1 text-sm text-zinc-400 transition-colors hover:text-white"
-            >
-              Xem tất cả <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-          <div
-            className="scrollbar-hide flex gap-4 overflow-x-auto pb-4"
-            style={{ scrollbarWidth: "none" }}
-          >
-            {nowShowing.map((movie) => (
-              <MovieCard key={movie.movie_id} movie={movie} size="md" />
-            ))}
-          </div>
-        </section>
-
-        {/* QUICK BOOKING STRIP (Code 2) */}
-        <section className="mt-10">
-          <div className="cinema-surface bg-gradient-to-br from-[#1a0808] to-cinema-surface p-6 rounded-xl">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-white">Đặt vé nhanh</h3>
-                <p className="text-zinc-400 text-sm mt-0.5">
-                  Chọn phim, rạp và ghế ngay chỉ trong 3 bước
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3 sm:justify-end">
-                {["Chọn phim", "Chọn suất", "Chọn ghế"].map((step, i) => (
-                  <div key={step} className="flex items-center gap-2">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-cinema-primary text-xs font-bold text-white">
-                        {i + 1}
-                      </div>
-                      <span className="text-zinc-300 text-sm">{step}</span>
-                    </div>
-                    {i < 2 && (
-                      <ChevronRight className="w-4 h-4 text-zinc-400" />
-                    )}
-                  </div>
-                ))}
-                <button
-                  onClick={() => navigate("/movies")}
-                  className="cinema-btn-primary w-full justify-center px-5 py-2 sm:ml-2 sm:w-auto"
-                >
-                  Bắt đầu
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* COMING SOON SECTION (Kết hợp UI Code 2 + Data Code 1) */}
-        <section className="mt-10">
-          <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-6 rounded-full bg-yellow-500" />
-              <h2 className="text-xl font-bold text-white">
-                <CalendarDays className="inline w-5 h-5 text-yellow-500 mr-1.5" />
-                Phim Sắp Chiếu
-              </h2>
-            </div>
-            <button
-              onClick={() => navigate("/movies?status=coming-soon")}
-              className="flex items-center gap-1 text-sm text-zinc-400 hover:text-white transition-colors"
-            >
-              Xem tất cả <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-          <div
-            className="scrollbar-hide flex gap-4 overflow-x-auto pb-4"
-            style={{ scrollbarWidth: "none" }}
-          >
-            {comingSoon.map((movie) => (
-              <MovieCard key={movie.movie_id} movie={movie} size="md" />
-            ))}
-          </div>
-        </section>
-
-        {/* PROMOTIONS SECTION */}
-        {promotions.length > 0 && (
-          <section className="mt-10">
-            <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-6 rounded-full bg-green-500" />
-                <h2 className="text-xl font-bold text-white">
-                  <Tag className="inline w-5 h-5 text-green-500 mr-1.5" />
-                  Khuyến Mãi Nổi Bật
-                </h2>
+              <div className="relative pt-[56.25%]">
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src={selectedTrailer.trailer.includes('youtube.com') || selectedTrailer.trailer.includes('youtu.be')
+                    ? selectedTrailer.trailer
+                    : `https://www.youtube.com/embed/${extractYouTubeId(selectedTrailer.trailer)}?autoplay=1`
+                  }
+                  title={selectedTrailer.title}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
               </div>
               <button
-                onClick={() => navigate("/promotions")}
-                className="flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+                onClick={() => setShowTrailerModal(false)}
+                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors"
               >
-                Xem tất cả <ArrowRight className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {promotions.slice(0, 4).map((promo) => (
-                <div
-                  key={promo.id}
-                  className="group rounded-2xl overflow-hidden border border-zinc-700 hover:border-zinc-700 transition-all hover:-translate-y-1 duration-300"
-                  style={{ background: "var(--color-cinema-surface)" }}
-                >
-                  <div className="relative h-44 overflow-hidden">
-                    <img
-                      src={promo.image}
-                      alt={promo.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    <div
-                      className="absolute top-3 right-3 px-3 py-1.5 rounded-lg text-white text-sm font-bold shadow-lg"
-                      style={{ background: "var(--color-cinema-primary)" }}
-                    >
-                      -{promo.discount_percent || promo.discount}%
-                    </div>
-                  </div>
-
-                  <div className="p-5">
-                    <h3 className="text-white mb-2 line-clamp-1 text-base font-bold group-hover:text-red-400 transition-colors">
-                      {promo.title}
-                    </h3>
-                    <p className="text-zinc-400 text-sm mb-4 line-clamp-2 leading-relaxed">
-                      {promo.description}
-                    </p>
-
-                    <div className="flex items-center gap-2 mb-3 text-zinc-400 text-xs">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>Hạn sử dụng: {promo.expiry}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-zinc-900 border border-dashed border-zinc-600 rounded-xl px-4 py-2.5 flex items-center gap-2 group-hover:border-red-500/50 transition-colors">
-                        <Tag className="w-4 h-4 text-red-500 shrink-0" />
-                        <span className="text-white text-sm tracking-wider font-bold">
-                          {promo.code}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => navigate("/promotions")}
-                        className="w-10 h-10 rounded-xl bg-zinc-700 hover:bg-zinc-600 flex items-center justify-center transition-all"
-                      >
-                        <ArrowRight className="w-4 h-4 text-white" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+            </motion.div>
+          </motion.div>
         )}
-
-        {/* CTA BANNER (Code 2) */}
-        <section className="mt-10">
-          <div
-            className="relative overflow-hidden rounded-2xl"
-            style={{
-              background:
-                "linear-gradient(135deg, #1a0005, var(--color-cinema-bg))",
-            }}
-          >
-            <div
-              className="absolute inset-0 opacity-30"
-              style={{
-                backgroundImage: `url(https://images.unsplash.com/photo-1757186202331-e72fee53815f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920)`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(229,9,20,0.3) 0%, rgba(17,24,39,0.9) 100%)",
-              }}
-            />
-            <div className="relative z-10 p-6 text-center sm:p-8 md:p-12">
-              <h2 className="mb-3 text-2xl font-extrabold text-white sm:text-3xl">
-                Tải ứng dụng EbizCinema
-              </h2>
-              <p className="text-zinc-300 mb-6 max-w-md mx-auto text-sm">
-                Đặt vé, theo dõi phim yêu thích và nhận ưu đãi độc quyền mọi lúc
-                mọi nơi
-              </p>
-              <div className="flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
-                <button className="flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-zinc-100">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="w-5 h-5"
-                    fill="currentColor"
-                  >
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11" />
-                  </svg>
-                  App Store
-                </button>
-                <button className="flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-zinc-100">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="w-5 h-5"
-                    fill="currentColor"
-                  >
-                    <path d="M3.18 23.76c.39.22.83.24 1.24.03L16.54 12 3.42.21C3.01 0 2.57.02 2.18.24 1.79.46 1.5.89 1.5 1.39v21.22c0 .5.29.93.68 1.15zm9.42-11.76L4.91 19.69 14.89 12zm2.2-1.39L5.16 4.59 14.8 12zM17.22 10.6l-2.12 1.4 2.12 1.4 2.68-1.4z" />
-                  </svg>
-                  Google Play
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
+      </AnimatePresence>
     </div>
   );
 };
