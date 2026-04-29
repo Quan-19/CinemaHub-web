@@ -71,7 +71,7 @@ function ProtectedRoute({ children, allowedRoles }) {
   }
 
   // Kiểm tra 2FA cho admin/staff
-  const needs2FA = user && (user.role === 'admin' || user.role === 'staff') && !twoFactorVerified;
+  const needs2FA = user && (user.role === 'admin' ) && !twoFactorVerified;
   
   if (needs2FA) {
     console.log("🔵 2FA required, redirecting to /2fa");
