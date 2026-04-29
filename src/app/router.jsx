@@ -1,5 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 // Layouts
 import MainLayout from "../layouts/MainLayout.jsx";
 import AdminLayout from "../layouts/AdminLayout.jsx";
@@ -47,49 +46,7 @@ import StaffBannersPage from "../pages/staff/StaffBannersPage.jsx";
 import StaffArticlesPage from "../pages/staff/StaffArticlesPage.jsx";
 import StaffScannerPage from "../pages/staff/StaffScannerPage.jsx";
 
-// ✅ AuthContext hook
-import { useAuth } from "../context/AuthContext.jsx";
-
-function ProtectedRoute({ children, allowedRoles }) {
-  const { user, loading } = useAuth();
-  const location = useLocation();
-
-  const twoFactorVerified = 
-    localStorage.getItem('twoFactorVerified') === 'true' || 
-    sessionStorage.getItem('twoFactorVerified') === 'true';
-
-  console.log("🔵 ProtectedRoute - path:", location.pathname, "2FA:", twoFactorVerified, "user:", user?.email);
-
-  if (loading) {
-    return <div className="p-8 text-center text-zinc-400">Đang kiểm tra quyền...</div>;
-  }
-
-  // 🔥 TUYỆT ĐỐI KHÔNG REDIRECT NẾU ĐANG Ở TRANG 2FA HOẶC AUTH
-  if (location.pathname === "/2fa" || location.pathname === "/auth") {
-    console.log("🔵 On 2FA or Auth page, skip redirect");
-    return children;
-  }
-
-  // Kiểm tra 2FA cho admin/staff
-  const needs2FA = user && (user.role === 'admin' ) && !twoFactorVerified;
-  
-  if (needs2FA) {
-    console.log("🔵 2FA required, redirecting to /2fa");
-    // Lưu email để dùng ở trang 2FA
-    localStorage.setItem("pending2FAEmail", user.email);
-    return <Navigate to={`/2fa?email=${encodeURIComponent(user.email)}`} replace />;
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <div className="p-8 text-center text-red-400">Bạn không có quyền truy cập trang này.</div>;
-  }
-
-  return children;
-}
+import ProtectedRoute from "./ProtectedRoute.jsx";
 
 // Router export - GIỮ NGUYÊN PHẦN CÒN LẠI
 export const router = createBrowserRouter([
