@@ -149,13 +149,34 @@ export function AuthProvider({ children }) {
             };
 
             // Nếu là admin/staff và chưa bật 2FA, yêu cầu setup
-            if (
-              (data.role === "admin" || data.role === "staff") &&
-              !data.two_factor_enabled
-            ) {
+            if (data.role === "admin" && !data.two_factor_enabled) {
               setRequire2FA(true);
               setPending2FAUser({ email: data.email });
               setUser(null);
+              setLoading(false);
+              return;
+            }
+            if (data.role === "staff") {
+              console.log("🔵 Staff logged in - no 2FA required");
+              // Set user normally
+              setUser({
+                uid: firebaseUser.uid,
+                user_id: data.user_id,
+                email: firebaseUser.email,
+                displayName: firebaseUser.displayName,
+                photoURL: firebaseUser.photoURL,
+                role: data.role,
+                cinema_id: data.cinema_id,
+                cinema_name: data.cinema_name,
+                two_factor_enabled: data.two_factor_enabled,
+              });
+
+              storeAuthState({
+                token,
+                role: data.role,
+                remember,
+              });
+              persistUserMeta(meta, remember);
               setLoading(false);
               return;
             }
@@ -227,58 +248,66 @@ export function AuthProvider({ children }) {
   }, []);
 
   const verify2FALogin = async (email, token, backupCode = null) => {
-  try {
-    console.log("🔵 Sending verify request for:", email);
-    
-    const response = await axios.post(`${API_URL}/2fa/verify-login`, {
-      email,
-      token,
-      backupCode,
-    });
+    try {
+      console.log("🔵 Sending verify request for:", email);
 
-    console.log("🔵 Response:", response.data);
-
-    if (response.data.success) {
-      const firebaseToken = response.data.token;
-      const userData = response.data.user;
-      
-      // 🔥 LƯU TOKEN VÀO CẢ HAI NƠI
-      localStorage.setItem('token', firebaseToken);
-      sessionStorage.setItem('token', firebaseToken);
-      
-      // 🔥 LƯU TRẠNG THÁI ĐÃ VERIFY 2FA - DÙNG localStorage LÀ CHÍNH
-      localStorage.setItem('twoFactorVerified', 'true');
-      localStorage.setItem('twoFactorVerifiedTime', Date.now().toString());
-      sessionStorage.setItem('twoFactorVerified', 'true');
-      
-      console.log("✅ 2FA Verified successfully!");
-      console.log("twoFactorVerified (localStorage):", localStorage.getItem('twoFactorVerified'));
-      console.log("twoFactorVerified (sessionStorage):", sessionStorage.getItem('twoFactorVerified'));
-      
-      // 🔥 QUAN TRỌNG: Cập nhật user state với đầy đủ thông tin
-      setUser({
-        uid: userData.uid || email,
-        user_id: userData.user_id,
-        email: userData.email,
-        displayName: userData.name || userData.displayName,
-        photoURL: userData.photoURL || null,
-        role: userData.role,
-        cinema_id: userData.cinema_id,
-        cinema_name: userData.cinema_name,
-        two_factor_enabled: true,
+      const response = await axios.post(`${API_URL}/2fa/verify-login`, {
+        email,
+        token,
+        backupCode,
       });
 
-      setRequire2FA(false);
-      setPending2FAUser(null);
+      console.log("🔵 Response:", response.data);
 
-      return userData;
+      if (response.data.success) {
+        const firebaseToken = response.data.token;
+        const userData = response.data.user;
+
+        // 🔥 LƯU TOKEN VÀO CẢ HAI NƠI
+        localStorage.setItem("token", firebaseToken);
+        sessionStorage.setItem("token", firebaseToken);
+
+        // 🔥 LƯU TRẠNG THÁI ĐÃ VERIFY 2FA - DÙNG localStorage LÀ CHÍNH
+        localStorage.setItem("twoFactorVerified", "true");
+        localStorage.setItem("twoFactorVerifiedTime", Date.now().toString());
+        sessionStorage.setItem("twoFactorVerified", "true");
+
+        console.log("✅ 2FA Verified successfully!");
+        console.log(
+          "twoFactorVerified (localStorage):",
+          localStorage.getItem("twoFactorVerified"),
+        );
+        console.log(
+          "twoFactorVerified (sessionStorage):",
+          sessionStorage.getItem("twoFactorVerified"),
+        );
+
+        // 🔥 QUAN TRỌNG: Cập nhật user state với đầy đủ thông tin
+        setUser({
+          uid: userData.uid || email,
+          user_id: userData.user_id,
+          email: userData.email,
+          displayName: userData.name || userData.displayName,
+          photoURL: userData.photoURL || null,
+          role: userData.role,
+          cinema_id: userData.cinema_id,
+          cinema_name: userData.cinema_name,
+          two_factor_enabled: true,
+        });
+
+        setRequire2FA(false);
+        setPending2FAUser(null);
+
+        return userData;
+      }
+      throw new Error("Xác thực thất bại");
+    } catch (error) {
+      console.error("2FA verification error:", error);
+      throw new Error(
+        error.response?.data?.message || "Mã xác thực không đúng",
+      );
     }
-    throw new Error("Xác thực thất bại");
-  } catch (error) {
-    console.error("2FA verification error:", error);
-    throw new Error(error.response?.data?.message || "Mã xác thực không đúng");
-  }
-};
+  };
   // Login with Email
   const loginWithEmail = async (email, password, remember) => {
     try {
@@ -322,7 +351,7 @@ export function AuthProvider({ children }) {
       }
 
       // Kiểm tra 2FA cho admin/staff
-      if ((role === "admin" || role === "staff") && twoFactorEnabled) {
+      if ((role === "admin" ) && twoFactorEnabled) {
         // Cần 2FA, chưa set user ngay
         console.log("🔵 2FA REQUIRED for:", email);
         setRequire2FA(true);
@@ -454,7 +483,7 @@ export function AuthProvider({ children }) {
       }
 
       // Kiểm tra 2FA cho admin/staff
-      if ((role === "admin" || role === "staff") && twoFactorEnabled) {
+      if ((role === "admin" ) && twoFactorEnabled) {
         console.log("🔵 2FA REQUIRED for Google login:", data.email);
         setRequire2FA(true);
         setPending2FAUser({ email: data.email, remember: rememberLogin });
