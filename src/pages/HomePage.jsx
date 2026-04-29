@@ -193,21 +193,6 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '40%']);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (ref.current) {
-        const rect = ref.current.getBoundingClientRect();
-        setMousePosition({
-          x: (e.clientX - rect.left) / rect.width - 0.5,
-          y: (e.clientY - rect.top) / rect.height - 0.5,
-        });
-      }
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
   if (!movie) return null;
 
@@ -225,13 +210,6 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20" />
       </motion.div>
-
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `radial-gradient(circle at ${50 + mousePosition.x * 20}% ${50 + mousePosition.y * 20}%, rgba(229,9,20,0.15) 0%, transparent 50%)`,
-        }}
-      />
 
       <motion.div style={{ opacity }} className="relative h-full flex items-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
@@ -407,6 +385,7 @@ const HomePage = () => {
           const rawStatus = String(m.status || '').toLowerCase();
           const normalizedStatus = rawStatus.replace(/-/g, '_');
           const ratingScore = Number(m.rating_score ?? m.ratingScore ?? m.rating ?? 0);
+          const reviewCount = Number(m.reviewCount ?? m.review_count ?? 0);
           const tickets = Number(m.tickets ?? 0);
           const views = Number(m.views ?? 0);
 
@@ -415,7 +394,11 @@ const HomePage = () => {
           movie_id: m.movie_id || m.id,
           rating: Number.isFinite(ratingScore) ? ratingScore : 0,
           score: Number.isFinite(ratingScore) ? ratingScore : 0,
-          votes: Number.isFinite(Number(m.votes)) ? Number(m.votes) : (Number.isFinite(tickets) ? tickets : 0),
+          votes: Number.isFinite(Number(m.votes))
+            ? Number(m.votes)
+            : (Number.isFinite(reviewCount) && reviewCount > 0)
+              ? reviewCount
+              : (Number.isFinite(tickets) ? tickets : 0),
           poster: m.poster,
           backdrop: m.backdrop || m.poster,
           description: m.description || '',
@@ -423,7 +406,7 @@ const HomePage = () => {
           originalTitle: m.original_title || m.originalTitle || '',
           releaseDate: m.release_date || m.releaseDate || '',
           duration: m.duration || 120,
-          age_rating: m.age_rating || m.ageRating || m.rating || 'T13',
+          age_rating: m.age_rating || m.ageRating || 'T13',
           trailer: m.trailer || '',
           status: normalizedStatus,
           created_at: m.created_at || m.createdAt,
