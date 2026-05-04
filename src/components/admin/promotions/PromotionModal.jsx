@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, Percent, DollarSign, Calendar, Tag, Users } from "lucide-react";
+import { formatNumberInput, parseNumberInput } from "../../../utils/numberFormat";
 
 const seatTypes = [
   { value: "Thường", label: "Ghế Thường", color: "text-gray-400" },
@@ -215,10 +216,17 @@ export default function PromotionModal({ show, onClose, onSave, editingItem }) {
                 Giá trị giảm <span className="text-red-400">*</span>
               </label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9,]*"
                 placeholder={form.discount_type === 'percent' ? "VD: 20" : "VD: 50000"}
-                value={form.discount_value}
-                onChange={(e) => setForm({ ...form, discount_value: e.target.value })}
+                value={formatNumberInput(form.discount_value)}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    discount_value: parseNumberInput(e.target.value),
+                  })
+                }
                 className={`${inputClass} ${errors.discount ? 'border-red-500/50' : ''}`}
               />
               {errors.discount && <p className="text-red-400 text-xs mt-1">{errors.discount}</p>}
@@ -308,10 +316,17 @@ export default function PromotionModal({ show, onClose, onSave, editingItem }) {
                 Đơn hàng tối thiểu (₫)
               </label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9,]*"
                 placeholder="0"
-                value={form.min_order}
-                onChange={(e) => setForm({ ...form, min_order: e.target.value })}
+                value={formatNumberInput(form.min_order)}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    min_order: parseNumberInput(e.target.value),
+                  })
+                }
                 className={inputClass}
               />
             </div>
@@ -320,10 +335,17 @@ export default function PromotionModal({ show, onClose, onSave, editingItem }) {
                 Giới hạn số lượt sử dụng
               </label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9,]*"
                 placeholder="Không giới hạn"
-                value={form.usage_limit}
-                onChange={(e) => setForm({ ...form, usage_limit: e.target.value })}
+                value={formatNumberInput(form.usage_limit)}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    usage_limit: parseNumberInput(e.target.value),
+                  })
+                }
                 className={inputClass}
               />
             </div>

@@ -12,6 +12,7 @@ import { makeId } from "../../components/staff/staffUtils.js";
 import { StaffCenteredModalShell } from "../../components/staff/StaffModalShell.jsx";
 import StaffSuccessToast from "../../components/staff/StaffSuccessToast.jsx";
 import StaffConfirmModal from "../../components/staff/StaffConfirmModal.jsx";
+import { formatNumberInput, parseNumberInput } from "../../utils/numberFormat";
 
 const MOCK_BANNERS = [
   {
@@ -310,11 +311,15 @@ function EditBannerModal({
             <div>
               <label className={labelBase}>Thứ tự</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9,]*"
                 className={inputBase}
-                value={form.order}
-                onChange={(e) => setForm((p) => ({ ...p, order: Number(e.target.value) }))}
-                min="1"
+                value={formatNumberInput(form.order)}
+                onChange={(e) => {
+                  const parsed = parseNumberInput(e.target.value);
+                  setForm((p) => ({ ...p, order: parsed === "" ? "" : parsed }));
+                }}
               />
             </div>
           </div>

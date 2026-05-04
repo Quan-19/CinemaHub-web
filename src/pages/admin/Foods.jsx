@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { formatNumberInput, parseNumberInput } from "../../utils/numberFormat";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
 import { Plus, Edit, Trash2, Package, Search, X, Upload } from "lucide-react";
@@ -398,15 +399,20 @@ export default function Foods() {
                     Giá (VNĐ)
                   </label>
                   <input
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
-                    }
-                    placeholder="Ví dụ: 50000"
-                    className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 transition-colors"
-                    required
-                  />
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9,]*"
+                      value={formatNumberInput(formData.price)}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          price: parseNumberInput(e.target.value),
+                        })
+                      }
+                      placeholder="Ví dụ: 50000"
+                      className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 transition-colors"
+                      required
+                    />
                 </div>
 
                 {/* Upload Ảnh - Thay đổi ở đây */}
