@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import { toast } from "react-hot-toast";
+import { formatNumberInput, parseNumberInput } from "../../../utils/numberFormat";
 
 export default function CinemaModal({
   show,
@@ -49,16 +50,17 @@ export default function CinemaModal({
 
   // Hàm xử lý thay đổi số phòng tối đa
   const handleMaxRoomsChange = (e) => {
-    const newMaxRooms = Number(e.target.value);
+    const parsedValue = parseNumberInput(e.target.value);
+    const newMaxRooms = parsedValue === "" ? null : parsedValue;
     const currentRooms = form.currentRooms || 0;
     
     // Nếu đang ở chế độ chỉnh sửa và giá trị mới nhỏ hơn số phòng hiện tại
-    if (isEdit && newMaxRooms < currentRooms) {
+    if (newMaxRooms !== null && isEdit && newMaxRooms < currentRooms) {
       toast.error(`Không thể giảm số phòng tối đa xuống dưới ${currentRooms} phòng (hiện có ${currentRooms} phòng)`);
       return;
     }
-    
-    setForm(p => ({ ...p, maxRooms: newMaxRooms }));
+
+    setForm(p => ({ ...p, maxRooms: newMaxRooms === null ? "" : newMaxRooms }));
   };
 
   if (!show) return null;
@@ -165,10 +167,10 @@ export default function CinemaModal({
                 <span className="text-xs text-white/40 ml-1">(giới hạn)</span>
               </label>
               <input
-                type="number"
-                min={isEdit ? (form.currentRooms || 1) : 1}
-                max="20"
-                value={form.maxRooms || 4}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9,]*"
+                value={formatNumberInput(form.maxRooms ?? 4)}
                 onChange={handleMaxRoomsChange}
                 className={inputClass}
               />

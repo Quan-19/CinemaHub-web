@@ -1,5 +1,6 @@
 import { X, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { formatNumberInput, parseNumberInput } from "../../../utils/numberFormat";
 
 export default function QuickEditModal({ 
   show, 
@@ -55,13 +56,18 @@ export default function QuickEditModal({
               Cập nhật giá vé (VNĐ)
             </label>
             <input
-              type="number"
-              value={updates.price}
-              onChange={e => setUpdates(p => ({ ...p, price: e.target.value }))}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9,]*"
+              value={formatNumberInput(updates.price)}
+              onChange={(e) =>
+                setUpdates((p) => ({
+                  ...p,
+                  price: parseNumberInput(e.target.value),
+                }))
+              }
               placeholder="Nhập giá vé mới..."
               className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder:text-white/30"
-              min="0"
-              step="1000"
             />
             <p className="text-[10px] text-white/30 mt-1">Để trống nếu không thay đổi</p>
           </div>

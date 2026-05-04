@@ -16,6 +16,7 @@ import { makeId } from "../../components/staff/staffUtils.js";
 import { StaffCenteredModalShell } from "../../components/staff/StaffModalShell.jsx";
 import StaffIconButton from "../../components/staff/StaffIconButton.jsx";
 import StaffConfirmModal from "../../components/staff/StaffConfirmModal.jsx";
+import { formatNumberInput, parseNumberInput } from "../../utils/numberFormat";
 
 const DAY_LABELS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 const DEFAULT_DAYS = [0, 1, 2, 3, 4, 5, 6];
@@ -271,11 +272,15 @@ function PromotionFormModal({
           <div>
             <div className={labelCls}>Mức giảm (đ)</div>
             <input
-              type="number"
-              min="0"
-              value={form.discountValue}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9,]*"
+              value={formatNumberInput(form.discountValue)}
               onChange={(e) =>
-                setForm((p) => ({ ...p, discountValue: e.target.value }))
+                setForm((p) => ({
+                  ...p,
+                  discountValue: parseNumberInput(e.target.value),
+                }))
               }
               placeholder="VD: 30000"
               className={inputCls}
@@ -284,10 +289,15 @@ function PromotionFormModal({
           <div>
             <div className={labelCls}>Đơn tối thiểu (đ)</div>
             <input
-              type="number"
-              value={form.minOrder}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9,]*"
+              value={formatNumberInput(form.minOrder)}
               onChange={(e) =>
-                setForm((p) => ({ ...p, minOrder: e.target.value }))
+                setForm((p) => ({
+                  ...p,
+                  minOrder: parseNumberInput(e.target.value),
+                }))
               }
               className={inputCls}
             />
@@ -307,10 +317,15 @@ function PromotionFormModal({
           <div>
             <div className={labelCls}>Giới hạn lượt dùng</div>
             <input
-              type="number"
-              value={form.usageLimit}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9,]*"
+              value={formatNumberInput(form.usageLimit)}
               onChange={(e) =>
-                setForm((p) => ({ ...p, usageLimit: e.target.value }))
+                setForm((p) => ({
+                  ...p,
+                  usageLimit: parseNumberInput(e.target.value),
+                }))
               }
               className={inputCls}
             />

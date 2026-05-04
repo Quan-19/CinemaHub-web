@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { formatNumberInput, parseNumberInput } from "../../../utils/numberFormat";
 
 export default function MovieModal({
   show,
@@ -208,12 +209,15 @@ export default function MovieModal({
                 Thời lượng (phút) <span className="text-red-500">*</span>
               </label>
               <input
-                type="number"
-                min="1"
-                max="500"
-                value={form?.duration || ""}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9,]*"
+                value={formatNumberInput(form?.duration || "")}
                 onChange={(e) =>
-                  setForm({ ...form, duration: Number(e.target.value) })
+                  setForm({
+                    ...form,
+                    duration: parseNumberInput(e.target.value),
+                  })
                 }
                 className={inputClass}
                 placeholder="Thời lượng phim"
