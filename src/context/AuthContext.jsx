@@ -351,7 +351,7 @@ export function AuthProvider({ children }) {
       }
 
       // Kiểm tra 2FA cho admin/staff
-      if ((role === "admin" ) && twoFactorEnabled) {
+      if (role === "admin" && twoFactorEnabled) {
         // Cần 2FA, chưa set user ngay
         console.log("🔵 2FA REQUIRED for:", email);
         setRequire2FA(true);
@@ -483,7 +483,7 @@ export function AuthProvider({ children }) {
       }
 
       // Kiểm tra 2FA cho admin/staff
-      if ((role === "admin" ) && twoFactorEnabled) {
+      if (role === "admin" && twoFactorEnabled) {
         console.log("🔵 2FA REQUIRED for Google login:", data.email);
         setRequire2FA(true);
         setPending2FAUser({ email: data.email, remember: rememberLogin });
@@ -534,7 +534,7 @@ export function AuthProvider({ children }) {
     try {
       await signOut(auth);
     } finally {
-      clearStoredAuthState();
+      clearStoredAuthState(); // Hàm này đã được cập nhật
       setUser(null);
       setRequire2FA(false);
       setPending2FAUser(null);

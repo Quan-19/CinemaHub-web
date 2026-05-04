@@ -573,30 +573,10 @@ const HomePage = () => {
             <AnimatedSection>
               <GlowCard className="bg-gradient-to-r from-red-900/20 to-red-800/5 border border-red-500/20 rounded-2xl p-5 mb-12 backdrop-blur-xl">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
-                      <Sparkles className="w-6 h-6 text-red-500" />
-                    </div>
+                  <div className="flex items-center gap-4">  
                     <div>
                       <h3 className="text-white font-bold text-lg">Đặt vé nhanh chóng</h3>
                       <p className="text-zinc-400 text-sm">Chỉ 3 bước đơn giản để có vé xem phim</p>
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                        {nowShowing.slice(0, 3).map((m) => (
-                          <motion.button
-                            key={m.movie_id}
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/movies/${m.movie_id}`);
-                            }}
-                            className="px-3 py-1.5 rounded-full bg-zinc-900/50 border border-white/10 text-zinc-200 text-xs font-semibold hover:border-white/20 hover:text-white transition-colors"
-                            title={m.title}
-                          >
-                            {m.title}
-                          </motion.button>
-                        ))}
-                      </div>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-4">
@@ -630,7 +610,7 @@ const HomePage = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-8 rounded-full bg-red-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
-                    <Flame className="inline w-5 h-5 md:w-6 md:h-6 text-red-500 mr-2" />
+                    {/* <Flame className="inline w-5 h-5 md:w-6 md:h-6 text-red-500 mr-2" /> */}
                     Phim Đang Chiếu
                   </h2>
                 </div>
@@ -659,7 +639,7 @@ const HomePage = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-8 rounded-full bg-orange-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
-                    <TrendingUp className="inline w-5 h-5 md:w-6 md:h-6 text-orange-500 mr-2" />
+                    {/* <TrendingUp className="inline w-5 h-5 md:w-6 md:h-6 text-orange-500 mr-2" /> */}
                     Phim Hot Tuần Này
                   </h2>
                 </div>
@@ -694,7 +674,7 @@ const HomePage = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-8 rounded-full bg-yellow-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
-                    <CalendarDays className="inline w-5 h-5 md:w-6 md:h-6 text-yellow-500 mr-2" />
+                    {/* <CalendarDays className="inline w-5 h-5 md:w-6 md:h-6 text-yellow-500 mr-2" /> */}
                     Phim Sắp Chiếu
                   </h2>
                 </div>
@@ -723,7 +703,7 @@ const HomePage = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-8 rounded-full bg-purple-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
-                    <MapPin className="inline w-5 h-5 md:w-6 md:h-6 text-purple-500 mr-2" />
+                    {/* <MapPin className="inline w-5 h-5 md:w-6 md:h-6 text-purple-500 mr-2" /> */}
                     Rạp Chiếu Nổi Bật
                   </h2>
                 </div>
@@ -752,7 +732,7 @@ const HomePage = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-8 rounded-full bg-green-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
-                    <Gift className="inline w-5 h-5 md:w-6 md:h-6 text-green-500 mr-2" />
+                    {/* <Gift className="inline w-5 h-5 md:w-6 md:h-6 text-green-500 mr-2" /> */}
                     Ưu Đãi Đặc Biệt
                   </h2>
                 </div>
@@ -824,7 +804,7 @@ const HomePage = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-8 rounded-full bg-blue-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
-                    <Newspaper className="inline w-5 h-5 md:w-6 md:h-6 text-blue-500 mr-2" />
+                    {/* <Newspaper className="inline w-5 h-5 md:w-6 md:h-6 text-blue-500 mr-2" /> */}
                     Tin tức điện ảnh
                   </h2>
                 </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Calendar, Sparkles } from "lucide-react";
 import { getPricingRuleRoomType, isHolidayPricingRule } from "../../../utils/pricingRuleUtils";
+import { formatNumberInput, parseNumberInput } from "../../../utils/numberFormat";
 
 const seatTypes = [
   { value: "Thường", label: "Ghế Thường", color: "text-gray-400" },
@@ -322,9 +323,9 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                   onChange={(e) => setForm({ ...form, time: e.target.value })}
                   className="w-full h-[45px] px-4 rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-red-500/50"
                 >
-                  <option value="Sáng (trước 12h)">Sáng (trước 12h)</option>
+                  <option value="Sáng (0h-11h)">Sáng (0h-11h)</option>
                   <option value="Chiều (12h-18h)">Chiều (12h-18h)</option>
-                  <option value="Tối (sau 18h)">Tối (sau 18h)</option>
+                  <option value="Tối (18h-23h)">Tối (18h-23h)</option>
                 </select>
                 {errors.time && <p className="text-red-400 text-xs mt-1">{errors.time}</p>}
               </div>
@@ -333,9 +334,16 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                 <div>
                   <label className="text-sm font-medium text-gray-300 mb-2 block">Giá gốc (₫) <span className="text-red-400">*</span></label>
                   <input
-                    type="number"
-                    value={form.base}
-                    onChange={(e) => setForm({ ...form, base: e.target.value })}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9,]*"
+                    value={formatNumberInput(form.base)}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        base: parseNumberInput(e.target.value),
+                      })
+                    }
                     placeholder="85000"
                     className="w-full h-[45px] px-4 rounded-xl bg-zinc-900 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50"
                   />
@@ -345,9 +353,16 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                 <div>
                   <label className="text-sm font-medium text-gray-300 mb-2 block">Giá áp dụng (₫)</label>
                   <input
-                    type="number"
-                    value={form.final}
-                    onChange={(e) => setForm({ ...form, final: e.target.value })}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9,]*"
+                    value={formatNumberInput(form.final)}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        final: parseNumberInput(e.target.value),
+                      })
+                    }
                     placeholder="85000"
                     className="w-full h-[45px] px-4 rounded-xl bg-zinc-900 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50"
                   />
@@ -433,10 +448,21 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                       <div className="flex-1 relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₫</span>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9,]*"
                           placeholder="Giá vé"
-                          value={form.holiday_prices.find(hp => hp.seat_type === seat.value)?.price || ""}
-                          onChange={(e) => updateHolidayPrice(seat.value, e.target.value)}
+                          value={formatNumberInput(
+                            form.holiday_prices.find(
+                              (hp) => hp.seat_type === seat.value
+                            )?.price || ""
+                          )}
+                          onChange={(e) =>
+                            updateHolidayPrice(
+                              seat.value,
+                              parseNumberInput(e.target.value)
+                            )
+                          }
                           className="w-full bg-zinc-900 border border-white/10 rounded-lg pl-8 pr-4 py-2.5 text-white text-sm outline-none focus:border-yellow-500/50"
                         />
                       </div>

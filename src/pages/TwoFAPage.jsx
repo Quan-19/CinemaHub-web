@@ -1,10 +1,8 @@
 // src/pages/TwoFAPage.jsx
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Shield, AlertCircle, ArrowLeft } from "lucide-react";
-import axios from "axios";
-
-const API_URL = "http://localhost:5000/api";
+import { Shield, AlertCircle, ArrowLeft, Clock } from "lucide-react";
+import axios from "../utils/axiosConfig";
 
 export default function TwoFAPage() {
   const navigate = useNavigate();
@@ -13,29 +11,34 @@ export default function TwoFAPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
-    // Lấy email từ URL params
     const params = new URLSearchParams(location.search);
     const emailParam = params.get("email");
+    const expired = params.get("expired") === "true";
 
-    // Hoặc lấy từ localStorage
     const storedEmail =
+      emailParam ||
       localStorage.getItem("pending2FAEmail") ||
-      sessionStorage.getItem("pending2FAEmail");
+      sessionStorage.getItem("pending2FAEmail") ||
+      localStorage.getItem("userEmail");
 
-    const finalEmail = emailParam || storedEmail;
-
-    if (!finalEmail) {
-      // Không có email, quay về login
+    if (!storedEmail) {
+      console.error("No email found for 2FA");
       window.location.href = "/auth";
       return;
     }
 
-    setEmail(finalEmail);
+    setEmail(storedEmail);
+    setSessionExpired(expired);
 
-    // Lưu lại để dùng nếu refresh
-    localStorage.setItem("pending2FAEmail", finalEmail);
+    if (expired) {
+      setError("Phiên xác thực đã hết hạn (5 phút). Vui lòng xác thực lại.");
+    }
+
+    localStorage.setItem("pending2FAEmail", storedEmail);
+    localStorage.setItem("userEmail", storedEmail);
   }, [location.search]);
 
   const handleVerify = async () => {
@@ -48,42 +51,54 @@ export default function TwoFAPage() {
     setError("");
 
     try {
-      console.log("🔵 Verifying 2FA for:", email);
+      const token =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
 
-      const response = await axios.post(`${API_URL}/2fa/verify-login`, {
-        email: email,
-        token: otpCode,
-        backupCode: null,
-      });
+      if (token) {
+        const response = await axios.post("/api/2fa/verify-session", {
+          token: otpCode,
+          backupCode: null,
+        });
 
-      console.log("🔵 Response:", response.data);
+        console.log("Verify session response:", response.data);
 
-      if (response.data.success) {
-        const { token, user } = response.data;
+        if (response.data.success) {
+          // Lưu trạng thái 2FA
+          localStorage.setItem("twoFactorVerified", "true");
+          sessionStorage.setItem("twoFactorVerified", "true");
 
-        // Lưu token và 2FA verified
-        localStorage.setItem("token", token);
-        sessionStorage.setItem("token", token);
-        localStorage.setItem("twoFactorVerified", "true");
-        sessionStorage.setItem("twoFactorVerified", "true");
+          if (response.data.twoFactorVerifiedUntil) {
+            localStorage.setItem(
+              "twoFactorExpiry",
+              response.data.twoFactorVerifiedUntil,
+            );
+          }
 
-        // Lưu role
-        localStorage.setItem("role", user.role);
-        sessionStorage.setItem("role", user.role);
-
-        // Xóa email tạm
-        localStorage.removeItem("pending2FAEmail");
-
-        console.log("✅ 2FA verified, redirecting...");
-
-        // Redirect dựa trên role
-        const role = user.role;
-        if (role === "admin") {
+          localStorage.removeItem("pending2FAEmail");
           window.location.href = "/admin/dashboard";
-        } else if (role === "staff") {
-          window.location.href = "/staff";
-        } else {
-          window.location.href = "/";
+        }
+      } else {
+        const response = await axios.post("/api/2fa/verify-login", {
+          email: email,
+          token: otpCode,
+          backupCode: null,
+        });
+
+        console.log("Verify login response:", response.data);
+
+        if (response.data.success) {
+          const { token: newToken, user } = response.data;
+
+          localStorage.setItem("token", newToken);
+          sessionStorage.setItem("token", newToken);
+          localStorage.setItem("role", user.role);
+          sessionStorage.setItem("role", user.role);
+          localStorage.setItem("userEmail", email);
+          localStorage.setItem("twoFactorVerified", "true");
+          sessionStorage.setItem("twoFactorVerified", "true");
+
+          localStorage.removeItem("pending2FAEmail");
+          window.location.href = "/admin/dashboard";
         }
       }
     } catch (err) {
@@ -92,25 +107,22 @@ export default function TwoFAPage() {
         err.response?.data?.message || "Mã OTP không đúng. Vui lòng thử lại.";
       setError(errorMessage);
       setOtpCode("");
-      setTimeout(() => {
-        document.querySelector("input")?.focus();
-      }, 100);
     } finally {
       setLoading(false);
     }
   };
 
-  // Hàm quay lại đăng nhập - DÙNG WINDOW.LOCATION.HREF
   const handleBackToLogin = () => {
-    // Xóa dữ liệu tạm
     localStorage.removeItem("pending2FAEmail");
-    sessionStorage.removeItem("pending2FAEmail");
+    localStorage.removeItem("userEmail");
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
     localStorage.removeItem("twoFactorVerified");
     sessionStorage.removeItem("twoFactorVerified");
+    localStorage.removeItem("twoFactorExpiry");
+    localStorage.removeItem("role");
+    sessionStorage.removeItem("role");
 
-    // Redirect về trang login
     window.location.href = "/auth";
   };
 
@@ -121,13 +133,21 @@ export default function TwoFAPage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10">
             <Shield className="h-8 w-8 text-red-500" />
           </div>
-          <h2 className="text-2xl font-bold text-white">Xác thực 2 yếu tố</h2>
+          <h2 className="text-2xl font-bold text-white">
+            {sessionExpired ? "Xác thực lại 2FA" : "Xác thực 2 yếu tố"}
+          </h2>
           <p className="text-gray-400 mt-2">
-            Vui lòng nhập mã OTP từ Google Authenticator
+            {sessionExpired
+              ? "Phiên xác thực đã hết hạn. Vui lòng nhập mã OTP mới."
+              : "Vui lòng nhập mã OTP từ Google Authenticator"}
           </p>
           <p className="text-sm text-gray-500 mt-1">
             Email: <strong className="text-white">{email}</strong>
           </p>
+          <div className="mt-3 flex items-center justify-center gap-2 text-xs text-yellow-500 bg-yellow-500/10 p-2 rounded">
+            <Clock className="h-3 w-3" />
+            <span>Mỗi lần xác thực có hiệu lực trong 5 phút</span>
+          </div>
         </div>
 
         <input

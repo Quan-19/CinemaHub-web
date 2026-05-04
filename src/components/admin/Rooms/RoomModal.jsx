@@ -1,6 +1,7 @@
 // RoomModal.jsx (phiên bản sửa lỗi)
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { formatNumberInput, parseNumberInput } from "../../../utils/numberFormat";
 
 export default function RoomModal({
   show,
@@ -306,13 +307,14 @@ export default function RoomModal({
                 Số hàng ghế <span className="text-red-500">*</span>
               </label>
               <input
-                type="number"
-                min={4}
-                max={20}
-                value={form.rows}
-                onChange={(e) =>
-                  setForm({ ...form, rows: Number(e.target.value) })
-                }
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9,]*"
+                value={formatNumberInput(form.rows)}
+                onChange={(e) => {
+                  const parsed = parseNumberInput(e.target.value);
+                  setForm({ ...form, rows: parsed === "" ? "" : parsed });
+                }}
                 className={`w-full px-4 py-2 rounded-lg outline-none bg-zinc-900 text-white border ${errors.rows ? "border-red-500" : "border-white/10"}`}
               />
               {errors.rows && (
@@ -326,13 +328,14 @@ export default function RoomModal({
                 Số ghế mỗi hàng <span className="text-red-500">*</span>
               </label>
               <input
-                type="number"
-                min={4}
-                max={20}
-                value={form.cols}
-                onChange={(e) =>
-                  setForm({ ...form, cols: Number(e.target.value) })
-                }
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9,]*"
+                value={formatNumberInput(form.cols)}
+                onChange={(e) => {
+                  const parsed = parseNumberInput(e.target.value);
+                  setForm({ ...form, cols: parsed === "" ? "" : parsed });
+                }}
                 className={`w-full px-4 py-2 rounded-lg outline-none bg-zinc-900 text-white border ${errors.cols ? "border-red-500" : "border-white/10"}`}
               />
               {errors.cols && (
@@ -366,14 +369,17 @@ export default function RoomModal({
                 Hàng Couple (để trống nếu không có)
               </label>
               <input
-                type="number"
-                value={form.coupleRow || ""}
-                onChange={(e) =>
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9,]*"
+                value={formatNumberInput(form.coupleRow || "")}
+                onChange={(e) => {
+                  const parsed = parseNumberInput(e.target.value);
                   setForm({
                     ...form,
-                    coupleRow: e.target.value ? Number(e.target.value) : null,
-                  })
-                }
+                    coupleRow: parsed === "" ? null : parsed,
+                  });
+                }}
                 placeholder="VD: 10"
                 className={`w-full px-4 py-2 rounded-lg outline-none bg-zinc-900 text-white border ${errors.coupleRow ? "border-red-500" : "border-white/10"}`}
               />

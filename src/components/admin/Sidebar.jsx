@@ -34,14 +34,33 @@ export default function Sidebar(props) {
 
   const adminName = user?.displayName || user?.email?.split("@")[0] || "Admin";
   const adminEmail = user?.email || "";
-  const adminInitial = String(adminName || "A").trim().charAt(0).toUpperCase() || "A";
+  const adminInitial =
+    String(adminName || "A")
+      .trim()
+      .charAt(0)
+      .toUpperCase() || "A";
 
+  // Sidebar.jsx
   const handleLogout = async () => {
     try {
       await logout();
     } finally {
+      // 🔥 XÓA TẤT CẢ DỮ LIỆU LIÊN QUAN ĐẾN AUTH VÀ 2FA
       localStorage.removeItem("token");
       localStorage.removeItem("role");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("twoFactorVerified");
+      localStorage.removeItem("twoFactorExpiry");
+      localStorage.removeItem("pending2FAEmail");
+      localStorage.removeItem("redirectAfter2FA");
+
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("role");
+      sessionStorage.removeItem("userEmail");
+      sessionStorage.removeItem("twoFactorVerified");
+      sessionStorage.removeItem("twoFactorExpiry");
+      sessionStorage.removeItem("pending2FAEmail");
+
       navigate("/auth");
     }
   };
@@ -80,8 +99,8 @@ export default function Sidebar(props) {
       items: [
         { name: "Tài khoản", icon: UserCog, path: "/admin/accounts" },
         { name: "Khách hàng", icon: Users, path: "/admin/customers" },
-        // { name: "Banner quảng cáo", icon: Image, path: "/admin/banners" },
-        // { name: "Bài viết", icon: FileText, path: "/admin/posts" },
+        { name: "Banner quảng cáo", icon: Image, path: "/admin/banners" },
+        { name: "Bài viết", icon: FileText, path: "/admin/posts" },
         // { name: "Thanh toán", icon: CreditCard, path: "/admin/payments" },
         // { name: "Dữ liệu phụ trợ", icon: Database, path: "/admin/data" },
       ],

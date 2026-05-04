@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatNumberInput } from "../../utils/numberFormat";
 import { Plus, Edit2, Trash2, Eye, EyeOff, GripVertical, Image, Upload, Toggle } from "lucide-react";
 
 // Định nghĩa mockBanners dạng mảng object JS thuần
@@ -253,7 +254,14 @@ export const AdminBannersPage = () => {
               </div>
               <div>
                 <label style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", display: "block", marginBottom: 6 }}>Thứ tự</label>
-                <input type="number" defaultValue={editItem?.order || 1} min={1}
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9,]*"
+                  defaultValue={formatNumberInput(editItem?.order || 1)}
+                  onChange={(e) => {
+                    e.target.value = formatNumberInput(e.target.value);
+                  }}
                   style={{ width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "10px 12px", color: "#fff", fontSize: 14, outline: "none" }} />
               </div>
             </div>
