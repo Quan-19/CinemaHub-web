@@ -736,8 +736,8 @@ export const SeatSelectionPage = () => {
                   <SeatLegendItem colorClassName="border-transparent bg-zinc-900/80" label="Đã đặt" />
                   <SeatLegendItem colorClassName="border-green-500 bg-green-500" label="Đang chọn" />
                   <SeatLegendItem colorClassName="border-zinc-700 bg-zinc-800/20" label="Thường" />
-                  <SeatLegendItem colorClassName="border-amber-500/40 bg-amber-500/5" label="VIP (+30%)" />
-                  <SeatLegendItem colorClassName="border-rose-500/40 bg-rose-500/5" label="Couple (+50%)" />
+                  <SeatLegendItem colorClassName="border-amber-500/40 bg-amber-500/5" label="VIP" />
+                  <SeatLegendItem colorClassName="border-rose-500/40 bg-rose-500/5" label="Couple" />
                   <SeatLegendItem colorClassName="border-red-500 bg-red-500/25" label="Bảo trì" />
                 </div>
               </div>
