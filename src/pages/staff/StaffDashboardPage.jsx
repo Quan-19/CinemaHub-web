@@ -85,8 +85,10 @@ function StatCard({
         ) : null}
       </div>
 
-      <div className="mt-4">
-        <div className="text-3xl font-bold tracking-tight">{value}</div>
+      <div className="mt-4 overflow-hidden">
+        <div className="text-3xl font-bold tracking-tight truncate" title={value}>
+          {value}
+        </div>
         <div className="mt-1 text-sm text-zinc-400">{title}</div>
         {helperText ? (
           <div className="mt-2 text-xs text-zinc-400">{helperText}</div>
@@ -283,14 +285,17 @@ function StaffDashboardPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold sm:text-3xl">Dashboard Nhân viên</h1>
-        <p className="mt-1 text-sm text-zinc-400">{subtitle}</p>
-      </div>
+    <main className="space-y-6">
+      <header>
+        <h1 className="text-2xl font-bold sm:text-3xl tracking-tight text-white">Dashboard Nhân viên</h1>
+        <p className="mt-1 text-sm text-zinc-400 font-medium">{subtitle}</p>
+      </header>
 
       {/* ================= STATS ================= */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section 
+        aria-label="Thống kê tổng quan"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+      >
         <StatCard
           icon={Ticket}
           accentClassName="bg-cinema-primary/15 text-cinema-primary"
@@ -326,58 +331,69 @@ function StaffDashboardPage() {
         />
       </section>
 
-      {/* ================= MONTHLY REVENUE ================= */}
-      <section className="cinema-surface p-4 sm:p-5">
-        <div className="flex items-end justify-between gap-4">
-          <h2 className="text-base font-semibold">Doanh thu theo kỳ</h2>
+      {/* ================= REVENUE SECTION ================= */}
+      <section 
+        aria-labelledby="revenue-heading"
+        className="cinema-surface overflow-hidden"
+      >
+        <div className="flex flex-col gap-4 border-b border-white/5 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <h2 id="revenue-heading" className="text-lg font-bold text-white">Doanh thu theo kỳ</h2>
+          
           <div className="flex flex-wrap items-center gap-3">
-            <label
-              className="text-xs font-semibold text-zinc-400"
-              htmlFor="staff-dashboard-revenue-view"
-            >
-              Xem
-            </label>
-            <select
-              id="staff-dashboard-revenue-view"
-              className="rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-2 text-xs font-semibold text-zinc-100 outline-none"
-              value={revenueView}
-              onChange={(e) => setRevenueView(e.target.value)}
-            >
-              <option value="month">Theo tháng</option>
-              <option value="day">Theo ngày</option>
-              <option value="quarter">Theo quý</option>
-            </select>
+            <div className="flex items-center gap-2">
+              <label
+                className="text-xs font-bold uppercase tracking-wider text-zinc-500"
+                htmlFor="staff-dashboard-revenue-view"
+              >
+                Xem
+              </label>
+              <select
+                id="staff-dashboard-revenue-view"
+                aria-label="Chọn kiểu xem doanh thu"
+                className="rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-100 outline-none transition-colors hover:border-white/20 focus:border-cinema-primary"
+                value={revenueView}
+                onChange={(e) => setRevenueView(e.target.value)}
+              >
+                <option value="month">Theo tháng</option>
+                <option value="day">Theo ngày</option>
+                <option value="quarter">Theo quý</option>
+              </select>
+            </div>
 
-            <label
-              className="text-xs font-semibold text-zinc-400"
-              htmlFor="staff-dashboard-year"
-            >
-              Năm
-            </label>
-            <select
-              id="staff-dashboard-year"
-              className="rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-2 text-xs font-semibold text-zinc-100 outline-none"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-            >
-              {yearOptions.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2">
+              <label
+                className="text-xs font-bold uppercase tracking-wider text-zinc-500"
+                htmlFor="staff-dashboard-year"
+              >
+                Năm
+              </label>
+              <select
+                id="staff-dashboard-year"
+                aria-label="Chọn năm xem doanh thu"
+                className="rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-100 outline-none transition-colors hover:border-white/20 focus:border-cinema-primary"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+              >
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            {revenueView === "day" ? (
-              <>
+            {revenueView === "day" && (
+              <div className="flex items-center gap-2">
                 <label
-                  className="text-xs font-semibold text-zinc-400"
+                  className="text-xs font-bold uppercase tracking-wider text-zinc-500"
                   htmlFor="staff-dashboard-month"
                 >
                   Tháng
                 </label>
                 <select
                   id="staff-dashboard-month"
-                  className="rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-2 text-xs font-semibold text-zinc-100 outline-none"
+                  aria-label="Chọn tháng xem doanh thu"
+                  className="rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-100 outline-none transition-colors hover:border-white/20 focus:border-cinema-primary"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(Number(e.target.value))}
                 >
@@ -387,20 +403,21 @@ function StaffDashboardPage() {
                     </option>
                   ))}
                 </select>
-              </>
-            ) : null}
+              </div>
+            )}
 
-            {revenueView === "quarter" ? (
-              <>
+            {revenueView === "quarter" && (
+              <div className="flex items-center gap-2">
                 <label
-                  className="text-xs font-semibold text-zinc-400"
+                  className="text-xs font-bold uppercase tracking-wider text-zinc-500"
                   htmlFor="staff-dashboard-quarter"
                 >
                   Quý
                 </label>
                 <select
                   id="staff-dashboard-quarter"
-                  className="rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-2 text-xs font-semibold text-zinc-100 outline-none"
+                  aria-label="Chọn quý xem doanh thu"
+                  className="rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-100 outline-none transition-colors hover:border-white/20 focus:border-cinema-primary"
                   value={selectedQuarter}
                   onChange={(e) => setSelectedQuarter(Number(e.target.value))}
                 >
@@ -410,164 +427,194 @@ function StaffDashboardPage() {
                     </option>
                   ))}
                 </select>
-              </>
-            ) : null}
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div>
-            <div className="text-xs font-semibold text-zinc-400">
-              {revenueView === "day"
-                ? `Theo ngày (Tháng ${selectedMonth}/${selectedYear})`
-                : revenueView === "quarter"
-                  ? `Theo quý (Quý ${selectedQuarter}: ${getQuarterMonthRange(selectedQuarter)}/${selectedYear})`
-                  : `Theo tháng (Năm ${selectedYear})`}
+        <div className="p-4 sm:p-5">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            {/* Chart Area */}
+            <div className="lg:col-span-8">
+              <div className="mb-4 text-xs font-bold uppercase tracking-widest text-zinc-400">
+                {revenueView === "day"
+                  ? `Biểu đồ theo ngày (Tháng ${selectedMonth}/${selectedYear})`
+                  : revenueView === "quarter"
+                    ? `Biểu đồ theo quý (Quý ${selectedQuarter}/${selectedYear})`
+                    : `Biểu đồ theo tháng (Năm ${selectedYear})`}
+              </div>
+              <div className="h-[320px] w-full rounded-2xl bg-zinc-950/30 p-4 ring-1 ring-white/5">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={chartData}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-cinema-primary)" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="var(--color-cinema-primary)" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="rgba(255,255,255,0.08)"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="period"
+                      axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                      tickLine={false}
+                      interval={revenueView === "day" ? 2 : 0}
+                      tick={{ fill: "#a1a1aa", fontSize: 12, fontWeight: 500 }}
+                      tickMargin={12}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      width={65}
+                      tick={{ fill: "#a1a1aa", fontSize: 12, fontWeight: 500 }}
+                      tickFormatter={(v) =>
+                        new Intl.NumberFormat("vi-VN", {
+                          notation: "compact",
+                          compactDisplay: "short",
+                        }).format(v)
+                      }
+                    />
+                    <Tooltip content={<RevenueTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 }} />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="var(--color-cinema-primary)"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorRevenue)"
+                      dot={{ r: 4, fill: "var(--color-cinema-primary)", strokeWidth: 2, stroke: "#000" }}
+                      activeDot={{ r: 6, strokeWidth: 0 }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="mt-3">
-              <ResponsiveContainer width="100%" height={220}>
-                <AreaChart
-                  data={chartData}
-                  margin={{ top: 8, right: 28, left: 0, bottom: 8 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.06)"
-                  />
-                  <XAxis
-                    dataKey="period"
-                    stroke="rgba(255,255,255,0.45)"
-                    interval={revenueView === "day" ? "preserveStartEnd" : 0}
-                    tick={{ fontSize: 11 }}
-                    tickMargin={8}
-                    padding={{ left: 8, right: 16 }}
-                  />
-                  <YAxis
-                    stroke="rgba(255,255,255,0.45)"
-                    width={110}
-                    tick={{ fontSize: 11 }}
-                    tickFormatter={(v) => `${formatNumber(v)}\u00A0₫`}
-                  />
-                  <Tooltip content={<RevenueTooltip />} />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="var(--color-cinema-primary)"
-                    fill="var(--color-cinema-primary)"
-                    fillOpacity={0.14}
-                    dot={{ r: 3 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
 
-          <div>
-            <div className="text-xs font-semibold text-zinc-400">
-              Theo quý (Năm {selectedYear})
-            </div>
-            <div className="mt-2 overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs font-semibold text-zinc-400">
-                    <th className="pb-2">Quý</th>
-                    <th className="pb-2 text-right">Doanh thu</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {quarterlyRevenue.map((row) => (
-                    <tr key={row.quarter} className="border-t border-white/5">
-                      <td className="py-2 font-medium text-zinc-100">
-                        Quý {row.quarter} ({getQuarterMonthRange(row.quarter)})
-                      </td>
-                      <td className="py-2 text-right font-semibold text-zinc-100">
-                        {formatCurrency(row.revenue)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+            {/* Tables Area */}
+            <div className="space-y-6 lg:col-span-4">
+              {/* Quarterly Table */}
+              <div className="rounded-2xl bg-zinc-950/30 p-4 ring-1 ring-white/5">
+                <div className="mb-3 text-xs font-bold uppercase tracking-widest text-zinc-400">
+                  Doanh thu Quý ({selectedYear})
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm" aria-label="Bảng doanh thu theo quý">
+                    <thead>
+                      <tr className="text-left text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                        <th className="pb-3">Quý</th>
+                        <th className="pb-3 text-right">Doanh thu</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {quarterlyRevenue.map((row) => (
+                        <tr key={row.quarter} className="group transition-colors hover:bg-white/[0.03]">
+                          <td className="py-2.5 text-xs font-medium text-zinc-300">
+                            Q{row.quarter} <span className="text-[10px] text-zinc-500">({getQuarterMonthRange(row.quarter)})</span>
+                          </td>
+                          <td className="py-2.5 text-right text-xs font-bold text-white">
+                            {formatCurrency(row.revenue)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-          <div>
-            <div className="text-xs font-semibold text-zinc-400">Theo năm</div>
-            <div className="mt-2 overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs font-semibold text-zinc-400">
-                    <th className="pb-2">Năm</th>
-                    <th className="pb-2 text-right">Doanh thu</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {yearlyRevenue.map((row) => (
-                    <tr key={row.year} className="border-t border-white/5">
-                      <td className="py-2 font-medium text-zinc-100">{row.year}</td>
-                      <td className="py-2 text-right font-semibold text-zinc-100">
-                        {formatCurrency(row.revenue)}
-                      </td>
-                    </tr>
-                  ))}
-
-                  {!yearlyRevenue.length ? (
-                    <tr>
-                      <td colSpan={2} className="py-3 text-sm text-zinc-400">
-                        Chưa có dữ liệu.
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
+              {/* Yearly Table */}
+              <div className="rounded-2xl bg-zinc-950/30 p-4 ring-1 ring-white/5">
+                <div className="mb-3 text-xs font-bold uppercase tracking-widest text-zinc-400">
+                  Doanh thu Năm
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm" aria-label="Bảng doanh thu theo năm">
+                    <thead>
+                      <tr className="text-left text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                        <th className="pb-3">Năm</th>
+                        <th className="pb-3 text-right">Doanh thu</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {yearlyRevenue.map((row) => (
+                        <tr key={row.year} className="group transition-colors hover:bg-white/[0.03]">
+                          <td className="py-2.5 text-xs font-medium text-zinc-300">{row.year}</td>
+                          <td className="py-2.5 text-right text-xs font-bold text-white">
+                            {formatCurrency(row.revenue)}
+                          </td>
+                        </tr>
+                      ))}
+                      {!yearlyRevenue.length && (
+                        <tr>
+                          <td colSpan={2} className="py-4 text-center text-xs text-zinc-500 italic">
+                            Chưa có dữ liệu
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ================= TOP MOVIES ================= */}
-      <section className="cinema-surface p-4 sm:p-5">
-        <div className="flex items-end justify-between gap-4">
-          <h2 className="text-base font-semibold">Top phim</h2>
-          <span className="text-xs text-zinc-400">Theo số vé (tích lũy)</span>
+      <section 
+        aria-labelledby="top-movies-heading"
+        className="cinema-surface overflow-hidden"
+      >
+        <div className="border-b border-white/5 p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-4">
+            <h2 id="top-movies-heading" className="text-lg font-bold text-white">Top phim bán chạy</h2>
+            <span className="text-xs font-medium text-zinc-400">Theo số vé tích lũy</span>
+          </div>
         </div>
 
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm" aria-label="Bảng xếp hạng phim">
             <thead>
-              <tr className="text-left text-xs font-semibold text-zinc-400">
-                <th className="pb-2">Phim</th>
-                <th className="pb-2 text-right">Vé</th>
-                <th className="pb-2 text-right">Doanh thu</th>
+              <tr className="bg-zinc-950/50 text-left text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                <th className="px-5 py-4">Tên phim</th>
+                <th className="px-5 py-4 text-right">Số vé</th>
+                <th className="px-5 py-4 text-right">Tổng doanh thu</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-white/5">
               {(data?.topMovies || []).map((m) => (
-                <tr key={m.title} className="border-t border-white/5">
-                  <td className="py-2 pr-3 font-medium text-zinc-100">
-                    <div className="max-w-[520px] truncate">{m.title}</div>
+                <tr key={m.title} className="group transition-colors hover:bg-white/[0.03]">
+                  <td className="px-5 py-4">
+                    <div className="max-w-[400px] truncate font-bold text-zinc-200 group-hover:text-cinema-primary transition-colors">
+                      {m.title}
+                    </div>
                   </td>
-                  <td className="py-2 text-right text-zinc-200">
+                  <td className="px-5 py-4 text-right font-medium text-zinc-400">
                     {formatNumber(m.tickets)}
                   </td>
-                  <td className="py-2 text-right font-semibold text-zinc-100">
+                  <td className="px-5 py-4 text-right font-bold text-white">
                     {formatCurrency(m.revenue)}
                   </td>
                 </tr>
               ))}
 
-              {!data?.topMovies?.length ? (
+              {!data?.topMovies?.length && (
                 <tr>
-                  <td colSpan={3} className="py-3 text-sm text-zinc-400">
-                    Chưa có dữ liệu.
+                  <td colSpan={3} className="px-5 py-10 text-center text-zinc-500 italic">
+                    Chưa có dữ liệu thống kê phim
                   </td>
                 </tr>
-              ) : null}
+              )}
             </tbody>
           </table>
         </div>
       </section>
-    </div>
+    </main>
   );
 }
 
