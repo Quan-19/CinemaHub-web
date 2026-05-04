@@ -15,7 +15,6 @@ import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
 import NotificationDropdown from "./NotificationDropdown";
 
-
 const navLinks = [
   { label: "Trang chủ", path: "/" },
   { label: "Phim", path: "/movies" },
@@ -60,8 +59,6 @@ function Navbar() {
   const { user, logout } = useAuth();
   const { unreadCount } = useNotification();
 
-
-
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -75,10 +72,16 @@ function Navbar() {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
         setUserMenuOpen(false);
       }
-      if (movieDropdownRef.current && !movieDropdownRef.current.contains(e.target)) {
+      if (
+        movieDropdownRef.current &&
+        !movieDropdownRef.current.contains(e.target)
+      ) {
         setMovieDropdownOpen(false);
       }
-      if (cinemaDropdownRef.current && !cinemaDropdownRef.current.contains(e.target)) {
+      if (
+        cinemaDropdownRef.current &&
+        !cinemaDropdownRef.current.contains(e.target)
+      ) {
         setCinemaDropdownOpen(false);
       }
     };
@@ -86,9 +89,22 @@ function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Navbar.jsx
   const handleLogout = async () => {
     setUserMenuOpen(false);
     await logout();
+
+    // 🔥 XÓA TẤT CẢ DỮ LIỆU
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("twoFactorVerified");
+    localStorage.removeItem("twoFactorExpiry");
+    localStorage.removeItem("pending2FAEmail");
+
+    sessionStorage.clear();
+
+    window.location.href = "/auth";
   };
 
   const runSearch = () => {
@@ -103,10 +119,11 @@ function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled
-        ? "bg-cinema-bg/95 backdrop-blur-xl border-b border-white/10 py-2 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
-        : "bg-gradient-to-b from-cinema-bg/80 via-cinema-bg/40 to-transparent py-4 md:py-5"
-        }`}
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+        isScrolled
+          ? "bg-cinema-bg/95 backdrop-blur-xl border-b border-white/10 py-2 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
+          : "bg-gradient-to-b from-cinema-bg/80 via-cinema-bg/40 to-transparent py-4 md:py-5"
+      }`}
     >
       <div className="flex items-center justify-between gap-4 lg:gap-8 px-4 sm:px-6 lg:px-8 max-w-[1920px] mx-auto">
         <Link to="/" className="flex items-center gap-2">
@@ -159,7 +176,9 @@ function Navbar() {
               }`}
             >
               Phim
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${movieDropdownOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform ${movieDropdownOpen ? "rotate-180" : ""}`}
+              />
             </button>
             {movieDropdownOpen && (
               <div className="absolute top-full left-0 mt-2 w-48 rounded-xl border border-zinc-700 bg-cinema-surface py-2 shadow-xl z-50 animate-fade-slide-up">
@@ -188,7 +207,9 @@ function Navbar() {
               }`}
             >
               Rạp chiếu
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${cinemaDropdownOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform ${cinemaDropdownOpen ? "rotate-180" : ""}`}
+              />
             </button>
             {cinemaDropdownOpen && (
               <div className="absolute top-full left-0 mt-2 w-48 rounded-xl border border-zinc-700 bg-cinema-surface py-2 shadow-xl z-50 animate-fade-slide-up">
@@ -270,7 +291,6 @@ function Navbar() {
               onClose={() => setNotifOpen(false)}
             />
           </div>
-
 
           <Link
             to="/movies"
