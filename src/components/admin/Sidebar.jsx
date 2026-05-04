@@ -34,14 +34,33 @@ export default function Sidebar(props) {
 
   const adminName = user?.displayName || user?.email?.split("@")[0] || "Admin";
   const adminEmail = user?.email || "";
-  const adminInitial = String(adminName || "A").trim().charAt(0).toUpperCase() || "A";
+  const adminInitial =
+    String(adminName || "A")
+      .trim()
+      .charAt(0)
+      .toUpperCase() || "A";
 
+  // Sidebar.jsx
   const handleLogout = async () => {
     try {
       await logout();
     } finally {
+      // 🔥 XÓA TẤT CẢ DỮ LIỆU LIÊN QUAN ĐẾN AUTH VÀ 2FA
       localStorage.removeItem("token");
       localStorage.removeItem("role");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("twoFactorVerified");
+      localStorage.removeItem("twoFactorExpiry");
+      localStorage.removeItem("pending2FAEmail");
+      localStorage.removeItem("redirectAfter2FA");
+
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("role");
+      sessionStorage.removeItem("userEmail");
+      sessionStorage.removeItem("twoFactorVerified");
+      sessionStorage.removeItem("twoFactorExpiry");
+      sessionStorage.removeItem("pending2FAEmail");
+
       navigate("/auth");
     }
   };

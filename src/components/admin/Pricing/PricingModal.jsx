@@ -323,7 +323,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                   onChange={(e) => setForm({ ...form, time: e.target.value })}
                   className="w-full h-[45px] px-4 rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-red-500/50"
                 >
-                  <option value="Sáng (0h-12h)">Sáng (0h-11h)</option>
+                  <option value="Sáng (0h-11h)">Sáng (0h-11h)</option>
                   <option value="Chiều (12h-18h)">Chiều (12h-18h)</option>
                   <option value="Tối (18h-23h)">Tối (18h-23h)</option>
                 </select>
