@@ -78,7 +78,7 @@ export default function CinemasTable({
 
                   <td>
                     <span className={`px-2.5 py-1 text-xs rounded-md ${brandColor(c.brand)}`}>
-                      {c.brand || "CGV"}
+                      {c.brand || "EbizCinema"}
                     </span>
                   </td>
 
@@ -343,14 +343,8 @@ function statusColor(status) {
 
 function brandColor(brand) {
   switch (brand) {
-    case "CGV":
+    case "EbizCinema":
       return "bg-red-500/10 text-red-400";
-    case "Lotte":
-      return "bg-yellow-500/10 text-yellow-400";
-    case "BHD":
-      return "bg-purple-500/10 text-purple-400";
-    case "Galaxy":
-      return "bg-blue-500/10 text-blue-400";
     default:
       return "bg-white/10 text-white";
   }

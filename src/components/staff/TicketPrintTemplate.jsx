@@ -4,7 +4,7 @@ import './TicketPrintTemplate.css';
 /**
  * TicketPrintTemplate Component
  * Used for both Print Preview and actual Window Printing
- * Styled to match Lotte Cinema ticket standards
+ * Styled to match EbizCinema ticket standards
  */
 const TicketPrintTemplate = React.forwardRef(({ scanResult }, ref) => {
     if (!scanResult) return null;

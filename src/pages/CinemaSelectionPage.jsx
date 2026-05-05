@@ -12,10 +12,7 @@ import { useBooking } from "../context/BookingContext";
 import { normalizeShowtimePricing } from "../utils/showtimePricing";
 
 const BRAND_COLORS = {
-  CGV: "#e50914",
-  Lotte: "#c41230",
-  BHD: "#1e40af",
-  Galaxy: "#7c3aed",
+  EbizCinema: "#e50914",
 };
 
 const TYPE_LABELS = {

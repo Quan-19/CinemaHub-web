@@ -108,7 +108,7 @@ export default function CinemaModal({
           <div>
             <label className="text-sm text-white/60">Tên rạp</label>
             <input
-              placeholder="VD: CGV Vincom Center Bà Triệu"
+              placeholder="VD: EbizCinema Vincom Center Bà Triệu"
               value={form.name || ""}
               onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
               className={inputClass}
@@ -119,14 +119,11 @@ export default function CinemaModal({
             <div>
               <label className="text-sm text-white/60">Thương hiệu</label>
               <select
-                value={form.brand || "CGV"}
+                value={form.brand || "EbizCinema"}
                 onChange={e => setForm(p => ({ ...p, brand: e.target.value }))}
                 className={inputClass}
               >
-                <option>CGV</option>
-                <option>Lotte</option>
-                <option>BHD</option>
-                <option>Galaxy</option>
+                <option>EbizCinema</option>
               </select>
             </div>
 

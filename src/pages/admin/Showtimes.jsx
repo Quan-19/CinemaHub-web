@@ -163,7 +163,7 @@ export default function ShowtimesPage() {
             id: cinemaId,
             cinema_id: cinemaId,
             name: cinema.name || "",
-            brand: cinema.brand || "CGV",
+            brand: cinema.brand || "EbizCinema",
             city: cinema.city || "",
             address: cinema.address || "",
             phone: cinema.phone || "",

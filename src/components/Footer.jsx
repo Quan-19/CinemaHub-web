@@ -18,10 +18,7 @@ const aboutLinks = [
 ]
 
 const cinemaLinks = [
-  { label: 'CGV Cinemas', path: '/cinemas?cinemaId=1' },
-  { label: 'Lotte Cinema', path: '/cinemas?cinemaId=2' },
-  { label: 'BHD Star Cineplex', path: '/cinemas?cinemaId=3' },
-  { label: 'Galaxy Cinema', path: '/cinemas?cinemaId=4' },
+  { label: 'EbizCinema', path: '/cinemas' },
 ]
 
 const supportLinks = [

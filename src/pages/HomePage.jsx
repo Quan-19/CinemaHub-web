@@ -322,10 +322,7 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
 const CinemaCard = ({ cinema, index }) => {
   const navigate = useNavigate();
   const brandColors = {
-    'CGV': '#e50914',
-    'Lotte': '#c41230',
-    'BHD': '#1e40af',
-    'Galaxy': '#7c3aed',
+    EbizCinema: '#e50914',
   };
   const color = brandColors[cinema.brand] || '#e50914';
   const cinemaId = cinema.cinema_id ?? cinema.id;

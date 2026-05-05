@@ -14,16 +14,16 @@ import {
 
 // Định nghĩa mockPayments dạng mảng object JS thuần
 const mockPayments = [
-  { id: "PAY001", bookingId: "BK1001", user: "Nguyễn Văn A", movie: "Hành Trình Vũ Trụ", cinema: "CGV Vincom", seats: "D5, D6", amount: 220000, method: "momo", status: "success", date: "06/03/2026", time: "14:32" },
-  { id: "PAY002", bookingId: "BK1002", user: "Trần Thị B", movie: "Biệt Đội Chiến Thần", cinema: "Lotte Hà Đông", seats: "E3, E4, E5", amount: 315000, method: "vnpay", status: "success", date: "06/03/2026", time: "13:15" },
-  { id: "PAY003", bookingId: "BK1003", user: "Lê Minh C", movie: "Bóng Đêm Vĩnh Cửu", cinema: "BHD Phạm Ngọc", seats: "B8", amount: 95000, method: "zalopay", status: "pending", date: "06/03/2026", time: "12:48" },
-  { id: "PAY004", bookingId: "BK1004", user: "Phạm Thu D", movie: "Mùa Hè Rực Rỡ", cinema: "Galaxy Nguyễn Du", seats: "F2, F3, F4, F5", amount: 360000, method: "card", status: "success", date: "06/03/2026", time: "11:20" },
-  { id: "PAY005", bookingId: "BK1005", user: "Hoàng Anh E", movie: "Rồng Bay Lên", cinema: "CGV Aeon Mall", seats: "H7, H8", amount: 190000, method: "momo", status: "failed", date: "06/03/2026", time: "10:55" },
-  { id: "PAY006", bookingId: "BK1006", user: "Vũ Thị Mai", movie: "Hành Trình Vũ Trụ", cinema: "CGV Vincom", seats: "A1, A2", amount: 280000, method: "vnpay", status: "success", date: "05/03/2026", time: "20:10" },
-  { id: "PAY007", bookingId: "BK1007", user: "Đinh Văn Long", movie: "Chuyến Đi Cuối Cùng", cinema: "BHD Phạm Ngọc", seats: "C6", amount: 95000, method: "cash", status: "refunded", date: "05/03/2026", time: "18:30" },
-  { id: "PAY008", bookingId: "BK1008", user: "Bùi Thị Lan", movie: "Biệt Đội Chiến Thần", cinema: "CGV Aeon Mall", seats: "G4, G5", amount: 330000, method: "momo", status: "success", date: "05/03/2026", time: "16:45" },
-  { id: "PAY009", bookingId: "BK1009", user: "Đỗ Minh Đức", movie: "Lễ Hội Huyền Bí", cinema: "Lotte Hà Đông", seats: "D9, D10", amount: 200000, method: "zalopay", status: "success", date: "05/03/2026", time: "15:00" },
-  { id: "PAY010", bookingId: "BK1010", user: "Ngô Thị Hoa", movie: "Rồng Bay Lên", cinema: "Galaxy Nguyễn Du", seats: "E1", amount: 90000, method: "card", status: "pending", date: "05/03/2026", time: "11:20" },
+  { id: "PAY001", bookingId: "BK1001", user: "Nguyễn Văn A", movie: "Hành Trình Vũ Trụ", cinema: "EbizCinema", seats: "D5, D6", amount: 220000, method: "momo", status: "success", date: "06/03/2026", time: "14:32" },
+  { id: "PAY002", bookingId: "BK1002", user: "Trần Thị B", movie: "Biệt Đội Chiến Thần", cinema: "EbizCinema", seats: "E3, E4, E5", amount: 315000, method: "vnpay", status: "success", date: "06/03/2026", time: "13:15" },
+  { id: "PAY003", bookingId: "BK1003", user: "Lê Minh C", movie: "Bóng Đêm Vĩnh Cửu", cinema: "EbizCinema", seats: "B8", amount: 95000, method: "zalopay", status: "pending", date: "06/03/2026", time: "12:48" },
+  { id: "PAY004", bookingId: "BK1004", user: "Phạm Thu D", movie: "Mùa Hè Rực Rỡ", cinema: "EbizCinema", seats: "F2, F3, F4, F5", amount: 360000, method: "card", status: "success", date: "06/03/2026", time: "11:20" },
+  { id: "PAY005", bookingId: "BK1005", user: "Hoàng Anh E", movie: "Rồng Bay Lên", cinema: "EbizCinema", seats: "H7, H8", amount: 190000, method: "momo", status: "failed", date: "06/03/2026", time: "10:55" },
+  { id: "PAY006", bookingId: "BK1006", user: "Vũ Thị Mai", movie: "Hành Trình Vũ Trụ", cinema: "EbizCinema", seats: "A1, A2", amount: 280000, method: "vnpay", status: "success", date: "05/03/2026", time: "20:10" },
+  { id: "PAY007", bookingId: "BK1007", user: "Đinh Văn Long", movie: "Chuyến Đi Cuối Cùng", cinema: "EbizCinema", seats: "C6", amount: 95000, method: "cash", status: "refunded", date: "05/03/2026", time: "18:30" },
+  { id: "PAY008", bookingId: "BK1008", user: "Bùi Thị Lan", movie: "Biệt Đội Chiến Thần", cinema: "EbizCinema", seats: "G4, G5", amount: 330000, method: "momo", status: "success", date: "05/03/2026", time: "16:45" },
+  { id: "PAY009", bookingId: "BK1009", user: "Đỗ Minh Đức", movie: "Lễ Hội Huyền Bí", cinema: "EbizCinema", seats: "D9, D10", amount: 200000, method: "zalopay", status: "success", date: "05/03/2026", time: "15:00" },
+  { id: "PAY010", bookingId: "BK1010", user: "Ngô Thị Hoa", movie: "Rồng Bay Lên", cinema: "EbizCinema", seats: "E1", amount: 90000, method: "card", status: "pending", date: "05/03/2026", time: "11:20" },
 ];
 
 const methodLabel = {

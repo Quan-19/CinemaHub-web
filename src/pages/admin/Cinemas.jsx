@@ -21,7 +21,7 @@ export default function CinemasPage() {
 
   const defaultForm = {
     name: "",
-    brand: "CGV",
+    brand: "EbizCinema",
     city: "",
     address: "",
     phone: "",
@@ -76,7 +76,7 @@ export default function CinemasPage() {
         id: cinema.cinema_id || cinema.id,
         cinema_id: cinema.cinema_id || cinema.id,
         name: cinema.name || "",
-        brand: cinema.brand || "CGV",
+        brand: cinema.brand || "EbizCinema",
         city: cinema.city || "",
         address: cinema.address || "",
         phone: cinema.phone || "",

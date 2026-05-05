@@ -1207,7 +1207,7 @@ export default function StaffShowtimesPage() {
   const { user } = useAuth();
   const cinemaName = useMemo(() => {
     const parts = String(subtitle ?? "").split("—");
-    return (parts[0] ?? "").trim() || "CGV Vincom Center Bà Triệu";
+    return (parts[0] ?? "").trim() || "EbizCinema";
   }, [subtitle]);
 
   const dates = useMemo(() => dayRange(7), []);

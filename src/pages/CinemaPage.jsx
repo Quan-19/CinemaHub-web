@@ -5,10 +5,7 @@ import { MapPin, Phone, Clock, ChevronLeft } from "lucide-react";
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const BRAND_COLORS = {
-  CGV: "#e50914",
-  Lotte: "#c41230",
-  BHD: "#1e40af",
-  Galaxy: "#7c3aed",
+  EbizCinema: "#e50914",
 };
 
 const removeDiacritics = (value = "") =>

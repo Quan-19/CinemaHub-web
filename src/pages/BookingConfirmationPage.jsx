@@ -1070,7 +1070,7 @@ export default function BookingConfirmationPage() {
                     {
                       icon: MapPin,
                       label: "Rạp",
-                      value: displayShowtime?.cinema_name || "CGV",
+                      value: displayShowtime?.cinema_name || "EbizCinema",
                     },
                     {
                       icon: Calendar,
@@ -1493,7 +1493,7 @@ export default function BookingConfirmationPage() {
                     <div>
                       <p className="text-zinc-400 text-xs">Rạp chiếu</p>
                       <p className="text-zinc-200 text-xs font-semibold">
-                        {showtime?.cinema_name || "CGV"}
+                        {showtime?.cinema_name || "EbizCinema"}
                       </p>
                     </div>
                     <div>

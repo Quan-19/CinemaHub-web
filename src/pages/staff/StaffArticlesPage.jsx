@@ -77,8 +77,8 @@ const MOCK_ARTICLES = [
   },
   {
     id: "a4",
-    title: "CGV ra mắt công nghệ ScreenX tại Hà Nội",
-    slug: "/blog/cgv-ra-mat-screenx-ha-noi",
+    title: "EbizCinema ra mắt công nghệ ScreenX tại Hà Nội",
+    slug: "/blog/ebizcinema-ra-mat-screenx-ha-noi",
     category: "news",
     author: "Nguyễn An",
     publishDate: "2026-02-25",

@@ -28,10 +28,7 @@ const movieDropdown = [
 ];
 
 const cinemaDropdown = [
-  { label: "CGV", path: "/cinemas?cinemaId=1" },
-  { label: "Lotte Cinema", path: "/cinemas?cinemaId=2" },
-  { label: "BHD Star", path: "/cinemas?cinemaId=3" },
-  { label: "Galaxy Cinema", path: "/cinemas?cinemaId=4" },
+  { label: "EbizCinema", path: "/cinemas?cinemaId=1" },
 ];
 
 const isLinkActive = (pathname, path) => {
@@ -131,7 +128,7 @@ function Navbar() {
             <Film className="h-4 w-4 text-white" />
           </span>
           <span className="text-2xl font-bold leading-none text-white">
-            Cinema<span className="text-cinema-primary">Hub</span>
+            Ebiz<span className="text-cinema-primary">Cinema</span>
           </span>
         </Link>
 
