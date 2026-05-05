@@ -86,10 +86,15 @@ export default function CinemaModal({
         staffs = [];
       }
 
-      // Lọc chỉ lấy staff (role === 'staff')
-      const staffList = staffs.filter(
-        (s) => s.role === "staff" && s.role !== "admin",
-      );
+      const currentCinemaId = form?.id ?? form?.cinema_id ?? null;
+
+      // Lọc staff chưa quản lý rạp khác (cho phép quản lý hiện tại)
+      const staffList = staffs.filter((s) => {
+        const isStaff = s.role === "staff" && s.role !== "admin";
+        const isFreeOrCurrent =
+          !s.cinema_id || String(s.cinema_id) === String(currentCinemaId);
+        return isStaff && isFreeOrCurrent;
+      });
       console.log(`Found ${staffList.length} staff members`);
 
       setAvailableManagers(staffList);

@@ -73,18 +73,26 @@ export default function AssignManagerModal({
           staffUsers = [];
         }
 
-        // Lọc chỉ lấy staff và active (nếu có status field)
-        const filteredStaff = staffUsers.filter(
-          (u) => u.role === "staff" && (!u.status || u.status === "active"),
-        );
+        const currentCinemaId = cinema?.id ?? cinema?.cinema_id ?? null;
+
+        // Lọc staff active và chưa quản lý rạp khác
+        const filteredStaff = staffUsers.filter((u) => {
+          const isStaff = u.role === "staff";
+          const isActive = !u.status || u.status === "active";
+          const isFreeOrCurrent =
+            !u.cinema_id ||
+            String(u.cinema_id) === String(currentCinemaId);
+          return isStaff && isActive && isFreeOrCurrent;
+        });
 
         console.log(`Found ${filteredStaff.length} staff members`);
         setUsers(filteredStaff);
 
         // Set selected manager if cinema has one
-        if (cinema?.managerId) {
+        const managerId = cinema?.managerId ?? cinema?.manager_id;
+        if (managerId) {
           const currentManager = filteredStaff.find(
-            (u) => u.id === cinema.managerId,
+            (u) => String(u.id) === String(managerId),
           );
           if (currentManager) {
             setSelected(currentManager);
