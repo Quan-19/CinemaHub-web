@@ -16,7 +16,7 @@ import {
   User,
   Share2,
   MessageSquare,
-  Info
+  Info,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { MovieCard } from "../components/MovieCard";
@@ -75,7 +75,7 @@ export const HomePage = () => {
         // Fetch promotions
         try {
           const promoRes = await fetch(
-            "http://localhost:5000/api/promotions?scope=public"
+            "http://localhost:5000/api/promotions?scope=public",
           );
           const promoPayload = await promoRes.json();
           const promoData = Array.isArray(promoPayload?.data)
@@ -127,7 +127,7 @@ export const HomePage = () => {
     if (featured.length === 0) return;
     const t = setInterval(
       () => setHeroIndex((i) => (i + 1) % featured.length),
-      5000
+      5000,
     );
     return () => clearInterval(t);
   }, [featured.length]);
@@ -243,14 +243,15 @@ export const HomePage = () => {
                       {current?.duration} phút
                     </span>
                     <span
-                      className={`rounded px-2 py-0.5 text-xs font-bold text-white ${current?.rating === "T18"
-                        ? "bg-red-500"
-                        : current?.rating === "T16"
-                          ? "bg-orange-500"
-                          : current?.rating === "T13"
-                            ? "bg-amber-500"
-                            : "bg-green-500"
-                        }`}
+                      className={`rounded px-2 py-0.5 text-xs font-bold text-white ${
+                        current?.rating === "T18"
+                          ? "bg-red-500"
+                          : current?.rating === "T16"
+                            ? "bg-orange-500"
+                            : current?.rating === "T13"
+                              ? "bg-amber-500"
+                              : "bg-green-500"
+                      }`}
                     >
                       {current?.rating}
                     </span>
@@ -298,10 +299,11 @@ export const HomePage = () => {
             <button
               key={i}
               onClick={() => setHeroIndex(i)}
-              className={`rounded-full transition-all ${i === heroIndex
-                ? "w-8 h-2 bg-red-500"
-                : "w-2 h-2 bg-white/30 hover:bg-white/60"
-                }`}
+              className={`rounded-full transition-all ${
+                i === heroIndex
+                  ? "w-8 h-2 bg-red-500"
+                  : "w-2 h-2 bg-white/30 hover:bg-white/60"
+              }`}
             />
           ))}
         </div>
@@ -311,10 +313,11 @@ export const HomePage = () => {
             <button
               key={m.movie_id}
               onClick={() => setHeroIndex(i)}
-              className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === heroIndex
-                ? "border-red-500 opacity-100"
-                : "border-transparent opacity-50 hover:opacity-75"
-                }`}
+              className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${
+                i === heroIndex
+                  ? "border-red-500 opacity-100"
+                  : "border-transparent opacity-50 hover:opacity-75"
+              }`}
             >
               <img
                 src={m.poster}
@@ -427,8 +430,8 @@ export const HomePage = () => {
                     <span className="text-zinc-400 text-xs">
                       {movie.releaseDate
                         ? new Date(movie.releaseDate).toLocaleDateString(
-                          "vi-VN"
-                        )
+                            "vi-VN",
+                          )
                         : "Sắp ra mắt"}
                     </span>
                   </div>
@@ -600,7 +603,7 @@ export const MovieDetailPage = () => {
       const [resST, resRV, resCinemas] = await Promise.all([
         fetch(`http://localhost:5000/api/showtimes/movie/${id}`),
         fetch(`http://localhost:5000/api/reviews/movie/${id}`),
-        fetch(`http://localhost:5000/api/cinemas`)
+        fetch(`http://localhost:5000/api/cinemas`),
       ]);
 
       let stList = [];
@@ -609,11 +612,19 @@ export const MovieDetailPage = () => {
 
       if (resCinemas.ok) {
         const cinemasData = await resCinemas.json();
-        const cinemasList = Array.isArray(cinemasData?.data) ? cinemasData.data : (Array.isArray(cinemasData) ? cinemasData : []);
+        const cinemasList = Array.isArray(cinemasData?.data)
+          ? cinemasData.data
+          : Array.isArray(cinemasData)
+            ? cinemasData
+            : [];
 
-        stList = stList.map(st => {
+        stList = stList.map((st) => {
           if (!st.cinemaAddress && !st.address && st.cinemaId) {
-            const cinema = cinemasList.find(c => String(c.cinema_id) === String(st.cinemaId) || String(c.id) === String(st.cinemaId));
+            const cinema = cinemasList.find(
+              (c) =>
+                String(c.cinema_id) === String(st.cinemaId) ||
+                String(c.id) === String(st.cinemaId),
+            );
             if (cinema && cinema.address) {
               st.cinemaAddress = cinema.address;
             }
@@ -748,18 +759,27 @@ export const MovieDetailPage = () => {
     }
   };
 
-  const averageReviewScore = reviewsList.length > 0
-    ? (reviewsList.reduce((acc, r) => acc + Number(r.rating), 0) / reviewsList.length)
-    : (movie.score / 2);
+  const averageReviewScore =
+    reviewsList.length > 0
+      ? reviewsList.reduce((acc, r) => acc + Number(r.rating), 0) /
+        reviewsList.length
+      : movie.score / 2;
 
-  const displayScore = reviewsList.length > 0 ? parseFloat((averageReviewScore * 2).toFixed(1)) : parseFloat(movie.score).toFixed(1);
-  const displayVotes = reviewsList.length > 0 ? reviewsList.length : (typeof movie.votes === "number" ? movie.votes : 0);
+  const displayScore =
+    reviewsList.length > 0
+      ? parseFloat((averageReviewScore * 2).toFixed(1))
+      : parseFloat(movie.score).toFixed(1);
+  const displayVotes =
+    reviewsList.length > 0
+      ? reviewsList.length
+      : typeof movie.votes === "number"
+        ? movie.votes
+        : 0;
 
   const stars = Math.round(averageReviewScore);
   const voteCount = displayVotes.toLocaleString();
   const movieGenres = normalizeList(movie.genre);
   const movieCast = normalizeList(movie.cast);
-
 
   return (
     <div
@@ -850,17 +870,36 @@ export const MovieDetailPage = () => {
               {/* Information Cards Grid */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 py-2">
                 {[
-                  { label: "Thời lượng", value: `${movie.duration} phút`, icon: Clock },
-                  { label: "Khởi chiếu", value: movie.releaseDate, icon: CalendarDays },
+                  {
+                    label: "Thời lượng",
+                    value: `${movie.duration} phút`,
+                    icon: Clock,
+                  },
+                  {
+                    label: "Khởi chiếu",
+                    value: movie.releaseDate,
+                    icon: CalendarDays,
+                  },
                   { label: "Quốc gia", value: movie.country, icon: Globe },
-                  { label: "Ngôn ngữ", value: movie.language, icon: MessageSquare }
+                  {
+                    label: "Ngôn ngữ",
+                    value: movie.language,
+                    icon: MessageSquare,
+                  },
                 ].map((item, idx) => (
-                  <div key={idx} className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 flex flex-col gap-2 hover:bg-zinc-800/40 transition-colors">
+                  <div
+                    key={idx}
+                    className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 flex flex-col gap-2 hover:bg-zinc-800/40 transition-colors"
+                  >
                     <div className="flex items-center gap-2 text-zinc-500">
                       <item.icon className="w-4 h-4" />
-                      <span className="text-[10px] uppercase tracking-wider font-bold">{item.label}</span>
+                      <span className="text-[10px] uppercase tracking-wider font-bold">
+                        {item.label}
+                      </span>
                     </div>
-                    <div className="text-white text-sm font-bold truncate">{item.value}</div>
+                    <div className="text-white text-sm font-bold truncate">
+                      {item.value}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -908,13 +947,32 @@ export const MovieDetailPage = () => {
         </div>
 
         {/* TABS NAVIGATION */}
-        <div ref={tabsRef} className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2 mb-8">
+        <div
+          ref={tabsRef}
+          className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2 mb-8"
+        >
           <div className="flex gap-6 sm:gap-8 border-b border-zinc-800">
-            {[{id: 'info', label: 'Thông tin', icon: <Info className="w-[18px] h-[18px]" />}, {id: 'showtimes', label: 'Suất chiếu', icon: <Clock className="w-[18px] h-[18px]" />}, {id: 'reviews', label: `Đánh giá (${reviewsList.length})`, icon: <Star className="w-[18px] h-[18px]" />}].map(tab => (
+            {[
+              {
+                id: "info",
+                label: "Thông tin",
+                icon: <Info className="w-[18px] h-[18px]" />,
+              },
+              {
+                id: "showtimes",
+                label: "Suất chiếu",
+                icon: <Clock className="w-[18px] h-[18px]" />,
+              },
+              {
+                id: "reviews",
+                label: `Đánh giá (${reviewsList.length})`,
+                icon: <Star className="w-[18px] h-[18px]" />,
+              },
+            ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 pb-4 px-2 font-bold text-[15px] transition-colors duration-200 relative ${activeTab === tab.id ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                className={`flex items-center gap-2 pb-4 px-2 font-bold text-[15px] transition-colors duration-200 relative ${activeTab === tab.id ? "text-white" : "text-zinc-500 hover:text-zinc-300"}`}
               >
                 {tab.icon}
                 {tab.label}
@@ -922,7 +980,7 @@ export const MovieDetailPage = () => {
                   <motion.div
                     layoutId="tab-indicator"
                     className="absolute bottom-0 left-0 w-full h-[3px] bg-red-600 rounded-t-full"
-                    transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 40 }}
                   />
                 )}
               </button>
@@ -932,139 +990,184 @@ export const MovieDetailPage = () => {
 
         {/* TAB CONTENTS */}
         <AnimatePresence mode="wait">
-        {activeTab === 'info' && (
-          <motion.div
-            key="info-content"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-          >
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-in fade-in duration-500 pb-10">
-            <div className="space-y-8">
-              {/* Nội dung phim */}
-              <div>
-                <h3 className="text-white text-lg font-bold mb-4">Nội dung phim</h3>
-                <p className="text-zinc-300 leading-relaxed text-[15px] max-w-5xl">
-                  {movie.description}
-                </p>
-              </div>
+          {activeTab === "info" && (
+            <motion.div
+              key="info-content"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+            >
+              <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-in fade-in duration-500 pb-10">
+                <div className="space-y-8">
+                  {/* Nội dung phim */}
+                  <div>
+                    <h3 className="text-white text-lg font-bold mb-4">
+                      Nội dung phim
+                    </h3>
+                    <p className="text-zinc-300 leading-relaxed text-[15px] max-w-5xl">
+                      {movie.description}
+                    </p>
+                  </div>
 
-              {/* Đạo diễn & Diễn viên */}
-              <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8">
-                {/* Đạo diễn */}
-                <div>
-                  <h4 className="text-zinc-500 text-xs uppercase tracking-wider font-semibold mb-4">Đạo diễn</h4>
-                  <div className="flex items-center gap-3 bg-[#111113] border border-zinc-800/60 rounded-2xl p-4">
-                    <div className="w-10 h-10 rounded-full bg-zinc-800/80 flex items-center justify-center border border-zinc-700/50 shrink-0">
-                      <User className="w-5 h-5 text-zinc-500" />
-                    </div>
+                  {/* Đạo diễn & Diễn viên */}
+                  <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8">
+                    {/* Đạo diễn */}
                     <div>
-                      <p className="text-white text-sm font-bold">{movie.director}</p>
-                      <p className="text-zinc-500 text-xs mt-0.5">Đạo diễn</p>
+                      <h4 className="text-zinc-500 text-xs uppercase tracking-wider font-semibold mb-4">
+                        Đạo diễn
+                      </h4>
+                      <div className="flex items-center gap-3 bg-[#111113] border border-zinc-800/60 rounded-2xl p-4">
+                        <div className="w-10 h-10 rounded-full bg-zinc-800/80 flex items-center justify-center border border-zinc-700/50 shrink-0">
+                          <User className="w-5 h-5 text-zinc-500" />
+                        </div>
+                        <div>
+                          <p className="text-white text-sm font-bold">
+                            {movie.director}
+                          </p>
+                          <p className="text-zinc-500 text-xs mt-0.5">
+                            Đạo diễn
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Diễn viên */}
+                    {movieCast.length > 0 && (
+                      <div>
+                        <h4 className="text-zinc-500 text-xs uppercase tracking-wider font-semibold mb-4">
+                          Diễn viên
+                        </h4>
+                        <div className="flex flex-wrap gap-3">
+                          {movieCast.map((actor) => (
+                            <div
+                              key={actor}
+                              className="flex items-center gap-2 bg-[#111113] border border-zinc-800/60 rounded-full py-2.5 px-4"
+                            >
+                              <div className="w-6 h-6 rounded-full bg-zinc-800/80 flex items-center justify-center shrink-0 border border-zinc-700/50">
+                                <User className="w-3.5 h-3.5 text-zinc-500" />
+                              </div>
+                              <span className="text-zinc-300 text-[13px] font-semibold">
+                                {actor}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Specs Panel */}
+                  <div className="bg-[#111113] border border-zinc-800/60 rounded-3xl p-6 sm:p-8 flex flex-wrap lg:grid lg:grid-cols-4 gap-6 items-center">
+                    <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto">
+                      <p className="text-zinc-500 text-xs font-semibold mb-1">
+                        Điểm EbizCinema
+                      </p>
+                      <p className="text-yellow-500 text-[26px] font-bold leading-tight">
+                        {displayScore}
+                        <span className="text-base text-yellow-500/80">
+                          /10
+                        </span>
+                      </p>
+                      <p className="text-zinc-500 text-[11px] mt-1">
+                        {voteCount} votes
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto lg:border-l border-zinc-800/60 lg:pl-6">
+                      <p className="text-zinc-500 text-xs font-semibold mb-1">
+                        User Reviews
+                      </p>
+                      <p className="text-green-500 text-[26px] font-bold leading-tight">
+                        {reviewsList.length > 0
+                          ? (
+                              reviewsList.reduce(
+                                (acc, r) => acc + Number(r.rating),
+                                0,
+                              ) / reviewsList.length
+                            ).toFixed(1)
+                          : 0}
+                      </p>
+                      <p className="text-zinc-500 text-[11px] mt-1">
+                        {reviewsList.length} đánh giá
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto lg:border-l border-zinc-800/60 lg:pl-6">
+                      <p className="text-zinc-500 text-xs font-semibold mb-2">
+                        Thể loại
+                      </p>
+                      <div className="flex flex-wrap items-center justify-center gap-1.5 min-h-[30px]">
+                        <span className="text-[#c084fc] font-extrabold text-[15px] leading-tight">
+                          {movieGenres.slice(0, 2).join(", ")}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto lg:border-l border-zinc-800/60 lg:pl-6">
+                      <p className="text-zinc-500 text-xs font-semibold mb-1">
+                        Giới hạn tuổi
+                      </p>
+                      <p className="text-red-500 text-[26px] font-bold leading-tight uppercase">
+                        {movie.ageRating || "T18"}
+                      </p>
+                      {/* <p className="text-zinc-500 text-[11px] mt-1">Từ 18 tuổi</p> */}
                     </div>
                   </div>
                 </div>
 
-                {/* Diễn viên */}
-                {movieCast.length > 0 && (
-                  <div>
-                    <h4 className="text-zinc-500 text-xs uppercase tracking-wider font-semibold mb-4">Diễn viên</h4>
-                    <div className="flex flex-wrap gap-3">
-                      {movieCast.map((actor) => (
-                        <div key={actor} className="flex items-center gap-2 bg-[#111113] border border-zinc-800/60 rounded-full py-2.5 px-4">
-                          <div className="w-6 h-6 rounded-full bg-zinc-800/80 flex items-center justify-center shrink-0 border border-zinc-700/50">
-                            <User className="w-3.5 h-3.5 text-zinc-500" />
-                          </div>
-                          <span className="text-zinc-300 text-[13px] font-semibold">{actor}</span>
+                {related.length > 0 && (
+                  <div className="mt-12 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <p className="text-sm uppercase tracking-[0.14em] text-zinc-400 font-bold">
+                        Phim liên quan
+                      </p>
+                    </div>
+                    <div
+                      className="flex overflow-x-auto gap-4 pb-4 snap-x pointer-events-auto"
+                      style={{ scrollbarWidth: "none" }}
+                    >
+                      {related.map((m) => (
+                        <div
+                          key={m.movie_id}
+                          className="min-w-[140px] sm:min-w-[160px] snap-start"
+                        >
+                          <MovieCard movie={m} size="sm" />
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
               </div>
+            </motion.div>
+          )}
 
-              {/* Specs Panel */}
-              <div className="bg-[#111113] border border-zinc-800/60 rounded-3xl p-6 sm:p-8 flex flex-wrap lg:grid lg:grid-cols-4 gap-6 items-center">
-                <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto">
-                  <p className="text-zinc-500 text-xs font-semibold mb-1">Điểm EbizCinema</p>
-                  <p className="text-yellow-500 text-[26px] font-bold leading-tight">{displayScore}<span className="text-base text-yellow-500/80">/10</span></p>
-                  <p className="text-zinc-500 text-[11px] mt-1">{voteCount} votes</p>
-                </div>
-
-                <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto lg:border-l border-zinc-800/60 lg:pl-6">
-                  <p className="text-zinc-500 text-xs font-semibold mb-1">User Reviews</p>
-                  <p className="text-green-500 text-[26px] font-bold leading-tight">{reviewsList.length > 0 ? (reviewsList.reduce((acc, r) => acc + Number(r.rating), 0) / reviewsList.length).toFixed(1) : 0}</p>
-                  <p className="text-zinc-500 text-[11px] mt-1">{reviewsList.length} đánh giá</p>
-                </div>
-
-                <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto lg:border-l border-zinc-800/60 lg:pl-6">
-                  <p className="text-zinc-500 text-xs font-semibold mb-2">Thể loại</p>
-                  <div className="flex flex-wrap items-center justify-center gap-1.5 min-h-[30px]">
-                    {movieGenres.slice(0, 2).map((g) => (
-                      <span key={g} className="text-[#c084fc] font-extrabold text-[15px] leading-tight">
-                        {g}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto lg:border-l border-zinc-800/60 lg:pl-6">
-                  <p className="text-zinc-500 text-xs font-semibold mb-1">Giới hạn tuổi</p>
-                  <p className="text-red-500 text-[26px] font-bold leading-tight uppercase">{movie.ageRating || "T18"}</p>
-                  {/* <p className="text-zinc-500 text-[11px] mt-1">Từ 18 tuổi</p> */}
-                </div>
-              </div>
-            </div>
-
-            {related.length > 0 && (
-              <div className="mt-12 space-y-4">
-                <div className="flex items-center gap-3">
-                  <p className="text-sm uppercase tracking-[0.14em] text-zinc-400 font-bold">
-                    Phim liên quan
-                  </p>
-                </div>
-                <div
-                  className="flex overflow-x-auto gap-4 pb-4 snap-x pointer-events-auto"
-                  style={{ scrollbarWidth: "none" }}
-                >
-                  {related.map((m) => (
-                    <div
-                      key={m.movie_id}
-                      className="min-w-[140px] sm:min-w-[160px] snap-start"
-                    >
-                      <MovieCard movie={m} size="sm" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </motion.div>
-      )}
-
-        {activeTab === 'showtimes' && (
-          <motion.div
-            key="showtimes-content"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-          >
-            <ShowtimesTab showtimes={showtimesList} />
-          </motion.div>
-        )}
-        {activeTab === 'reviews' && (
-          <motion.div
-            key="reviews-content"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-          >
-            <ReviewsTab movieId={id} reviews={reviewsList} onReviewSubmit={fetchMovieExtras} />
-          </motion.div>
-        )}
+          {activeTab === "showtimes" && (
+            <motion.div
+              key="showtimes-content"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+            >
+              <ShowtimesTab showtimes={showtimesList} />
+            </motion.div>
+          )}
+          {activeTab === "reviews" && (
+            <motion.div
+              key="reviews-content"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+            >
+              <ReviewsTab
+                movieId={id}
+                reviews={reviewsList}
+                onReviewSubmit={fetchMovieExtras}
+              />
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
 
