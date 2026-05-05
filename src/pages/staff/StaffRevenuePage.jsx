@@ -35,14 +35,14 @@ function StatCard({ icon: Icon, title, value, sub, accentClass }) {
         >
           <Icon className="h-6 w-6" />
         </div>
-        <div>
-          <div className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+        <div className="min-w-0 flex-1">
+          <div className="text-xs font-semibold text-zinc-300 uppercase tracking-wider truncate" title={title}>
             {title}
           </div>
-          <div className="mt-1 text-2xl font-bold tracking-tight text-zinc-100">
+          <div className="mt-1 text-2xl font-bold tracking-tight text-zinc-100 truncate" title={value}>
             {value}
           </div>
-          {sub && <div className="mt-1 text-xs text-zinc-400">{sub}</div>}
+          {sub && <div className="mt-1 text-xs text-zinc-400 truncate" title={sub}>{sub}</div>}
         </div>
       </div>
     </div>

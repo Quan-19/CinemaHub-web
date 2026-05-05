@@ -67,11 +67,13 @@
     @apply relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all duration-300 rounded-xl overflow-hidden;
     background: linear-gradient(135deg, #e50914, #b20710);
     box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3);
+    isolation: isolate;
   }
   .cinema-btn-primary::before {
     content: '';
     @apply absolute inset-0 opacity-0 transition-opacity duration-300;
     background: linear-gradient(135deg, #ff1a24, #d0060f);
+    z-index: -1;
   }
   .cinema-btn-primary:hover::before {
     @apply opacity-100;
