@@ -10,8 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 export const PromotionsPage = () => {
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(null);
-  const [expandedPromo, setExpandedPromo] = useState(null);
+  const [copiedPromoId, setCopiedPromoId] = useState(null);
+  const [expandedPromos, setExpandedPromos] = useState(() => new Set());
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,26 +37,55 @@ export const PromotionsPage = () => {
             : [];
 
         // Format data
-        const formatted = data.map((promo) => ({
-          promotion_id: promo.promotion_id || promo.id,
-          title: promo.title || "",
-          description: promo.description || "",
-          code: promo.code || "",
-          image: promo.image || "",
-          discount_percent: promo.discount_percent || 0,
-          discount_value: promo.discount_value || 0,
-          discount_type: promo.discount_type || "percent",
-          min_order: promo.min_order || 0,
-          start_date: promo.start_date,
-          end_date: promo.end_date,
-          status: promo.status || "active",
-          cinema_id: promo.cinema_id || null,
-          cinema_name: promo.cinema_name || null,
-          apply_days: typeof promo.apply_days === "string" ? JSON.parse(promo.apply_days || "[]") : (promo.apply_days || []),
-          apply_seat_types: typeof promo.apply_seat_types === "string" ? JSON.parse(promo.apply_seat_types || "[]") : (promo.apply_seat_types || []),
-          usage_limit: promo.usage_limit || 0,
-          used_count: promo.used_count || 0,
-        }));
+        const parseArrayField = (value) => {
+          if (Array.isArray(value)) return value;
+          if (typeof value === "string") {
+            try {
+              return JSON.parse(value || "[]");
+            } catch {
+              return [];
+            }
+          }
+          return [];
+        };
+
+        const formatted = data.map((promo, index) => {
+          const discountType = promo.discount_type || "percent";
+          const rawPercent = Number(promo.discount_percent ?? 0);
+          const rawValue = Number(promo.discount_value ?? 0);
+          let discountPercent = Number.isFinite(rawPercent) ? rawPercent : 0;
+          let discountValue = Number.isFinite(rawValue) ? rawValue : 0;
+
+          if (discountType === "percent" && discountPercent <= 0 && discountValue > 0) {
+            discountPercent = discountValue;
+          }
+
+          if ((discountType === "value" || discountType === "fixed") && discountValue <= 0 && discountPercent > 0) {
+            discountValue = discountPercent;
+          }
+
+          return {
+            promotion_id: promo.promotion_id || promo.id || null,
+            client_id: `${promo.promotion_id || promo.id || promo.code || "promo"}-${index}`,
+            title: promo.title || "",
+            description: promo.description || "",
+            code: promo.code || "",
+            image: promo.image || "",
+            discount_percent: discountPercent,
+            discount_value: discountValue,
+            discount_type: discountType,
+            min_order: promo.min_order || 0,
+            start_date: promo.start_date,
+            end_date: promo.end_date,
+            status: promo.status || "active",
+            cinema_id: promo.cinema_id || null,
+            cinema_name: promo.cinema_name || null,
+            apply_days: parseArrayField(promo.apply_days),
+            apply_seat_types: parseArrayField(promo.apply_seat_types),
+            usage_limit: promo.usage_limit || 0,
+            used_count: promo.used_count || 0,
+          };
+        });
 
         setPromotions(formatted);
       } catch (err) {
@@ -70,30 +99,47 @@ export const PromotionsPage = () => {
     fetchPromotions();
   }, []);
 
-  const handleCopy = (code) => {
+  const handleCopy = (promoId, code) => {
     if (navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(code).catch(() => { });
     }
-    setCopied(code);
-    setTimeout(() => setCopied(null), 2000);
+    setCopiedPromoId(promoId);
+    setTimeout(() => setCopiedPromoId(null), 2000);
   };
 
   const toggleExpand = (id) => {
-    setExpandedPromo(expandedPromo === id ? null : id);
+    setExpandedPromos((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
   const getDiscountDisplay = (promo) => {
     if (promo.discount_type === "percent") {
-      return `-${promo.discount_percent}%`;
+      const pct = promo.discount_percent || promo.discount_value || 0;
+      return `-${pct}%`;
     } else if (promo.discount_type === "value" || promo.discount_type === "fixed") {
-      return `-${(promo.discount_value || 0).toLocaleString()}đ`;
+      const value = promo.discount_value || promo.discount_percent || 0;
+      return `-${value.toLocaleString()}đ`;
     }
     return "Ưu đãi";
   };
 
   const getDayName = (day) => {
     const days = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
-    return days[day];
+    return days[day] || day;
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "Không rõ";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Không rõ";
+    return date.toLocaleDateString("vi-VN");
   };
 
   const filteredPromotions = promotions.filter(promo => {
@@ -244,10 +290,10 @@ export const PromotionsPage = () => {
       {/* CONTENT GRID */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6">
         {filteredPromotions.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 items-start">
             {filteredPromotions.map((promo, idx) => (
               <article
-                key={promo.promotion_id}
+                key={promo.client_id}
                 className="group relative glass-card overflow-hidden hover:translate-y-[-8px] transition-all duration-500 animate-scale-in"
                 style={{ animationDelay: `${idx * 0.05}s` }}
               >
@@ -307,7 +353,7 @@ export const PromotionsPage = () => {
                       <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider">Hết hạn</span>
                       <div className="flex items-center gap-1.5 text-zinc-300 text-sm font-medium">
                         <Clock className="w-4 h-4 text-zinc-500" />
-                        {new Date(promo.end_date).toLocaleDateString("vi-VN")}
+                        {formatDate(promo.end_date)}
                       </div>
                     </div>
 
@@ -328,11 +374,11 @@ export const PromotionsPage = () => {
                         {promo.code}
                       </span>
                       <button
-                        onClick={() => handleCopy(promo.code)}
+                        onClick={() => handleCopy(promo.client_id, promo.code)}
                         className="text-zinc-500 hover:text-white transition-all duration-300 relative"
                       >
                         <AnimatePresence mode="wait">
-                          {copied === promo.code ? (
+                          {copiedPromoId === promo.client_id ? (
                             <motion.div
                               key="check"
                               initial={{ scale: 0.5, opacity: 0, rotate: -45 }}
@@ -358,39 +404,80 @@ export const PromotionsPage = () => {
                   </div>
 
                   <button
-                    onClick={() => toggleExpand(promo.promotion_id)}
+                    onClick={() => toggleExpand(promo.client_id)}
                     className="w-full py-2.5 rounded-xl bg-white/5 text-zinc-300 text-xs sm:text-sm font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                   >
-                    {expandedPromo === promo.promotion_id ? "Thu gọn" : "Xem điều kiện"}
-                    <ChevronRight className={`w-4 h-4 transition-transform ${expandedPromo === promo.promotion_id ? "-rotate-90" : "rotate-0"}`} />
+                    {expandedPromos.has(promo.client_id) ? "Thu gọn" : "Xem điều kiện"}
+                    <ChevronRight className={`w-4 h-4 transition-transform ${expandedPromos.has(promo.client_id) ? "-rotate-90" : "rotate-0"}`} />
                   </button>
 
                   {/* Expanded Content */}
-                  {expandedPromo === promo.promotion_id && (
+                  {expandedPromos.has(promo.client_id) && (
                     <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/5 animate-fade-slide-up">
+                      <h3 className="text-white text-xs font-bold mb-3 uppercase tracking-wider flex items-center gap-2">
+                        <Info className="w-3.5 h-3.5 text-blue-400" />
+                        Thông tin khuyến mãi
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-zinc-300 mb-4">
+                        <div className="flex items-center justify-between gap-3 bg-black/30 rounded-lg px-3 py-2">
+                          <span className="text-zinc-500">Mức ưu đãi</span>
+                          <span className="font-bold text-white">{getDiscountDisplay(promo)}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 bg-black/30 rounded-lg px-3 py-2">
+                          <span className="text-zinc-500">Áp dụng tại</span>
+                          <span className="font-bold text-white">{promo.cinema_name || "Toàn hệ thống"}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 bg-black/30 rounded-lg px-3 py-2">
+                          <span className="text-zinc-500">Thời gian</span>
+                          <span className="font-bold text-white">{formatDate(promo.start_date)} - {formatDate(promo.end_date)}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 bg-black/30 rounded-lg px-3 py-2">
+                          <span className="text-zinc-500">Tối thiểu</span>
+                          <span className="font-bold text-white">{promo.min_order > 0 ? `${promo.min_order.toLocaleString()}đ` : "Không yêu cầu"}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 bg-black/30 rounded-lg px-3 py-2">
+                          <span className="text-zinc-500">Giới hạn</span>
+                          <span className="font-bold text-white">{promo.usage_limit > 0 ? `${promo.used_count}/${promo.usage_limit}` : "Không giới hạn"}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 bg-black/30 rounded-lg px-3 py-2">
+                          <span className="text-zinc-500">Trạng thái</span>
+                          <span className={`font-bold ${promo.status === "active" ? "text-green-400" : "text-zinc-400"}`}>{promo.status === "active" ? "Đang hoạt động" : "Tạm dừng"}</span>
+                        </div>
+                      </div>
+
                       <h3 className="text-white text-xs font-bold mb-3 uppercase tracking-wider flex items-center gap-2">
                         <Info className="w-3.5 h-3.5 text-red-500" />
                         Điều khoản áp dụng
                       </h3>
                       <ul className="space-y-2">
-                        {promo.apply_days.length < 7 && (
+                        {promo.apply_days.length > 0 && promo.apply_days.length < 7 ? (
                           <li className="text-zinc-400 text-xs flex gap-2">
                             <span className="text-red-500">•</span>
                             Chỉ áp dụng các ngày: {promo.apply_days.map(d => getDayName(d)).join(", ")}
                           </li>
+                        ) : (
+                          <li className="text-zinc-400 text-xs flex gap-2">
+                            <span className="text-red-500">•</span>
+                            Áp dụng tất cả các ngày trong tuần.
+                          </li>
                         )}
-                        {promo.apply_seat_types.length > 0 && (
+                        {promo.apply_seat_types.length > 0 ? (
                           <li className="text-zinc-400 text-xs flex gap-2">
                             <span className="text-red-500">•</span>
                             Loại ghế: {promo.apply_seat_types.join(", ")}
                           </li>
+                        ) : (
+                          <li className="text-zinc-400 text-xs flex gap-2">
+                            <span className="text-red-500">•</span>
+                            Áp dụng cho tất cả loại ghế.
+                          </li>
                         )}
-                        {promo.usage_limit > 0 && (
+                        {promo.usage_limit > 0 ? (
                           <li className="text-zinc-400 text-xs flex gap-2">
                             <span className="text-red-500">•</span>
                             Lượt sử dụng: {promo.used_count}/{promo.usage_limit}
                           </li>
-                        )}
+                        ) : null}
                         <li className="text-zinc-400 text-xs flex gap-2">
                           <span className="text-red-500">•</span>
                           Mỗi tài khoản chỉ được sử dụng 1 lần cho chương trình này.

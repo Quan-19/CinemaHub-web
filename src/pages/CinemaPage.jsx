@@ -445,19 +445,16 @@ function CinemaPage() {
   const activeRegion = regions.find((r) => r.id === selectedRegion);
   const displayedCinemas = activeRegion ? activeRegion.cinemas : [];
 
-  // ✅ GIỮ ID naming từ Code 1
   const selectedCinema =
     displayedCinemas.find(
       (c) => String(c.cinema_id ?? c.id) === String(selectedCinemaId)
     ) || null;
 
-  // ✅ GIỮ movie status từ Code 1 (underscore)
   const nowShowingMovies = useMemo(
     () => movies.filter((m) => m.status === "now_showing"),
     [movies]
   );
 
-  // ✅ THÊM loading indicator
   if (loading) {
     return (
       <div
@@ -542,7 +539,6 @@ function CinemaPage() {
               <ChevronLeft className="w-4 h-4" /> Chọn khu vực khác
             </button>
 
-            {/* ✅ THÊM hiển thị số lượng rạp từ Code 2 */}
             <p className="text-zinc-400 text-sm mb-4">
               {activeRegion.label}: {displayedCinemas.length} rạp
             </p>
@@ -586,7 +582,6 @@ function CinemaPage() {
                       <div className="flex items-center gap-4 text-zinc-400 text-xs">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {/* ✅ THÊM showtimes info từ Code 2 */}
                           {cinema.showtimes?.length || 0} suất/ngày
                         </span>
                         <span className="flex items-center gap-1">
@@ -608,7 +603,6 @@ function CinemaPage() {
                 >
                   Phim đang chiếu tại {selectedCinema.name}
                 </h3>
-                {/* ✅ THÊM description từ Code 2 */}
                 <p className="text-zinc-400 text-sm mb-4">
                   Chọn phim để chuyển nhanh tới suất chiếu của rạp đã chọn.
                 </p>
@@ -616,7 +610,7 @@ function CinemaPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                   {nowShowingMovies.map((movie) => (
                     <div
-                      key={movie.movie_id} // ✅ GIỮ movie_id từ Code 1
+                      key={movie.movie_id} 
                       className="rounded-2xl border border-zinc-700 p-4"
                       style={{ background: "var(--color-cinema-surface)" }}
                     >

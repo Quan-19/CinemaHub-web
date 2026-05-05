@@ -50,7 +50,7 @@ function Footer() {
                 <Film className="h-4 w-4 text-white" />
               </span>
               <span className="text-2xl font-bold text-white">
-                Cinema<span className="text-cinema-primary">Hub</span>
+                Ebiz<span className="text-cinema-primary">Cinema</span>
               </span>
             </Link>
             <p className="mb-4 text-sm leading-relaxed text-zinc-400 max-w-sm">
@@ -122,15 +122,7 @@ function Footer() {
               </li>
             </ul>
             <div className="mt-4">
-              <p className="mb-2 text-xs text-zinc-400">Tải ứng dụng</p>
-              <div className="flex gap-2">
-                <div className="cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs text-zinc-300 hover:border-zinc-600">
-                  App Store
-                </div>
-                <div className="cursor-pointer rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs text-zinc-300 hover:border-zinc-600">
-                  Google Play
-                </div>
-              </div>
+              <p className="mb-2 text-xs text-zinc-400">Giờ làm việc: 8:00 - 22:00 (Tất cả các ngày bao gồm cả Lễ Tết)</p>
             </div>
           </div>
         </div>

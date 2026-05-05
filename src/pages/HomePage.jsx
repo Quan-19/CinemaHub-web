@@ -701,7 +701,7 @@ const HomePage = () => {
                   <div className="w-1 h-8 rounded-full bg-purple-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
                     {/* <MapPin className="inline w-5 h-5 md:w-6 md:h-6 text-purple-500 mr-2" /> */}
-                    Rạp Chiếu Nổi Bật
+                    Rạp Chiếu
                   </h2>
                 </div>
                 <motion.button

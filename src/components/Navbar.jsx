@@ -19,7 +19,7 @@ const navLinks = [
   { label: "Trang chủ", path: "/" },
   { label: "Phim", path: "/movies" },
   { label: "Rạp chiếu", path: "/cinemas" },
-  { label: "Khuyến mãi", path: "/promotions" },
+  { label: "Tin mới & ưu đãi", path: "/promotions" },
 ];
 
 const movieDropdown = [
@@ -28,7 +28,7 @@ const movieDropdown = [
 ];
 
 const cinemaDropdown = [
-  { label: "EbizCinema", path: "/cinemas?cinemaId=1" },
+  { label: "Tất cả các rạp", path: "/cinemas" },
 ];
 
 const isLinkActive = (pathname, path) => {
@@ -232,7 +232,7 @@ function Navbar() {
                 : "rounded-full px-4 py-2 text-[15px] font-semibold text-white/90 transition-all hover:bg-white/10 hover:text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
             }
           >
-            Khuyến mãi
+            Tin mới & Ưu đãi
           </Link>
         </nav>
 

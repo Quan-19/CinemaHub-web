@@ -1,31 +1,18 @@
 /* MoviesPage.jsx - Premium Movie Listing Page (No Mock Data) */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Search,
-  ChevronDown,
-  SlidersHorizontal,
   Flame,
   Film,
   Star,
-  Clock,
   X,
-  Filter,
-  Calendar,
-  TrendingUp,
-  Sparkles
+  Filter
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MovieCard } from "../components/MovieCard";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-const SORT_OPTIONS = [
-  { label: "Phổ biến nhất", value: "popular", icon: TrendingUp },
-  { label: "Điểm cao nhất", value: "top-rated", icon: Star },
-  { label: "Mới nhất", value: "newest", icon: Calendar },
-  { label: "Thời lượng tăng dần", value: "duration", icon: Clock },
-];
 
 const STATUS_TABS = [
   { label: "Tất cả", value: "all" },
@@ -52,6 +39,14 @@ const fetchGenres = async () => {
   }
 };
 
+const normalizeAgeRating = (value) => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "P";
+  if (/^T\d+$/i.test(raw)) return raw.toUpperCase();
+  if (/^\d+$/.test(raw)) return `T${raw}`;
+  return raw.toUpperCase();
+};
+
 // Lấy danh sách rating động từ API
 const fetchRatings = async () => {
   try {
@@ -60,7 +55,7 @@ const fetchRatings = async () => {
     const movies = Array.isArray(data) ? data : (data.data || []);
     const allRatings = new Set();
     movies.forEach(movie => {
-      const rating = movie.age_rating || movie.rating || 'P';
+      const rating = normalizeAgeRating(movie.age_rating ?? movie.ageRating);
       allRatings.add(rating);
     });
     return ['Tất cả', ...Array.from(allRatings).sort()];
@@ -89,7 +84,6 @@ function MoviesPage() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState(queryParam);
-  const [sortBy, setSortBy] = useState(SORT_OPTIONS[0].value);
   const [tab, setTab] = useState(() => {
     const status = searchParams.get('status');
     if (status === 'now-showing') return 'now-showing';
@@ -99,10 +93,11 @@ function MoviesPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [genre, setGenre] = useState("Tất cả");
   const [rating, setRating] = useState("Tất cả");
-  const [sortOpen, setSortOpen] = useState(false);
   const [genreOptions, setGenreOptions] = useState(['Tất cả']);
   const [ratingOptions, setRatingOptions] = useState(['Tất cả', 'P', 'T13', 'T16', 'T18']);
   const [fetchingFilters, setFetchingFilters] = useState(true);
+  const syncingFromUrlRef = useRef(false);
+  const lastSearchKeyRef = useRef(searchParams.toString());
 
   const actionBtnBase = "inline-flex h-11 items-center gap-2 rounded-2xl border border-white/10 bg-zinc-900/80 px-4 text-sm font-semibold text-white transition-all hover:border-white/20 hover:bg-zinc-800 backdrop-blur-sm";
 
@@ -124,7 +119,7 @@ function MoviesPage() {
           duration: m.duration || 120,
           score: m.rating || m.ratingScore || 0,
           votes: m.votes || m.views || 0,
-          rating: m.age_rating || m.rating || "P",
+          rating: normalizeAgeRating(m.age_rating ?? m.ageRating),
           poster: m.poster,
           backdrop: m.backdrop || m.poster,
           trailer: m.trailer,
@@ -163,45 +158,54 @@ function MoviesPage() {
     loadFilterOptions();
   }, []);
 
+  // ========== SYNC STATE FROM URL (NAVBAR LINKS) ==========
+  useEffect(() => {
+    const searchKey = searchParams.toString();
+    if (lastSearchKeyRef.current === searchKey) return;
+    lastSearchKeyRef.current = searchKey;
+
+    const nextQuery = searchParams.get("q") || "";
+    const status = searchParams.get("status");
+    const nextTab =
+      status === "now-showing"
+        ? "now-showing"
+        : status === "coming-soon"
+          ? "coming-soon"
+          : "all";
+
+    if (nextQuery === query && nextTab === tab) return;
+    syncingFromUrlRef.current = true;
+    setQuery(nextQuery);
+    setTab(nextTab);
+  }, [searchParams, query, tab]);
+
   // ========== FILTER & SORT MOVIES ==========
   const filteredMovies = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return [...movies]
-      .filter((movie) => {
-        // Tab filter
-        if (tab !== "all" && movie.status !== tab) return false;
+    return [...movies].filter((movie) => {
+      // Tab filter
+      if (tab !== "all" && movie.status !== tab) return false;
 
-        // Genre filter
-        if (genre !== "Tất cả") {
-          const normalizedGenre = genre.toLowerCase();
-          const genres = movie.genre || [];
-          if (!genres.some((g) => g.toLowerCase() === normalizedGenre || g.toLowerCase().includes(normalizedGenre)))
-            return false;
-        }
+      // Genre filter
+      if (genre !== "Tất cả") {
+        const normalizedGenre = genre.toLowerCase();
+        const genres = movie.genre || [];
+        if (!genres.some((g) => g.toLowerCase() === normalizedGenre || g.toLowerCase().includes(normalizedGenre)))
+          return false;
+      }
 
-        // Rating filter
-        if (rating !== "Tất cả" && movie.rating !== rating) return false;
+      // Rating filter
+      if (rating !== "Tất cả" && movie.rating !== rating) return false;
 
-        // Search query
-        if (!normalizedQuery) return true;
-        return (
-          movie.title?.toLowerCase().includes(normalizedQuery) ||
-          movie.originalTitle?.toLowerCase().includes(normalizedQuery)
-        );
-      })
-      .sort((a, b) => {
-        if (sortBy === "popular") return (b.votes || 0) - (a.votes || 0);
-        if (sortBy === "top-rated") return (b.score || 0) - (a.score || 0);
-        if (sortBy === "newest") {
-          const dateA = a.releaseDate ? new Date(a.releaseDate).getTime() : 0;
-          const dateB = b.releaseDate ? new Date(b.releaseDate).getTime() : 0;
-          return dateB - dateA;
-        }
-        if (sortBy === "duration") return (a.duration || 0) - (b.duration || 0);
-        return 0;
-      });
-  }, [genre, movies, query, rating, sortBy, tab]);
+      // Search query
+      if (!normalizedQuery) return true;
+      return (
+        movie.title?.toLowerCase().includes(normalizedQuery) ||
+        movie.originalTitle?.toLowerCase().includes(normalizedQuery)
+      );
+    });
+  }, [genre, movies, query, rating, tab]);
 
   // ========== RESET FILTERS ==========
   const resetFilters = () => {
@@ -211,11 +215,16 @@ function MoviesPage() {
 
   // ========== UPDATE URL WHEN SEARCH/TAB CHANGES ==========
   useEffect(() => {
+    if (syncingFromUrlRef.current) {
+      syncingFromUrlRef.current = false;
+      return;
+    }
     const params = new URLSearchParams();
     if (query) params.set('q', query);
     if (tab !== 'all') params.set('status', tab);
+    if (params.toString() === searchParams.toString()) return;
     setSearchParams(params, { replace: true });
-  }, [query, tab, setSearchParams]);
+  }, [query, tab, searchParams, setSearchParams]);
 
   // ========== RENDER ==========
   return (
@@ -258,7 +267,7 @@ function MoviesPage() {
             </div>
           </div>
 
-          {/* SEARCH & SORT SECTION */}
+          {/* SEARCH & FILTER SECTION */}
           <div className="relative mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
             {/* Search input */}
             <div className="relative flex-1">
@@ -272,60 +281,6 @@ function MoviesPage() {
             </div>
 
             <div className="flex items-center gap-2 self-start">
-              {/* Sort dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setSortOpen(!sortOpen)}
-                  className={actionBtnBase}
-                >
-                  {(() => {
-                    const selected = SORT_OPTIONS.find((o) => o.value === sortBy);
-                    const Icon = selected?.icon;
-                    return (
-                      <>
-                        {Icon && <Icon className="h-4 w-4 text-zinc-400" />}
-                        {selected?.label}
-                        <ChevronDown className={`h-4 w-4 text-zinc-400 transition-transform ${sortOpen ? 'rotate-180' : ''}`} />
-                      </>
-                    );
-                  })()}
-                </button>
-
-                <AnimatePresence>
-                  {sortOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute right-0 z-30 mt-2 w-48 overflow-hidden rounded-2xl border border-white/10 bg-cinema-surface shadow-2xl backdrop-blur-xl"
-                    >
-                      {SORT_OPTIONS.map((option) => {
-                        const active = option.value === sortBy;
-                        const Icon = option.icon;
-                        return (
-                          <button
-                            key={option.value}
-                            onClick={() => {
-                              setSortBy(option.value);
-                              setSortOpen(false);
-                            }}
-                            className={`flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-all ${
-                              active
-                                ? "bg-cinema-primary/20 text-white"
-                                : "text-zinc-300 hover:bg-white/5 hover:text-white"
-                            }`}
-                          >
-                            {Icon && <Icon className={`h-4 w-4 ${active ? 'text-cinema-primary' : 'text-zinc-500'}`} />}
-                            {option.label}
-                            {active && <Sparkles className="h-3 w-3 ml-auto text-cinema-primary" />}
-                          </button>
-                        );
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
               {/* Filter button */}
               <motion.button
                 whileTap={{ scale: 0.95 }}
@@ -500,9 +455,6 @@ function MoviesPage() {
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-zinc-400">
                 Hiển thị <span className="text-white font-semibold">{filteredMovies.length}</span> kết quả
-              </p>
-              <p className="text-xs text-zinc-500">
-                Sắp xếp theo: {SORT_OPTIONS.find(o => o.value === sortBy)?.label}
               </p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
