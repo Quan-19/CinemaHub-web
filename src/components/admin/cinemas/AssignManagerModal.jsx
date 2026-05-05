@@ -26,25 +26,66 @@ export default function AssignManagerModal({
           toast.error("Vui lòng đăng nhập lại");
           return;
         }
-        
+
         const token = await user.getIdToken();
-        const res = await fetch(
-          "http://localhost:5000/api/users/assign-users",
-          {
-            headers: { Authorization: `Bearer ${token}` },
+
+        // ✅ SỬA: Gọi đúng endpoint /cinemas/staffs
+        const res = await fetch("http://localhost:5000/api/cinemas/staffs", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("API Error:", errorText);
+          throw new Error(`HTTP ${res.status}: ${errorText}`);
+        }
+
+        // Đọc response text trước để debug
+        const responseText = await res.text();
+        console.log("Raw staffs response:", responseText);
+
+        // Parse JSON
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error("JSON parse error:", parseError);
+          throw new Error("Invalid JSON response from server");
+        }
+
+        console.log("Parsed staffs data:", data);
+
+        // Xử lý data từ API (theo format từ backend)
+        let staffUsers = [];
+        if (data && data.success && Array.isArray(data.data)) {
+          // Format: { success: true, data: [...] }
+          staffUsers = data.data;
+        } else if (Array.isArray(data)) {
+          // Format: trực tiếp là array
+          staffUsers = data;
+        } else if (data && data.data && Array.isArray(data.data)) {
+          staffUsers = data.data;
+        } else {
+          console.warn("Unexpected data format:", data);
+          staffUsers = [];
+        }
+
+        // Lọc chỉ lấy staff và active (nếu có status field)
+        const filteredStaff = staffUsers.filter(
+          (u) => u.role === "staff" && (!u.status || u.status === "active"),
         );
-        
-        if (!res.ok) throw new Error("Failed to fetch users");
-        
-        const data = await res.json();
-        const staffUsers = (Array.isArray(data) ? data : []).filter(
-          u => u.role === "staff" && u.status === "active"
-        );
-        setUsers(staffUsers);
-        
+
+        console.log(`Found ${filteredStaff.length} staff members`);
+        setUsers(filteredStaff);
+
+        // Set selected manager if cinema has one
         if (cinema?.managerId) {
-          const currentManager = staffUsers.find(u => u.id === cinema.managerId);
+          const currentManager = filteredStaff.find(
+            (u) => u.id === cinema.managerId,
+          );
           if (currentManager) {
             setSelected(currentManager);
           } else {
@@ -53,9 +94,23 @@ export default function AssignManagerModal({
         } else {
           setSelected(null);
         }
+
+        // Show message if no staff available
+        if (filteredStaff.length === 0 && !loading) {
+          toast.custom(
+            (t) => (
+              <div className="bg-yellow-600 text-white px-4 py-2 rounded shadow-lg">
+                ⚠️ Chưa có nhân viên nào. Hãy thêm nhân viên trước khi phân
+                quyền quản lý.
+              </div>
+            ),
+            { duration: 3000 },
+          );
+        }
       } catch (err) {
         console.error("Fetch users error:", err);
-        toast.error("Không thể tải danh sách nhân viên");
+        toast.error(`Không thể tải danh sách nhân viên: ${err.message}`);
+        setUsers([]);
       } finally {
         setLoading(false);
       }
@@ -66,7 +121,7 @@ export default function AssignManagerModal({
 
   const handleAssign = async () => {
     if (!cinema) return;
-    
+
     setSubmitting(true);
     try {
       const auth = getAuth();
@@ -75,10 +130,16 @@ export default function AssignManagerModal({
         toast.error("Vui lòng đăng nhập lại");
         return;
       }
-      
+
       const token = await user.getIdToken();
       const cinemaId = cinema.id || cinema.cinema_id;
-      
+
+      console.log("Assigning manager:", {
+        cinemaId,
+        managerId: selected?.id || null,
+        selected,
+      });
+
       const res = await fetch(
         `http://localhost:5000/api/cinemas/${cinemaId}/assign-manager`,
         {
@@ -87,18 +148,37 @@ export default function AssignManagerModal({
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             manager_id: selected?.id || null,
           }),
-        }
+        },
       );
 
+      // Kiểm tra response trước
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Assign failed");
+        const errorText = await res.text();
+        console.error("Assign API error response:", errorText);
+        let errorMessage;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage =
+            errorData.message || errorData.error || "Assign failed";
+        } catch {
+          errorMessage = errorText || "Assign failed";
+        }
+        throw new Error(errorMessage);
       }
 
-      const data = await res.json();
+      // Đọc response
+      const responseText = await res.text();
+      console.log("Assign response:", responseText);
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        data = { success: true, message: "Assign successful" };
+      }
 
       if (onAssigned) {
         onAssigned(cinemaId, {
@@ -107,8 +187,11 @@ export default function AssignManagerModal({
           email: selected?.email || null,
         });
       }
-      
-      toast.success(data.message || (selected ? "Phân quyền quản lý thành công!" : "Đã xóa quản lý"));
+
+      toast.success(
+        data.message ||
+          (selected ? "Phân quyền quản lý thành công!" : "Đã xóa quản lý"),
+      );
       onClose();
     } catch (err) {
       console.error("Assign error:", err);
@@ -127,14 +210,18 @@ export default function AssignManagerModal({
           <h2 className="text-white font-semibold">
             Phân quyền quản lý chi nhánh
           </h2>
-          <X onClick={onClose} className="cursor-pointer text-white/40 hover:text-white" size={20} />
+          <X
+            onClick={onClose}
+            className="cursor-pointer text-white/40 hover:text-white"
+            size={20}
+          />
         </div>
 
         <div className="p-4">
           <p className="text-sm text-white/60 mb-3">
             Rạp: <span className="text-white">{cinema?.name}</span>
           </p>
-          
+
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
@@ -149,7 +236,15 @@ export default function AssignManagerModal({
                     : "border-white/10 hover:border-white/20"
                 }`}
               >
-                <p className="text-sm">❌ Không phân quyền (Xóa quản lý hiện tại)</p>
+                <p className="text-sm">
+                  ❌ Không phân quyền (Xóa quản lý hiện tại)
+                </p>
+                {cinema?.managerName && selected === null && (
+                  <p className="text-xs text-yellow-400 mt-1">
+                    Hiện đang có quản lý: {cinema.managerName} - Thao tác này sẽ
+                    xóa quản lý hiện tại
+                  </p>
+                )}
               </div>
 
               {users.length === 0 ? (
@@ -167,18 +262,26 @@ export default function AssignManagerModal({
                         : "border-white/10 hover:border-white/20"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-sm font-medium">
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0">
                         {u.name?.[0] || "?"}
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-white">{u.name}</p>
-                        <p className="text-xs text-white/40">
-                          {u.email} • {u.role === "staff" ? "Nhân viên" : u.role}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white truncate">
+                          {u.name}
                         </p>
+                        <p className="text-xs text-white/40 truncate">
+                          {u.email} •{" "}
+                          {u.role === "staff" ? "Nhân viên" : u.role}
+                        </p>
+                        {cinema?.managerId === u.id && (
+                          <p className="text-xs text-green-400 mt-1">
+                            ✓ Đang là quản lý của rạp này
+                          </p>
+                        )}
                       </div>
                       {selected?.id === u.id && (
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-purple-500 rounded-full mt-1"></div>
                       )}
                     </div>
                   </div>
