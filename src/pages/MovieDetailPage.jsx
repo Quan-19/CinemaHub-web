@@ -1012,7 +1012,7 @@ export const MovieDetailPage = () => {
                 <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto lg:border-l border-zinc-800/60 lg:pl-6">
                   <p className="text-zinc-500 text-xs font-semibold mb-1">Giới hạn tuổi</p>
                   <p className="text-red-500 text-[26px] font-bold leading-tight uppercase">{movie.ageRating || "T18"}</p>
-                  <p className="text-zinc-500 text-[11px] mt-1">Từ 18 tuổi</p>
+                  {/* <p className="text-zinc-500 text-[11px] mt-1">Từ 18 tuổi</p> */}
                 </div>
               </div>
             </div>
