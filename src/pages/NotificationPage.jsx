@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNotification } from "../context/NotificationContext";
-import { Bell, CreditCard, Zap, Info, Clock, CheckCircle2, ChevronRight, Inbox } from "lucide-react";
+import { Bell, CreditCard, Zap, Info, Clock, CheckCircle2, ChevronRight, ChevronLeft, Inbox } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function NotificationPage() {
     const { notifications, markAsRead, markAllAsRead } = useNotification();
     const [filter, setFilter] = useState("all");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     // SEO Optimization
     useEffect(() => {
@@ -18,6 +20,16 @@ export default function NotificationPage() {
         if (filter === "movie") return n.type === "movie_update" || n.type === "movie";
         return true;
     });
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filter]);
+
+    const totalPages = Math.ceil(filteredNotifs.length / itemsPerPage);
+    const paginatedNotifs = filteredNotifs.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     const getIcon = (type) => {
         switch (type) {
@@ -42,8 +54,8 @@ export default function NotificationPage() {
     return (
         <div className="min-h-screen bg-cinema-bg pt-20 pb-20 mt-4 md:mt-0">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Header Section - Sticky */}
-                <header className="sticky top-20 z-40 mb-10 py-6 bg-cinema-bg/80 backdrop-blur-lg border-b border-white/5 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                {/* Header Section */}
+                <header className="mb-10 py-6 bg-cinema-bg/80 backdrop-blur-lg border-b border-white/5 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-cinema-primary/10 rounded-lg">
@@ -89,8 +101,8 @@ export default function NotificationPage() {
                 {/* Notification List */}
                 <main className="space-y-4">
                     <AnimatePresence mode="popLayout">
-                        {filteredNotifs.length > 0 ? (
-                            filteredNotifs.map((n) => (
+                        {paginatedNotifs.length > 0 ? (
+                            paginatedNotifs.map((n) => (
                                 <motion.article
                                     layout
                                     initial={{ opacity: 0, y: 20 }}
@@ -110,7 +122,7 @@ export default function NotificationPage() {
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between gap-4 mb-1">
-                                                <h2 className={`text-base sm:text-lg font-bold text-white transition-opacity ${n.is_read ? "opacity-60" : ""}`}>
+                                                <h2 className={`text-base sm:text-lg font-bold transition-colors ${n.is_read ? "text-zinc-300" : "text-white"}`}>
                                                     {n.title}
                                                 </h2>
                                                 <div className="flex items-center gap-3">
@@ -121,7 +133,7 @@ export default function NotificationPage() {
                                                 </div>
                                             </div>
 
-                                            <p className={`text-sm sm:text-base text-zinc-400 mb-4 leading-relaxed line-clamp-2 ${n.is_read ? "opacity-50" : ""}`}>
+                                            <p className={`text-sm sm:text-base mb-4 leading-relaxed line-clamp-2 transition-colors ${n.is_read ? "text-zinc-400" : "text-zinc-300"}`}>
                                                 {n.message}
                                             </p>
 
@@ -160,6 +172,59 @@ export default function NotificationPage() {
                             </motion.div>
                         )}
                     </AnimatePresence>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-2 mt-8 pt-4">
+                            <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 text-white transition-all"
+                            >
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
+                            
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: totalPages }).map((_, i) => {
+                                    const pageNumber = i + 1;
+                                    if (
+                                        pageNumber === 1 ||
+                                        pageNumber === totalPages ||
+                                        Math.abs(currentPage - pageNumber) <= 1
+                                    ) {
+                                        return (
+                                            <button
+                                                key={i}
+                                                onClick={() => setCurrentPage(pageNumber)}
+                                                className={`w-10 h-10 rounded-xl font-medium transition-all ${
+                                                    currentPage === pageNumber
+                                                        ? "bg-cinema-primary text-white shadow-lg shadow-cinema-primary/20"
+                                                        : "bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white"
+                                                }`}
+                                            >
+                                                {pageNumber}
+                                            </button>
+                                        );
+                                    }
+                                    if (
+                                        pageNumber === currentPage - 2 ||
+                                        pageNumber === currentPage + 2
+                                    ) {
+                                        return <span key={i} className="text-zinc-500 px-1">...</span>;
+                                    }
+                                    return null;
+                                })}
+                            </div>
+
+                            <button
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 text-white transition-all"
+                            >
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

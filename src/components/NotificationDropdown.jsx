@@ -9,9 +9,9 @@ const NotificationDropdown = ({ isOpen, onClose }) => {
     const [filter, setFilter] = useState("all");
     const dropdownRef = useRef(null);
 
-    const filteredNotifications = filter === "all"
+    const filteredNotifications = (filter === "all"
         ? notifications
-        : notifications.filter(n => !n.is_read);
+        : notifications.filter(n => !n.is_read)).slice(0, 4);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -51,7 +51,7 @@ const NotificationDropdown = ({ isOpen, onClose }) => {
                     exit={{ opacity: 0, y: 10, scale: 0.95, filter: "blur(10px)" }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     ref={dropdownRef}
-                    className="absolute right-0 top-full mt-4 w-80 sm:w-[400px] rounded-2xl border border-white/10 bg-cinema-bg/95 backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.6)] overflow-hidden z-[100]"
+                    className="absolute right-0 top-full mt-4 w-80 sm:w-[400px] rounded-2xl border border-white/20 bg-zinc-900/95 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] ring-1 ring-black/5 overflow-hidden z-[100]"
                 >
                     {/* Header */}
                     <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
