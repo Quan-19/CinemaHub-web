@@ -1,35 +1,41 @@
 /* HomePage.jsx - Full Premium Cinematic Homepage (No Mock Data) */
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { 
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+} from "framer-motion";
+import {
   ChevronDown,
-  Star, 
-  Clock, 
-  Play, 
-  Ticket, 
-  Tag, 
-  ArrowRight, 
-  Flame, 
-  CalendarDays, 
-  Sparkles, 
+  Star,
+  Clock,
+  Play,
+  Ticket,
+  Tag,
+  ArrowRight,
+  Flame,
+  CalendarDays,
+  Sparkles,
   Gift,
   MapPin,
   X,
   Film,
   TrendingUp,
   Newspaper,
-  ChevronRight as ChevronRightIcon
-} from 'lucide-react';
+  ChevronRight as ChevronRightIcon,
+} from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 // ========== COMPONENTS ==========
 
 // Premium Movie Card Component
 const PremiumMovieCard = ({ movie, index }) => {
   const navigate = useNavigate();
-  const isNowShowing = movie.status === 'now_showing' || movie.status === 'now-showing';
+  const isNowShowing =
+    movie.status === "now_showing" || movie.status === "now-showing";
   const movieId = movie.movie_id ?? movie.id;
 
   return (
@@ -49,29 +55,33 @@ const PremiumMovieCard = ({ movie, index }) => {
           whileHover={{ scale: 1.1 }}
           transition={{ duration: 0.4 }}
           onError={(e) => {
-            e.target.src = 'https://via.placeholder.com/300x450?text=No+Image';
+            e.target.src = "https://via.placeholder.com/300x450?text=No+Image";
           }}
         />
-        
+
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
+
         <div className="absolute top-3 left-3 z-10">
-          <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase backdrop-blur-md ${
-            isNowShowing 
-              ? 'bg-red-500/90 text-white' 
-              : 'bg-yellow-500/90 text-black'
-          }`}>
-            {isNowShowing ? 'Đang chiếu' : 'Sắp chiếu'}
+          <span
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase backdrop-blur-md ${
+              isNowShowing
+                ? "bg-red-500/90 text-white"
+                : "bg-yellow-500/90 text-black"
+            }`}
+          >
+            {isNowShowing ? "Đang chiếu" : "Sắp chiếu"}
           </span>
         </div>
 
         <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-sm">
           <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-          <span className="text-white text-xs font-bold">{movie.rating || movie.score || 'N/A'}</span>
+          <span className="text-white text-xs font-bold">
+            {movie.rating || movie.score || "N/A"}
+          </span>
         </div>
 
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/60 backdrop-blur-sm">
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/movies/${movieId}`);
@@ -79,7 +89,7 @@ const PremiumMovieCard = ({ movie, index }) => {
             className="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-bold flex items-center gap-2 transform scale-90 group-hover:scale-100 transition-transform"
           >
             <Ticket className="w-4 h-4" />
-            {isNowShowing ? 'Đặt vé' : 'Chi tiết'}
+            {isNowShowing ? "Đặt vé" : "Chi tiết"}
           </button>
         </div>
       </div>
@@ -98,7 +108,7 @@ const PremiumMovieCard = ({ movie, index }) => {
           </div>
           <div className="w-1 h-1 rounded-full bg-zinc-600" />
           <div className="flex items-center gap-1">
-            <span>{movie.genre?.[0] || 'Phim'}</span>
+            <span>{movie.genre?.[0] || "Phim"}</span>
           </div>
         </div>
       </div>
@@ -123,7 +133,12 @@ const HeroSkeleton = () => (
 );
 
 // Animated Section Component
-const AnimatedSection = ({ children, className, delay = 0, direction = 'up' }) => {
+const AnimatedSection = ({
+  children,
+  className,
+  delay = 0,
+  direction = "up",
+}) => {
   const [ref, inView] = useState(false);
   const sectionRef = useRef(null);
 
@@ -135,7 +150,7 @@ const AnimatedSection = ({ children, className, delay = 0, direction = 'up' }) =
           observer.disconnect();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
     if (sectionRef.current) observer.observe(sectionRef.current);
     return () => observer.disconnect();
@@ -144,8 +159,8 @@ const AnimatedSection = ({ children, className, delay = 0, direction = 'up' }) =
   const variants = {
     hidden: {
       opacity: 0,
-      y: direction === 'up' ? 50 : direction === 'down' ? -50 : 0,
-      x: direction === 'left' ? -50 : direction === 'right' ? 50 : 0,
+      y: direction === "up" ? 50 : direction === "down" ? -50 : 0,
+      x: direction === "left" ? -50 : direction === "right" ? 50 : 0,
     },
     visible: {
       opacity: 1,
@@ -159,7 +174,7 @@ const AnimatedSection = ({ children, className, delay = 0, direction = 'up' }) =
     <motion.div
       ref={sectionRef}
       initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
+      animate={inView ? "visible" : "hidden"}
       variants={variants}
       className={className}
     >
@@ -178,9 +193,12 @@ const GlowCard = ({ children, className, onClick }) => {
       className={`group relative rounded-2xl overflow-hidden cursor-pointer ${className}`}
     >
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-      <div 
+      <div
         className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-        style={{ boxShadow: 'inset 0 0 0 1px rgba(229,9,20,0.5), 0 0 20px rgba(229,9,20,0.2)' }}
+        style={{
+          boxShadow:
+            "inset 0 0 0 1px rgba(229,9,20,0.5), 0 0 20px rgba(229,9,20,0.2)",
+        }}
       />
       {children}
     </motion.div>
@@ -190,8 +208,11 @@ const GlowCard = ({ children, className, onClick }) => {
 // Parallax Hero Component
 const ParallaxHero = ({ movie, onBook, onTrailer }) => {
   const ref = useRef(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
-  const y = useTransform(scrollYProgress, [0, 1], ['0%', '40%']);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   if (!movie) return null;
@@ -204,14 +225,18 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
           alt={movie.title}
           className="w-full h-full object-cover object-center"
           onError={(e) => {
-            e.target.src = 'https://via.placeholder.com/1920x1080?text=No+Image';
+            e.target.src =
+              "https://via.placeholder.com/1920x1080?text=No+Image";
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20" />
       </motion.div>
 
-      <motion.div style={{ opacity }} className="relative h-full flex items-center">
+      <motion.div
+        style={{ opacity }}
+        className="relative h-full flex items-center"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -226,7 +251,9 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 backdrop-blur-sm border border-red-500/30 mb-4"
             >
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-xs font-semibold text-red-400">ĐANG CHIẾU</span>
+              <span className="text-xs font-semibold text-red-400">
+                ĐANG CHIẾU
+              </span>
             </motion.div>
 
             <motion.h1
@@ -264,7 +291,7 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
                   Đặt vé ngay
                 </span>
               </button>
-              
+
               <button
                 onClick={onTrailer}
                 className="px-6 md:px-8 py-3 md:py-4 rounded-full font-bold text-white border border-white/30 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center gap-2 group"
@@ -282,19 +309,27 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
             >
               <div className="flex items-center gap-2 text-zinc-300">
                 <Star className="w-4 h-4 md:w-5 md:h-5 fill-yellow-500 text-yellow-500" />
-                <span className="font-semibold">{movie.rating || movie.score}/10</span>
-                <span className="text-xs md:text-sm text-zinc-400">({movie.votes?.toLocaleString() || '0'} đánh giá)</span>
+                <span className="font-semibold">
+                  {movie.rating || movie.score}/10
+                </span>
+                <span className="text-xs md:text-sm text-zinc-400">
+                  ({movie.votes?.toLocaleString() || "0"} đánh giá)
+                </span>
               </div>
               <div className="flex items-center gap-2 text-zinc-300">
                 <Clock className="w-4 h-4 md:w-5 md:h-5" />
                 <span>{movie.duration} phút</span>
               </div>
-              <div className={`px-2 md:px-3 py-1 rounded-full text-xs font-bold ${
-                movie.age_rating === 'T18' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                movie.age_rating === 'T16' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
-                'bg-green-500/20 text-green-400 border border-green-500/30'
-              }`}>
-                {movie.age_rating || 'T13'}
+              <div
+                className={`px-2 md:px-3 py-1 rounded-full text-xs font-bold ${
+                  movie.age_rating === "T18"
+                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                    : movie.age_rating === "T16"
+                      ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                      : "bg-green-500/20 text-green-400 border border-green-500/30"
+                }`}
+              >
+                {movie.age_rating || "T13"}
               </div>
             </motion.div>
           </motion.div>
@@ -309,7 +344,10 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
       >
         <div className="flex flex-col items-center gap-2 text-zinc-400 text-xs">
           <span>Kéo xuống để khám phá</span>
-          <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
             <ChevronDown className="w-4 h-4" />
           </motion.div>
         </div>
@@ -322,9 +360,9 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
 const CinemaCard = ({ cinema, index }) => {
   const navigate = useNavigate();
   const brandColors = {
-    EbizCinema: '#e50914',
+    EbizCinema: "#e50914",
   };
-  const color = brandColors[cinema.brand] || '#e50914';
+  const color = brandColors[cinema.brand] || "#e50914";
   const cinemaId = cinema.cinema_id ?? cinema.id;
 
   const handleClick = () => {
@@ -334,16 +372,21 @@ const CinemaCard = ({ cinema, index }) => {
   };
 
   return (
-    <GlowCard className="bg-cinema-surface border border-white/10 p-4" onClick={handleClick}>
+    <GlowCard
+      className="bg-cinema-surface border border-white/10 p-4"
+      onClick={handleClick}
+    >
       <div className="flex items-start gap-3">
         <div
           className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
           style={{ background: color }}
         >
-          {cinema.brand?.[0] || 'C'}
+          {cinema.brand?.[0] || "C"}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-white font-semibold text-sm mb-1">{cinema.name}</h3>
+          <h3 className="text-white font-semibold text-sm mb-1">
+            {cinema.name}
+          </h3>
           <p className="text-zinc-500 text-xs line-clamp-2">{cinema.address}</p>
         </div>
         <div className="shrink-0 self-center">
@@ -376,55 +419,77 @@ const HomePage = () => {
         // Fetch movies
         const movieRes = await fetch(`${API_BASE_URL}/api/movies`);
         const movieData = await movieRes.json();
-        const movies = Array.isArray(movieData) ? movieData : (movieData.data || []);
+        const movies = Array.isArray(movieData)
+          ? movieData
+          : movieData.data || [];
 
         const formattedMovies = movies.map((m) => {
-          const rawStatus = String(m.status || '').toLowerCase();
-          const normalizedStatus = rawStatus.replace(/-/g, '_');
-          const ratingScore = Number(m.rating_score ?? m.ratingScore ?? m.rating ?? 0);
+          const rawStatus = String(m.status || "").toLowerCase();
+          const normalizedStatus = rawStatus.replace(/-/g, "_");
+          const ratingScore = Number(
+            m.rating_score ?? m.ratingScore ?? m.rating ?? 0,
+          );
           const reviewCount = Number(m.reviewCount ?? m.review_count ?? 0);
           const tickets = Number(m.tickets ?? 0);
           const views = Number(m.views ?? 0);
 
-          return ({
-          ...m,
-          movie_id: m.movie_id || m.id,
-          rating: Number.isFinite(ratingScore) ? ratingScore : 0,
-          score: Number.isFinite(ratingScore) ? ratingScore : 0,
-          votes: Number.isFinite(Number(m.votes))
-            ? Number(m.votes)
-            : (Number.isFinite(reviewCount) && reviewCount > 0)
-              ? reviewCount
-              : (Number.isFinite(tickets) ? tickets : 0),
-          poster: m.poster,
-          backdrop: m.backdrop || m.poster,
-          description: m.description || '',
-          genre: Array.isArray(m.genre) ? m.genre : (m.genre?.split(',').map(g => g.trim()) || []),
-          originalTitle: m.original_title || m.originalTitle || '',
-          releaseDate: m.release_date || m.releaseDate || '',
-          duration: m.duration || 120,
-          age_rating: m.age_rating || m.ageRating || 'T13',
-          trailer: m.trailer || '',
-          status: normalizedStatus,
-          created_at: m.created_at || m.createdAt,
-          tickets: Number.isFinite(tickets) ? tickets : 0,
-          views: Number.isFinite(views) ? views : 0,
-        });
+          return {
+            ...m,
+            movie_id: m.movie_id || m.id,
+            rating: Number.isFinite(ratingScore) ? ratingScore : 0,
+            score: Number.isFinite(ratingScore) ? ratingScore : 0,
+            votes: Number.isFinite(Number(m.votes))
+              ? Number(m.votes)
+              : Number.isFinite(reviewCount) && reviewCount > 0
+                ? reviewCount
+                : Number.isFinite(tickets)
+                  ? tickets
+                  : 0,
+            poster: m.poster,
+            backdrop: m.backdrop || m.poster,
+            description: m.description || "",
+            genre: Array.isArray(m.genre)
+              ? m.genre
+              : m.genre?.split(",").map((g) => g.trim()) || [],
+            originalTitle: m.original_title || m.originalTitle || "",
+            releaseDate: m.release_date || m.releaseDate || "",
+            duration: m.duration || 120,
+            age_rating: m.age_rating || m.ageRating || "T13",
+            trailer: m.trailer || "",
+            status: normalizedStatus,
+            created_at: m.created_at || m.createdAt,
+            tickets: Number.isFinite(tickets) ? tickets : 0,
+            views: Number.isFinite(views) ? views : 0,
+          };
         });
 
         setAllMovies(formattedMovies);
 
-        setNowShowing(formattedMovies.filter((m) => m.status === 'now_showing' || m.status === 'now-showing'));
-        setComingSoon(formattedMovies.filter((m) => m.status === 'coming_soon' || m.status === 'coming-soon'));
+        setNowShowing(
+          formattedMovies.filter(
+            (m) => m.status === "now_showing" || m.status === "now-showing",
+          ),
+        );
+        setComingSoon(
+          formattedMovies.filter(
+            (m) => m.status === "coming_soon" || m.status === "coming-soon",
+          ),
+        );
 
         // Fetch promotions
         try {
-          const promoRes = await fetch(`${API_BASE_URL}/api/promotions?scope=public`);
+          const promoRes = await fetch(
+            `${API_BASE_URL}/api/promotions?scope=public`,
+          );
           const promoPayload = await promoRes.json();
-          const promoData = Array.isArray(promoPayload?.data) ? promoPayload.data : (Array.isArray(promoPayload) ? promoPayload : []);
+          const promoData = Array.isArray(promoPayload?.data)
+            ? promoPayload.data
+            : Array.isArray(promoPayload)
+              ? promoPayload
+              : [];
           setPromotions(promoData);
         } catch (err) {
-          console.error('Error fetching promotions:', err);
+          console.error("Error fetching promotions:", err);
           setPromotions([]);
         }
 
@@ -432,17 +497,20 @@ const HomePage = () => {
         try {
           const cinemaRes = await fetch(`${API_BASE_URL}/api/cinemas`);
           const cinemaPayload = await cinemaRes.json();
-          const cinemaData = Array.isArray(cinemaPayload) ? cinemaPayload : (cinemaPayload.data || []);
+          const cinemaData = Array.isArray(cinemaPayload)
+            ? cinemaPayload
+            : cinemaPayload.data || [];
           // Filter active cinemas and take first 4
-          const activeCinemas = cinemaData.filter(c => c.status !== 'inactive').slice(0, 4);
+          const activeCinemas = cinemaData
+            .filter((c) => c.status !== "inactive")
+            .slice(0, 4);
           setCinemas(activeCinemas);
         } catch (err) {
-          console.error('Error fetching cinemas:', err);
+          console.error("Error fetching cinemas:", err);
           setCinemas([]);
         }
-
       } catch (err) {
-        console.error('Error fetching data:', err);
+        console.error("Error fetching data:", err);
       } finally {
         setLoading(false);
       }
@@ -482,7 +550,8 @@ const HomePage = () => {
 
   const extractYouTubeId = (url) => {
     if (!url) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const regExp =
+      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return match && match[2].length === 11 ? match[2] : null;
   };
@@ -497,7 +566,9 @@ const HomePage = () => {
             <div className="h-10 w-24 bg-zinc-800 rounded-lg animate-pulse" />
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4">
-            {[...Array(6)].map((_, i) => <MovieCardSkeleton key={i} />)}
+            {[...Array(6)].map((_, i) => (
+              <MovieCardSkeleton key={i} />
+            ))}
           </div>
         </div>
       </div>
@@ -517,7 +588,7 @@ const HomePage = () => {
           </motion.div>
           <p className="text-zinc-400 mb-4">Không có phim đang chiếu</p>
           <button
-            onClick={() => navigate('/movies')}
+            onClick={() => navigate("/movies")}
             className="px-6 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors"
           >
             Xem phim sắp chiếu
@@ -540,7 +611,10 @@ const HomePage = () => {
 
       {/* Slider Navigation Dots */}
       {featured.length > 1 && (
-        <div className="absolute left-1/2 -translate-x-1/2 z-20" style={{ top: '75vh' }}>
+        <div
+          className="absolute left-1/2 -translate-x-1/2 z-20"
+          style={{ top: "75vh" }}
+        >
           <div className="flex gap-2">
             {featured.map((_, i) => (
               <button
@@ -553,7 +627,9 @@ const HomePage = () => {
                   }, 6000);
                 }}
                 className={`transition-all duration-300 rounded-full ${
-                  i === heroIndex ? 'w-8 h-2 bg-red-500' : 'w-2 h-2 bg-white/30 hover:bg-white/60'
+                  i === heroIndex
+                    ? "w-8 h-2 bg-red-500"
+                    : "w-2 h-2 bg-white/30 hover:bg-white/60"
                 }`}
               />
             ))}
@@ -564,32 +640,39 @@ const HomePage = () => {
       {/* Main Content */}
       <div className="relative z-10 mt-16 md:mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
           {/* Quick Booking Bar */}
           {nowShowing.length > 0 && (
             <AnimatedSection>
               <GlowCard className="bg-gradient-to-r from-red-900/20 to-red-800/5 border border-red-500/20 rounded-2xl p-5 mb-12 backdrop-blur-xl">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">  
+                  <div className="flex items-center gap-4">
                     <div>
-                      <h3 className="text-white font-bold text-lg">Đặt vé nhanh chóng</h3>
-                      <p className="text-zinc-400 text-sm">Chỉ 3 bước đơn giản để có vé xem phim</p>
+                      <h3 className="text-white font-bold text-lg">
+                        Đặt vé nhanh chóng
+                      </h3>
+                      <p className="text-zinc-400 text-sm">
+                        Chỉ 3 bước đơn giản để có vé xem phim
+                      </p>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-4">
-                    {['Chọn phim', 'Chọn suất', 'Chọn ghế'].map((step, i) => (
+                    {["Chọn phim", "Chọn suất", "Chọn ghế"].map((step, i) => (
                       <div key={step} className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white text-sm font-bold">
                           {i + 1}
                         </div>
-                        <span className="text-zinc-300 text-sm hidden sm:inline">{step}</span>
-                        {i < 2 && <ChevronRightIcon className="w-4 h-4 text-zinc-500 ml-1 hidden sm:block" />}
+                        <span className="text-zinc-300 text-sm hidden sm:inline">
+                          {step}
+                        </span>
+                        {i < 2 && (
+                          <ChevronRightIcon className="w-4 h-4 text-zinc-500 ml-1 hidden sm:block" />
+                        )}
                       </div>
                     ))}
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate('/movies')}
+                      onClick={() => navigate("/movies")}
                       className="px-6 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 text-white font-bold hover:shadow-lg hover:shadow-red-500/25 transition-all"
                     >
                       Bắt đầu ngay
@@ -613,7 +696,7 @@ const HomePage = () => {
                 </div>
                 <motion.button
                   whileHover={{ x: 5 }}
-                  onClick={() => navigate('/movies?status=now-showing')}
+                  onClick={() => navigate("/movies?status=now-showing")}
                   className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
                 >
                   Xem tất cả
@@ -623,7 +706,11 @@ const HomePage = () => {
 
               <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-none">
                 {nowShowing.map((movie, idx) => (
-                  <PremiumMovieCard key={movie.movie_id} movie={movie} index={idx} />
+                  <PremiumMovieCard
+                    key={movie.movie_id}
+                    movie={movie}
+                    index={idx}
+                  />
                 ))}
               </div>
             </AnimatedSection>
@@ -642,7 +729,7 @@ const HomePage = () => {
                 </div>
                 <motion.button
                   whileHover={{ x: 5 }}
-                  onClick={() => navigate('/movies?sort=top-rated')}
+                  onClick={() => navigate("/movies?sort=top-rated")}
                   className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
                 >
                   Xem tất cả
@@ -652,13 +739,19 @@ const HomePage = () => {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {[...nowShowing]
-                  .sort((a, b) => (b.tickets || 0) - (a.tickets || 0)
-                    || (b.views || 0) - (a.views || 0)
-                    || (b.rating || b.score || 0) - (a.rating || a.score || 0)
+                  .sort(
+                    (a, b) =>
+                      (b.tickets || 0) - (a.tickets || 0) ||
+                      (b.views || 0) - (a.views || 0) ||
+                      (b.rating || b.score || 0) - (a.rating || a.score || 0),
                   )
                   .slice(0, 5)
                   .map((movie, idx) => (
-                    <PremiumMovieCard key={`hot-${movie.movie_id}`} movie={movie} index={idx} />
+                    <PremiumMovieCard
+                      key={`hot-${movie.movie_id}`}
+                      movie={movie}
+                      index={idx}
+                    />
                   ))}
               </div>
             </AnimatedSection>
@@ -677,7 +770,7 @@ const HomePage = () => {
                 </div>
                 <motion.button
                   whileHover={{ x: 5 }}
-                  onClick={() => navigate('/movies?status=coming-soon')}
+                  onClick={() => navigate("/movies?status=coming-soon")}
                   className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
                 >
                   Xem tất cả
@@ -687,7 +780,11 @@ const HomePage = () => {
 
               <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-none">
                 {comingSoon.map((movie, idx) => (
-                  <PremiumMovieCard key={movie.movie_id} movie={movie} index={idx} />
+                  <PremiumMovieCard
+                    key={movie.movie_id}
+                    movie={movie}
+                    index={idx}
+                  />
                 ))}
               </div>
             </AnimatedSection>
@@ -706,7 +803,7 @@ const HomePage = () => {
                 </div>
                 <motion.button
                   whileHover={{ x: 5 }}
-                  onClick={() => navigate('/cinemas')}
+                  onClick={() => navigate("/cinemas")}
                   className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
                 >
                   Xem tất cả
@@ -716,7 +813,11 @@ const HomePage = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {cinemas.map((cinema, idx) => (
-                  <CinemaCard key={cinema.cinema_id || idx} cinema={cinema} index={idx} />
+                  <CinemaCard
+                    key={cinema.cinema_id || idx}
+                    cinema={cinema}
+                    index={idx}
+                  />
                 ))}
               </div>
             </AnimatedSection>
@@ -735,7 +836,7 @@ const HomePage = () => {
                 </div>
                 <motion.button
                   whileHover={{ x: 5 }}
-                  onClick={() => navigate('/promotions')}
+                  onClick={() => navigate("/promotions")}
                   className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
                 >
                   Xem tất cả
@@ -745,7 +846,10 @@ const HomePage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {promotions.slice(0, 3).map((promo, idx) => (
-                  <GlowCard key={promo.promotion_id || promo.id || idx} className="bg-cinema-surface border border-white/10 overflow-hidden">
+                  <GlowCard
+                    key={promo.promotion_id || promo.id || idx}
+                    className="bg-cinema-surface border border-white/10 overflow-hidden"
+                  >
                     <div className="relative h-48 overflow-hidden">
                       {promo.image ? (
                         <img
@@ -753,7 +857,8 @@ const HomePage = () => {
                           alt={promo.title}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                           onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/400x300?text=Promotion';
+                            e.target.src =
+                              "https://via.placeholder.com/400x300?text=Promotion";
                           }}
                         />
                       ) : (
@@ -762,25 +867,32 @@ const HomePage = () => {
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      {(promo.discount_percent > 0 || promo.discount_value > 0) && (
+                      {(promo.discount_percent > 0 ||
+                        promo.discount_value > 0) && (
                         <div className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm font-bold">
                           -{promo.discount_percent || promo.discount_value}%
                         </div>
                       )}
                     </div>
                     <div className="p-5">
-                      <h3 className="text-white font-bold text-lg mb-2 line-clamp-1">{promo.title}</h3>
-                      <p className="text-zinc-400 text-sm mb-4 line-clamp-2">{promo.description}</p>
+                      <h3 className="text-white font-bold text-lg mb-2 line-clamp-1">
+                        {promo.title}
+                      </h3>
+                      <p className="text-zinc-400 text-sm mb-4 line-clamp-2">
+                        {promo.description}
+                      </p>
                       {promo.code && (
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 border border-dashed border-zinc-600">
                             <Tag className="w-4 h-4 text-red-500" />
-                            <span className="text-white text-sm font-mono font-bold">{promo.code}</span>
+                            <span className="text-white text-sm font-mono font-bold">
+                              {promo.code}
+                            </span>
                           </div>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => navigate('/movies')}
+                            onClick={() => navigate("/movies")}
                             className="px-4 py-2 rounded-lg bg-red-600/20 text-red-400 text-sm font-medium hover:bg-red-600/30 transition-colors"
                           >
                             Áp dụng
@@ -807,7 +919,7 @@ const HomePage = () => {
                 </div>
                 <motion.button
                   whileHover={{ x: 5 }}
-                  onClick={() => navigate('/movies')}
+                  onClick={() => navigate("/movies")}
                   className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
                 >
                   Xem phim
@@ -828,16 +940,24 @@ const HomePage = () => {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                            m.status === 'now_showing'
-                              ? 'bg-red-500/15 text-red-300 border border-red-500/20'
-                              : 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/20'
-                          }`}>
-                            {m.status === 'now_showing' ? 'Đang chiếu' : 'Sắp chiếu'}
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              m.status === "now_showing"
+                                ? "bg-red-500/15 text-red-300 border border-red-500/20"
+                                : "bg-yellow-500/15 text-yellow-300 border border-yellow-500/20"
+                            }`}
+                          >
+                            {m.status === "now_showing"
+                              ? "Đang chiếu"
+                              : "Sắp chiếu"}
                           </span>
                           {(m.created_at || m.releaseDate) && (
                             <span className="text-[10px] font-semibold text-zinc-500">
-                              {String(m.created_at || m.releaseDate).split('T')[0]}
+                              {
+                                String(m.created_at || m.releaseDate).split(
+                                  "T",
+                                )[0]
+                              }
                             </span>
                           )}
                         </div>
@@ -845,7 +965,8 @@ const HomePage = () => {
                           {m.title}
                         </h3>
                         <p className="text-zinc-400 text-sm mt-2 line-clamp-3">
-                          {m.description || 'Khám phá thông tin chi tiết về bộ phim này.'}
+                          {m.description ||
+                            "Khám phá thông tin chi tiết về bộ phim này."}
                         </p>
                         <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-zinc-300">
                           Xem chi tiết
@@ -867,7 +988,7 @@ const HomePage = () => {
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ delay: 0.6, type: 'spring' }}
+                  transition={{ delay: 0.6, type: "spring" }}
                   className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4"
                 >
                   <Film className="w-8 h-8 text-red-500" />
@@ -881,7 +1002,7 @@ const HomePage = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate('/movies')}
+                  onClick={() => navigate("/movies")}
                   className="px-8 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 text-white font-bold hover:shadow-lg hover:shadow-red-500/25 transition-all"
                 >
                   Đặt vé ngay
@@ -912,9 +1033,11 @@ const HomePage = () => {
               <div className="relative pt-[56.25%]">
                 <iframe
                   className="absolute inset-0 w-full h-full"
-                  src={selectedTrailer.trailer.includes('youtube.com') || selectedTrailer.trailer.includes('youtu.be')
-                    ? selectedTrailer.trailer
-                    : `https://www.youtube.com/embed/${extractYouTubeId(selectedTrailer.trailer)}?autoplay=1`
+                  src={
+                    selectedTrailer.trailer.includes("youtube.com") ||
+                    selectedTrailer.trailer.includes("youtu.be")
+                      ? selectedTrailer.trailer
+                      : `https://www.youtube.com/embed/${extractYouTubeId(selectedTrailer.trailer)}?autoplay=1`
                   }
                   title={selectedTrailer.title}
                   frameBorder="0"
