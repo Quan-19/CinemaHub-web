@@ -81,7 +81,7 @@ export default function ShowtimeDetailModal({ showtime, isOpen, onClose }) {
                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${status.bg} ${status.color}`}>
                               {status.label}
                            </span>
-                           <span className="text-xs text-zinc-500 font-medium">Định dạng: {showtime.type}</span>
+                           <span className="text-xs text-zinc-500 font-medium">Định dạng: {showtime.type} • {showtime.language === 'DUB' ? 'Lồng tiếng' : 'Phụ đề'}</span>
                         </div>
                      </div>
                   </div>

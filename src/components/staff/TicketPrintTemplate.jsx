@@ -42,7 +42,7 @@ const TicketPrintTemplate = React.forwardRef(({ scanResult }, ref) => {
             <div className="py-4 space-y-3">
                 <div className="flex items-start gap-4">
                     <span className="font-bold border border-black px-1.5 py-0.5 leading-none mt-0.5">
-                        [{scanResult.showtime?.format}]
+                        [{scanResult.showtime?.format} - {scanResult.showtime?.language === 'DUB' ? 'LỒNG TIẾNG' : 'PHỤ ĐỀ'}]
                     </span>
                     <div>
                         <p className="font-black text-sm uppercase leading-tight">{scanResult.movie?.title}</p>

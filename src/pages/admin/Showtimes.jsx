@@ -235,6 +235,7 @@ export default function ShowtimesPage() {
             availableSeats: s.availableSeats || 100,
             bookedCount: s.bookedCount || 0,
             status: normalizedStatus,
+            language: s.language || "VIETSUB",
             special: Boolean(s.isSpecial ?? s.special ?? s.is_special ?? false),
           };
         });
@@ -408,6 +409,7 @@ export default function ShowtimesPage() {
       totalSeats: 0,
       availableSeats: 0,
       status: "scheduled",
+      language: "VIETSUB",
     });
   };
 
@@ -600,6 +602,7 @@ export default function ShowtimesPage() {
         prices: finalFormData.prices,
         is_special: Boolean(finalFormData.isSpecial),
         status: finalFormData.status || "scheduled",
+        language: finalFormData.language || "VIETSUB",
       };
 
       console.log("📦 Payload gửi lên API:", payload);

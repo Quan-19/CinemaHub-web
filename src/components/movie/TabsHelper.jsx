@@ -226,9 +226,9 @@ export const ShowtimesTab = ({ showtimes }) => {
                             Đã chiếu
                           </div>
                         )}
-                        <div className="flex justify-between items-center mb-1.5">
+                        <div className="flex items-center gap-2 mb-2.5">
                           <span
-                            className={`font-bold text-[17px] transition-colors ${
+                            className={`font-bold text-[17px] leading-none transition-colors ${
                               isExpired
                                 ? "text-zinc-500"
                                 : "text-white group-hover/st:text-red-500"
@@ -236,22 +236,33 @@ export const ShowtimesTab = ({ showtimes }) => {
                           >
                             {st.time}
                           </span>
-                          <span
-                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                              isExpired
-                                ? "bg-zinc-800 text-zinc-500 border border-zinc-700"
-                                : is3D
-                                ? "bg-blue-600 text-white"
-                                : isImax
-                                ? "bg-orange-500 text-white"
-                                : "bg-zinc-800 border border-zinc-700 text-white"
-                            }`}
-                          >
-                            {st.type}
-                          </span>
+                          <div className="flex gap-1.5">
+                            <span
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${
+                                isExpired
+                                  ? "bg-zinc-800 text-zinc-500 border border-zinc-700"
+                                  : "bg-purple-600 text-white"
+                              }`}
+                            >
+                              {st.language === "DUB" ? "Lồng tiếng" : st.language === "ENGLISH" ? "Tiếng Anh" : "VietSub"}
+                            </span>
+                            <span
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${
+                                isExpired
+                                  ? "bg-zinc-800 text-zinc-500 border border-zinc-700"
+                                  : is3D
+                                  ? "bg-blue-600 text-white"
+                                  : isImax
+                                  ? "bg-orange-500 text-white"
+                                  : "bg-zinc-800 border border-zinc-700 text-white"
+                              }`}
+                            >
+                              {st.type}
+                            </span>
+                          </div>
                         </div>
                         <div
-                          className={`font-semibold text-xs mb-1.5 ${
+                          className={`font-semibold text-xs mb-2 ${
                             isExpired ? "text-zinc-600" : "text-zinc-300"
                           }`}
                         >
@@ -267,15 +278,16 @@ export const ShowtimesTab = ({ showtimes }) => {
                             isExpired ? "text-zinc-600" : "text-zinc-500"
                           }`}
                         >
-                          <User className="w-3.5 h-3.5" />
+                          <User className="w-3 h-3 opacity-70" />
                           {isExpired ? (
-                            <span>{st.totalSeats || 45} ghế</span>
-                          ) : st.remainingSeats > 0 ? (
-                            <span className="text-amber-500">
-                              Còn {st.remainingSeats}
-                            </span>
+                            <span>Đã hết suất</span>
                           ) : (
-                            <span>{st.totalSeats || 45} ghế</span>
+                            <div className="flex items-center gap-1">
+                              <span className={st.availableSeats > 0 ? "text-emerald-500 font-bold" : "text-zinc-500"}>
+                                {st.availableSeats ?? st.totalSeats ?? 0}
+                              </span>
+                              <span className="opacity-60">/ {st.totalSeats || 0} ghế trống</span>
+                            </div>
                           )}
                         </div>
                       </div>

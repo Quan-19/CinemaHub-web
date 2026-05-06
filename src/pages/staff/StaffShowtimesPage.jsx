@@ -26,7 +26,11 @@ const STATUS_OPTIONS = [
   { value: "open", label: "Mở bán" },
   { value: "locked", label: "Khóa" },
 ];
-const DEFAULT_LANGUAGE_OPTION = { value: "VIETSUB", label: "Phụ đề Việt" };
+const DEFAULT_LANGUAGE_OPTION = { value: "VIETSUB", label: "Phụ đề" };
+const STANDARD_LANGUAGES = [
+  { value: "VIETSUB", label: "Phụ đề" },
+  { value: "DUB", label: "Lồng tiếng" },
+];
 const STAFF_PAST_DATE_ERROR = "Bạn chỉ được chọn ngày chiếu từ hôm nay trở đi.";
 
 function normalizeStaffStatus(status) {
@@ -175,25 +179,17 @@ function normalizeLanguageOption(rawValue) {
   if (
     normalized === "VI" ||
     normalized === "VIETSUB" ||
-    normalized.includes("PHU DE VIET")
+    normalized.includes("PHU DE VIET") ||
+    normalized.includes("PHU DE")
   ) {
-    return { value: "VIETSUB", label: "Phụ đề Việt" };
+    return { value: "VIETSUB", label: "Phụ đề" };
   }
 
-  if (normalized === "DUB" || normalized.includes("LONG TIENG VIET")) {
-    return { value: "DUB", label: "Lồng tiếng Việt" };
+  if (normalized === "DUB" || normalized.includes("LONG TIENG")) {
+    return { value: "DUB", label: "Lồng tiếng" };
   }
 
-  if (
-    normalized === "EN" ||
-    normalized === "ENGLISH" ||
-    normalized === "ENGSUB" ||
-    normalized.includes("PHU DE ANH")
-  ) {
-    return { value: "ENGLISH", label: "Phụ đề Anh" };
-  }
-
-  return { value: raw, label: raw };
+  return DEFAULT_LANGUAGE_OPTION;
 }
 
 function extractLanguageOptionsFromMovie(movie = {}) {
@@ -590,13 +586,8 @@ function EditShowtimeModal({
   const durationNumber = Number(duration) || (selectedMovie?.duration ?? 0);
 
   const modalLanguageOptions = useMemo(() => {
-    const source =
-      selectedMovie?.languageOptions?.length > 0
-        ? selectedMovie.languageOptions
-        : languageOptions;
-
-    return source.length > 0 ? source : [DEFAULT_LANGUAGE_OPTION];
-  }, [selectedMovie, languageOptions]);
+    return STANDARD_LANGUAGES;
+  }, []);
 
   const roomOptions = useMemo(() => {
     return rooms.map((room) => ({

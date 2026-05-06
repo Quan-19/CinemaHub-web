@@ -361,6 +361,11 @@ export default function StaffScannerPage() {
                                             <h4 className="text-base font-black text-white leading-tight truncate">{scanResult.movie?.title}</h4>
                                             <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-zinc-500 mt-1">
                                                 <span className="px-1.5 py-0.5 bg-zinc-800 rounded">{scanResult.showtime?.format}</span>
+                                                <span className={`px-1.5 py-0.5 rounded ${
+                                                    scanResult.showtime?.language === 'DUB' ? 'bg-purple-600/20 text-purple-400' : 'bg-zinc-800 text-zinc-400'
+                                                }`}>
+                                                    {scanResult.showtime?.language === 'DUB' ? 'Lồng tiếng' : 'Phụ đề'}
+                                                </span>
                                                 <span>•</span>
                                                 <span className="truncate">{scanResult.movie?.genre}</span>
                                                 <span>•</span>

@@ -760,6 +760,8 @@ export const SeatSelectionPage = () => {
                     <p className="text-zinc-500 text-[11px] font-bold uppercase tracking-wider mt-0.5">
                       {showtimeInfo?.time || new Date(showtimeInfo?.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                       {" · "}
+                      {showtimeInfo?.language === "DUB" ? "Lồng tiếng" : showtimeInfo?.language === "ENGLISH" ? "Tiếng Anh" : "VietSub"}
+                      {" · "}
                       {showtimeInfo?.type || "2D"}
                       {" · "}
                       Phòng {showtimeInfo?.room_name || "P1"}
