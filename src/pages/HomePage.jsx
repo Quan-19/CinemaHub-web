@@ -1,4 +1,3 @@
-/* HomePage.jsx - Full Premium Cinematic Homepage (No Mock Data) */
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
@@ -758,7 +757,7 @@ const HomePage = () => {
                   <GlowCard key={promo.promotion_id || promo.id || idx} className="bg-cinema-surface border border-white/10 overflow-hidden">
                     <div className="relative h-48 overflow-hidden">
                       {promo.image ? (
-                        <img
+                          <img
                           src={promo.image}
                           alt={promo.title}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"

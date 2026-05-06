@@ -12,25 +12,23 @@ export default function PricingTable({ data, onEdit, onDelete, onView, onToggleA
     currentPage * itemsPerPage
   );
 
-  const getTypeColor = (type) => {
-    if (type === 'HOLIDAY') return 'red';
-    const colors = {
-      '2D': 'blue',
-      '3D': 'purple',
-      'IMAX': 'yellow',
-      '4DX': 'green'
+  const getTypeStyles = (type) => {
+    const styles = {
+      '2D': 'bg-blue-500/20 text-blue-400',
+      '3D': 'bg-purple-500/20 text-purple-400',
+      'IMAX': 'bg-yellow-500/20 text-yellow-400',
+      '4DX': 'bg-green-500/20 text-green-400'
     };
-    return colors[type] || 'gray';
+    return styles[type] || 'bg-gray-500/20 text-gray-400';
   };
 
-  const getSeatColor = (seat) => {
-    if (!seat || seat === 'HOLIDAY') return 'red';
-    const colors = {
-      'VIP': 'amber',
-      'Couple': 'pink',
-      'Thường': 'gray'
+  const getSeatStyles = (seat) => {
+    const styles = {
+      'VIP': 'bg-amber-500/20 text-amber-400',
+      'Couple': 'bg-pink-500/20 text-pink-400',
+      'Thường': 'bg-gray-500/20 text-gray-400'
     };
-    return colors[seat] || 'gray';
+    return styles[seat] || 'bg-gray-500/20 text-gray-400';
   };
 
   const formatPrice = (price) => {
@@ -59,81 +57,88 @@ export default function PricingTable({ data, onEdit, onDelete, onView, onToggleA
             {paginatedData.length > 0 ? (
               paginatedData.map((item) => {
                 const isHoliday = isHolidayPricingRule(item);
-                const roomType = getPricingRuleRoomType(item);
+                const roomType = (getPricingRuleRoomType(item) || '').trim();
                 
                 return (
                   <tr 
                     key={item.id} 
                     className="border-b border-white/5 hover:bg-white/5 transition-colors"
                   >
-                    <td className="p-4 font-medium text-white">{item.name}</td>
+                    <td className="p-4 font-medium text-white whitespace-nowrap">{item.name}</td>
+                    
                     <td className="p-4">
                       {isHoliday ? (
-                        <div className="flex flex-col gap-1">
-                          <span className="px-2 py-1 rounded-lg text-xs font-medium bg-green-500/30 text-green-400">
-                            Phòng: {roomType}
-                          </span>
-                        </div>
+                        <span className="inline-block px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap bg-green-500/30 text-green-400">
+                          {roomType}
+                        </span>
                       ) : (
-                        <span className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getTypeColor(roomType)}-500/20 text-${getTypeColor(roomType)}-400`}>
+                        <span className={`inline-block px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap ${getTypeStyles(roomType)}`}>
                           {roomType}
                         </span>
                       )}
                     </td>
+                    
                     <td className="p-4">
                       {isHoliday ? (
                         <div className="flex flex-wrap gap-1">
-                          {item.holiday_prices?.map((hp, idx) => (
-                            <span key={idx} className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                              hp.seat_type === 'VIP' ? 'bg-amber-500/20 text-amber-400' : 
-                              hp.seat_type === 'Couple' ? 'bg-pink-500/20 text-pink-400' : 
-                              'bg-gray-500/20 text-gray-400'
-                            }`}>
-                              {hp.seat_type}
-                            </span>
-                          ))}
+                          {item.holiday_prices?.map((hp, idx) => {
+                            const seatStyles = {
+                              'VIP': 'bg-amber-500/20 text-amber-400',
+                              'Couple': 'bg-pink-500/20 text-pink-400',
+                              'Thường': 'bg-gray-500/20 text-gray-400'
+                            };
+                            return (
+                              <span key={idx} className={`px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap ${seatStyles[hp.seat_type] || 'bg-gray-500/20 text-gray-400'}`}>
+                                {hp.seat_type}
+                              </span>
+                            );
+                          })}
                         </div>
                       ) : (
-                        <span className={`px-2 py-1 rounded-lg text-xs font-medium bg-${getSeatColor(item.seat)}-500/20 text-${getSeatColor(item.seat)}-400`}>
+                        <span className={`inline-block px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap ${getSeatStyles(item.seat)}`}>
                           {item.seat}
                         </span>
                       )}
                     </td>
+                    
                     <td className="p-4 text-gray-300">
                       {isHoliday ? (
                         <div>
-                          <div>{item.start_date} → {item.end_date}</div>
+                          <div className="whitespace-nowrap">{item.start_date} → {item.end_date}</div>
                           <div className="text-xs text-gray-500 mt-1">
-                            Áp dụng: {item.apply_days?.map(d => {
+                            {item.apply_days?.map(d => {
                               const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
                               return days[d];
                             }).join(', ')}
                           </div>
                         </div>
                       ) : (
-                        `${item.day} - ${item.time}`
+                        <span className="whitespace-nowrap">{item.day} - {item.time}</span>
                       )}
                     </td>
-                    <td className="p-4 text-gray-400 line-through">
+                    
+                    <td className="p-4 text-gray-400 line-through whitespace-nowrap">
                       {isHoliday ? '---' : formatPrice(item.base)}
                     </td>
+                    
                     <td className="p-4 font-bold text-yellow-400">
                       {isHoliday ? (
                         <div className="space-y-1">
                           {item.holiday_prices?.map((hp, idx) => (
-                            <div key={idx} className="text-sm">
+                            <div key={idx} className="text-sm whitespace-nowrap">
                               {hp.seat_type}: {formatPrice(Number(hp.price))}
                             </div>
                           ))}
                         </div>
                       ) : (
-                        formatPrice(item.final)
+                        <span className="whitespace-nowrap">{formatPrice(item.final)}</span>
                       )}
                     </td>
+                    
                     <td className="p-4">
                       <button
                         onClick={() => onToggleActive(item)}
-                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs w-fit transition-colors ${
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs w-fit transition-colors whitespace-nowrap ${
                           item.active 
                             ? 'text-green-400 bg-green-400/10 hover:bg-green-400/20' 
                             : 'text-gray-400 bg-gray-400/10 hover:bg-gray-400/20'
@@ -143,6 +148,7 @@ export default function PricingTable({ data, onEdit, onDelete, onView, onToggleA
                         {item.active ? 'Đang áp dụng' : 'Ngưng áp dụng'}
                       </button>
                     </td>
+                    
                     <td className="p-4">
                       <div className="flex gap-2">
                         <button
@@ -182,7 +188,6 @@ export default function PricingTable({ data, onEdit, onDelete, onView, onToggleA
         </table>
       </div>
 
-      {/* Pagination */}
       {data.length > 0 && (
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-4 py-3 border-t border-white/10">
           <div className="text-sm text-gray-400">

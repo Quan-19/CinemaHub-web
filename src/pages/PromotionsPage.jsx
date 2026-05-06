@@ -272,7 +272,7 @@ export const PromotionsPage = () => {
                 : "text-zinc-400 hover:text-white hover:bg-white/5"
                 }`}
             >
-              Hệ thống
+              Toàn hệ thống
             </button>
             <button
               onClick={() => setActiveTab("cinema")}
@@ -317,7 +317,7 @@ export const PromotionsPage = () => {
                   <div className="absolute top-4 left-4 z-20">
                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${promo.cinema_id ? "bg-blue-600 text-white" : "bg-red-600 text-white"
                       }`}>
-                      {promo.cinema_id ? "Tại rạp" : "Hệ thống"}
+                      {promo.cinema_id ? "Tại rạp" : "Toàn hệ thống"}
                     </span>
                   </div>
 
