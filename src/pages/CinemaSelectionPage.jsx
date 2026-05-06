@@ -279,7 +279,7 @@ export const CinemaSelectionPage = () => {
         prices: pricing.prices,
         isSpecial: pricing.isSpecial,
         isExpired,
-        availableSeats: null,
+        availableSeats: showtime.availableSeats,
       });
     });
     return Array.from(groupedShowtimes.entries())
@@ -816,19 +816,31 @@ export const CinemaSelectionPage = () => {
                                   : "border-zinc-700 hover:border-red-500 hover:bg-red-500/5 cursor-pointer"
                               }`}
                             >
-                              <div className="flex items-center gap-2 mb-1">
+                              <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
                                 <span
-                                  className="text-white text-sm"
-                                  style={{ fontWeight: 700 }}
+                                  className="text-white text-sm font-bold"
                                 >
                                   {st.time}
                                 </span>
                                 <span
-                                  className="px-1.5 py-0.5 rounded text-xs text-white"
-                                  style={{
+                                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                                    isDisabled
+                                      ? "bg-zinc-800 text-zinc-500 border border-zinc-700"
+                                      : "bg-purple-600 text-white"
+                                  }`}
+                                >
+                                  {st.language === "DUB" ? "Lồng tiếng" : "Phụ đề"}
+                                </span>
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                                    isDisabled
+                                      ? "bg-zinc-800 text-zinc-500 border border-zinc-700"
+                                      : ""
+                                  }`}
+                                  style={!isDisabled ? {
                                     background: typeInfo?.color || "#52525b",
-                                    fontWeight: 600,
-                                  }}
+                                    color: "white"
+                                  } : {}}
                                 >
                                   {st.type}
                                 </span>

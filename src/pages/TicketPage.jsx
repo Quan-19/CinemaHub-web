@@ -168,6 +168,7 @@ export const TicketPage = () => {
             data?.room_name ||
             "",
           showtimeType: data?.showtime?.format || data?.showtime?.show_format || data?.showtime?.room?.type || "",
+          showtimeLanguage: data?.showtime?.language || "",
           movieTitle: data?.movie?.title || data?.movie_title || "",
           movieOriginalTitle: data?.movie?.original_title || data?.original_title || "",
           moviePoster: data?.movie?.poster || data?.movie_poster || "",
@@ -328,8 +329,14 @@ export const TicketPage = () => {
                 </span>
                 <span className="px-2 py-0.5 rounded text-xs font-bold"
                   style={{ background: "rgba(139,92,246,0.2)", color: "#a78bfa" }}>
-                  {ticket.showtimeType}
+                  {ticket.showtimeType || "2D"}
                 </span>
+                {ticket.showtimeLanguage && (
+                  <span className="px-2 py-0.5 rounded text-xs font-bold"
+                    style={{ background: "rgba(168,85,247,0.2)", color: "#c084fc" }}>
+                    {ticket.showtimeLanguage === "DUB" ? "Lồng tiếng" : ticket.showtimeLanguage === "ENGLISH" ? "Tiếng Anh" : "VietSub"}
+                  </span>
+                )}
                 <span className="px-2 py-0.5 rounded text-xs"
                   style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)" }}>
                   {ticket.movieDuration} phút

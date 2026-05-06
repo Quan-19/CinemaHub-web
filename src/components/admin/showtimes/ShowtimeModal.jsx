@@ -836,7 +836,22 @@ export default function ShowtimeModal({
                     )}
                   </div>
 
-                  <div>
+                  <div className="sm:col-span-1">
+                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
+                      Ngôn ngữ *
+                    </label>
+                    <select
+                      value={form?.language || "VIETSUB"}
+                      onChange={(e) => setForm({ ...form, language: e.target.value })}
+                      className={selectClass}
+                      required
+                    >
+                      <option value="VIETSUB">Phụ đề (VietSub)</option>
+                      <option value="DUB">Lồng tiếng</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-1">
                     <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
                       Rạp chiếu *
                     </label>

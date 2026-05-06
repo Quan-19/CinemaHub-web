@@ -1080,7 +1080,7 @@ export default function BookingConfirmationPage() {
                     {
                       icon: Clock,
                       label: "Giờ chiếu",
-                      value: formatTimeVI(displayShowtime),
+                      value: `${formatTimeVI(displayShowtime)} • ${displayShowtime?.language === "DUB" ? "Lồng tiếng" : displayShowtime?.language === "ENGLISH" ? "Tiếng Anh" : "VietSub"} • ${displayShowtime?.type || "2D"}`,
                     },
                     {
                       icon: Film,
@@ -1499,7 +1499,7 @@ export default function BookingConfirmationPage() {
                     <div>
                       <p className="text-zinc-400 text-xs">Suất chiếu</p>
                       <p className="text-zinc-200 text-xs font-semibold">
-                        {formatTimeVI(showtime)}{" "}
+                        {formatTimeVI(showtime)} • {showtime?.language === "DUB" ? "Lồng tiếng" : showtime?.language === "ENGLISH" ? "Tiếng Anh" : "VietSub"} • {showtime?.type || "2D"}
                       </p>
                     </div>
                     <div>

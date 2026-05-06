@@ -168,11 +168,18 @@ export default function ShowtimesTable({
                       </div>
                     </td>
                     <td className="p-4 text-center">
-                      <span
-                        className={`inline-block min-w-[50px] px-2 py-0.5 rounded-md text-[11px] font-bold bg-${getTypeColor(item.type)}-500/10 text-${getTypeColor(item.type)}-400 border border-${getTypeColor(item.type)}-500/20`}
-                      >
-                        {item.type}
-                      </span>
+                      <div className="flex flex-col items-center gap-1">
+                        <span
+                          className={`inline-block min-w-[50px] px-2 py-0.5 rounded-md text-[11px] font-bold bg-${getTypeColor(item.type)}-500/10 text-${getTypeColor(item.type)}-400 border border-${getTypeColor(item.type)}-500/20`}
+                        >
+                          {item.type}
+                        </span>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                          item.language === 'DUB' ? 'bg-purple-500/10 text-purple-400' : 'bg-zinc-800 text-zinc-500'
+                        }`}>
+                          {item.language === 'DUB' ? 'LỒNG TIẾNG' : 'PHỤ ĐỀ'}
+                        </span>
+                      </div>
                     </td>
                     <td className="p-4">
                       <div className="flex flex-col gap-1.5 min-w-[150px]">

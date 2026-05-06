@@ -214,6 +214,7 @@ function ProfilePage() {
             start_time_raw: booking.start_time,
             ticket_code: booking.ticket_code,
             qr_token: booking.qr_token,
+            language: booking.language,
             formatted_show_time: startTime ? startTime.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : null,
             formatted_show_date: startTime ? startTime.toLocaleDateString("vi-VN") : null,
           });
@@ -457,7 +458,9 @@ function ProfilePage() {
                             <img src={getPosterUrl(booking)} alt={booking.movie_name} className="w-20 h-28 rounded-xl object-cover shadow-lg group-hover:scale-105 transition-transform duration-500" onError={() => handlePosterError(booking.booking_id)} />
                             <div className="flex-1 flex flex-col justify-between py-1">
                               <div>
-                                <h4 className="text-white font-bold text-sm line-clamp-1">{booking.movie_name}</h4>
+                                <h4 className="text-white font-bold text-sm line-clamp-1">
+                                  {booking.movie_name} - {booking.language === "DUB" ? "Lồng tiếng" : "Phụ đề"}
+                                </h4>
                                 <p className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1.5"><Clock className="h-3 w-3 text-cinema-primary" /> {booking.formatted_show_time} • {booking.formatted_show_date}</p>
                                 <p className="text-[10px] text-zinc-500 mt-0.5 flex items-center gap-1.5"><MapPin className="h-3 w-3" /> {booking.cinema_name}</p>
                               </div>
@@ -502,7 +505,9 @@ function ProfilePage() {
                   <img src={getPosterUrl(selectedBooking)} alt={selectedBooking.movie_name} className="w-28 h-40 object-cover rounded-xl shadow-lg flex-shrink-0" />
                   <div className="flex-1 space-y-3">
                     <div>
-                      <h4 className="text-lg font-bold text-white leading-tight mb-1">{selectedBooking.movie_name}</h4>
+                      <h4 className="text-lg font-bold text-white leading-tight mb-1">
+                        {selectedBooking.movie_name} - {selectedBooking.language === "DUB" ? "Lồng tiếng" : "Phụ đề"}
+                      </h4>
                       <span className={`inline-block px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wider ${selectedBooking.payment_status === 'paid' ? 'bg-emerald-500/10 text-emerald-500' :
                         selectedBooking.payment_status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
                           'bg-rose-500/10 text-rose-500'

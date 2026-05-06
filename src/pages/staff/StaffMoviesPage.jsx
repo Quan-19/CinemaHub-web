@@ -657,7 +657,7 @@ function StaffMovieCard({ movie, onEdit, onDelete }) {
           <span className="inline-flex items-center gap-1 text-yellow-400">
             <Star className="h-3.5 w-3.5" />
             <span className="font-semibold text-yellow-300">
-              {movie.rating || "N/A"}
+              {movie.ratingScore ? movie.ratingScore.toFixed(1) : (movie.rating ? Number(movie.rating).toFixed(1) : "0.0")}
             </span>
           </span>
           <span className="inline-flex items-center gap-1 text-zinc-400">
