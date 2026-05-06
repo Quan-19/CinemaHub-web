@@ -29,6 +29,28 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
+// ========== HELPER FUNCTIONS ==========
+// Hàm extract YouTube ID từ nhiều dạng URL khác nhau
+const extractYouTubeId = (url) => {
+  if (!url) return null;
+  
+  // Các dạng URL YouTube hỗ trợ
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&?#]+)/,
+    /youtube\.com\/watch\?.*[?&]v=([^&?#]+)/,
+    /youtube\.com\/shorts\/([^/?]+)/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  
+  return null;
+};
+
 // ========== COMPONENTS ==========
 
 // Premium Movie Card Component
@@ -360,7 +382,7 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
 const CinemaCard = ({ cinema, index }) => {
   const navigate = useNavigate();
   const brandColors = {
-    EbizCinema: "#e50914",
+    EbizCinema: '#c9a0a2',
   };
   const color = brandColors[cinema.brand] || "#e50914";
   const cinemaId = cinema.cinema_id ?? cinema.id;
@@ -408,7 +430,7 @@ const HomePage = () => {
   const [cinemas, setCinemas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showTrailerModal, setShowTrailerModal] = useState(false);
-  const [selectedTrailer, setSelectedTrailer] = useState(null);
+  const [selectedTrailerMovie, setSelectedTrailerMovie] = useState(null);
   const autoSlideRef = useRef(null);
 
   // Fetch all data from API
@@ -543,17 +565,9 @@ const HomePage = () => {
 
   const handleTrailer = (movie) => {
     if (movie?.trailer) {
-      setSelectedTrailer(movie);
+      setSelectedTrailerMovie(movie);
       setShowTrailerModal(true);
     }
-  };
-
-  const extractYouTubeId = (url) => {
-    if (!url) return null;
-    const regExp =
-      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return match && match[2].length === 11 ? match[2] : null;
   };
 
   if (loading) {
@@ -690,7 +704,6 @@ const HomePage = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-8 rounded-full bg-red-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
-                    {/* <Flame className="inline w-5 h-5 md:w-6 md:h-6 text-red-500 mr-2" /> */}
                     Phim Đang Chiếu
                   </h2>
                 </div>
@@ -723,7 +736,6 @@ const HomePage = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-8 rounded-full bg-orange-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
-                    {/* <TrendingUp className="inline w-5 h-5 md:w-6 md:h-6 text-orange-500 mr-2" /> */}
                     Phim Hot Tuần Này
                   </h2>
                 </div>
@@ -764,7 +776,6 @@ const HomePage = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-8 rounded-full bg-yellow-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
-                    {/* <CalendarDays className="inline w-5 h-5 md:w-6 md:h-6 text-yellow-500 mr-2" /> */}
                     Phim Sắp Chiếu
                   </h2>
                 </div>
@@ -797,7 +808,6 @@ const HomePage = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-8 rounded-full bg-purple-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
-                    {/* <MapPin className="inline w-5 h-5 md:w-6 md:h-6 text-purple-500 mr-2" /> */}
                     Rạp Chiếu
                   </h2>
                 </div>
@@ -830,7 +840,6 @@ const HomePage = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-8 rounded-full bg-green-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
-                    {/* <Gift className="inline w-5 h-5 md:w-6 md:h-6 text-green-500 mr-2" /> */}
                     Ưu Đãi Đặc Biệt
                   </h2>
                 </div>
@@ -913,7 +922,6 @@ const HomePage = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-8 rounded-full bg-blue-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
-                    {/* <Newspaper className="inline w-5 h-5 md:w-6 md:h-6 text-blue-500 mr-2" /> */}
                     Tin tức điện ảnh
                   </h2>
                 </div>
@@ -1013,9 +1021,9 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Trailer Modal */}
+      {/* Trailer Modal - SỬA GIỐNG MovieDetailPage */}
       <AnimatePresence>
-        {showTrailerModal && selectedTrailer && selectedTrailer.trailer && (
+        {showTrailerModal && selectedTrailerMovie && selectedTrailerMovie.trailer && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1027,24 +1035,43 @@ const HomePage = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-4xl mx-4 rounded-2xl overflow-hidden"
+              className="relative w-full max-w-4xl mx-4 rounded-2xl overflow-hidden bg-black"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="relative pt-[56.25%]">
-                <iframe
-                  className="absolute inset-0 w-full h-full"
-                  src={
-                    selectedTrailer.trailer.includes("youtube.com") ||
-                    selectedTrailer.trailer.includes("youtu.be")
-                      ? selectedTrailer.trailer
-                      : `https://www.youtube.com/embed/${extractYouTubeId(selectedTrailer.trailer)}?autoplay=1`
+                {(() => {
+                  const youtubeId = extractYouTubeId(selectedTrailerMovie.trailer);
+                  
+                  if (youtubeId) {
+                    return (
+                      <iframe
+                        className="absolute inset-0 w-full h-full"
+                        src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+                        title={`Trailer: ${selectedTrailerMovie.title}`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                      />
+                    );
                   }
-                  title={selectedTrailer.title}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+                  
+                  // Fallback nếu không có trailer hợp lệ
+                  return (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900">
+                      <Play className="w-16 h-16 text-red-500 mb-4" fill="currentColor" />
+                      <p className="text-white font-semibold mb-2">{selectedTrailerMovie.title}</p>
+                      <p className="text-zinc-400 text-sm">Chưa có trailer cho phim này</p>
+                      <button
+                        onClick={() => setShowTrailerModal(false)}
+                        className="mt-6 px-6 py-2 rounded-full bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+                      >
+                        Đóng
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
+              
               <button
                 onClick={() => setShowTrailerModal(false)}
                 className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors"

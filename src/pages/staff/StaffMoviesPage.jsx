@@ -12,14 +12,11 @@ import {
   Upload,
 } from "lucide-react";
 import {
-  ddmmyyyyToInput,
-  inputToDdmmyyyy,
   makeId,
 } from "../../components/staff/staffUtils.js";
 import { StaffCenteredModalShell } from "../../components/staff/StaffModalShell.jsx";
 import StaffSuccessToast from "../../components/staff/StaffSuccessToast.jsx";
 import StaffConfirmModal from "../../components/staff/StaffConfirmModal.jsx";
-import { getAuth } from "firebase/auth";
 
 const GENRE_OPTIONS = [
   "Hành động",
@@ -109,6 +106,7 @@ function EditMovieModal({
 }) {
   const isAdd = mode === "add";
   const [errors, setErrors] = useState({});
+  const [customGenre, setCustomGenre] = useState("");
   const scrollRef = useRef(null);
   const posterRef = useRef(null);
   const backdropRef = useRef(null);
@@ -118,13 +116,15 @@ function EditMovieModal({
     return {
       poster: m.poster || "",
       backdrop: m.backdrop || "",
+      posterFile: null,
+      backdropFile: null,
       title: m.title || "",
       originalTitle: m.originalTitle || "",
       genre: [...(m.genre || [])],
-      rating: m.rating || "T16",
+      rating: m.rating || m.ageRating || "T16",
       duration: m.duration ?? "",
       status: m.status || "now_showing",
-      releaseDate: ddmmyyyyToInput(m.releaseDate) || "",
+      releaseDate: m.releaseDate || "",
       director: m.director || "",
       castText: (m.cast || []).join(", "),
       description: m.description || "",
@@ -147,7 +147,7 @@ function EditMovieModal({
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
-      setForm((prev) => ({ ...prev, [field]: url }));
+      setForm((prev) => ({ ...prev, [field]: url, [`${field}File`]: file }));
     }
   };
 
@@ -185,20 +185,26 @@ function EditMovieModal({
     // chỉ add nếu có giá trị
     if (form.poster.trim()) updated.poster = form.poster.trim();
     if (form.backdrop.trim()) updated.backdrop = form.backdrop.trim();
+    if (form.posterFile) updated.posterFile = form.posterFile;
+    if (form.backdropFile) updated.backdropFile = form.backdropFile;
+
     if (form.title.trim()) updated.title = form.title.trim();
     if (form.originalTitle.trim())
       updated.originalTitle = form.originalTitle.trim();
 
     if (form.genre.length > 0) updated.genre = form.genre;
 
-    if (form.rating) updated.rating = form.rating;
+    if (form.rating) {
+      updated.rating = form.rating;
+      updated.ageRating = form.rating;
+    }
 
     if (form.duration) updated.duration = Number(form.duration);
 
     if (form.status) updated.status = form.status;
 
     if (form.releaseDate) {
-      updated.releaseDate = inputToDdmmyyyy(form.releaseDate);
+      updated.releaseDate = form.releaseDate;
     }
 
     if (form.director.trim()) updated.director = form.director.trim();
@@ -231,312 +237,391 @@ function EditMovieModal({
       <form onSubmit={save} className="flex min-h-0 flex-1 flex-col">
         <div
           ref={scrollRef}
-          className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-1"
+          className="min-h-0 flex-1 space-y-8 overflow-y-auto overscroll-contain pr-2"
         >
-          <div className="flex flex-col gap-6 sm:flex-row">
-            <div className="w-full sm:w-36">
-              <label className={labelBase}>Poster phim</label>
-              <div
-                onClick={() => posterRef.current?.click()}
-                className={[
-                  "relative mt-1.5 flex aspect-[2/3] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all hover:border-cinema-primary/50 hover:bg-zinc-900/60",
-                  errors.poster
-                    ? "border-cinema-primary/50 bg-cinema-primary/5"
-                    : "border-zinc-700 bg-zinc-900/40",
-                ].join(" ")}
-              >
-                {form.poster ? (
-                  <>
-                    <img
-                      src={form.poster}
-                      alt="Poster"
-                      className="h-full w-full object-cover"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
-                      <div className="flex flex-col items-center gap-1">
-                        <Upload className="h-5 w-5 text-white" />
-                        <span className="text-[10px] font-bold text-white">
-                          Thay đổi
-                        </span>
+          {/* Section: Basic Info */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
+              <div className="h-4 w-1 rounded-full bg-cinema-primary" />
+              <h3 className="text-sm font-bold text-white">Thông tin cơ bản</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className={labelBase}>Tên phim (tiếng Việt)</label>
+                <input
+                  className={[
+                    inputBase,
+                    errors.title ? "border-cinema-primary" : "",
+                  ].join(" ")}
+                  value={form.title}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, title: e.target.value }))
+                  }
+                />
+                {errors.title ? (
+                  <div className={errorText}>{errors.title}</div>
+                ) : null}
+              </div>
+              <div>
+                <label className={labelBase}>Tên gốc</label>
+                <input
+                  className={[
+                    inputBase,
+                    errors.originalTitle ? "border-cinema-primary" : "",
+                  ].join(" ")}
+                  value={form.originalTitle}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, originalTitle: e.target.value }))
+                  }
+                />
+                {errors.originalTitle ? (
+                  <div className={errorText}>{errors.originalTitle}</div>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+              <div>
+                <label className={labelBase}>Phân loại</label>
+                <select
+                  className={inputBase}
+                  value={form.rating}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, rating: e.target.value }))
+                  }
+                >
+                  {RATING_OPTIONS.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelBase}>Thời lượng (phút)</label>
+                <input
+                  className={[
+                    inputBase,
+                    errors.duration ? "border-cinema-primary" : "",
+                  ].join(" ")}
+                  value={form.duration}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, duration: e.target.value }))
+                  }
+                  inputMode="numeric"
+                />
+                {errors.duration ? (
+                  <div className={errorText}>{errors.duration}</div>
+                ) : null}
+              </div>
+              <div>
+                <label className={labelBase}>Trạng thái</label>
+                <select
+                  className={inputBase}
+                  value={form.status}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, status: e.target.value }))
+                  }
+                >
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelBase}>Ngày ra mắt</label>
+                <input
+                  type="date"
+                  className={[
+                    inputBase,
+                    errors.releaseDate ? "border-cinema-primary" : "",
+                  ].join(" ")}
+                  value={form.releaseDate}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, releaseDate: e.target.value }))
+                  }
+                />
+                {errors.releaseDate ? (
+                  <div className={errorText}>{errors.releaseDate}</div>
+                ) : null}
+              </div>
+            </div>
+          </section>
+
+          {/* Section: Media */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
+              <div className="h-4 w-1 rounded-full bg-cinema-primary" />
+              <h3 className="text-sm font-bold text-white">Hình ảnh thiết kế</h3>
+            </div>
+            
+            <div className="flex flex-col gap-6 sm:flex-row">
+              <div className="w-full sm:w-36">
+                <label className={labelBase}>Poster phim</label>
+                <div
+                  onClick={() => posterRef.current?.click()}
+                  className={[
+                    "relative mt-1.5 flex aspect-[2/3] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all hover:border-cinema-primary/50 hover:bg-zinc-900/60",
+                    errors.poster
+                      ? "border-cinema-primary/50 bg-cinema-primary/5"
+                      : "border-zinc-700 bg-zinc-900/40",
+                  ].join(" ")}
+                >
+                  {form.poster ? (
+                    <>
+                      <img
+                        src={form.poster}
+                        alt="Poster"
+                        className="h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
+                        <div className="flex flex-col items-center gap-1">
+                          <Upload className="h-5 w-5 text-white" />
+                          <span className="text-[10px] font-bold text-white">
+                            Thay đổi
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 p-4 text-center">
+                      <ImageIcon className="h-5 w-5 text-zinc-400" />
+                      <div className="text-xs font-semibold text-zinc-300">
+                        Tải poster
                       </div>
                     </div>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center gap-2 p-4 text-center">
-                    <ImageIcon className="h-5 w-5 text-zinc-400" />
-                    <div className="text-xs font-semibold text-zinc-300">
-                      Tải poster
-                    </div>
-                  </div>
-                )}
-                <input
-                  ref={posterRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleFileChange(e, "poster")}
-                  className="hidden"
-                />
+                  )}
+                  <input
+                    ref={posterRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, "poster")}
+                    className="hidden"
+                  />
+                </div>
+                {errors.poster ? (
+                  <div className={errorText}>{errors.poster}</div>
+                ) : null}
               </div>
-              {errors.poster ? (
-                <div className={errorText}>{errors.poster}</div>
-              ) : null}
-            </div>
 
-            <div className="flex-1 min-w-0">
-              <label className={labelBase}>Backdrop (Ảnh nền)</label>
-              <div
-                onClick={() => backdropRef.current?.click()}
-                className={[
-                  "relative mt-1.5 flex aspect-video w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all hover:border-cinema-primary/50 hover:bg-zinc-900/60",
-                  errors.backdrop
-                    ? "border-cinema-primary/50 bg-cinema-primary/5"
-                    : "border-zinc-700 bg-zinc-900/40",
-                ].join(" ")}
-              >
-                {form.backdrop ? (
-                  <>
-                    <img
-                      src={form.backdrop}
-                      alt="Backdrop"
-                      className="h-full w-full object-cover"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
-                      <div className="flex flex-col items-center gap-1">
-                        <Upload className="h-5 w-5 text-white" />
-                        <span className="text-[10px] font-bold text-white">
-                          Thay đổi
-                        </span>
+              <div className="flex-1 min-w-0">
+                <label className={labelBase}>Backdrop (Ảnh nền ngang)</label>
+                <div
+                  onClick={() => backdropRef.current?.click()}
+                  className={[
+                    "relative mt-1.5 flex aspect-video w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all hover:border-cinema-primary/50 hover:bg-zinc-900/60",
+                    errors.backdrop
+                      ? "border-cinema-primary/50 bg-cinema-primary/5"
+                      : "border-zinc-700 bg-zinc-900/40",
+                  ].join(" ")}
+                >
+                  {form.backdrop ? (
+                    <>
+                      <img
+                        src={form.backdrop}
+                        alt="Backdrop"
+                        className="h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
+                        <div className="flex flex-col items-center gap-1">
+                          <Upload className="h-5 w-5 text-white" />
+                          <span className="text-[10px] font-bold text-white">
+                            Thay đổi
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 p-4 text-center">
+                      <ImageIcon className="h-5 w-5 text-zinc-400" />
+                      <div className="text-xs font-semibold text-zinc-300">
+                        Tải backdrop
                       </div>
                     </div>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center gap-2 p-4 text-center">
-                    <ImageIcon className="h-5 w-5 text-zinc-400" />
-                    <div className="text-xs font-semibold text-zinc-300">
-                      Tải backdrop
-                    </div>
-                  </div>
-                )}
+                  )}
+                  <input
+                    ref={backdropRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, "backdrop")}
+                    className="hidden"
+                  />
+                </div>
+                {errors.backdrop ? (
+                  <div className={errorText}>{errors.backdrop}</div>
+                ) : null}
+              </div>
+            </div>
+          </section>
+
+          {/* Section: Genres & People */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
+              <div className="h-4 w-1 rounded-full bg-cinema-primary" />
+              <h3 className="text-sm font-bold text-white">Nội dung & Nhân sự</h3>
+            </div>
+
+            <div>
+              <div className={labelBase}>Thể loại phim</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {GENRE_OPTIONS.map((g) => {
+                  const active = form.genre.includes(g);
+                  return (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => toggleGenre(g)}
+                      className={[
+                        "rounded-full px-3 py-1 text-xs font-semibold transition",
+                        active
+                          ? "bg-cinema-primary text-white"
+                          : "border border-zinc-700 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700",
+                      ].join(" ")}
+                    >
+                      {g}
+                    </button>
+                  );
+                })}
+                {form.genre
+                  .filter((g) => !GENRE_OPTIONS.includes(g))
+                  .map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => toggleGenre(g)}
+                      className="rounded-full bg-cinema-primary px-3 py-1 text-xs font-semibold text-white transition"
+                    >
+                      {g}
+                    </button>
+                  ))}
+              </div>
+
+              <div className="mt-3 flex gap-2">
                 <input
-                  ref={backdropRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleFileChange(e, "backdrop")}
-                  className="hidden"
+                  type="text"
+                  placeholder="Thêm thể loại khác..."
+                  className={[inputBase, "flex-1"].join(" ")}
+                  value={customGenre}
+                  onChange={(e) => setCustomGenre(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (customGenre.trim()) {
+                        toggleGenre(customGenre.trim());
+                        setCustomGenre("");
+                      }
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (customGenre.trim()) {
+                      toggleGenre(customGenre.trim());
+                      setCustomGenre("");
+                    }
+                  }}
+                  className="rounded-xl bg-zinc-800 px-4 text-xs font-bold text-white hover:bg-zinc-700"
+                >
+                  Thêm
+                </button>
+              </div>
+
+              {errors.genre ? (
+                <div className={errorText}>{errors.genre}</div>
+              ) : null}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className={labelBase}>Đạo diễn</label>
+                <input
+                  className={[
+                    inputBase,
+                    errors.director ? "border-cinema-primary" : "",
+                  ].join(" ")}
+                  value={form.director}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, director: e.target.value }))
+                  }
+                />
+                {errors.director ? (
+                  <div className={errorText}>{errors.director}</div>
+                ) : null}
+              </div>
+
+              <div>
+                <label className={labelBase}>
+                  Diễn viên (cách nhau bằng dấu phẩy)
+                </label>
+                <input
+                  className={inputBase}
+                  value={form.castText}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, castText: e.target.value }))
+                  }
                 />
               </div>
-              {errors.backdrop ? (
-                <div className={errorText}>{errors.backdrop}</div>
-              ) : null}
             </div>
-          </div>
+          </section>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* Section: Additional Info */}
+          <section className="space-y-4 pb-4">
+            <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
+              <div className="h-4 w-1 rounded-full bg-cinema-primary" />
+              <h3 className="text-sm font-bold text-white">Thông tin bổ sung</h3>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className={labelBase}>Ngôn ngữ</label>
+                <select
+                  className={inputBase}
+                  value={form.language}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, language: e.target.value }))
+                  }
+                >
+                  {LANGUAGE_OPTIONS.map((x) => (
+                    <option key={x} value={x}>
+                      {x}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelBase}>Quốc gia</label>
+                <select
+                  className={inputBase}
+                  value={form.country}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, country: e.target.value }))
+                  }
+                >
+                  {COUNTRY_OPTIONS.map((x) => (
+                    <option key={x} value={x}>
+                      {x}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div>
-              <label className={labelBase}>Tên phim (tiếng Việt)</label>
-              <input
-                className={[
-                  inputBase,
-                  errors.title ? "border-cinema-primary" : "",
-                ].join(" ")}
-                value={form.title}
+              <label className={labelBase}>Mô tả phim</label>
+              <textarea
+                className={[inputBase, "min-h-[120px] resize-none leading-relaxed"].join(" ")}
+                placeholder="Nhập mô tả tóm tắt nội dung phim..."
+                value={form.description}
                 onChange={(e) =>
-                  setForm((p) => ({ ...p, title: e.target.value }))
+                  setForm((p) => ({ ...p, description: e.target.value }))
                 }
               />
-              {errors.title ? (
-                <div className={errorText}>{errors.title}</div>
-              ) : null}
             </div>
-            <div>
-              <label className={labelBase}>Tên gốc</label>
-              <input
-                className={[
-                  inputBase,
-                  errors.originalTitle ? "border-cinema-primary" : "",
-                ].join(" ")}
-                value={form.originalTitle}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, originalTitle: e.target.value }))
-                }
-              />
-              {errors.originalTitle ? (
-                <div className={errorText}>{errors.originalTitle}</div>
-              ) : null}
-            </div>
-          </div>
-
-          <div>
-            <div className={labelBase}>Thể loại</div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {GENRE_OPTIONS.map((g) => {
-                const active = form.genre.includes(g);
-                return (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => toggleGenre(g)}
-                    className={[
-                      "rounded-full px-3 py-1 text-xs font-semibold transition",
-                      active
-                        ? "bg-cinema-primary text-white"
-                        : "border border-zinc-700 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700",
-                    ].join(" ")}
-                  >
-                    {g}
-                  </button>
-                );
-              })}
-            </div>
-            {errors.genre ? (
-              <div className={errorText}>{errors.genre}</div>
-            ) : null}
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-            <div>
-              <label className={labelBase}>Phân loại</label>
-              <select
-                className={inputBase}
-                value={form.rating}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, rating: e.target.value }))
-                }
-              >
-                {RATING_OPTIONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelBase}>Thời lượng (phút)</label>
-              <input
-                className={[
-                  inputBase,
-                  errors.duration ? "border-cinema-primary" : "",
-                ].join(" ")}
-                value={form.duration}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, duration: e.target.value }))
-                }
-                inputMode="numeric"
-              />
-              {errors.duration ? (
-                <div className={errorText}>{errors.duration}</div>
-              ) : null}
-            </div>
-            <div>
-              <label className={labelBase}>Trạng thái</label>
-              <select
-                className={inputBase}
-                value={form.status}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, status: e.target.value }))
-                }
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelBase}>Ngày ra mắt</label>
-              <input
-                type="date"
-                className={[
-                  inputBase,
-                  errors.releaseDate ? "border-cinema-primary" : "",
-                ].join(" ")}
-                value={form.releaseDate}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, releaseDate: e.target.value }))
-                }
-              />
-              {errors.releaseDate ? (
-                <div className={errorText}>{errors.releaseDate}</div>
-              ) : null}
-            </div>
-          </div>
-
-          <div>
-            <label className={labelBase}>Đạo diễn</label>
-            <input
-              className={[
-                inputBase,
-                errors.director ? "border-cinema-primary" : "",
-              ].join(" ")}
-              value={form.director}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, director: e.target.value }))
-              }
-            />
-            {errors.director ? (
-              <div className={errorText}>{errors.director}</div>
-            ) : null}
-          </div>
-
-          <div>
-            <label className={labelBase}>
-              Diễn viên (cách nhau bằng dấu phẩy)
-            </label>
-            <input
-              className={inputBase}
-              value={form.castText}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, castText: e.target.value }))
-              }
-            />
-          </div>
-
-          <div>
-            <label className={labelBase}>Mô tả</label>
-            <textarea
-              className={[inputBase, "min-h-[92px] resize-none"].join(" ")}
-              value={form.description}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, description: e.target.value }))
-              }
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className={labelBase}>Ngôn ngữ</label>
-              <select
-                className={inputBase}
-                value={form.language}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, language: e.target.value }))
-                }
-              >
-                {LANGUAGE_OPTIONS.map((x) => (
-                  <option key={x} value={x}>
-                    {x}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelBase}>Quốc gia</label>
-              <select
-                className={inputBase}
-                value={form.country}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, country: e.target.value }))
-                }
-              >
-                {COUNTRY_OPTIONS.map((x) => (
-                  <option key={x} value={x}>
-                    {x}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          </section>
         </div>
 
         <div className="shrink-0 border-t border-zinc-700 pt-4">
@@ -689,9 +774,10 @@ function StaffMoviesPage() {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await fetch(
-          "http://localhost:5000/api/movies?scope=manage"
-        );
+        const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+        const res = await fetch("http://localhost:5000/api/movies?scope=manage", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         const data = await res.json();
 
         setMovies(data);
@@ -704,6 +790,7 @@ function StaffMoviesPage() {
 
     fetchMovies();
   }, []);
+
   useEffect(() => {
     return () => {
       if (toastTimeoutRef.current) {
@@ -711,18 +798,18 @@ function StaffMoviesPage() {
         toastTimeoutRef.current = null;
       }
     };
-    if (loading) {
-      return <div className="text-white p-6">Loading movies...</div>;
-    }
   }, []);
 
-  const showSuccess = (message) => {
-    setToast({ message });
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     toastTimeoutRef.current = setTimeout(() => {
       setToast(null);
     }, 4000);
   };
+
+  const showSuccess = (msg) => showToast(msg, "success");
+  const showError = (msg) => showToast(msg, "error");
 
   const closeEdit = () => setEditing(null);
   const closeDelete = () => setConfirmDelete(null);
@@ -730,75 +817,92 @@ function StaffMoviesPage() {
 
   const onSave = async (updated) => {
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      const token = await user.getIdToken();
+      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
 
-      await fetch(`http://localhost:5000/api/movies/${updated.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(updated),
+      const formData = new FormData();
+      Object.entries(updated).forEach(([k, v]) => {
+        if (k === 'posterFile') formData.append('poster', v);
+        else if (k === 'backdropFile') formData.append('backdrop', v);
+        else if (k === 'genre' || k === 'cast') formData.append(k, JSON.stringify(v));
+        else if (k !== 'poster' && k !== 'backdrop') formData.append(k, v);
       });
 
+      const res = await fetch(`http://localhost:5000/api/movies/${updated.id}`, {
+        method: "PUT",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      });
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || result.message || "Lỗi cập nhật phim");
+
       // reload lại
-      const res = await fetch("http://localhost:5000/api/movies?scope=manage");
-      const data = await res.json();
+      const reloadRes = await fetch("http://localhost:5000/api/movies?scope=manage", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await reloadRes.json();
       setMovies(data);
 
       closeEdit();
       showSuccess("Cập nhật phim thành công");
     } catch (err) {
       console.error(err);
+      showError(err.message);
     }
   };
 
   const onDelete = async (id) => {
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      const token = await user.getIdToken();
+      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
 
-      await fetch(`http://localhost:5000/api/movies/${id}`, {
+      const res = await fetch(`http://localhost:5000/api/movies/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+
+      const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.error || result.message || "Lỗi xóa phim");
+      }
 
       setMovies((prev) => prev.filter((m) => m.id !== id));
       closeDelete();
+      showSuccess("Xóa phim thành công");
     } catch (err) {
       console.error(err);
+      showError(err.message); 
     }
   };
 
   const onAdd = async (created) => {
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      const token = await user.getIdToken();
+      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+
+      const formData = new FormData();
+      Object.entries(created).forEach(([k, v]) => {
+        if (k === 'posterFile') formData.append('poster', v);
+        else if (k === 'backdropFile') formData.append('backdrop', v);
+        else if (k === 'genre' || k === 'cast') formData.append(k, JSON.stringify(v));
+        else if (k !== 'poster' && k !== 'backdrop') formData.append(k, v);
+      });
 
       const res = await fetch("http://localhost:5000/api/movies", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({
-          ...created,
-          genre: created.genre, // array OK
-        }),
+        body: formData,
       });
 
       const result = await res.json();
+      if (!res.ok) throw new Error(result.error || result.message || "Lỗi thêm phim");
 
       // reload lại list
-      const newRes = await fetch(
-        "http://localhost:5000/api/movies?scope=manage"
-      );
+      const newRes = await fetch("http://localhost:5000/api/movies?scope=manage", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       const newData = await newRes.json();
       setMovies(newData);
 
@@ -806,6 +910,7 @@ function StaffMoviesPage() {
       showSuccess("Thêm phim thành công");
     } catch (err) {
       console.error(err);
+      showError(err.message);
     }
   };
 
@@ -829,7 +934,7 @@ function StaffMoviesPage() {
       id: makeId(),
       title: "",
       originalTitle: "",
-      status: "now-showing",
+      status: "now_showing",
       genre: [],
       score: 0,
       votes: 0,
@@ -846,9 +951,17 @@ function StaffMoviesPage() {
     });
   }, [adding]);
 
+  if (loading) {
+    return <div className="p-6 text-white">Loading movies...</div>;
+  }
+
   return (
     <div className="space-y-5">
-      <StaffSuccessToast message={toast?.message} />
+      <StaffSuccessToast 
+        message={toast?.message} 
+        type={toast?.type} 
+        onClose={() => setToast(null)}
+      />
 
       <div className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

@@ -128,6 +128,9 @@ export const ShowtimesTab = ({ showtimes }) => {
             firstWithAddress.cinemaAddress ||
             firstWithAddress.address ||
             "Đang cập nhật địa chỉ";
+          
+          // Updated badgeLabel to show "Ebiz" instead of extracting first letters
+          const badgeLabel = "Ebiz";
 
           return (
             <div
@@ -138,19 +141,19 @@ export const ShowtimesTab = ({ showtimes }) => {
                 className="flex items-start justify-between cursor-pointer group"
                 onClick={() => toggleCinema(cinemaName)}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-start gap-4 min-w-0">
                   <div className="w-12 h-12 rounded-xl bg-red-600 flex items-center justify-center shrink-0 shadow-md">
-                    <span className="text-white font-black text-sm">
-                      {cinemaName.split(" ")[0]}
+                    <span className="text-white font-black text-[13px] tracking-widest">
+                      {badgeLabel}
                     </span>
                   </div>
-                  <div>
-                    <h4 className="text-white font-bold text-[15px] group-hover:text-red-500 transition-colors uppercase">
+                  <div className="min-w-0">
+                    <h4 className="text-white font-bold text-[15px] leading-snug break-words line-clamp-2 group-hover:text-red-500 transition-colors uppercase">
                       {cinemaName}
                     </h4>
-                    <div className="flex items-center gap-1 text-zinc-500 text-xs mt-1">
+                    <div className="flex items-center gap-1 text-zinc-500 text-xs mt-1 min-w-0">
                       <Info className="w-3 h-3" />
-                      <span className="truncate max-w-[200px] sm:max-w-md">
+                      <span className="line-clamp-1 sm:line-clamp-2">
                         {displayAddress}
                       </span>
                     </div>
