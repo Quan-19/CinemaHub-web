@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { useEffect, useMemo } from "react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
+import AIChatbox from "../components/AIChatbox.jsx"; // ← Sửa đường dẫn
 
 function MainLayout() {
   const location = useLocation();
@@ -21,11 +22,15 @@ function MainLayout() {
     <div className="w-full">
       <Navbar />
 
-      <main className={`pb-6 sm:pb-8 ${!isFullBleed ? "pt-[72px] lg:pt-[88px]" : ""}`}>
+      <main
+        className={`pb-6 sm:pb-8 ${!isFullBleed ? "pt-[72px] lg:pt-[88px]" : ""}`}
+      >
         <Outlet />
       </main>
 
       <Footer />
+
+      <AIChatbox />
     </div>
   );
 }
