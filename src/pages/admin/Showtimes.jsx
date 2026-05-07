@@ -1,4 +1,4 @@
-// Showtimes.jsx - Complete file with pricing integration
+// Showtimes.jsx - Complete file with real-time status updates
 import { useState, useEffect } from "react";
 import { Download, Eye, Printer, X } from "lucide-react";
 import ShowtimesHeader from "../../components/admin/showtimes/ShowtimesHeader";
@@ -204,7 +204,7 @@ export default function ShowtimesPage() {
           const basePrice = Number(s.base_price) || pricing.basePrice;
 
           let normalizedStatus = s.status;
-          if (s.status === "available") normalizedStatus = "scheduled";
+          if (s.status === "available") normalizedStatus = "available";
 
           return {
             id: String(s.id) || String(s.showtime_id),
@@ -218,6 +218,8 @@ export default function ShowtimesPage() {
             date: formattedDate,
             time: formattedTime,
             endTime: formattedEndTime || "---",
+            start_time: s.start_time,
+            end_time: s.end_time,
             isSpecial: Boolean(
               s.isSpecial ?? s.special ?? s.is_special ?? false
             ),
@@ -235,7 +237,6 @@ export default function ShowtimesPage() {
             availableSeats: s.availableSeats || 100,
             bookedCount: s.bookedCount || 0,
             status: normalizedStatus,
-            language: s.language || "VIETSUB",
             special: Boolean(s.isSpecial ?? s.special ?? s.is_special ?? false),
           };
         });
@@ -257,6 +258,90 @@ export default function ShowtimesPage() {
     };
 
     loadData();
+  }, []);
+
+  // Update showtimes status automatically based on real time (mỗi phút)
+  useEffect(() => {
+    const updateStatuses = () => {
+      const now = new Date();
+      
+      setShowtimes(prev => 
+        prev.map(showtime => {
+          // Nếu đã hủy thì giữ nguyên
+          if (showtime.status === 'cancelled') {
+            return showtime;
+          }
+          
+          // Nếu có start_time và end_time từ API
+          if (showtime.start_time && showtime.end_time) {
+            const startTime = new Date(showtime.start_time);
+            const endTime = new Date(showtime.end_time);
+            
+            if (now < startTime) {
+              return { ...showtime, status: 'scheduled' };
+            } else if (now >= startTime && now <= endTime) {
+              return { ...showtime, status: 'ongoing' };
+            } else {
+              return { ...showtime, status: 'ended' };
+            }
+          }
+          
+          // Fallback: tính từ date và time
+          const showDate = showtime.date;
+          const showTime = showtime.time;
+          let endTimeRaw = showtime.endTime || '';
+          
+          let isNextDay = false;
+          if (endTimeRaw.includes('ngày hôm sau')) {
+            isNextDay = true;
+            endTimeRaw = endTimeRaw.replace(' (ngày hôm sau)', '');
+          }
+          
+          const todayStr = now.toISOString().split('T')[0];
+          const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+          
+          if (showDate < todayStr) {
+            return { ...showtime, status: 'ended' };
+          }
+          
+          if (showDate > todayStr) {
+            return { ...showtime, status: 'scheduled' };
+          }
+          
+          // Cùng ngày hôm nay
+          if (showTime > currentTime) {
+            return { ...showtime, status: 'scheduled' };
+          }
+          
+          if (isNextDay) {
+            const endHour = parseInt(endTimeRaw.split(':')[0]);
+            const nowHour = now.getHours();
+            if (nowHour < endHour || (nowHour === endHour && now.getMinutes() <= parseInt(endTimeRaw.split(':')[1]))) {
+              return { ...showtime, status: 'ongoing' };
+            }
+            return { ...showtime, status: 'ended' };
+          }
+          
+          if (endTimeRaw && currentTime <= endTimeRaw) {
+            return { ...showtime, status: 'ongoing' };
+          }
+          
+          if (endTimeRaw && currentTime > endTimeRaw) {
+            return { ...showtime, status: 'ended' };
+          }
+          
+          return showtime;
+        })
+      );
+    };
+    
+    // Cập nhật ngay lập tức
+    updateStatuses();
+    
+    // Cập nhật mỗi phút
+    const interval = setInterval(updateStatuses, 60000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   // Save showtimes to localStorage
@@ -409,7 +494,6 @@ export default function ShowtimesPage() {
       totalSeats: 0,
       availableSeats: 0,
       status: "scheduled",
-      language: "VIETSUB",
     });
   };
 
@@ -602,7 +686,6 @@ export default function ShowtimesPage() {
         prices: finalFormData.prices,
         is_special: Boolean(finalFormData.isSpecial),
         status: finalFormData.status || "scheduled",
-        language: finalFormData.language || "VIETSUB",
       };
 
       console.log("📦 Payload gửi lên API:", payload);
@@ -984,50 +1067,6 @@ export default function ShowtimesPage() {
       matchSearch && matchCinema && matchDate && matchStatus && matchSpecial
     );
   });
-
-  // Update showtimes status every minute
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setShowtimes((prev) =>
-        prev.map((showtime) => {
-          const now = new Date();
-          const nowDate = getTodayDate();
-          const nowTime = `${String(now.getHours()).padStart(2, "0")}:${String(
-            now.getMinutes()
-          ).padStart(2, "0")}`;
-
-          let newStatus = showtime.status;
-
-          if (showtime.status !== "cancelled") {
-            if (showtime.date < nowDate) {
-              newStatus = "ended";
-            } else if (showtime.date === nowDate) {
-              if (showtime.time > nowTime) {
-                newStatus = "scheduled";
-              } else if (showtime.time <= nowTime) {
-                let endTimeRaw = showtime.endTime;
-                if (endTimeRaw && endTimeRaw.includes("ngày hôm sau")) {
-                  endTimeRaw = endTimeRaw.replace(" (ngày hôm sau)", "");
-                  newStatus = "ongoing";
-                } else if (endTimeRaw && endTimeRaw >= nowTime) {
-                  newStatus = "ongoing";
-                } else if (endTimeRaw && endTimeRaw < nowTime) {
-                  newStatus = "ended";
-                } else {
-                  newStatus = "ongoing";
-                }
-              }
-            } else if (showtime.date > nowDate) {
-              newStatus = "scheduled";
-            }
-          }
-
-          return { ...showtime, status: newStatus };
-        })
-      );
-    }, 60000);
-    return () => clearInterval(interval);
-  }, []);
 
   const availableDates = [...new Set(showtimes.map((s) => s.date))].sort();
 

@@ -1,3 +1,4 @@
+// ShowtimesTable.jsx - Updated with real-time status support
 import { Edit2, Trash2, Sparkles, Clock, Calendar } from "lucide-react";
 import { formatDateToDisplay } from "../../../utils/dateUtils";
 
@@ -23,30 +24,41 @@ export default function ShowtimesTable({
 
   const paginatedData = showtimes.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
+  // Hàm xác định style trạng thái dựa trên status hiện tại (đã được FE tính real-time)
   const getStatusStyle = (status) => {
     const styles = {
       scheduled: {
         label: "Sắp chiếu",
         color: "text-green-400",
         bg: "bg-green-400/10",
+        border: "border-green-400/20",
       },
       ongoing: {
         label: "Đang chiếu",
         color: "text-yellow-400",
         bg: "bg-yellow-400/10",
+        border: "border-yellow-400/20",
       },
       ended: {
         label: "Đã kết thúc",
         color: "text-gray-400",
         bg: "bg-gray-400/10",
+        border: "border-gray-400/20",
       },
       cancelled: {
         label: "Đã hủy",
         color: "text-red-400",
         bg: "bg-red-400/10",
+        border: "border-red-400/20",
+      },
+      available: {
+        label: "Sắp chiếu",
+        color: "text-green-400",
+        bg: "bg-green-400/10",
+        border: "border-green-400/20",
       },
     };
     return styles[status] || styles.scheduled;
@@ -84,7 +96,7 @@ export default function ShowtimesTable({
         <table className="min-w-[1200px] w-full text-sm border-collapse">
           <thead className="bg-zinc-900 text-gray-300 border-b border-white/10">
             <tr className="uppercase text-[11px] font-bold tracking-wider">
-              <th className="p-4 text-center w-12 text-center">
+              <th className="p-4 text-center w-12">
                 <input
                   type="checkbox"
                   checked={
@@ -139,11 +151,11 @@ export default function ShowtimesTable({
                           {item.movieTitle}
                         </span>
                         <div className="flex items-center gap-2 text-xs text-gray-500">
-                           {isSpecialShowtime && (
-                              <span className="inline-flex items-center gap-1 text-[10px] text-amber-500/80 bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-500/20">
-                                <Sparkles size={8} /> Suất đặc biệt
-                              </span>
-                           )}
+                          {isSpecialShowtime && (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-amber-500/80 bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-500/20">
+                              <Sparkles size={8} /> Suất đặc biệt
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -156,63 +168,56 @@ export default function ShowtimesTable({
                     <td className="p-4 text-center">
                       <div className="flex flex-col items-center gap-0.5 text-center">
                         <div className="flex items-center gap-1.5 text-gray-300 font-medium whitespace-nowrap justify-center">
-                           <Calendar size={12} className="text-gray-500" />
-                           {formatDateToDisplay(item.date)}
+                          <Calendar size={12} className="text-gray-500" />
+                          {formatDateToDisplay(item.date)}
                         </div>
                         <div className="flex items-center gap-1.5 text-sm text-gray-400 font-mono justify-center">
-                           <Clock size={13} className="text-gray-500" />
-                           <span className="text-white font-medium">{item.time}</span>
-                           <span className="text-gray-600">-</span>
-                           <span className="text-gray-100">{item.endTime || "---"}</span>
+                          <Clock size={13} className="text-gray-500" />
+                          <span className="text-white font-medium">{item.time}</span>
+                          <span className="text-gray-600">-</span>
+                          <span className="text-gray-100">{item.endTime || "---"}</span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <span
-                          className={`inline-block min-w-[50px] px-2 py-0.5 rounded-md text-[11px] font-bold bg-${getTypeColor(item.type)}-500/10 text-${getTypeColor(item.type)}-400 border border-${getTypeColor(item.type)}-500/20`}
-                        >
-                          {item.type}
-                        </span>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                          item.language === 'DUB' ? 'bg-purple-500/10 text-purple-400' : 'bg-zinc-800 text-zinc-500'
-                        }`}>
-                          {item.language === 'DUB' ? 'LỒNG TIẾNG' : 'PHỤ ĐỀ'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex flex-col gap-1.5 min-w-[150px]">
-                         <div className="grid grid-cols-1 gap-1">
-                            {/* Thường */}
-                            <div className="flex justify-between items-center bg-white/[0.03] px-2 py-0.5 rounded border border-transparent hover:border-white/5">
-                               <span className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Thường</span>
-                               <span className={`font-bold text-xs tracking-tight ${isSpecialShowtime ? 'text-amber-400' : 'text-zinc-100'}`}>
-                                 {formatMoney(prices.Thường)}
-                               </span>
-                            </div>
-                            
-                            {/* VIP */}
-                            <div className="flex justify-between items-center bg-purple-500/[0.03] px-2 py-0.5 rounded border border-transparent hover:border-purple-500/10">
-                               <span className="text-[9px] text-purple-400/60 font-bold uppercase tracking-tighter">VIP</span>
-                               <span className="text-purple-400 font-bold text-xs tracking-tight">
-                                 {formatMoney(prices.VIP)}
-                               </span>
-                            </div>
-
-                            {/* Couple */}
-                            <div className="flex justify-between items-center bg-red-500/[0.03] px-2 py-0.5 rounded border border-transparent hover:border-red-500/10">
-                               <span className="text-[9px] text-red-400/60 font-bold uppercase tracking-tighter">Couple</span>
-                               <span className="text-red-500 font-bold text-xs tracking-tight">
-                                 {formatMoney(prices.Couple)}
-                               </span>
-                            </div>
-                         </div>
                       </div>
                     </td>
                     <td className="p-4 text-center">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${status.bg} ${status.color} border border-current/10`}
+                        className={`inline-block min-w-[50px] px-2 py-0.5 rounded-md text-[11px] font-bold bg-${getTypeColor(item.type)}-500/10 text-${getTypeColor(item.type)}-400 border border-${getTypeColor(item.type)}-500/20`}
+                      >
+                        {item.type}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1.5 min-w-[150px]">
+                        <div className="grid grid-cols-1 gap-1">
+                          {/* Thường */}
+                          <div className="flex justify-between items-center bg-white/[0.03] px-2 py-0.5 rounded border border-transparent hover:border-white/5">
+                            <span className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Thường</span>
+                            <span className={`font-bold text-xs tracking-tight ${isSpecialShowtime ? 'text-amber-400' : 'text-zinc-100'}`}>
+                              {formatMoney(prices.Thường)}
+                            </span>
+                          </div>
+                          
+                          {/* VIP */}
+                          <div className="flex justify-between items-center bg-purple-500/[0.03] px-2 py-0.5 rounded border border-transparent hover:border-purple-500/10">
+                            <span className="text-[9px] text-purple-400/60 font-bold uppercase tracking-tighter">VIP</span>
+                            <span className="text-purple-400 font-bold text-xs tracking-tight">
+                              {formatMoney(prices.VIP)}
+                            </span>
+                          </div>
+
+                          {/* Couple */}
+                          <div className="flex justify-between items-center bg-red-500/[0.03] px-2 py-0.5 rounded border border-transparent hover:border-red-500/10">
+                            <span className="text-[9px] text-red-400/60 font-bold uppercase tracking-tighter">Couple</span>
+                            <span className="text-red-500 font-bold text-xs tracking-tight">
+                              {formatMoney(prices.Couple)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4 text-center">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${status.bg} ${status.color} border ${status.border}`}
                       >
                         {status.label}
                       </span>
@@ -240,7 +245,7 @@ export default function ShowtimesTable({
               })
             ) : (
               <tr>
-                <td colSpan="13" className="p-12 text-center text-gray-500">
+                <td colSpan="8" className="p-12 text-center text-gray-500">
                   <div className="flex flex-col items-center gap-2 opacity-40">
                     <Calendar size={40} />
                     <p className="font-medium">Không tìm thấy suất chiếu nào</p>
@@ -285,10 +290,11 @@ export default function ShowtimesTable({
                   <button
                     key={i}
                     onClick={() => onPageChange(pageNum)}
-                    className={`w-8 h-8 rounded-lg text-xs font-bold transition-all border ${currentPage === pageNum
+                    className={`w-8 h-8 rounded-lg text-xs font-bold transition-all border ${
+                      currentPage === pageNum
                         ? "bg-red-600 text-white border-red-600 shadow-lg shadow-red-600/20"
                         : "bg-transparent text-gray-500 border-transparent hover:bg-white/5 hover:text-white"
-                      }`}
+                    }`}
                   >
                     {pageNum}
                   </button>
