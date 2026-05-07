@@ -1,5 +1,4 @@
-// ShowtimeModal.jsx - Sửa phần fetch promotions
-
+// ShowtimeModal.jsx - Đã loại bỏ phần chọn trạng thái
 import { X, Search, Sparkles } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { getTodayDate } from "../../../utils/dateUtils";
@@ -117,7 +116,6 @@ export default function ShowtimeModal({
   const movieInputRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // API URLs
   const PRICING_API_URL = "http://localhost:5000/api/pricing";
 
   const formatVndWithCommas = (value) => {
@@ -207,7 +205,6 @@ export default function ShowtimeModal({
     };
 
     fetchHolidayPricingRules();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, form?.isSpecial]);
 
   useEffect(() => {
@@ -267,7 +264,6 @@ export default function ShowtimeModal({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Ensure specialPrices exists when editing an existing special showtime
   useEffect(() => {
     if (!isEdit) return;
     if (!form?.isSpecial) return;
@@ -278,13 +274,10 @@ export default function ShowtimeModal({
       ...form,
       specialPrices: normalizePriceMap(seed, DEFAULT_REGULAR_PRICES),
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form?.isSpecial]);
 
-  // Auto fetch regular prices for regular showtimes only
   useEffect(() => {
     const fetchRegularPrices = async () => {
-      // Only fetch if regular showtime is selected
       if (form?.isSpecial || !form?.type || !form?.date || !form?.time) return;
 
       console.log("💰 Fetching regular prices with params:", {
@@ -477,7 +470,6 @@ export default function ShowtimeModal({
     }
 
     if (isSpecial) {
-      // Switching to special - require selecting a pricing rule to populate prices
       setForm({
         ...form,
         isSpecial: true,
@@ -489,7 +481,6 @@ export default function ShowtimeModal({
         priceSource: "special",
       });
     } else {
-      // Switching back to regular
       setForm({
         ...form,
         isSpecial: false,
@@ -545,10 +536,11 @@ export default function ShowtimeModal({
     });
   };
 
+  // Tính endTime với 10 phút quảng cáo
   const calculateEndTime = () => {
     if (!form?.time || !form?.movieDuration) return "";
     const [hours, minutes] = form.time.split(":").map(Number);
-    const totalMinutes = hours * 60 + minutes + form.movieDuration + 15;
+    const totalMinutes = hours * 60 + minutes + form.movieDuration + 10;
     const endHours = Math.floor(totalMinutes / 60);
     const endMinutes = totalMinutes % 60;
 
@@ -572,7 +564,7 @@ export default function ShowtimeModal({
     }
 
     const [hours, minutes] = time.split(":").map(Number);
-    const totalMinutes = hours * 60 + minutes + form.movieDuration + 15;
+    const totalMinutes = hours * 60 + minutes + form.movieDuration + 10;
     const endHours = Math.floor(totalMinutes / 60);
     const endMinutes = totalMinutes % 60;
 
@@ -610,7 +602,6 @@ export default function ShowtimeModal({
       isSpecial: true,
       priceSource: "special",
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isComingSoonMovie, form?.isSpecial]);
 
   const currentRoomCount = selectedCinema?.rooms?.length || 0;
@@ -978,7 +969,7 @@ export default function ShowtimeModal({
                     </div>
                     {form?.movieDuration && (
                       <p className="text-[10px] text-blue-400 mt-1">
-                        ⏱️ {form.movieDuration} phút + 15 phút quảng cáo
+                        ⏱️ {form.movieDuration} phút + 10 phút quảng cáo
                         {form?.endTime &&
                           form.endTime.includes("ngày hôm sau") && (
                             <span className="text-yellow-400 ml-2">
@@ -1191,72 +1182,7 @@ export default function ShowtimeModal({
                 </p>
               </div>
 
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-xs font-semibold text-white/70 mb-3">
-                  Trạng thái
-                </div>
-                <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
-                  Trạng thái
-                </label>
-                <select
-                  value={form?.status || "scheduled"}
-                  onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  className={selectClass}
-                >
-                  <option
-                    value="scheduled"
-                    className="bg-zinc-900 text-green-400"
-                  >
-                    Sắp chiếu
-                  </option>
-                  <option
-                    value="ongoing"
-                    className="bg-zinc-900 text-yellow-400"
-                  >
-                    Đang chiếu
-                  </option>
-                  <option value="ended" className="bg-zinc-900 text-gray-400">
-                    Đã kết thúc
-                  </option>
-                  <option
-                    value="cancelled"
-                    className="bg-zinc-900 text-red-400"
-                  >
-                    Hủy
-                  </option>
-                </select>
-
-                {form?.roomId && form?.type && form?.totalSeats > 0 && (
-                  <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                    <div className="flex items-center gap-2 text-xs text-blue-400 mb-1">
-                      <span>🎬</span>
-                      <span>Thông tin phòng chiếu</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <span className="text-white/50">Phòng:</span>
-                        <span className="text-white ml-2">{form.roomName}</span>
-                      </div>
-                      <div>
-                        <span className="text-white/50">Định dạng:</span>
-                        <span className="text-white ml-2">{form.type}</span>
-                      </div>
-                      <div>
-                        <span className="text-white/50">Sức chứa:</span>
-                        <span className="text-white ml-2">
-                          {form.totalSeats} ghế
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-white/50">Rạp:</span>
-                        <span className="text-white ml-2">
-                          {form.cinemaName}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* ĐÃ LOẠI BỎ PHẦN CHỌN TRẠNG THÁI */}
             </div>
           </div>
         </div>

@@ -126,7 +126,9 @@ export default function ShowtimeDetailModal({ showtime, isOpen, onClose }) {
                   <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Tình trạng ghế</label>
                   <div className="bg-zinc-900 border border-white/5 rounded-xl p-4">
                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-zinc-400">Đã đặt: <span className="text-white font-bold">{showtime.bookedCount || 0}</span> / {showtime.totalSeats || 0} ghế</span>
+                        <span className="text-xs text-zinc-400">
+                           Đã đặt: <span className="text-white font-bold">{showtime.bookedCount || 0}</span> / {showtime.totalSeats || 0} ghế
+                        </span>
                         <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">
                            Còn trống {Math.max(0, (showtime.totalSeats || 0) - (showtime.bookedCount || 0))}
                         </span>
@@ -137,6 +139,26 @@ export default function ShowtimeDetailModal({ showtime, isOpen, onClose }) {
                            style={{ width: `${Math.min(100, ((showtime.bookedCount || 0) / (showtime.totalSeats || 1)) * 100)}%` }}
                         />
                      </div>
+                     
+                     {/* Cảnh báo nếu có vé đã đặt */}
+                     {(showtime.bookedCount || 0) > 0 && (
+                        <div className="mt-3 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                           <p className="text-xs text-yellow-400 flex items-center gap-2">
+                              <span>⚠️</span>
+                              <span>Suất chiếu này đã có {showtime.bookedCount} vé được đặt. Không thể hủy hoặc xóa suất chiếu khi còn vé đã đặt.</span>
+                           </p>
+                        </div>
+                     )}
+                     
+                     {/* Cảnh báo nếu suất chiếu đã kết thúc */}
+                     {(showtime.status === 'ended' || showtime.status === 'cancelled') && (
+                        <div className="mt-3 p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+                           <p className="text-xs text-red-400 flex items-center gap-2">
+                              <span>🔴</span>
+                              <span>Suất chiếu này đã {showtime.status === 'ended' ? 'kết thúc' : 'bị hủy'}. Không thể chỉnh sửa.</span>
+                           </p>
+                        </div>
+                     )}
                   </div>
                </div>
 

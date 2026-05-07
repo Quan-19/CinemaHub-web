@@ -1,5 +1,5 @@
-// ShowtimesTable.jsx - Updated with real-time status support
-import { Edit2, Trash2, Sparkles, Clock, Calendar } from "lucide-react";
+// ShowtimesTable.jsx - Giữ nguyên như cũ
+import { Edit2, Trash2, Sparkles, Clock, Calendar, Ban } from "lucide-react";
 import { formatDateToDisplay } from "../../../utils/dateUtils";
 
 export default function ShowtimesTable({
@@ -7,6 +7,7 @@ export default function ShowtimesTable({
   onEdit,
   onDelete,
   onViewDetail,
+  onCancel,
   onSelect,
   selectedIds,
   currentPage,
@@ -27,7 +28,6 @@ export default function ShowtimesTable({
     currentPage * itemsPerPage
   );
 
-  // Hàm xác định style trạng thái dựa trên status hiện tại (đã được FE tính real-time)
   const getStatusStyle = (status) => {
     const styles = {
       scheduled: {
@@ -35,30 +35,28 @@ export default function ShowtimesTable({
         color: "text-green-400",
         bg: "bg-green-400/10",
         border: "border-green-400/20",
+        icon: "🟢",
       },
       ongoing: {
         label: "Đang chiếu",
         color: "text-yellow-400",
         bg: "bg-yellow-400/10",
         border: "border-yellow-400/20",
+        icon: "🟡",
       },
       ended: {
         label: "Đã kết thúc",
         color: "text-gray-400",
         bg: "bg-gray-400/10",
         border: "border-gray-400/20",
+        icon: "⚫",
       },
       cancelled: {
         label: "Đã hủy",
         color: "text-red-400",
         bg: "bg-red-400/10",
         border: "border-red-400/20",
-      },
-      available: {
-        label: "Sắp chiếu",
-        color: "text-green-400",
-        bg: "bg-green-400/10",
-        border: "border-green-400/20",
+        icon: "🔴",
       },
     };
     return styles[status] || styles.scheduled;
@@ -90,6 +88,28 @@ export default function ShowtimesTable({
     }
   };
 
+  const canCancel = (showtime) => {
+    if (!showtime.status) return false;
+    if (showtime.status === 'cancelled') return false;
+    if (showtime.status === 'ended') return false;
+    if (showtime.status !== 'scheduled') return false;
+    return true;
+  };
+
+  const canEdit = (showtime) => {
+    if (!showtime.status) return false;
+    if (showtime.status === 'cancelled') return false;
+    if (showtime.status === 'ended') return false;
+    return true;
+  };
+
+  const canDelete = (showtime) => {
+    if (!showtime.status) return false;
+    if (showtime.status === 'cancelled') return false;
+    if (showtime.status === 'ended') return false;
+    return true;
+  };
+
   return (
     <div className="bg-cinema-surface rounded-xl border border-white/10 overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
@@ -113,7 +133,7 @@ export default function ShowtimesTable({
               <th className="p-4 text-center w-[10%]">Định dạng</th>
               <th className="p-4 text-left w-[17%]">Cấu trúc giá</th>
               <th className="p-4 text-center w-[10%]">Trạng thái</th>
-              <th className="p-4 text-right w-24 whitespace-nowrap">Thao tác</th>
+              <th className="p-4 text-right w-28 whitespace-nowrap">Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -125,11 +145,17 @@ export default function ShowtimesTable({
                 const prices = isSpecialShowtime 
                   ? (item.specialPrices || {}) 
                   : (item.regularPrices || item.prices || {});
+                
+                const showCanCancel = canCancel(item);
+                const showCanEdit = canEdit(item);
+                const showCanDelete = canDelete(item);
 
                 return (
                   <tr
                     key={item.id}
-                    className="border-b border-white/5 hover:bg-white/[0.03] transition-colors group"
+                    className={`border-b border-white/5 hover:bg-white/[0.03] transition-colors group ${
+                      item.status === 'cancelled' ? 'opacity-60' : ''
+                    }`}
                   >
                     <td className="p-4 text-center">
                       <input
@@ -138,7 +164,8 @@ export default function ShowtimesTable({
                         onChange={(e) =>
                           handleSelectOne(item.id, e.target.checked)
                         }
-                        className="w-4 h-4 rounded border-white/20 bg-transparent accent-red-600 cursor-pointer"
+                        disabled={!showCanDelete}
+                        className="w-4 h-4 rounded border-white/20 bg-transparent accent-red-600 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                       />
                     </td>
                     <td className="p-4">
@@ -189,23 +216,18 @@ export default function ShowtimesTable({
                     <td className="p-4">
                       <div className="flex flex-col gap-1.5 min-w-[150px]">
                         <div className="grid grid-cols-1 gap-1">
-                          {/* Thường */}
                           <div className="flex justify-between items-center bg-white/[0.03] px-2 py-0.5 rounded border border-transparent hover:border-white/5">
                             <span className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Thường</span>
                             <span className={`font-bold text-xs tracking-tight ${isSpecialShowtime ? 'text-amber-400' : 'text-zinc-100'}`}>
                               {formatMoney(prices.Thường)}
                             </span>
                           </div>
-                          
-                          {/* VIP */}
                           <div className="flex justify-between items-center bg-purple-500/[0.03] px-2 py-0.5 rounded border border-transparent hover:border-purple-500/10">
                             <span className="text-[9px] text-purple-400/60 font-bold uppercase tracking-tighter">VIP</span>
                             <span className="text-purple-400 font-bold text-xs tracking-tight">
                               {formatMoney(prices.VIP)}
                             </span>
                           </div>
-
-                          {/* Couple */}
                           <div className="flex justify-between items-center bg-red-500/[0.03] px-2 py-0.5 rounded border border-transparent hover:border-red-500/10">
                             <span className="text-[9px] text-red-400/60 font-bold uppercase tracking-tighter">Couple</span>
                             <span className="text-red-500 font-bold text-xs tracking-tight">
@@ -216,25 +238,46 @@ export default function ShowtimesTable({
                       </div>
                     </td>
                     <td className="p-4 text-center">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${status.bg} ${status.color} border ${status.border}`}
-                      >
-                        {status.label}
-                      </span>
+                      <div className="flex flex-col items-center">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${status.bg} ${status.color} border ${status.border}`}
+                        >
+                          <span>{status.icon}</span>
+                          {status.label}
+                        </span>
+                        {item.status !== 'cancelled' && item.status !== 'ended' && (
+                          <div className="text-[9px] text-white/30 mt-1">
+                            Tự động
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-1 px-1">
                         <button
                           onClick={() => onEdit(item)}
-                          className="p-2 hover:bg-white/10 rounded-lg transition-all text-gray-400 hover:text-green-500"
-                          title="Chỉnh sửa"
+                          disabled={!showCanEdit}
+                          className="p-2 hover:bg-white/10 rounded-lg transition-all text-gray-400 hover:text-green-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                          title={!showCanEdit ? "Không thể chỉnh sửa suất đã kết thúc hoặc đã hủy" : "Chỉnh sửa"}
                         >
                           <Edit2 size={16} />
                         </button>
+                        
+                        {onCancel && showCanCancel && (
+                          <button
+                            onClick={() => onCancel(item)}
+                            className="p-2 hover:bg-red-500/10 rounded-lg transition-all text-gray-400 hover:text-red-500"
+                            title="Hủy suất chiếu"
+                          >
+                            <Ban size={16} />
+                          </button>
+                        )}
+                        
                         <button
-                          onClick={() => onDelete(item.id)}
-                          className="p-2 hover:bg-red-500/10 rounded-lg transition-all text-gray-400 hover:text-red-500"
-                          title="Xóa"
+                          onClick={() => onDelete(item)}
+                          disabled={!showCanDelete}
+                          className="p-2 hover:bg-red-500/10 rounded-lg transition-all text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                          title={!showCanDelete ? "Không thể xóa suất đã kết thúc hoặc đã hủy" : "Xóa"}
                         >
                           <Trash2 size={16} />
                         </button>
