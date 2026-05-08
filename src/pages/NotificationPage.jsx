@@ -21,9 +21,7 @@ export default function NotificationPage() {
         return true;
     });
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [filter]);
+
 
     const totalPages = Math.ceil(filteredNotifs.length / itemsPerPage);
     const paginatedNotifs = filteredNotifs.slice(
@@ -86,7 +84,10 @@ export default function NotificationPage() {
                     ].map((tab) => (
                         <button
                             key={tab.id}
-                            onClick={() => setFilter(tab.id)}
+                            onClick={() => {
+                                setFilter(tab.id);
+                                setCurrentPage(1);
+                            }}
                             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${filter === tab.id
                                 ? "bg-cinema-primary text-white shadow-lg shadow-cinema-primary/20"
                                 : "text-zinc-400 hover:text-white hover:bg-white/5"

@@ -155,14 +155,14 @@ const AnimatedSection = ({
   delay = 0,
   direction = "up",
 }) => {
-  const [ref, inView] = useState(false);
+  const [inView, setInView] = useState(false);
   const sectionRef = useRef(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          inView(true);
+          setInView(true);
           observer.disconnect();
         }
       },
@@ -373,7 +373,7 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
 };
 
 // Cinema Card Component
-const CinemaCard = ({ cinema, index }) => {
+const CinemaCard = ({ cinema }) => {
   const navigate = useNavigate();
   const brandColors = {
     EbizCinema: '#c9a0a2',

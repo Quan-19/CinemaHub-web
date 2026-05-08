@@ -592,6 +592,7 @@ function EditShowtimeModal({
   );
   const [status, setStatus] = useState(normalizeStaffStatus(initial.status));
   const [error, setError] = useState(null);
+  const [movieSearchQuery, setMovieSearchQuery] = useState("");
 
   // Pricing states
   const [holidayPromos, setHolidayPromos] = useState([]);
@@ -622,6 +623,12 @@ function EditShowtimeModal({
   const isComingSoonMovie = selectedMovieStatus === "coming_soon";
   const effectiveIsSpecial = isComingSoonMovie ? true : isSpecial;
   const durationNumber = Number(duration) || (selectedMovie?.duration ?? 0);
+
+  const filteredMovies = useMemo(() => {
+    if (!movieSearchQuery.trim()) return movieOptions;
+    const query = normalizeText(movieSearchQuery);
+    return movieOptions.filter(m => normalizeText(m.title).includes(query));
+  }, [movieOptions, movieSearchQuery]);
 
   const modalLanguageOptions = useMemo(() => {
     return STANDARD_LANGUAGES;
@@ -702,8 +709,8 @@ function EditShowtimeModal({
 
           setHolidayPromos(applicableRules);
           // Auto-select first promo if none selected
-          if (!selectedPromoId && applicableRules.length > 0) {
-            setSelectedPromoId(applicableRules[0].id);
+          if (applicableRules.length > 0) {
+            setSelectedPromoId(prev => prev || applicableRules[0].id);
           }
         }
       } catch (err) {
@@ -777,19 +784,7 @@ function EditShowtimeModal({
     // Use a small delay to avoid excessive calls
     const timer = setTimeout(fetchPrices, 300);
     return () => clearTimeout(timer);
-  }, [date, roomType, start, effectiveIsSpecial, selectedPromoId]);
-
-  // ✅ Validate duration to prevent negative numbers
-  const handleDurationChange = (e) => {
-    const value = parseInt(e.target.value);
-    if (value < 0) {
-      setDuration(0);
-    } else if (value > 480) {
-      setDuration(480); // Max 8 hours
-    } else {
-      setDuration(value);
-    }
-  };
+  }, [date, roomType, start, effectiveIsSpecial, selectedPromoId, holidayPromos]);
 
   const handleSave = () => {
     if (!movieId || !date || !start || !roomId || !format || !language) {
@@ -881,35 +876,49 @@ function EditShowtimeModal({
                     Phim *
                   </label>
                   <div className="rounded-2xl border border-zinc-700 bg-zinc-900/40">
-                    <div className="flex items-center gap-2 border-b border-zinc-700 px-3 py-2 text-sm text-zinc-400">
-                      <Search className="h-4 w-4" /> Chọn phim
+                    <div className="flex items-center gap-2 border-b border-zinc-700 px-3 py-2 text-sm text-zinc-400 focus-within:border-zinc-500 transition-colors">
+                      <Search className="h-4 w-4 text-zinc-500" />
+                      <input
+                        type="text"
+                        placeholder="Tìm phim..."
+                        value={movieSearchQuery}
+                        onChange={(e) => setMovieSearchQuery(e.target.value)}
+                        className="bg-transparent border-none outline-none flex-1 text-white placeholder-zinc-600"
+                      />
                     </div>
-                    <div className="max-h-[160px] overflow-auto">
-                      {movieOptions.map((m) => (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => {
-                            setMovieId(m.id);
-                            setDuration(m.duration || "");
-                            if (m.languageOptions?.length > 0) {
-                              setLanguage(m.languageOptions[0].value);
-                            }
-                            if (normalizeMovieStatus(m.status) === "coming_soon") {
-                              setIsSpecial(true);
-                            }
-                          }}
-                          className={[
-                            "flex w-full items-center justify-between px-3 py-2 text-left text-sm transition",
-                            String(movieId) === String(m.id)
-                              ? "bg-cinema-primary/15 text-white"
-                              : "hover:bg-zinc-900/60 text-zinc-200",
-                          ].join(" ")}
-                        >
-                          <span className="truncate">{m.title}</span>
-                          <span className="text-xs text-zinc-400">{m.duration}p</span>
-                        </button>
-                      ))}
+                    <div className="max-h-[160px] overflow-auto custom-scrollbar">
+                      {filteredMovies.length === 0 ? (
+                        <div className="px-3 py-4 text-center text-xs text-zinc-500">
+                          Không tìm thấy phim
+                        </div>
+                      ) : (
+                        filteredMovies.map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => {
+                              setMovieSearchQuery(""); // Optional: clear search on select
+                              setMovieId(m.id);
+                              setDuration(m.duration || "");
+                              if (m.languageOptions?.length > 0) {
+                                setLanguage(m.languageOptions[0].value);
+                              }
+                              if (normalizeMovieStatus(m.status) === "coming_soon") {
+                                setIsSpecial(true);
+                              }
+                            }}
+                            className={[
+                              "flex w-full items-center justify-between px-3 py-2 text-left text-sm transition",
+                              String(movieId) === String(m.id)
+                                ? "bg-cinema-primary/15 text-white"
+                                : "hover:bg-zinc-900/60 text-zinc-200",
+                            ].join(" ")}
+                          >
+                            <span className="truncate">{m.title}</span>
+                            <span className="text-xs text-zinc-400">{m.duration}p</span>
+                          </button>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>

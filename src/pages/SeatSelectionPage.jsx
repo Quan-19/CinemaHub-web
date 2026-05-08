@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import toast from "react-hot-toast";
 import { useParams, useNavigate, useBlocker, useLocation } from "react-router-dom";
 import { ChevronLeft, Ticket } from "lucide-react";
 import { useBooking } from "../context/BookingContext";
@@ -42,33 +43,6 @@ const SEAT_TYPES = {
   },
 };
 
-// ✅ HÀM RELEASE LOCK CỦA USER HIỆN TẠI
-const releaseMyLocks = async (showtimeId) => {
-  try {
-    const auth = getAuth();
-    const user = auth.currentUser;
-
-    if (!user) {
-      console.log("User not logged in");
-      return false;
-    }
-
-    const token = await user.getIdToken();
-
-    await axios.post(
-      "http://localhost:5000/api/seats/release-my-locks",
-      { showtime_id: showtimeId },
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
-
-    console.log("✅ Released my previous locks");
-    return true;
-  } catch (error) {
-    console.log("No locks to release or error:", error?.response?.data);
-    return false;
-  }
-};
-
 // ✅ HÀM LOCK GHẾ
 const lockSelectedSeats = async (seats, showtimeId) => {
   try {
@@ -98,7 +72,7 @@ const lockSelectedSeats = async (seats, showtimeId) => {
   } catch (error) {
     console.error("❌ Failed to lock seats:", error);
     if (error.response?.data?.error) {
-      alert(error.response.data.error);
+      toast.error(error.response.data.error);
     }
     return false;
   }
@@ -276,6 +250,7 @@ export const SeatSelectionPage = () => {
     };
 
     fetchOccupiedSeats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showtimeId, currentUser]); // picked.length được loại ra để tránh loop, nhưng check logic bên trong
 
   // ========== TIMER LOGIC ==========
@@ -359,7 +334,7 @@ export const SeatSelectionPage = () => {
       } catch (err) {
         console.error("Error loading main data:", err);
         if (String(err?.message || "").includes("tạm khóa")) {
-          alert("Suất chiếu này đang tạm khóa.");
+          toast.error("Suất chiếu này đang tạm khóa.");
           navigate(-1);
         }
       }
@@ -412,7 +387,7 @@ export const SeatSelectionPage = () => {
     } else {
       // CHỌN MỚI
       if (picked.length >= MAX_SEATS) {
-        alert("Bạn chỉ có thể chọn tối đa 8 ghế");
+        toast.error("Bạn chỉ có thể chọn tối đa 8 ghế");
         return;
       }
       setPicked((prev) => [...prev, { id, type }]);

@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -778,7 +777,6 @@ function StaffRoomsPage() {
   const { user } = useAuth();
   // Cố định rạp theo phân quyền của admin
   const selectedCinemaId = useMemo(() => String(user?.cinema_id || ""), [user?.cinema_id]);
-  const { subtitle } = useOutletContext();
 
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -788,9 +786,7 @@ function StaffRoomsPage() {
   //   }
   //   return "";
   // }, [rooms]);
-  useEffect(() => {
-    loadRooms();
-  }, []);
+
   const cinemaList = useMemo(() => {
     const map = new Map();
 
@@ -806,7 +802,7 @@ function StaffRoomsPage() {
     return Array.from(map.values());
   }, [rooms]);
 
-  const loadRooms = async () => {
+  const loadRooms = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -839,7 +835,11 @@ function StaffRoomsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.cinema_id]);
+
+  useEffect(() => {
+    loadRooms();
+  }, [loadRooms]);
 
   const staffRooms = useMemo(() => {
     if (!selectedCinemaId) return rooms;
