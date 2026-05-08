@@ -23,8 +23,14 @@ import { useEffect } from "react";
 import { getAuth } from "firebase/auth";
 
 const STATUS_OPTIONS = [
-  { value: "open", label: "Mở bán" },
-  { value: "locked", label: "Khóa" },
+  { value: "scheduled", label: "Sắp chiếu" },
+  { value: "ongoing", label: "Đang chiếu" },
+  { value: "ended", label: "Đã kết thúc" },
+  { value: "cancelled", label: "Đã hủy" },
+];
+const MODAL_STATUS_OPTIONS = [
+  { value: "scheduled", label: "Sắp chiếu (Mở bán)" },
+  { value: "cancelled", label: "Đã hủy" },
 ];
 const DEFAULT_LANGUAGE_OPTION = { value: "VIETSUB", label: "Phụ đề" };
 const STANDARD_LANGUAGES = [
@@ -38,25 +44,18 @@ function normalizeStaffStatus(status) {
     .trim()
     .toLowerCase();
 
+  if (normalized === "cancelled") return "cancelled";
+  if (normalized === "ended" || normalized === "sold_out") return "ended";
+  if (normalized === "ongoing") return "ongoing";
   if (
-    normalized === "open" ||
-    normalized === "available" ||
     normalized === "scheduled" ||
-    normalized === "ongoing"
+    normalized === "open" ||
+    normalized === "available"
   ) {
-    return "open";
+    return "scheduled";
   }
 
-  if (
-    normalized === "locked" ||
-    normalized === "cancelled" ||
-    normalized === "sold_out" ||
-    normalized === "ended"
-  ) {
-    return "locked";
-  }
-
-  return "open";
+  return "scheduled";
 }
 
 const normalizeMovieStatus = (status) => {
@@ -286,26 +285,38 @@ function getTodayDateInputValue() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-function StatusBadge({ status, isPast }) {
-  if (isPast) {
-    return (
-      <span className="inline-flex items-center rounded-full bg-zinc-700/30 px-2 py-1 text-[10px] font-semibold text-zinc-300">
-        Hoàn thành
-      </span>
-    );
-  }
+function StatusBadge({ status }) {
+  const statusStyles = {
+    scheduled: {
+      label: "Sắp chiếu",
+      icon: "🟢",
+      className: "bg-emerald-500/15 text-emerald-300 border-emerald-500/25",
+    },
+    ongoing: {
+      label: "Đang chiếu",
+      icon: "🟡",
+      className: "bg-yellow-500/15 text-yellow-300 border-yellow-500/25",
+    },
+    ended: {
+      label: "Đã kết thúc",
+      icon: "⚫",
+      className: "bg-zinc-500/15 text-zinc-400 border-zinc-500/25",
+    },
+    cancelled: {
+      label: "Đã hủy",
+      icon: "🔴",
+      className: "bg-red-500/15 text-red-300 border-red-500/25",
+    },
+  };
 
-  const isOpen = status === "open";
+  const style = statusStyles[status] || statusStyles.scheduled;
+
   return (
     <span
-      className={[
-        "inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold",
-        isOpen
-          ? "bg-emerald-500/15 text-emerald-300"
-          : "bg-zinc-600/20 text-zinc-300",
-      ].join(" ")}
+      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold ${style.className}`}
     >
-      {isOpen ? "Mở bán" : "Khóa"}
+      <span className="text-[9px]">{style.icon}</span>
+      {style.label}
     </span>
   );
 }
@@ -467,16 +478,33 @@ function CalendarPicker({ selectedDate, onSelectDate, onClose }) {
 
 function ShowtimeCard({ showtime, onEdit, onDelete }) {
   const isPast = showtime.isPast;
+  const effectiveStatus = isPast && showtime.status !== 'cancelled' ? 'ended' : showtime.status;
+  const isInactive = effectiveStatus === 'ended' || effectiveStatus === 'cancelled';
+  const hasBookings = (showtime.bookedCount || 0) > 0;
+
   return (
-    <div className="rounded-2xl border border-zinc-700 bg-zinc-950/30 p-4">
+    <div className={`rounded-2xl border bg-zinc-950/30 p-4 transition-all ${
+      effectiveStatus === 'cancelled'
+        ? 'border-red-500/20 opacity-60'
+        : effectiveStatus === 'ended'
+          ? 'border-zinc-700/50 opacity-50'
+          : effectiveStatus === 'ongoing'
+            ? 'border-yellow-500/30'
+            : 'border-zinc-700'
+    }`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2 text-lg font-bold text-white">
-            <Clock4 className="h-5 w-5 text-cinema-primary" />
+            <Clock4 className={`h-5 w-5 ${effectiveStatus === 'ongoing' ? 'text-yellow-400' : 'text-cinema-primary'}`} />
             <span>
               {formatTime(showtime.start)} – {formatTime(showtime.end)}
             </span>
-            <StatusBadge status={showtime.status} isPast={isPast} />
+            <StatusBadge status={effectiveStatus} />
+            {hasBookings && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-blue-500/25 bg-blue-500/15 px-2 py-0.5 text-[10px] font-bold text-blue-300">
+                🎟️ {showtime.bookedCount} vé đã đặt
+              </span>
+            )}
           </div>
           <div className="text-sm font-semibold text-white">
             {showtime.movieTitle}
@@ -499,20 +527,30 @@ function ShowtimeCard({ showtime, onEdit, onDelete }) {
           </div>
         </div>
 
-        {isPast ? (
+        {isInactive ? (
           <span className="inline-flex items-center rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-xs font-semibold text-zinc-400">
-            Suất chiếu đã hoàn thành
+            {effectiveStatus === 'cancelled' ? 'Suất chiếu đã hủy' : 'Suất chiếu đã kết thúc'}
           </span>
         ) : (
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onEdit}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
-            >
-              <Pencil className="h-4 w-4" />
-              Sửa
-            </button>
+            {hasBookings ? (
+              <span
+                title={`Không thể sửa: đã có ${showtime.bookedCount} vé được đặt`}
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-zinc-700/50 bg-zinc-900/20 px-3 text-sm font-semibold text-zinc-500 cursor-not-allowed"
+              >
+                <Pencil className="h-4 w-4" />
+                🔒 Đã khóa
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
+              >
+                <Pencil className="h-4 w-4" />
+                Sửa
+              </button>
+            )}
             <button
               type="button"
               onClick={onDelete}
@@ -1162,7 +1200,7 @@ function EditShowtimeModal({
                 onChange={(e) => setStatus(e.target.value)}
                 className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cinema-primary/30"
               >
-                {STATUS_OPTIONS.map((s) => (
+                {MODAL_STATUS_OPTIONS.map((s) => (
                   <option key={s.value} value={s.value}>
                     {s.label}
                   </option>
@@ -1423,6 +1461,7 @@ export default function StaffShowtimesPage() {
             startTime: formattedTime,
             duration: duration,
             prices: s.prices || (isSpecialShowtime ? s.special_prices : null) || { Thường: 50000 },
+            bookedCount: Number(s.bookedCount) || 0,
           };
         })
         .filter((s) => {
@@ -1500,7 +1539,7 @@ export default function StaffShowtimesPage() {
       special: forceSpecialForComingSoon,
       languageCode: firstLanguage.value,
       language: firstLanguage.value,
-      status: "open",
+      status: "scheduled",
     };
     setEditModal({ mode: "create", data: initial });
   };
@@ -1572,10 +1611,12 @@ export default function StaffShowtimesPage() {
         is_special: Boolean(next.isSpecial),
         special_prices: next.isSpecial ? next.prices : null,
         prices: next.prices,
-        status:
-          normalizeStaffStatus(next.status) === "open"
-            ? "available"
-            : "cancelled",
+        status: (() => {
+          const s = normalizeStaffStatus(next.status);
+          if (s === "cancelled") return "cancelled";
+          if (s === "ended") return "sold_out";
+          return "available";
+        })(),
       };
 
       console.log("PAYLOAD:", payload);
@@ -1783,14 +1824,22 @@ export default function StaffShowtimesPage() {
               suất
             </span>
           </div>
-          <div className="mt-4 space-y-2 text-xs text-zinc-400">
-            <div className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-              Mở bán
+          <div className="mt-4 flex flex-wrap gap-1.5 text-xs text-zinc-400">
+            <div className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/40 px-2.5 py-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              Sắp chiếu
             </div>
-            <div className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-zinc-500" />
-              Khóa
+            <div className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/40 px-2.5 py-1.5">
+              <span className="h-2 w-2 rounded-full bg-yellow-400" />
+              Đang chiếu
+            </div>
+            <div className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/40 px-2.5 py-1.5">
+              <span className="h-2 w-2 rounded-full bg-zinc-500" />
+              Đã kết thúc
+            </div>
+            <div className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/40 px-2.5 py-1.5">
+              <span className="h-2 w-2 rounded-full bg-red-400" />
+              Đã hủy
             </div>
           </div>
         </div>

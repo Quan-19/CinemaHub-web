@@ -100,6 +100,7 @@ export default function ShowtimesTable({
     if (!showtime.status) return false;
     if (showtime.status === 'cancelled') return false;
     if (showtime.status === 'ended') return false;
+    if ((showtime.bookedCount || 0) > 0) return false;
     return true;
   };
 
@@ -107,6 +108,7 @@ export default function ShowtimesTable({
     if (!showtime.status) return false;
     if (showtime.status === 'cancelled') return false;
     if (showtime.status === 'ended') return false;
+    if ((showtime.bookedCount || 0) > 0) return false;
     return true;
   };
 
@@ -177,10 +179,15 @@ export default function ShowtimesTable({
                         <span className="font-bold text-white text-sm leading-tight line-clamp-2 group-hover:text-red-500 transition-colors">
                           {item.movieTitle}
                         </span>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
                           {isSpecialShowtime && (
                             <span className="inline-flex items-center gap-1 text-[10px] text-amber-500/80 bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-500/20">
                               <Sparkles size={8} /> Suất đặc biệt
+                            </span>
+                          )}
+                          {(item.bookedCount || 0) > 0 && (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded-full border border-blue-500/20 font-bold">
+                              🎟️ {item.bookedCount} vé đã đặt
                             </span>
                           )}
                         </div>
@@ -258,7 +265,11 @@ export default function ShowtimesTable({
                           onClick={() => onEdit(item)}
                           disabled={!showCanEdit}
                           className="p-2 hover:bg-white/10 rounded-lg transition-all text-gray-400 hover:text-green-500 disabled:opacity-30 disabled:cursor-not-allowed"
-                          title={!showCanEdit ? "Không thể chỉnh sửa suất đã kết thúc hoặc đã hủy" : "Chỉnh sửa"}
+                          title={!showCanEdit 
+                            ? (item.bookedCount > 0 
+                                ? `Không thể sửa: đã có ${item.bookedCount} vé được đặt` 
+                                : "Không thể chỉnh sửa suất đã kết thúc hoặc đã hủy") 
+                            : "Chỉnh sửa"}
                         >
                           <Edit2 size={16} />
                         </button>
@@ -277,7 +288,11 @@ export default function ShowtimesTable({
                           onClick={() => onDelete(item)}
                           disabled={!showCanDelete}
                           className="p-2 hover:bg-red-500/10 rounded-lg transition-all text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed"
-                          title={!showCanDelete ? "Không thể xóa suất đã kết thúc hoặc đã hủy" : "Xóa"}
+                          title={!showCanDelete 
+                            ? (item.bookedCount > 0 
+                                ? `Không thể xóa: đã có ${item.bookedCount} vé được đặt` 
+                                : "Không thể xóa suất đã kết thúc hoặc đã hủy") 
+                            : "Xóa"}
                         >
                           <Trash2 size={16} />
                         </button>

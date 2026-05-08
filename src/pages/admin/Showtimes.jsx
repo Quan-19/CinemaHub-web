@@ -142,6 +142,12 @@ export default function ShowtimesPage() {
       toast.error("Không thể chỉnh sửa suất chiếu đã kết thúc hoặc đã hủy");
       return;
     }
+    
+    if ((showtime.bookedCount || 0) > 0) {
+      toast.error(`Không thể chỉnh sửa: đã có ${showtime.bookedCount} vé được đặt cho suất chiếu này.`);
+      return;
+    }
+
     setEditingShowtime(showtime);
     setForm(showtime);
     setShowModal(true);

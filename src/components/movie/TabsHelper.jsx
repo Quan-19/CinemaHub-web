@@ -18,13 +18,55 @@ import { useAuth } from "../../context/AuthContext";
 export const ShowtimesTab = ({ showtimes }) => {
   const [selectedDate, setSelectedDate] = useState(0);
   const [expandedCinemas, setExpandedCinemas] = useState({});
+  const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
-  // Group showtimes by Date -> Cinema
+  // Toast notification helper
+  const showToast = (message) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  // Helper: determine showtime status from time data
+  const getShowtimeStatus = (st) => {
+    if (!st.date || !st.time) return 'available';
+    
+    const now = new Date();
+    const startParts = st.time.split(":");
+    const startDateObj = new Date(st.date);
+    startDateObj.setHours(
+      parseInt(startParts[0], 10),
+      parseInt(startParts[1], 10),
+      0, 0
+    );
+
+    if (st.endTime) {
+      const endParts = st.endTime.split(":");
+      const endDateObj = new Date(st.date);
+      endDateObj.setHours(
+        parseInt(endParts[0], 10),
+        parseInt(endParts[1], 10),
+        0, 0
+      );
+      // Handle overnight showtimes
+      if (endDateObj < startDateObj) {
+        endDateObj.setDate(endDateObj.getDate() + 1);
+      }
+      if (now >= endDateObj) return 'ended';
+    }
+
+    if (now >= startDateObj) return 'started';
+    return 'available';
+  };
+
+  // Group showtimes by Date -> Cinema, filtering out ended showtimes
   const groupedDates = (showtimes || []).reduce((acc, st) => {
+    const status = getShowtimeStatus(st);
+    if (status === 'ended') return acc; // Hide ended showtimes
+
     if (!acc[st.date]) acc[st.date] = {};
     if (!acc[st.date][st.cinemaName]) acc[st.date][st.cinemaName] = [];
-    acc[st.date][st.cinemaName].push(st);
+    acc[st.date][st.cinemaName].push({ ...st, _status: status });
     return acc;
   }, {});
 
@@ -63,8 +105,35 @@ export const ShowtimesTab = ({ showtimes }) => {
     }));
   };
 
+  const handleShowtimeClick = (st) => {
+    if (st._status === 'started') {
+      showToast("Suất chiếu này đã bắt đầu, quý khách vui lòng chọn suất tiếp theo.");
+      return;
+    }
+    const totalSeats = Number(st.totalSeats) || 0;
+    const availableSeats = Number(st.availableSeats) ?? totalSeats;
+    if (totalSeats > 0 && availableSeats <= 0) {
+      showToast("Không còn ghế nào trống để chọn ghế, vui lòng chọn suất chiếu khác.");
+      return;
+    }
+    navigate(`/seats/${st.id}`);
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-10">
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 duration-300 pointer-events-auto">
+          <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-xl bg-amber-500/90 text-white max-w-md">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span className="text-sm font-bold leading-snug">{toast}</span>
+            <button onClick={() => setToast(null)} className="ml-2 hover:opacity-70 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div>
         <h3 className="text-white text-lg font-bold mb-4">Chọn ngày</h3>
         <div
@@ -173,63 +242,40 @@ export const ShowtimesTab = ({ showtimes }) => {
 
               {isExpanded && (
                 <div className="flex flex-wrap gap-3 mt-6 pt-5 border-t border-zinc-800/60 animate-in slide-in-from-top-2 duration-300">
-                  {currentShowtimes[cinemaName].map((st) => {
+                  {cinemaShows.map((st) => {
                     const isImax = String(st.type).includes("IMAX");
                     const is3D = String(st.type).includes("3D");
-
-                    let isExpired = false;
-                    if (st.date && st.time && st.endTime) {
-                      const now = new Date();
-                      const startParts = st.time.split(":");
-                      const endParts = st.endTime.split(":");
-
-                      const startDateObj = new Date(st.date);
-                      startDateObj.setHours(
-                        parseInt(startParts[0], 10),
-                        parseInt(startParts[1], 10),
-                        0,
-                        0
-                      );
-
-                      const endDateObj = new Date(st.date);
-                      endDateObj.setHours(
-                        parseInt(endParts[0], 10),
-                        parseInt(endParts[1], 10),
-                        0,
-                        0
-                      );
-
-                      // Handle overnight showtimes correctly
-                      if (endDateObj < startDateObj) {
-                        endDateObj.setDate(endDateObj.getDate() + 1);
-                      }
-
-                      if (endDateObj < now) {
-                        isExpired = true;
-                      }
-                    }
+                    const isStarted = st._status === 'started';
+                    const totalSeats = Number(st.totalSeats) || 0;
+                    const availableSeats = Number(st.availableSeats) ?? totalSeats;
+                    const isFull = totalSeats > 0 && availableSeats <= 0;
+                    const isDisabled = isStarted || isFull;
 
                     return (
                       <div
                         key={st.id}
-                        onClick={() =>
-                          !isExpired && navigate(`/seats/${st.id}`)
-                        }
+                        onClick={() => handleShowtimeClick(st)}
                         className={`border rounded-2xl p-3 min-w-[120px] transition-all text-left group/st relative overflow-hidden ${
-                          isExpired
-                            ? "border-zinc-800 bg-zinc-900/30 opacity-50 cursor-not-allowed"
+                          isDisabled
+                            ? "border-zinc-800 bg-zinc-900/30 opacity-60 cursor-not-allowed"
                             : "border-zinc-700/80 bg-zinc-900/50 hover:bg-zinc-800 hover:border-red-600/50 hover:scale-[1.02] cursor-pointer"
                         }`}
                       >
-                        {isExpired && (
-                          <div className="absolute top-0 right-0 bg-zinc-800 text-zinc-400 text-[9px] font-bold px-1.5 py-0.5 rounded-bl-lg z-10">
-                            Đã chiếu
+                        {/* Status badges */}
+                        {isStarted && (
+                          <div className="absolute top-0 right-0 bg-amber-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-bl-lg z-10">
+                            Đang chiếu
+                          </div>
+                        )}
+                        {isFull && !isStarted && (
+                          <div className="absolute top-0 right-0 bg-red-700 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-bl-lg z-10">
+                            Hết ghế
                           </div>
                         )}
                         <div className="flex items-center gap-2 mb-2.5">
                           <span
                             className={`font-bold text-[17px] leading-none transition-colors ${
-                              isExpired
+                              isDisabled
                                 ? "text-zinc-500"
                                 : "text-white group-hover/st:text-red-500"
                             }`}
@@ -239,7 +285,7 @@ export const ShowtimesTab = ({ showtimes }) => {
                           <div className="flex gap-1.5">
                             <span
                               className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${
-                                isExpired
+                                isDisabled
                                   ? "bg-zinc-800 text-zinc-500 border border-zinc-700"
                                   : "bg-purple-600 text-white"
                               }`}
@@ -248,7 +294,7 @@ export const ShowtimesTab = ({ showtimes }) => {
                             </span>
                             <span
                               className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${
-                                isExpired
+                                isDisabled
                                   ? "bg-zinc-800 text-zinc-500 border border-zinc-700"
                                   : is3D
                                   ? "bg-blue-600 text-white"
@@ -263,7 +309,7 @@ export const ShowtimesTab = ({ showtimes }) => {
                         </div>
                         <div
                           className={`font-semibold text-xs mb-2 ${
-                            isExpired ? "text-zinc-600" : "text-zinc-300"
+                            isDisabled ? "text-zinc-600" : "text-zinc-300"
                           }`}
                         >
                           {Number(st.prices?.Thường || 0) > 0
@@ -275,18 +321,20 @@ export const ShowtimesTab = ({ showtimes }) => {
                         </div>
                         <div
                           className={`text-[11px] flex items-center gap-1.5 font-medium ${
-                            isExpired ? "text-zinc-600" : "text-zinc-500"
+                            isDisabled ? "text-zinc-600" : "text-zinc-500"
                           }`}
                         >
                           <User className="w-3 h-3 opacity-70" />
-                          {isExpired ? (
-                            <span>Đã hết suất</span>
+                          {isStarted ? (
+                            <span className="text-amber-500 font-bold">Đã bắt đầu</span>
+                          ) : isFull ? (
+                            <span className="text-red-500 font-bold">Hết ghế</span>
                           ) : (
                             <div className="flex items-center gap-1">
-                              <span className={st.availableSeats > 0 ? "text-emerald-500 font-bold" : "text-zinc-500"}>
-                                {st.availableSeats ?? st.totalSeats ?? 0}
+                              <span className={availableSeats > 0 ? "text-emerald-500 font-bold" : "text-zinc-500"}>
+                                {availableSeats}
                               </span>
-                              <span className="opacity-60">/ {st.totalSeats || 0} ghế trống</span>
+                              <span className="opacity-60">/ {totalSeats} ghế trống</span>
                             </div>
                           )}
                         </div>
