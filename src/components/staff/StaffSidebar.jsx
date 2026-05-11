@@ -180,13 +180,6 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
             onNavigate={handleNavigate}
           />
           <SidebarLink
-            to="/staff/banners"
-            icon={Megaphone}
-            label="Banner quảng cáo"
-            collapsed={collapsed}
-            onNavigate={handleNavigate}
-          />
-          <SidebarLink
             to="/staff/articles"
             icon={FileText}
             label="Quản lý bài viết"

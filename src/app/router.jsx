@@ -42,7 +42,6 @@ import StaffProfilePage from "../pages/staff/StaffProfilePage.jsx";
 import StaffRoomsPage from "../pages/staff/StaffRoomsPage.jsx";
 import StaffShowtimesPage from "../pages/staff/StaffShowtimesPage.jsx";
 import StaffRevenuePage from "../pages/staff/StaffRevenuePage.jsx";
-import StaffBannersPage from "../pages/staff/StaffBannersPage.jsx";
 import StaffArticlesPage from "../pages/staff/StaffArticlesPage.jsx";
 import StaffScannerPage from "../pages/staff/StaffScannerPage.jsx";
 

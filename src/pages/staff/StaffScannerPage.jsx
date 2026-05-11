@@ -181,6 +181,7 @@ export default function StaffScannerPage() {
             // Refresh scan result to get confirmed status
             setScanResult(prev => ({ ...prev, booking_status: 'confirmed' }));
         } catch (err) {
+            console.error("Check-in error:", err);
             toast.error("Lỗi khi cập nhật trạng thái check-in");
         } finally {
             setLoading(false);

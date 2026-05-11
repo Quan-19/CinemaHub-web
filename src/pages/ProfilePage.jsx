@@ -120,7 +120,7 @@ function ProfilePage() {
       });
       if (!response.ok) return null;
       return await response.json();
-    } catch (error) { return null; }
+    } catch { return null; }
   };
 
   const loadAllMovies = async () => {
@@ -223,6 +223,7 @@ function ProfilePage() {
       } catch { setBookings([]); } finally { setLoadingHistory(false); }
     };
     fetchBookings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, activeTab, allMovies]);
 
   const filteredBookings = bookings.filter(b => {
@@ -258,7 +259,7 @@ function ProfilePage() {
       await setDoc(userRef, { phone, dob, updatedAt: serverTimestamp() }, { merge: true });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch { } finally { setSaving(false); }
+    } catch (error) { console.error("Save profile error:", error); } finally { setSaving(false); }
   };
 
   const formatCurrency = (amount) => amount ? new Intl.NumberFormat("vi-VN").format(amount) + " đ" : "0 đ";

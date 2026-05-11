@@ -141,7 +141,9 @@ export const TicketPage = () => {
           try {
             const parsed = JSON.parse(text);
             if (Array.isArray(parsed)) return parsed;
-          } catch { }
+          } catch (err) { 
+            console.error("Genre parse error:", err); 
+          }
           return text
             .split(/,|\|/g)
             .map((s) => s.trim())

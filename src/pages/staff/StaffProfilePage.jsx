@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import {
   Building2,
@@ -14,10 +14,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from "lucide-react";
-import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
-
 import { useAuth } from "../../context/AuthContext";
-import { db } from "../../../firebase/firebaseConfig";
 import StaffSuccessToast from "../../components/staff/StaffSuccessToast.jsx";
 
 function normalizePhone(phone) {
@@ -27,7 +24,6 @@ function normalizePhone(phone) {
 }
 
 function StaffProfilePage() {
-  const { subtitle } = useOutletContext();
   const { user } = useAuth();
   const navigate = useNavigate();
 

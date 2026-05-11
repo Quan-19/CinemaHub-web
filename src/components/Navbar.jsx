@@ -6,7 +6,6 @@ import {
   Film,
   LogOut,
   Menu,
-  Search,
   Ticket,
   User,
   X,
@@ -41,8 +40,6 @@ const isLinkActive = (pathname, path) => {
 function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [movieDropdownOpen, setMovieDropdownOpen] = useState(false);
@@ -104,16 +101,6 @@ function Navbar() {
     window.location.href = "/auth";
   };
 
-  const runSearch = () => {
-    const query = searchQuery.trim();
-    setSearchOpen(false);
-    if (!query) {
-      navigate("/movies");
-      return;
-    }
-    navigate(`/movies?q=${encodeURIComponent(query)}`);
-  };
-
   return (
     <header
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
@@ -131,21 +118,6 @@ function Navbar() {
             Ebiz<span className="text-cinema-primary">Cinema</span>
           </span>
         </Link>
-
-        <div className="hidden xl:flex flex-1 max-w-md w-full items-center">
-          <div className="relative w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/70 drop-shadow-md" />
-            <input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") runSearch();
-              }}
-              placeholder="Tìm kiếm phim, diễn viên"
-              className="w-full h-[46px] bg-white/[0.08] hover:bg-white/[0.12] backdrop-blur-md border border-white/10 rounded-full pl-11 pr-4 text-sm text-white placeholder-white/60 outline-none focus:bg-white/[0.15] focus:border-white/30 transition-all shadow-input"
-            />
-          </div>
-        </div>
 
         <nav
           className="hidden items-center gap-1 xl:gap-2 md:flex"
@@ -237,39 +209,6 @@ function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="relative block xl:hidden">
-            {searchOpen ? (
-              <div className="flex items-center gap-2 rounded-full border border-white/20 bg-cinema-bg/70 backdrop-blur-md px-3 py-1.5 h-10 w-48 sm:w-64 absolute right-0 top-1/2 -translate-y-1/2">
-                <Search className="h-4 w-4 shrink-0 text-white/70" />
-                <input
-                  autoFocus
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") runSearch();
-                    if (event.key === "Escape") setSearchOpen(false);
-                  }}
-                  placeholder="Tìm kiếm..."
-                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/60"
-                />
-                <button
-                  onClick={() => setSearchOpen(false)}
-                  className="text-white/70 hover:text-white"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="rounded-full p-2.5 text-white/90 transition-colors hover:bg-white/10 hover:text-white drop-shadow-md"
-                aria-label="Mở tìm kiếm"
-              >
-                <Search className="h-5 w-5" />
-              </button>
-            )}
-          </div>
-
           <div className="relative">
             <button
               onClick={() => setNotifOpen(!notifOpen)}
