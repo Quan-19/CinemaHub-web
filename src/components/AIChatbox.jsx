@@ -1,4 +1,4 @@
-// components/AIChatbox.jsx - Minimize = Đóng về nút tròn ban đầu
+// components/AIChatbox.jsx - Phiên bản cập nhật
 import { useState, useEffect, useRef } from "react";
 import { getAuth } from "firebase/auth";
 import {
@@ -36,17 +36,18 @@ export default function AIChatbox() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+  const sendMessage = async (messageText) => {
+    const textToSend = messageText || input;
+    if (!textToSend.trim() || isLoading) return;
 
     const userMessage = {
       id: Date.now(),
       role: "user",
-      content: input,
+      content: textToSend,
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
+    setInput(""); // Clear input
     setIsLoading(true);
 
     try {
@@ -59,7 +60,7 @@ export default function AIChatbox() {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),
         },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ message: textToSend }),
       });
 
       const data = await response.json();
@@ -93,6 +94,11 @@ export default function AIChatbox() {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  // Xử lý click suggestion - TỰ ĐỘNG GỬI
+  const handleSuggestionClick = (suggestion) => {
+    sendMessage(suggestion);
   };
 
   // Minimize = đóng hẳn về nút tròn
@@ -203,19 +209,21 @@ export default function AIChatbox() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Suggestions */}
+          {/* Suggestions - ĐÃ BỎ "Top 5 phim hay nhất" */}
           <div className="px-4 py-2 bg-gray-900/50 border-t border-red-600/20">
             <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2">
               {[
                 "Phim hành động",
                 "Phim hài hước",
                 "Phim kinh dị",
-                "Top 5 phim hay nhất",
+                "Phim tình cảm",
+                "Gợi ý phim ngẫu nhiên",
+                "Còn phim khác không?",
               ].map((suggestion) => (
                 <button
                   key={suggestion}
-                  onClick={() => setInput(suggestion)}
-                  className="px-3 py-1 text-xs bg-gray-800 hover:bg-red-600/20 text-gray-300 hover:text-red-400 rounded-full transition-all whitespace-nowrap border border-red-600/20"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="px-3 py-1 text-xs bg-gray-800 hover:bg-red-600/20 text-gray-300 hover:text-red-400 rounded-full transition-all whitespace-nowrap border border-red-600/20 cursor-pointer"
                 >
                   {suggestion}
                 </button>
@@ -238,7 +246,7 @@ export default function AIChatbox() {
                 />
               </div>
               <button
-                onClick={sendMessage}
+                onClick={() => sendMessage()}
                 disabled={isLoading || !input.trim()}
                 className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2.5 rounded-xl transition-all duration-200 shadow-lg shadow-red-600/30"
               >
