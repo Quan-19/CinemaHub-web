@@ -186,8 +186,7 @@ export const CinemaSelectionPage = () => {
         const diffTime = d.getTime() - today.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        // Only today and next 7 days
-        return diffDays >= 0 && diffDays <= 7;
+        return diffDays >= 0 && diffDays <= 13;
       })
       .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
@@ -621,41 +620,73 @@ export const CinemaSelectionPage = () => {
           ))}
         </div>
 
-        {/* Date selector */}
         <div className="mb-6">
           <h2 className="text-white mb-3" style={{ fontWeight: 600 }}>
             Chọn ngày
           </h2>
-          <div
-            className="flex gap-2 overflow-x-auto pb-1"
-            style={{ scrollbarWidth: "none" }}
-          >
-            {dateOptions.map((d, i) => (
-              <button
-                key={d.value}
-                onClick={() => setSelectedDateIdx(i)}
-                className={`flex-shrink-0 flex flex-col items-center px-4 py-3 rounded-xl border transition-all min-w-[72px] ${
-                  selectedDateIdx === i
-                    ? "border-red-500 bg-red-500/10 text-white"
-                    : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
-                }`}
-              >
-                <span className="text-xs mb-0.5" style={{ opacity: 0.7 }}>
-                  {d.day}
-                </span>
-                <span className="text-lg" style={{ fontWeight: 700 }}>
-                  {d.date}
-                </span>
-                <span className="text-xs" style={{ opacity: 0.7 }}>
-                  T{d.month}
-                </span>
-              </button>
-            ))}
-          </div>
-          {dateOptions.length === 0 && (
+          {dateOptions.length === 0 ? (
             <p className="text-zinc-400 text-sm mt-3">
               Phim này hiện chưa có lịch chiếu.
             </p>
+          ) : (
+            <div className="relative">
+              {/* Mobile: scroll ngang 1 hàng */}
+              <div
+                className="flex sm:hidden gap-2 overflow-x-auto pb-2"
+                style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+              >
+                {dateOptions.map((d, i) => (
+                  <button
+                    key={d.value}
+                    onClick={() => setSelectedDateIdx(i)}
+                    className={`flex flex-col items-center justify-center shrink-0 w-[68px] py-2.5 rounded-2xl border transition-all duration-300 ${
+                      selectedDateIdx === i
+                        ? "border-red-500 bg-red-500/10 text-white ring-1 ring-red-600/20"
+                        : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
+                    }`}
+                  >
+                    <span className="text-[11px] mb-0.5" style={{ opacity: 0.7 }}>
+                      {d.day}
+                    </span>
+                    <span className="text-lg" style={{ fontWeight: 700 }}>
+                      {d.date}
+                    </span>
+                    <span className="text-[11px]" style={{ opacity: 0.7 }}>
+                      T{d.month}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {/* Gradient fade phải - chỉ mobile */}
+              {dateOptions.length > 4 && (
+                <div className="absolute right-0 top-0 bottom-2 w-10 bg-gradient-to-l from-[#09090b] to-transparent pointer-events-none sm:hidden" />
+              )}
+
+              {/* Desktop/Tablet: grid 7 cột × 2 hàng */}
+              <div className="hidden sm:grid sm:grid-cols-7 gap-2">
+                {dateOptions.map((d, i) => (
+                  <button
+                    key={d.value}
+                    onClick={() => setSelectedDateIdx(i)}
+                    className={`flex flex-col items-center justify-center py-3 rounded-2xl border transition-all duration-300 ${
+                      selectedDateIdx === i
+                        ? "border-red-500 bg-red-500/10 text-white ring-1 ring-red-600/20"
+                        : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
+                    }`}
+                  >
+                    <span className="text-xs mb-0.5" style={{ opacity: 0.7 }}>
+                      {d.day}
+                    </span>
+                    <span className="text-lg" style={{ fontWeight: 700 }}>
+                      {d.date}
+                    </span>
+                    <span className="text-xs" style={{ opacity: 0.7 }}>
+                      T{d.month}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 

@@ -61,7 +61,9 @@ export const MovieCard = ({ movie, size = "md" }) => {
         <div className="mt-1.5 flex items-center justify-between">
           <div className="flex items-center gap-1 text-yellow-500">
             <Star className="h-3 w-3 fill-current" />
-            <span className="text-[11px] font-black">{movie.score || "8.5"}</span>
+            <span className="text-[11px] font-black">
+              {movie.score ? (movie.score / 2).toFixed(1) : "0.0"}
+            </span>
           </div>
           <div className="flex items-center gap-1 text-zinc-400">
             <Clock className="h-3 w-3" />

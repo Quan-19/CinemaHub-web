@@ -106,8 +106,18 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 // Constants
 const PAYMENT_METHODS = [
-  { id: "momo", label: "Ví MoMo", icon: "💜", desc: "Thanh toán qua ví MoMo" },
-  { id: "vnpay", label: "VNPay QR", icon: "🔵", desc: "Quét mã QR VNPay" },
+  {
+    id: "momo",
+    label: "Ví MoMo",
+    icon: "https://developers.momo.vn/v3/vi/img/logo.svg",
+    desc: "Thanh toán qua ví MoMo",
+  },
+  {
+    id: "vnpay",
+    label: "VNPay QR",
+    icon: "https://vinadesign.vn/uploads/thumbnails/800/2023/05/vnpay-logo-vinadesign-25-12-59-16.jpg",
+    desc: "Quét mã QR VNPay",
+  },
   {
     id: "card",
     label: "Thẻ tín dụng",
@@ -117,7 +127,7 @@ const PAYMENT_METHODS = [
   {
     id: "zalopay",
     label: "ZaloPay",
-    icon: "🟢",
+    icon: "https://cdn.brandfetch.io/id_T-oXJkN/theme/dark/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B",
     desc: "Thanh toán qua ZaloPay",
   },
 ];
@@ -817,7 +827,7 @@ export default function BookingConfirmationPage() {
 
     return (
       <div
-        className="min-h-screen pt-16"
+        className="min-h-screen pt-0"
         style={{ background: "var(--color-cinema-bg)" }}
       >
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
@@ -972,7 +982,7 @@ export default function BookingConfirmationPage() {
 
     return (
       <div
-        className="min-h-screen pt-16"
+        className="min-h-screen pt-0"
         style={{ background: "var(--color-cinema-bg)" }}
       >
         {showConfetti && <Confetti />}
@@ -1416,7 +1426,7 @@ export default function BookingConfirmationPage() {
   // ========== RENDER CONFIRMATION STATE (bình thường) ==========
   return (
     <div
-      className="min-h-screen pt-16"
+      className="min-h-screen pt-0"
       style={{ background: "var(--color-cinema-bg)" }}
     >
       {/* Header */}
@@ -1541,7 +1551,7 @@ export default function BookingConfirmationPage() {
               <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
                 🍿 Thêm combo bắp nước (tuỳ chọn)
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar scroll-smooth">
                 {foods.map((food) => {
                   const count = comboCounts[food.food_id] || 0;
                   return (
@@ -1684,7 +1694,20 @@ export default function BookingConfirmationPage() {
                       : "border-zinc-700 bg-zinc-900 hover:border-zinc-600"
                       }`}
                   >
-                    <span className="text-xl">{method.icon}</span>
+                    <div
+                      className={`w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center ${method.icon.startsWith("http") ? "bg-white p-1" : ""
+                        }`}
+                    >
+                      {method.icon.startsWith("http") ? (
+                        <img
+                          src={method.icon}
+                          alt={method.label}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <span className="text-xl">{method.icon}</span>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p
                         className={`text-xs truncate font-semibold ${selectedPaymentMethod === method.id ? "text-white" : "text-zinc-300"}`}
