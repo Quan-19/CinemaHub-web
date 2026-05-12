@@ -40,6 +40,24 @@ function formatNumber(value) {
   return new Intl.NumberFormat("vi-VN").format(Number(value || 0));
 }
 
+function formatCompactValue(value) {
+  const num = Number(value || 0);
+  const abs = Math.abs(num);
+  if (abs >= 1_000_000_000) {
+    const digits = abs >= 10_000_000_000 ? 0 : 1;
+    return `${(num / 1_000_000_000).toFixed(digits)}B`;
+  }
+  if (abs >= 1_000_000) {
+    const digits = abs >= 10_000_000 ? 0 : 1;
+    return `${(num / 1_000_000).toFixed(digits)}M`;
+  }
+  if (abs >= 1_000) {
+    const digits = abs >= 10_000 ? 0 : 1;
+    return `${(num / 1_000).toFixed(digits)}K`;
+  }
+  return formatNumber(num);
+}
+
 function RevenueChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   const first = payload?.[0];
@@ -122,6 +140,30 @@ export default function RevenueReport() {
   }, []);
 
   const months = useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
+
+  const detailRevenueData = useMemo(() => {
+    return (revenueData || []).filter((item) => {
+      const revenue = Number(item?.revenue || 0);
+      const tickets = Number(item?.tickets || 0);
+      return revenue > 0 || tickets > 0;
+    });
+  }, [revenueData]);
+
+  const cinemaChartHeight = useMemo(() => {
+    const count = cinemaRevenue?.length || 0;
+    if (count <= 1) return 160;
+    if (count === 2) return 200;
+    return 280;
+  }, [cinemaRevenue]);
+
+  const cinemaBarSize = useMemo(() => {
+    const count = cinemaRevenue?.length || 0;
+    if (count <= 1) return 18;
+    if (count === 2) return 20;
+    return undefined;
+  }, [cinemaRevenue]);
+
+  const isSingleCinema = (cinemaRevenue?.length || 0) === 1;
 
   // Chart colors
   const CHART_COLORS = useMemo(
@@ -580,7 +622,7 @@ export default function RevenueReport() {
                   <YAxis
                     stroke="rgba(255, 255, 255, 0.35)"
                     tick={{ fill: "rgba(255, 255, 255, 0.65)", fontSize: 12 }}
-                    tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`}
+                    tickFormatter={formatCompactValue}
                     width={60}
                   />
                   <Tooltip content={<RevenueChartTooltip />} />
@@ -613,7 +655,7 @@ export default function RevenueReport() {
             {cinemaRevenue.length > 0 ? (
               <>
                 <div className="text-zinc-300">
-                  <ResponsiveContainer width="100%" height={280}>
+                  <ResponsiveContainer width="100%" height={cinemaChartHeight}>
                     <BarChart
                       data={cinemaRevenue}
                       layout="vertical"
@@ -630,7 +672,7 @@ export default function RevenueReport() {
                           fill: "rgba(255, 255, 255, 0.65)",
                           fontSize: 12,
                         }}
-                        tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`}
+                        tickFormatter={formatCompactValue}
                       />
                       <YAxis
                         type="category"
@@ -647,6 +689,7 @@ export default function RevenueReport() {
                         dataKey="revenue"
                         radius={[0, 6, 6, 0]}
                         isAnimationActive={false}
+                        barSize={cinemaBarSize}
                       >
                         {cinemaRevenue.map((entry, index) => (
                           <Cell
@@ -676,9 +719,11 @@ export default function RevenueReport() {
                         <div className="flex-1">
                           <p className="font-medium">{cinema.cinema_name}</p>
                           <div className="flex items-center gap-2 mt-1">
-                            <div className="w-32 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div
+                              className={`${isSingleCinema ? "w-24" : "w-32"} h-1.5 bg-white/10 rounded-full overflow-hidden`}
+                            >
                               <div
-                                className="h-full bg-cinema-primary rounded-full"
+                                className={`${isSingleCinema ? "bg-cinema-primary/70" : "bg-cinema-primary"} h-full rounded-full`}
                                 style={{ width: `${percentage}%` }}
                               />
                             </div>
@@ -805,7 +850,7 @@ export default function RevenueReport() {
         {/* Detailed Data Table */}
         <div className="mt-6 cinema-surface p-5 overflow-x-auto">
           <h3 className="font-semibold mb-4">Chi tiết doanh thu theo kỳ</h3>
-          {revenueData.length > 0 ? (
+          {detailRevenueData.length > 0 ? (
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/10">
@@ -830,7 +875,7 @@ export default function RevenueReport() {
                 </tr>
               </thead>
               <tbody>
-                {revenueData.map((item, idx) => {
+                {detailRevenueData.map((item, idx) => {
                   const percentage =
                     summary.totalRevenue > 0
                       ? (item.revenue / summary.totalRevenue) * 100
