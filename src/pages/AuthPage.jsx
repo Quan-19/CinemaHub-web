@@ -559,30 +559,13 @@ function AuthPage() {
 
   // AuthPage.jsx - useEffect đọc URL params
   // AuthPage.jsx - useEffect đọc URL params
-  // useEffect(() => {
-  //   const params = new URLSearchParams(location.search);
-  //   const require2fa = params.get("require2fa");
-  //   const email = params.get("email");
-
-  //   console.log(
-  //     "🔵 Checking URL params - require2fa:",
-  //     require2fa,
-  //     "email:",
-  //     email,
-  //   );
-
-  //   // 🔥 THÊM DELAY NHỎ ĐỂ TRÁNH RACE CONDITION
-  //   const timer = setTimeout(() => {
-  //     if (require2fa === "true" && email && !show2FA) {
-  //       console.log("🔵 Setting 2FA mode from URL");
-  //       setPendingEmail(email);
-  //       setShow2FA(true);
-  //       setTab("login");
-  //     }
-  //   }, 100);
-
-  //   return () => clearTimeout(timer);
-  // }, [location.search, show2FA]);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get("tab");
+    if (tabParam === "login" || tabParam === "register") {
+      setTab(tabParam);
+    }
+  }, [location.search]);
   useEffect(() => {
     // 🔥 QUAN TRỌNG: Không redirect nếu đang ở chế độ 2FA
     if (show2FA) {
