@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 import { 
   ChevronDown,
   Star,
@@ -276,7 +277,7 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-4 leading-tight"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-3 leading-[1.05] tracking-tight"
             >
               {movie.title}
             </motion.h1>
@@ -413,8 +414,87 @@ const CinemaCard = ({ cinema }) => {
   );
 };
 
+// Home Promotion Card Component
+const HomePromotionCard = ({ promo, index }) => {
+  const navigate = useNavigate();
+  
+  const getDiscountDisplay = (promo) => {
+    const discountType = promo.discount_type || "percent";
+    const discountPercent = Number(promo.discount_percent ?? 0);
+    const discountValue = Number(promo.discount_value ?? 0);
+
+    if (discountType === "percent") {
+      const pct = discountPercent || discountValue || 0;
+      return `-${pct}%`;
+    } else if (discountType === "value" || discountType === "fixed") {
+      const value = discountValue || discountPercent || 0;
+      return `-${value.toLocaleString()}đ`;
+    }
+    return "Ưu đãi";
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "Hết hạn sớm";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Hết hạn sớm";
+    return date.toLocaleDateString("vi-VN");
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1 }}
+      onClick={() => navigate("/promotions#promotions-list")}
+      className="group relative cursor-pointer"
+    >
+      <div className="relative flex flex-col sm:flex-row rounded-2xl overflow-hidden bg-zinc-900/50 border border-white/5 backdrop-blur-md group-hover:border-red-500/30 transition-all duration-500">
+        {/* Left Side - Discount Badge */}
+        <div className="w-full sm:w-24 h-20 sm:h-auto shrink-0 flex items-center justify-center bg-zinc-800/30 relative">
+          <div className="absolute inset-0 opacity-5">
+             <div className="w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '10px 10px' }}></div>
+          </div>
+          <div className="relative z-10 flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-red-600 text-white shadow-lg rotate-[-5deg] group-hover:rotate-0 transition-transform duration-500">
+            <span className="text-[8px] font-black uppercase leading-none opacity-80">Giảm</span>
+            <span className="text-sm font-black leading-none">{getDiscountDisplay(promo).replace('-', '')}</span>
+          </div>
+        </div>
+
+        {/* Divider Dash */}
+        <div className="hidden sm:flex flex-col items-center justify-center px-1 relative">
+          <div className="absolute -top-2 w-4 h-4 bg-cinema-bg rounded-full border border-white/5"></div>
+          <div className="w-[1px] h-full border-l border-dashed border-white/20"></div>
+          <div className="absolute -bottom-2 w-4 h-4 bg-cinema-bg rounded-full border border-white/5"></div>
+        </div>
+
+        {/* Right Side - Content */}
+        <div className="flex-1 p-4 flex flex-col justify-center min-w-0">
+          <div className="flex items-center justify-between mb-1">
+             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{promo.cinema_id ? "Tại rạp" : "Hệ thống"}</span>
+             <span className="text-[8px] font-medium text-zinc-600 flex items-center gap-0.5"><Clock className="w-2 h-2" /> {formatDate(promo.end_date)}</span>
+          </div>
+          <h3 className="text-white font-bold text-sm mb-1 group-hover:text-red-500 transition-colors line-clamp-1">
+            {promo.title}
+          </h3>
+          <p className="text-zinc-500 text-[11px] line-clamp-1 mb-2">
+            {promo.description}
+          </p>
+          <div className="flex items-center gap-2">
+             <div className="flex-1 px-2 py-1 bg-black/40 border border-white/5 rounded-lg text-[10px] font-mono font-bold text-zinc-400 tracking-wider">
+                {promo.code}
+             </div>
+             <div className="text-[10px] font-bold text-red-500 group-hover:translate-x-1 transition-transform">Lấy mã →</div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 // ========== MAIN HOMEPAGE COMPONENT ==========
 const HomePage = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [heroIndex, setHeroIndex] = useState(0);
   const [allMovies, setAllMovies] = useState([]);
@@ -849,61 +929,11 @@ const HomePage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {promotions.slice(0, 3).map((promo, idx) => (
-                  <GlowCard
+                  <HomePromotionCard
                     key={promo.promotion_id || promo.id || idx}
-                    className="bg-cinema-surface border border-white/10 overflow-hidden"
-                  >
-                    <div className="relative h-48 overflow-hidden">
-                      {promo.image ? (
-                          <img
-                          src={promo.image}
-                          alt={promo.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          onError={(e) => {
-                            e.target.src =
-                              "https://via.placeholder.com/400x300?text=Promotion";
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-red-900/30 to-purple-900/30 flex items-center justify-center">
-                          <Gift className="w-12 h-12 text-red-500/50" />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      {(promo.discount_percent > 0 ||
-                        promo.discount_value > 0) && (
-                        <div className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm font-bold">
-                          -{promo.discount_percent || promo.discount_value}%
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-5">
-                      <h3 className="text-white font-bold text-lg mb-2 line-clamp-1">
-                        {promo.title}
-                      </h3>
-                      <p className="text-zinc-400 text-sm mb-4 line-clamp-2">
-                        {promo.description}
-                      </p>
-                      {promo.code && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 border border-dashed border-zinc-600">
-                            <Tag className="w-4 h-4 text-red-500" />
-                            <span className="text-white text-sm font-mono font-bold">
-                              {promo.code}
-                            </span>
-                          </div>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => navigate("/movies")}
-                            className="px-4 py-2 rounded-lg bg-red-600/20 text-red-400 text-sm font-medium hover:bg-red-600/30 transition-colors"
-                          >
-                            Áp dụng
-                          </motion.button>
-                        </div>
-                      )}
-                    </div>
-                  </GlowCard>
+                    promo={promo}
+                    index={idx}
+                  />
                 ))}
               </div>
             </AnimatedSection>
@@ -983,35 +1013,37 @@ const HomePage = () => {
           )}
 
           {/* CTA Banner */}
-          <AnimatedSection delay={0.5}>
-            <div className="mt-12 mb-8 relative overflow-hidden rounded-2xl">
-              <div className="absolute inset-0 from-black/90 bg-cinema-surface" />
-              <div className="relative z-10 p-8 md:p-12 text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.6, type: "spring" }}
-                  className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4"
-                >
-                  <Film className="w-8 h-8 text-red-500" />
-                </motion.div>
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
-                  Trải nghiệm điện ảnh đỉnh cao
-                </h2>
-                <p className="text-zinc-300 mb-6 max-w-md mx-auto text-sm">
-                  Đặt vé nhanh chóng, thanh toán an toàn, nhận ưu đãi hấp dẫn
-                </p>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate("/movies")}
-                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 text-white font-bold hover:shadow-lg hover:shadow-red-500/25 transition-all"
-                >
-                  Đặt vé ngay
-                </motion.button>
+          {!user && (
+            <AnimatedSection delay={0.5}>
+              <div className="mt-12 mb-8 relative overflow-hidden rounded-2xl">
+                <div className="absolute inset-0 from-black/90 bg-cinema-surface" />
+                <div className="relative z-10 p-8 md:p-12 text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.6, type: "spring" }}
+                    className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4"
+                  >
+                    <Film className="w-8 h-8 text-red-500" />
+                  </motion.div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+                    Trải nghiệm điện ảnh đỉnh cao
+                  </h2>
+                  <p className="text-zinc-300 mb-6 max-w-md mx-auto text-sm">
+                    Đặt vé nhanh chóng, thanh toán an toàn, nhận ưu đãi hấp dẫn
+                  </p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate("/movies")}
+                    className="px-8 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 text-white font-bold hover:shadow-lg hover:shadow-red-500/25 transition-all"
+                  >
+                    Đặt vé ngay
+                  </motion.button>
+                </div>
               </div>
-            </div>
-          </AnimatedSection>
+            </AnimatedSection>
+          )}
         </div>
       </div>
 

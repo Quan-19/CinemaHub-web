@@ -37,6 +37,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
@@ -45,10 +46,12 @@
   .custom-scrollbar::-webkit-scrollbar {
     width: 5px;
   }
+
   .custom-scrollbar::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 10px;
   }
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: linear-gradient(135deg, #e50914, #b20710);
     border-radius: 10px;
@@ -62,6 +65,7 @@
 }
 
 @layer components {
+
   /* Premium gradient buttons */
   .cinema-btn-primary {
     @apply relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all duration-300 rounded-xl overflow-hidden;
@@ -69,19 +73,23 @@
     box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3);
     isolation: isolate;
   }
+
   .cinema-btn-primary::before {
     content: '';
     @apply absolute inset-0 opacity-0 transition-opacity duration-300;
     background: linear-gradient(135deg, #ff1a24, #d0060f);
     z-index: -1;
   }
+
   .cinema-btn-primary:hover::before {
     @apply opacity-100;
   }
+
   .cinema-btn-primary:hover {
     @apply scale-105;
     box-shadow: 0 8px 25px rgba(229, 9, 20, 0.5);
   }
+
   .cinema-btn-primary:active {
     @apply scale-95;
   }
@@ -110,30 +118,56 @@
   .neon-border {
     @apply relative;
   }
+
   .neon-border::after {
     content: '';
     @apply absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500 pointer-events-none;
     box-shadow: 0 0 20px var(--color-cinema-primary);
   }
+
   .neon-border:hover::after {
     @apply opacity-100;
   }
 }
 
 @keyframes shimmer {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes glowPulse {
-  0%, 100% { opacity: 0.4; filter: blur(20px); }
-  50% { opacity: 0.8; filter: blur(25px); }
+
+  0%,
+  100% {
+    opacity: 0.4;
+    filter: blur(20px);
+  }
+
+  50% {
+    opacity: 0.8;
+    filter: blur(25px);
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes fadeSlideUp {
@@ -141,6 +175,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -152,6 +187,7 @@
     opacity: 0;
     transform: scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -175,15 +211,18 @@
   opacity: 0;
   transform: translateY(-8px) scale(0.96);
 }
+
 .dropdown-enter-active {
   opacity: 1;
   transform: translateY(0) scale(1);
   transition: opacity 0.2s ease-out, transform 0.2s ease-out;
 }
+
 .dropdown-exit {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
+
 .dropdown-exit-active {
   opacity: 0;
   transform: translateY(-8px) scale(0.96);
@@ -192,8 +231,15 @@
 
 /* Step connector line pulse */
 @keyframes stepPulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 .step-pulse {
@@ -204,6 +250,7 @@
 .screen-glow {
   position: relative;
 }
+
 .screen-glow::before {
   content: '';
   position: absolute;
