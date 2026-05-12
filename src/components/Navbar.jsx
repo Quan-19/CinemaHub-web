@@ -311,6 +311,41 @@ function Navbar() {
       {menuOpen ? (
         <div className="absolute top-full left-0 w-full bg-cinema-bg/95 backdrop-blur-xl border-b border-white/10 md:hidden pb-4 shadow-xl">
           <div className="space-y-1 px-4 sm:px-6 pt-2">
+            {user && (
+              <div
+                onClick={() => {
+                  setMenuOpen(false);
+                  navigate("/profile");
+                }}
+                className="mb-4 flex items-center gap-4 rounded-2xl bg-gradient-to-r from-white/10 to-white/5 p-4 border border-white/10 active:scale-[0.98] transition-all shadow-lg cursor-pointer"
+              >
+                <div className="relative">
+                  {user.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt={user.displayName}
+                      className="h-12 w-12 rounded-full object-cover border-2 border-cinema-primary shadow-cinema-primary/20 shadow-md"
+                    />
+                  ) : (
+                    <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-cinema-primary to-cinema-primary-dark text-white border-2 border-white/10 shadow-lg">
+                      <User className="h-6 w-6" />
+                    </div>
+                  )}
+                  <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-green-500 border-2 border-cinema-bg" />
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <p className="truncate text-base font-bold text-white">
+                    {user.displayName || "Người dùng"}
+                  </p>
+                  <p className="truncate text-xs text-zinc-400 font-medium">
+                    {user.email}
+                  </p>
+                </div>
+                <div className="rounded-full bg-white/5 p-2 border border-white/5">
+                  <ChevronDown className="h-4 w-4 text-zinc-400 -rotate-90" />
+                </div>
+              </div>
+            )}
             {navLinks.map((link) => {
               const active = isLinkActive(location.pathname, link.path);
               return (

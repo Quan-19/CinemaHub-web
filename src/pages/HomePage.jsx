@@ -92,7 +92,7 @@ const PremiumMovieCard = ({ movie, index }) => {
         <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-sm">
           <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
           <span className="text-white text-xs font-bold">
-            {movie.rating || movie.score || "N/A"}
+            {movie.rating ? (movie.rating / 2).toFixed(1) : (movie.score / 2).toFixed(1) || "0.0"}
           </span>
         </div>
 
@@ -326,7 +326,7 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
               <div className="flex items-center gap-2 text-zinc-300">
                 <Star className="w-4 h-4 md:w-5 md:h-5 fill-yellow-500 text-yellow-500" />
                 <span className="font-semibold">
-                  {movie.rating || movie.score}/10
+                  {movie.rating ? (movie.rating / 2).toFixed(1) : (movie.score / 2).toFixed(1) || "0.0"}/5
                 </span>
                 <span className="text-xs md:text-sm text-zinc-400">
                   ({movie.votes?.toLocaleString() || "0"} đánh giá)
@@ -743,7 +743,7 @@ const HomePage = () => {
                 </motion.button>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-none">
                 {[...nowShowing]
                   .sort(
                     (a, b) =>
@@ -751,7 +751,7 @@ const HomePage = () => {
                       (b.views || 0) - (a.views || 0) ||
                       (b.rating || b.score || 0) - (a.rating || a.score || 0),
                   )
-                  .slice(0, 5)
+                  .slice(0, 10)
                   .map((movie, idx) => (
                     <PremiumMovieCard
                       key={`hot-${movie.movie_id}`}
@@ -929,12 +929,12 @@ const HomePage = () => {
                 </motion.button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-none">
                 {cinemaNewsItems.map((m, idx) => (
                   <GlowCard
                     key={m.movie_id || idx}
                     onClick={() => navigate(`/movies/${m.movie_id}`)}
-                    className="bg-cinema-surface border border-white/10 p-5"
+                    className="bg-cinema-surface border border-white/10 p-5 w-[300px] md:w-[400px] shrink-0"
                   >
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 rounded-xl bg-blue-500/15 border border-blue-500/20 flex items-center justify-center shrink-0">

@@ -80,9 +80,9 @@ const lockSelectedSeats = async (seats, showtimeId) => {
 
 function SeatLegendItem({ colorClassName, label }) {
   return (
-    <div className="flex items-center gap-2 text-xs text-zinc-400">
+    <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-zinc-400">
       <span
-        className={["h-4 w-4 rounded-[4px] border", colorClassName].join(" ")}
+        className={["h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-[3px] sm:rounded-[4px] border", colorClassName].join(" ")}
       />
       <span>{label}</span>
     </div>
@@ -93,14 +93,14 @@ export const SeatSelectionPage = () => {
   const { showtimeId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { 
-    selectedMovie, 
-    selectedCinema, 
-    selectedShowtime, 
+  const {
+    selectedMovie,
+    selectedCinema,
+    selectedShowtime,
     setSelectedSeats,
     setSelectedShowtime,
     setSelectedMovie,
-    setSelectedCinema 
+    setSelectedCinema
   } = useBooking();
 
   // State
@@ -143,7 +143,7 @@ export const SeatSelectionPage = () => {
       const hasActiveLock = remainingTime !== null && remainingTime > 0;
       if (hasActiveLock && picked.length > 0) {
         e.preventDefault();
-        e.returnValue = ""; 
+        e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -152,11 +152,11 @@ export const SeatSelectionPage = () => {
 
   const seatRows = useMemo(() => {
     if (!roomLayout) return [];
-    
+
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
     const vipSet = new Set(roomLayout.vipRows || []);
     const data = [];
-    
+
     for (let r = 1; r <= roomLayout.rows; r += 1) {
       const rowLabel = letters[r - 1] ?? String(r);
       const isCoupleRow = roomLayout.coupleRow === r;
@@ -210,7 +210,7 @@ export const SeatSelectionPage = () => {
           { headers }
         );
         const seatData = await resSeats.json();
-        
+
         const occupiedList = seatData.occupied || [];
         const othersLocked = new Set();
         const myLockedMap = new Map(); // Dùng Map để lọc trùng ID
@@ -218,7 +218,7 @@ export const SeatSelectionPage = () => {
         occupiedList.forEach(s => {
           const label = `${s.seat_row}${s.seat_number}`;
           if (s.isMine) {
-            myLockedMap.set(label, { id: label }); 
+            myLockedMap.set(label, { id: label });
           } else {
             othersLocked.add(label);
           }
@@ -227,7 +227,7 @@ export const SeatSelectionPage = () => {
         const myLocked = Array.from(myLockedMap.values());
         console.log("🎯 Occupied Data:", { total: occupiedList.length, mine: myLocked.length });
         setOccupiedSeats(othersLocked);
-        
+
         // Luôn cập nhật picked nếu có ghế của mình và picked đang trống
         if (myLocked.length > 0 && picked.length === 0) {
           console.log("♻️ Auto-recovering seats:", myLocked);
@@ -295,10 +295,10 @@ export const SeatSelectionPage = () => {
         }
 
         if (!isMounted) return;
-        
+
         setShowtime(showtimeData);
         setSelectedShowtime(showtimeData);
-        
+
         // Cập nhật movie và cinema vào context nếu chưa có
         if (showtimeData.movie) setSelectedMovie(showtimeData.movie);
         if (showtimeData.cinema) setSelectedCinema(showtimeData.cinema);
@@ -307,18 +307,18 @@ export const SeatSelectionPage = () => {
           try {
             const resRoom = await fetch(`http://localhost:5000/api/rooms/${showtimeData.roomId}`);
             const roomData = await resRoom.json();
-            
+
             let vipRowsParsed = [];
             let maintenanceParsed = [];
             try {
               if (roomData.vip_rows) {
-                 vipRowsParsed = typeof roomData.vip_rows === 'string' ? JSON.parse(roomData.vip_rows) : roomData.vip_rows;
+                vipRowsParsed = typeof roomData.vip_rows === 'string' ? JSON.parse(roomData.vip_rows) : roomData.vip_rows;
               }
               if (roomData.maintenance_seats) {
                 maintenanceParsed = typeof roomData.maintenance_seats === 'string' ? JSON.parse(roomData.maintenance_seats) : roomData.maintenance_seats;
               }
             } catch (e) { console.error(e); }
-            
+
             setMaintenanceSeats(new Set(maintenanceParsed || []));
             setRoomLayout({
               rows: roomData.seat_rows,
@@ -326,8 +326,8 @@ export const SeatSelectionPage = () => {
               vipRows: vipRowsParsed,
               coupleRow: roomData.couple_row
             });
-          } catch(err){ 
-            console.error("Error loading room map", err); 
+          } catch (err) {
+            console.error("Error loading room map", err);
           }
         }
         setLoading(false);
@@ -342,7 +342,7 @@ export const SeatSelectionPage = () => {
 
     fetchMainData();
     return () => { isMounted = false; };
-  }, [showtimeId, navigate, setSelectedCinema, setSelectedMovie, setSelectedShowtime]); 
+  }, [showtimeId, navigate, setSelectedCinema, setSelectedMovie, setSelectedShowtime]);
 
   const openAuthForAction = (action) => {
     pendingAuthActionRef.current = action;
@@ -401,7 +401,7 @@ export const SeatSelectionPage = () => {
     // Kiểm tra lại đăng nhập trước khi lock ghế
     const auth = getAuth();
     const user = auth.currentUser;
-    
+
     if (!user) {
       openAuthForAction({
         type: "continue",
@@ -559,58 +559,48 @@ export const SeatSelectionPage = () => {
           {/* LEFT: SEAT MAP (lg:col-span-2) */}
           <div className="lg:col-span-2">
             <div className="rounded-2xl border border-zinc-700 bg-zinc-950/20 p-4 sm:p-5">
-              <div className="relative mb-6 flex items-center justify-center">
-                <svg
-                  className="pointer-events-none absolute inset-x-0 top-0 h-14 w-full text-cyan-400"
-                  viewBox="0 0 600 80"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
-                >
-                  <defs>
-                    <filter
-                      id="screenGlowBlurCustomer"
-                      x="-30%"
-                      y="-80%"
-                      width="160%"
-                      height="260%"
+              <div className="overflow-x-auto pb-6 scrollbar-hide">
+                <div className="mx-auto w-fit min-w-full sm:min-w-[400px] px-4">
+                  <div className="relative mb-12 flex items-center justify-center">
+                    <svg
+                      className="pointer-events-none absolute inset-x-0 top-0 h-20 w-full text-cyan-500/30"
+                      viewBox="0 0 600 120"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
                     >
-                      <feGaussianBlur stdDeviation="7" />
-                    </filter>
-                    <linearGradient id="screenSpotCustomer" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0" stopColor="currentColor" stopOpacity="0.16" />
-                      <stop offset="1" stopColor="currentColor" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M 110 52 Q 300 16 490 52 L 520 110 L 80 110 Z" fill="url(#screenSpotCustomer)" opacity="0.9" />
-                  <path d="M 110 52 Q 300 16 490 52" fill="none" stroke="currentColor" strokeWidth="14" strokeLinecap="round" opacity="0.22" filter="url(#screenGlowBlurCustomer)" />
-                  <path d="M 110 52 Q 300 16 490 52" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" opacity="0.85" />
-                </svg>
-                <div className="pt-6 text-[11px] font-semibold tracking-[0.55em] text-zinc-400 uppercase">
-                  SCREEN
-                </div>
-              </div>
+                      <defs>
+                        <filter id="screenGlow" x="-20%" y="-20%" width="140%" height="140%">
+                          <feGaussianBlur stdDeviation="5" />
+                        </filter>
+                        <linearGradient id="screenGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0" stopColor="currentColor" stopOpacity="0.8" />
+                          <stop offset="1" stopColor="currentColor" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M 5 45 Q 300 10 595 45 L 600 120 L 0 120 Z" fill="url(#screenGrad)" />
+                      <path
+                        d="M 5 45 Q 300 10 595 45"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        className="text-cyan-400"
+                        style={{ filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.8))' }}
+                      />
+                    </svg>
+                    <div className="pt-10 text-[13px] font-black tracking-[1em] text-cyan-400/40 uppercase">
+                      MÀN HÌNH
+                    </div>
+                  </div>
 
-              <div className="overflow-x-auto pb-1">
-                <div className="mx-auto w-fit">
                   <div className="inline-grid gap-2">
                     {seatRows.map((row) => {
-                      const isCoupleRow = row.isCoupleRow;
-                      const standardWidth = (roomLayout?.cols || 10) * (28 + 8);
-                      const coupleWidth = row.seats.length * (56 + 8);
-                      const diff = standardWidth - coupleWidth;
-                      const leftPadding = isCoupleRow ? diff / 2 : 0;
-                      const rightPadding = isCoupleRow ? diff / 2 : 0;
-
                       return (
-                        <div key={row.label} className="grid grid-cols-[28px_auto_28px] items-center gap-3">
-                          <div className="text-center text-[11px] font-semibold text-zinc-400">{row.label}</div>
+                        <div key={row.label} className="grid grid-cols-[24px_auto_24px] sm:grid-cols-[28px_auto_28px] items-center gap-1 sm:gap-3">
+                          <div className="text-center text-[10px] sm:text-[11px] font-semibold text-zinc-500">{row.label}</div>
                           <div className="flex justify-center">
-                            <div 
-                              className="grid auto-cols-max grid-flow-col gap-2"
-                              style={{
-                                paddingLeft: leftPadding > 0 ? `${leftPadding}px` : 0,
-                                paddingRight: rightPadding > 0 ? `${rightPadding}px` : 0,
-                              }}
+                            <div
+                              className="grid auto-cols-max grid-flow-col gap-1 sm:gap-2"
                             >
                               {row.seats.map((seat) => {
                                 const isOccupied = occupiedSeats.has(seat.id);
@@ -620,18 +610,18 @@ export const SeatSelectionPage = () => {
                                 const className = isMaintenance
                                   ? "border-red-500 bg-red-500/25 text-red-500 cursor-not-allowed"
                                   : isOccupied
-                                  ? "border-transparent bg-zinc-900/80 text-zinc-700 cursor-not-allowed"
-                                  : isSelected
-                                    ? "border-green-500 bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.4)] scale-105 z-10"
-                                    : seat.type === "vip"
-                                      ? "border-amber-500/40 bg-amber-500/5 text-amber-400 hover:border-amber-400/70 hover:bg-amber-500/10"
-                                      : seat.type === "couple"
-                                        ? "border-rose-500/40 bg-rose-500/5 text-rose-400 hover:border-rose-400/70 hover:bg-rose-500/10"
-                                        : "border-zinc-700 bg-zinc-800/20 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-700/30";
-                                        
-                                const base = seat.isCouple 
-                                  ? "h-7 w-14 rounded-lg border-2 flex items-center justify-center gap-1 text-[10px] font-bold transition-all duration-200"
-                                  : "h-7 w-7 rounded-lg border-2 text-[10px] flex items-center justify-center font-bold transition-all duration-200";
+                                    ? "border-transparent bg-zinc-900/80 text-zinc-700 cursor-not-allowed"
+                                    : isSelected
+                                      ? "border-green-500 bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.4)] scale-105 z-10"
+                                      : seat.type === "vip"
+                                        ? "border-amber-500/40 bg-amber-500/5 text-amber-400 hover:border-amber-400/70 hover:bg-amber-500/10"
+                                        : seat.type === "couple"
+                                          ? "border-rose-500/40 bg-rose-500/5 text-rose-400 hover:border-rose-400/70 hover:bg-rose-500/10"
+                                          : "border-zinc-700 bg-zinc-800/20 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-700/30";
+
+                                const base = seat.isCouple
+                                  ? "h-6 w-[52px] sm:h-7 sm:w-16 rounded-md sm:rounded-lg border-[1.5px] sm:border-2 flex items-center justify-center gap-1 text-[9px] sm:text-[10px] font-bold transition-all duration-200"
+                                  : "h-6 w-6 sm:h-7 sm:w-7 rounded-md sm:rounded-lg border-[1.5px] sm:border-2 text-[9px] sm:text-[10px] flex items-center justify-center font-bold transition-all duration-200";
 
                                 const isDisabled = isOccupied || isMaintenance;
 
@@ -649,7 +639,7 @@ export const SeatSelectionPage = () => {
                                   >
                                     {isMaintenance ? (seat.isCouple ? "🛠️" : "X") : isOccupied ? "×" : seat.isCouple ? (
                                       <>
-                                        <span className="text-[10px]">👥</span>
+                                        <span className="text-[9px] sm:text-[10px]">👥</span>
                                         <span>{seat.number}</span>
                                       </>
                                     ) : (
@@ -665,39 +655,21 @@ export const SeatSelectionPage = () => {
                       );
                     })}
 
-                    <div className="grid grid-cols-[28px_auto_28px] items-center gap-3 pt-2">
+                    <div className="grid grid-cols-[24px_auto_24px] sm:grid-cols-[28px_auto_28px] items-center gap-1 sm:gap-3 pt-2">
                       <div />
                       <div className="flex justify-center">
-                        <div className="grid auto-cols-max grid-flow-col gap-2 text-center text-[11px] font-semibold text-zinc-400">
+                        <div className="grid auto-cols-max grid-flow-col gap-1 sm:gap-2 text-center text-[10px] sm:text-[11px] font-semibold text-zinc-500">
                           {seatRows[0]?.isCoupleRow
-                            ? (() => {
-                                const firstRow = seatRows[0];
-                                const standardWidth = (roomLayout?.cols || 10) * (28 + 8);
-                                const coupleWidth = firstRow.seats.length * (56 + 8);
-                                const diff = standardWidth - coupleWidth;
-                                const leftPadding = diff / 2;
-                                
-                                return (
-                                  <div
-                                    className="grid auto-cols-max grid-flow-col gap-2"
-                                    style={{
-                                      paddingLeft: leftPadding > 0 ? `${leftPadding}px` : 0,
-                                      paddingRight: leftPadding > 0 ? `${leftPadding}px` : 0,
-                                    }}
-                                  >
-                                    {Array.from({ length: firstRow.seats.length }, (_, i) => (
-                                      <div key={i + 1} className="w-14 text-center">
-                                        {i + 1}
-                                      </div>
-                                    ))}
-                                  </div>
-                                );
-                              })()
+                            ? Array.from({ length: seatRows[0].seats.length }, (_, i) => (
+                              <div key={i + 1} className="w-[52px] sm:w-16 text-center">
+                                {i + 1}
+                              </div>
+                            ))
                             : Array.from({ length: roomLayout?.cols || 10 }, (_, i) => (
-                                <div key={i + 1} className="w-7 text-center">
-                                  {i + 1}
-                                </div>
-                              ))}
+                              <div key={i + 1} className="w-6 sm:w-7 text-center">
+                                {i + 1}
+                              </div>
+                            ))}
                         </div>
                       </div>
                       <div />
@@ -706,8 +678,8 @@ export const SeatSelectionPage = () => {
                 </div>
               </div>
 
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-700 pt-3">
-                <div className="flex flex-wrap items-center gap-5">
+              <div className="mt-4 sm:mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-700/50 pt-3">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:gap-5">
                   <SeatLegendItem colorClassName="border-transparent bg-zinc-900/80" label="Đã đặt" />
                   <SeatLegendItem colorClassName="border-green-500 bg-green-500" label="Đang chọn" />
                   <SeatLegendItem colorClassName="border-zinc-700 bg-zinc-800/20" label="Thường" />
@@ -725,15 +697,15 @@ export const SeatSelectionPage = () => {
               <h2 className="text-white font-bold text-xl mb-6">Thông tin đặt vé</h2>
 
               <div className="flex gap-4 mb-6">
-                <div className="w-24 h-32 rounded-2xl overflow-hidden shrink-0 border-2 border-zinc-800 shadow-lg">
+                <div className="w-20 h-28 sm:w-24 sm:h-32 rounded-xl sm:rounded-2xl overflow-hidden shrink-0 border-2 border-zinc-800 shadow-lg">
                   <img src={movieInfo?.poster} alt={movieInfo?.title} className="w-full h-full object-cover" />
                 </div>
-                <div className="flex flex-col justify-center gap-1.5">
-                  <h3 className="text-white font-bold text-xl leading-tight tracking-tight">{movieInfo?.title}</h3>
+                <div className="flex flex-col justify-center gap-1 sm:gap-1.5">
+                  <h3 className="text-white font-bold text-lg sm:text-xl leading-tight tracking-tight">{movieInfo?.title}</h3>
                   <div>
-                    <p className="text-zinc-400 text-sm font-medium">{cinemaInfo?.name}</p>
-                    <p className="text-zinc-500 text-[11px] font-bold uppercase tracking-wider mt-0.5">
-                      {showtimeInfo?.time || new Date(showtimeInfo?.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                    <p className="text-zinc-400 text-xs sm:text-sm font-medium">{cinemaInfo?.name}</p>
+                    <p className="text-zinc-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider mt-0.5">
+                      {showtimeInfo?.time || (showtimeInfo?.start_time && new Date(showtimeInfo.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }))}
                       {" · "}
                       {showtimeInfo?.language === "DUB" ? "Lồng tiếng" : showtimeInfo?.language === "ENGLISH" ? "Tiếng Anh" : "VietSub"}
                       {" · "}
@@ -755,11 +727,10 @@ export const SeatSelectionPage = () => {
                   <div className="flex flex-wrap gap-1.5 min-h-[2rem]">
                     {picked.length > 0 ? (
                       picked.map(s => (
-                        <span key={s.id} className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border-2 ${
-                          s.type === 'vip' ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' :
-                          s.type === 'couple' ? 'border-rose-500/30 bg-rose-500/10 text-rose-400' :
-                          'border-zinc-700 bg-zinc-800/50 text-zinc-100'
-                        }`}>
+                        <span key={s.id} className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border-2 ${s.type === 'vip' ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' :
+                            s.type === 'couple' ? 'border-rose-500/30 bg-rose-500/10 text-rose-400' :
+                              'border-zinc-700 bg-zinc-800/50 text-zinc-100'
+                          }`}>
                           {s.id}
                         </span>
                       ))
@@ -789,8 +760,8 @@ export const SeatSelectionPage = () => {
                   }`}
               >
                 <Ticket size={14} className={`${remainingTime !== null && remainingTime < 60 ? "text-white animate-bounce" : "text-red-500"} group-hover:scale-110 transition-transform`} />
-                {picked.length > 0 
-                  ? `Tiếp tục (${picked.length} ghế) ${remainingTime !== null ? `- ${formatTime(remainingTime)}` : ""}` 
+                {picked.length > 0
+                  ? `Tiếp tục (${picked.length} ghế) ${remainingTime !== null ? `- ${formatTime(remainingTime)}` : ""}`
                   : "Chọn ghế để tiếp tục"}
               </button>
             </div>
@@ -825,7 +796,7 @@ export const SeatSelectionPage = () => {
                 <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-5 border border-red-500/20">
                   <AlertCircle size={32} className="text-red-500" />
                 </div>
-                
+
                 <h3 className="text-white text-xl font-bold mb-3 tracking-tight">Chưa hoàn tất giao dịch!</h3>
                 <p className="text-zinc-400 text-sm leading-relaxed mb-8">
                   Bạn đang có ghế được giữ chỗ. Nếu thoát ra, các ghế này sẽ bị hủy. Bạn có muốn tiếp tục thanh toán không?

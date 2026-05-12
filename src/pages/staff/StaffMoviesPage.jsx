@@ -69,6 +69,7 @@ function normalizeMovie(movie) {
     director: movie.director || "",
     language: movie.language || "Phụ đề Việt",
     country: movie.country || "Mỹ",
+    trailer: movie.trailer || "",
   };
 }
 
@@ -130,6 +131,7 @@ function EditMovieModal({
       description: m.description || "",
       language: m.language || "Phụ đề Việt",
       country: m.country || "Mỹ",
+      trailer: m.trailer || "",
     };
   });
 
@@ -170,6 +172,7 @@ function EditMovieModal({
       if (!form.releaseDate)
         nextErrors.releaseDate = "Vui lòng chọn ngày ra mắt";
       if (!form.director.trim()) nextErrors.director = "Vui lòng nhập đạo diễn";
+      if (!form.trailer.trim()) nextErrors.trailer = "Vui lòng nhập URL Trailer";
 
       setErrors(nextErrors);
       if (Object.keys(nextErrors).length > 0) {
@@ -220,6 +223,7 @@ function EditMovieModal({
 
     if (form.language) updated.language = form.language;
     if (form.country) updated.country = form.country;
+    if (form.trailer.trim()) updated.trailer = form.trailer.trim();
     onSave(updated);
   };
 
@@ -454,6 +458,31 @@ function EditMovieModal({
                   <div className={errorText}>{errors.backdrop}</div>
                 ) : null}
               </div>
+            </div>
+          </section>
+
+          {/* Section: Trailer */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
+              <div className="h-4 w-1 rounded-full bg-cinema-primary" />
+              <h3 className="text-sm font-bold text-white">Trailer</h3>
+            </div>
+            <div>
+              <label className={labelBase}>URL Trailer (YouTube)</label>
+              <input
+                className={[
+                  inputBase,
+                  errors.trailer ? "border-cinema-primary" : "",
+                ].join(" ")}
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={form.trailer}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, trailer: e.target.value }))
+                }
+              />
+              {errors.trailer ? (
+                <div className={errorText}>{errors.trailer}</div>
+              ) : null}
             </div>
           </section>
 
@@ -948,6 +977,7 @@ function StaffMoviesPage() {
       language: "Phụ đề Việt",
       country: "Mỹ",
       cast: [],
+      trailer: "",
     });
   }, [adding]);
 

@@ -73,14 +73,18 @@ export const ShowtimesTab = ({ showtimes }) => {
   const dates = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return Object.keys(groupedDates)
-      .sort()
-      .filter((dateStr) => {
-        const parsed = new Date(dateStr);
-        if (Number.isNaN(parsed.getTime())) return false;
-        parsed.setHours(0, 0, 0, 0);
-        return parsed >= today;
-      });
+    // Tạo 14 ngày liên tiếp từ hôm nay
+    const next14Days = Array.from({ length: 14 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      // format YYYY-MM-DD
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    });
+    // Chỉ giữ ngày nào có suất chiếu
+    return next14Days.filter((dateStr) => groupedDates[dateStr]);
   }, [groupedDates]);
   const safeSelectedDate = selectedDate < dates.length ? selectedDate : 0;
   const currentShowtimes = dates[safeSelectedDate]
@@ -120,7 +124,7 @@ export const ShowtimesTab = ({ showtimes }) => {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-10">
+    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-10">
       {/* Toast notification */}
       {toast && (
         <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 duration-300 pointer-events-auto">
@@ -136,53 +140,78 @@ export const ShowtimesTab = ({ showtimes }) => {
 
       <div>
         <h3 className="text-white text-lg font-bold mb-4">Chọn ngày</h3>
-        <div
-          className="flex gap-2 overflow-x-auto pb-4"
-          style={{ scrollbarWidth: "none" }}
-        >
-          {dates.length === 0 && (
-            <p className="text-zinc-500 text-sm">
-              Chưa có lịch chiếu cho phim này.
-            </p>
-          )}
-          {dates.map((d, index) => {
-            const { dayOfWeek, date, month } = formatDay(d);
-            const active = index === safeSelectedDate;
-            return (
-              <button
-                key={d}
-                onClick={() => setSelectedDate(index)}
-                className={`flex flex-col items-center justify-center min-w-[70px] h-[90px] rounded-2xl border transition-all shrink-0 ${
-                  active
-                    ? "border-red-600 text-white bg-[#18181b]"
-                    : "border-zinc-800 text-zinc-500 bg-[#111113] hover:bg-zinc-900"
-                }`}
-              >
-                <div
-                  className={`text-xs font-bold mb-1 ${
-                    active ? "text-white" : "text-zinc-500"
-                  }`}
-                >
-                  {dayOfWeek}
-                </div>
-                <div
-                  className={`text-2xl font-black mb-1 ${
-                    active ? "text-red-500" : "text-zinc-300"
-                  }`}
-                >
-                  {date}
-                </div>
-                <div
-                  className={`text-xs font-bold ${
-                    active ? "text-white" : "text-zinc-500"
-                  }`}
-                >
-                  T{month}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        {dates.length === 0 ? (
+          <p className="text-zinc-500 text-sm">
+            Chưa có lịch chiếu cho phim này.
+          </p>
+        ) : (
+          <div className="relative">
+            {/* Mobile: scroll ngang 1 hàng */}
+            <div
+              className="flex sm:hidden gap-2 overflow-x-auto pb-2"
+              style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+            >
+              {dates.map((d, index) => {
+                const { dayOfWeek, date, month } = formatDay(d);
+                const active = index === safeSelectedDate;
+                return (
+                  <button
+                    key={d}
+                    onClick={() => setSelectedDate(index)}
+                    className={`flex flex-col items-center justify-center shrink-0 w-[68px] h-[86px] rounded-2xl border transition-all duration-300 ${
+                      active
+                        ? "border-red-600 bg-red-600/10 text-white ring-1 ring-red-600/20"
+                        : "border-zinc-800 text-zinc-500 bg-[#111113] hover:bg-zinc-900"
+                    }`}
+                  >
+                    <div className={`text-[11px] font-bold mb-1 ${active ? "text-white" : "text-zinc-500"}`}>
+                      {dayOfWeek}
+                    </div>
+                    <div className={`text-xl font-black mb-1 ${active ? "text-red-500" : "text-zinc-300"}`}>
+                      {date}
+                    </div>
+                    <div className={`text-[11px] font-bold ${active ? "text-white" : "text-zinc-500"}`}>
+                      T{month}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {/* Gradient fade phải - chỉ mobile, báo hiệu còn ngày phía sau */}
+            {dates.length > 4 && (
+              <div className="absolute right-0 top-0 bottom-2 w-10 bg-gradient-to-l from-[#09090b] to-transparent pointer-events-none sm:hidden" />
+            )}
+
+            {/* Desktop/Tablet: grid 7 cột × 2 hàng */}
+            <div className="hidden sm:grid sm:grid-cols-7 gap-2">
+              {dates.map((d, index) => {
+                const { dayOfWeek, date, month } = formatDay(d);
+                const active = index === safeSelectedDate;
+                return (
+                  <button
+                    key={d}
+                    onClick={() => setSelectedDate(index)}
+                    className={`flex flex-col items-center justify-center h-[90px] rounded-2xl border transition-all duration-300 ${
+                      active
+                        ? "border-red-600 bg-red-600/10 text-white ring-1 ring-red-600/20"
+                        : "border-zinc-800 text-zinc-500 bg-[#111113] hover:bg-zinc-900"
+                    }`}
+                  >
+                    <div className={`text-xs font-bold mb-1 ${active ? "text-white" : "text-zinc-500"}`}>
+                      {dayOfWeek}
+                    </div>
+                    <div className={`text-2xl font-black mb-1 ${active ? "text-red-500" : "text-zinc-300"}`}>
+                      {date}
+                    </div>
+                    <div className={`text-xs font-bold ${active ? "text-white" : "text-zinc-500"}`}>
+                      T{month}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -330,7 +359,7 @@ export const ShowtimesTab = ({ showtimes }) => {
                           ) : isFull ? (
                             <span className="text-red-500 font-bold">Hết ghế</span>
                           ) : (
-                            <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1">
                               <span className={availableSeats > 0 ? "text-emerald-500 font-bold" : "text-zinc-500"}>
                                 {availableSeats}
                               </span>
@@ -362,6 +391,15 @@ export const ReviewsTab = ({ movieId, reviews, onReviewSubmit }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [notif, setNotif] = useState(null);
   const [filter, setFilter] = useState("newest");
+
+  const formatLikes = (num) => {
+    if (!num) return 0;
+    if (num >= 1000000000)
+      return (num / 1000000000).toFixed(1).replace(/\.0$/, "") + "T";
+    if (num >= 1000)
+      return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+    return num;
+  };
 
   // Reorder and Sort logic
   const sortedReviews = useMemo(() => {
@@ -501,7 +539,7 @@ export const ReviewsTab = ({ movieId, reviews, onReviewSubmit }) => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-10">
+    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pb-10">
       {/* NOTIFICATION TOAST */}
       <div className="fixed top-24 right-4 z-[100] space-y-3 pointer-events-none">
         {notif && (
@@ -530,305 +568,308 @@ export const ReviewsTab = ({ movieId, reviews, onReviewSubmit }) => {
         )}
       </div>
 
-      {/* SUMMARY */}
-      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 flex flex-col sm:flex-row gap-6 items-center sm:items-start shadow-xl">
-        <div className="flex flex-col items-center justify-center shrink-0">
-          <div className="text-5xl font-black text-white">{averageRating}</div>
-          <div className="flex mt-2 mb-1">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Star
-                key={i}
-                className={`w-4 h-4 ${
-                  i <= Math.round(averageRating)
-                    ? "fill-yellow-400 text-yellow-400"
-                    : "text-zinc-600"
-                }`}
-              />
-            ))}
-          </div>
-          <div className="text-zinc-500 text-xs">{reviews.length} đánh giá</div>
-        </div>
-
-        <div className="flex-1 w-full space-y-1.5 flex flex-col-reverse">
-          {[1, 2, 3, 4, 5].map((star) => {
-            const pct =
-              reviews.length > 0
-                ? (ratingCounts[star] / reviews.length) * 100
-                : 0;
-            return (
-              <div key={star} className="flex items-center gap-3 text-sm">
-                <div className="text-zinc-400 w-3 text-right">{star}</div>
-                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-green-500 rounded-full"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <div className="text-zinc-500 w-4 text-xs text-right">
-                  {ratingCounts[star]}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* FILTER BUTTONS */}
-      <div className="flex justify-between items-center text-sm border-b border-zinc-800 pb-4 mt-8">
-        <span className="text-zinc-100 font-bold text-base">
-          {reviews.length} đánh giá
-        </span>
-        <div className="flex p-1 bg-zinc-900/90 border border-zinc-800/50 rounded-full shadow-inner">
-          <button
-            onClick={() => setFilter("helpful")}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${
-              filter === "helpful"
-                ? "bg-red-600 text-white shadow-lg"
-                : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            Hữu ích nhất
-          </button>
-          <button
-            onClick={() => setFilter("rating")}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${
-              filter === "rating"
-                ? "bg-red-600 text-white shadow-lg"
-                : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            Điểm cao
-          </button>
-          <button
-            onClick={() => setFilter("newest")}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${
-              filter === "newest"
-                ? "bg-red-600 text-white shadow-lg"
-                : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            Mới nhất
-          </button>
-        </div>
-      </div>
-
-      {/* WRITE REVIEW */}
-      <div
-        ref={formRef}
-        className={`bg-zinc-900/60 border rounded-2xl p-6 mb-4 transition-colors ${
-          isEditing ? "border-amber-500/50" : "border-zinc-800"
-        }`}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-white font-bold">
-            {isEditing ? "Chỉnh sửa đánh giá của bạn" : "Viết đánh giá của bạn"}
-          </h3>
-          {isEditing && (
-            <button
-              onClick={cancelEdit}
-              className="text-zinc-400 hover:text-white flex items-center gap-1 text-xs font-bold uppercase transition-colors"
-            >
-              <X className="w-3 h-3" /> Hủy chỉnh sửa
-            </button>
-          )}
-        </div>
-        {user ? (
-          <div className="flex items-center gap-3 mb-6">
-            {user.photoURL ? (
-              <img
-                src={user.photoURL}
-                alt={user.displayName}
-                className="w-10 h-10 rounded-full object-cover border border-zinc-700"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white font-bold">
-                {user.displayName?.substring(0, 1).toUpperCase() || "U"}
-              </div>
-            )}
-            <div>
-              <p className="text-white font-bold text-sm">
-                {user.displayName || "Thành viên"}
-              </p>
-              <p className="text-zinc-500 text-xs">
-                {isEditing
-                  ? "Đang cập nhật đánh giá..."
-                  : "Đang viết đánh giá..."}
-              </p>
-            </div>
-          </div>
-        ) : null}
-        {user ? (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <p className="text-zinc-400 text-xs uppercase tracking-wide font-semibold mb-2">
-                Điểm đánh giá *
-              </p>
-              <div className="flex gap-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* SIDEBAR: Summary & Write Review */}
+        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+          {/* SUMMARY */}
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-6 shadow-xl">
+            <div className="flex flex-col items-center justify-center shrink-0">
+              <div className="text-5xl font-black text-white">{averageRating}</div>
+              <div className="flex mt-2 mb-1">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Star
                     key={i}
-                    className={`w-8 h-8 cursor-pointer transition-colors ${
-                      i <= rating
+                    className={`w-4 h-4 ${
+                      i <= Math.round(averageRating)
                         ? "fill-yellow-400 text-yellow-400"
-                        : "text-zinc-600 hover:text-zinc-400"
+                        : "text-zinc-600"
                     }`}
-                    onClick={() => setRating(i)}
                   />
                 ))}
               </div>
+              <div className="text-zinc-500 text-xs">{reviews.length} đánh giá</div>
             </div>
-            <div>
-              <p className="text-zinc-400 text-xs uppercase tracking-wide font-semibold mb-2">
-                Nhận xét *
-              </p>
-              <textarea
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white text-sm focus:outline-none focus:border-zinc-600"
-                rows="4"
-                placeholder="Chia sẻ cảm nhận của bạn về bộ phim này..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                required
-              ></textarea>
+
+            <div className="flex-1 w-full space-y-1.5 flex flex-col-reverse">
+              {[1, 2, 3, 4, 5].map((star) => {
+                const pct =
+                  reviews.length > 0
+                    ? (ratingCounts[star] / reviews.length) * 100
+                    : 0;
+                return (
+                  <div key={star} className="flex items-center gap-3 text-sm">
+                    <div className="text-zinc-400 w-3 text-right">{star}</div>
+                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                    <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-green-500 rounded-full"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="text-zinc-500 w-4 text-xs text-right">
+                      {ratingCounts[star]}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex justify-end gap-3">
+          </div>
+
+          {/* WRITE REVIEW */}
+          <div
+            ref={formRef}
+            className={`bg-zinc-900/60 border rounded-2xl p-5 transition-colors ${
+              isEditing ? "border-amber-500/50" : "border-zinc-800"
+            }`}
+          >
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-white font-bold text-sm">
+                {isEditing ? "Chỉnh sửa đánh giá" : "Viết đánh giá của bạn"}
+              </h3>
               {isEditing && (
                 <button
-                  type="button"
                   onClick={cancelEdit}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold px-6 py-2 rounded-xl transition-colors"
+                  className="text-zinc-400 hover:text-white flex items-center gap-1 text-[10px] font-bold uppercase transition-colors"
                 >
-                  Hủy
+                  <X className="w-3 h-3" /> Hủy
                 </button>
               )}
-              <button
-                disabled={submitting}
-                type="submit"
-                className={`${
-                  isEditing
-                    ? "bg-amber-600 hover:bg-amber-700"
-                    : "bg-red-600 hover:bg-red-700"
-                } text-white font-bold px-6 py-2 rounded-xl transition-colors disabled:opacity-50 shadow-lg`}
-              >
-                {submitting
-                  ? "Đang gửi..."
-                  : isEditing
-                  ? "Cập nhật ngay"
-                  : "Gửi bài đánh giá"}
-              </button>
             </div>
-          </form>
-        ) : (
-          <div className="text-center py-6 border border-zinc-800 rounded-xl bg-zinc-900/30">
-            <p className="text-zinc-400 mb-3 text-sm">
-              Vui lòng đăng nhập để có thể để lại bài đánh giá cho bộ phim này.
-            </p>
-            <button
-              onClick={() => navigate("/auth")}
-              className="bg-white text-black font-bold uppercase tracking-wide text-xs px-6 py-2.5 rounded-full shadow-lg"
-            >
-              Đăng nhập ngay
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* REVIEWS LIST */}
-      <div className="space-y-4">
-        {sortedReviews.map((r) => {
-          const isCurrentUser =
-            user && String(user.user_id) === String(r.user_id);
-          const finalName =
-            r.user_name || (isCurrentUser ? user.displayName : "Thành viên");
-          const finalAvatar =
-            r.avatar || (isCurrentUser ? user.photoURL : null);
-
-          // Real likes count from DB
-          const likeCount = r.likes_count || 0;
-
-          return (
-            <div
-              key={r.review_id}
-              className={`bg-[#111116] border rounded-2xl p-6 transition-all duration-300 ${
-                isCurrentUser
-                  ? "border-red-600/40 ring-1 ring-red-600/10"
-                  : "border-zinc-800/80 hover:border-zinc-700"
-              }`}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  {finalAvatar ? (
-                    <img
-                      src={finalAvatar}
-                      alt={finalName}
-                      className="w-12 h-12 rounded-full object-cover shrink-0 border-2 border-zinc-800"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-red-600 to-red-400 flex items-center justify-center text-white font-bold text-lg shrink-0 border-2 border-zinc-800">
-                      {finalName
-                        ? finalName.substring(0, 1).toUpperCase()
-                        : "U"}
-                    </div>
-                  )}
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-white font-bold text-base tracking-tight">
-                        {finalName}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 mt-1.5">
-                      <div className="flex">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                          <Star
-                            key={i}
-                            className={`w-3.5 h-3.5 ${
-                              i <= r.rating
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "text-zinc-700"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
+            {user ? (
+              <div className="flex items-center gap-3 mb-4">
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName}
+                    className="w-9 h-9 rounded-full object-cover border border-zinc-700"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-red-600 flex items-center justify-center text-white font-bold text-sm">
+                    {user.displayName?.substring(0, 1).toUpperCase() || "U"}
                   </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className="text-zinc-500 text-[11px] font-medium">
-                    {r.created_at
-                      ? new Date(r.created_at).toLocaleDateString("vi-VN")
-                      : ""}
-                  </div>
-                  {isCurrentUser && (
-                    <button
-                      onClick={handleEdit}
-                      className="p-2 rounded-xl bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
-                      title="Chỉnh sửa đánh giá"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                )}
+                <div className="min-w-0">
+                  <p className="text-white font-bold text-sm truncate">
+                    {user.displayName || "Thành viên"}
+                  </p>
+                  <p className="text-zinc-500 text-xs truncate">
+                    {isEditing
+                      ? "Đang cập nhật..."
+                      : "Đang viết đánh giá..."}
+                  </p>
                 </div>
               </div>
-              <p className="text-zinc-300 text-[14.5px] leading-relaxed mt-2 font-medium">
-                {r.comment}
-              </p>
-
-              <div className="flex items-center gap-4 pt-3 border-t border-zinc-800/50">
-                <button
-                  onClick={() => handleLike(r.review_id)}
-                  className="flex items-center gap-1.5 text-zinc-500 hover:text-red-500 transition-colors group"
-                >
-                  <div className="p-1.5 rounded-full group-hover:bg-red-500/10">
-                    <ThumbsUp className="w-3.5 h-3.5" />
+            ) : null}
+            {user ? (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <p className="text-zinc-400 text-xs uppercase tracking-wide font-semibold mb-2">
+                    Điểm đánh giá *
+                  </p>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Star
+                        key={i}
+                        className={`w-7 h-7 cursor-pointer transition-colors ${
+                          i <= rating
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-zinc-600 hover:text-zinc-400"
+                        }`}
+                        onClick={() => setRating(i)}
+                      />
+                    ))}
                   </div>
-                  <span className="text-[11px] font-bold">
-                    {likeCount} lượt thích
-                  </span>
+                </div>
+                <div>
+                  <p className="text-zinc-400 text-xs uppercase tracking-wide font-semibold mb-2">
+                    Nhận xét *
+                  </p>
+                  <textarea
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-zinc-600"
+                    rows="3"
+                    placeholder="Chia sẻ cảm nhận của bạn..."
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    required
+                  ></textarea>
+                </div>
+                <div className="flex justify-end gap-3">
+                  <button
+                    disabled={submitting}
+                    type="submit"
+                    className={`w-full ${
+                      isEditing
+                        ? "bg-amber-600 hover:bg-amber-700"
+                        : "bg-red-600 hover:bg-red-700"
+                    } text-white font-bold px-6 py-2.5 rounded-xl transition-colors disabled:opacity-50 shadow-lg text-sm`}
+                  >
+                    {submitting
+                      ? "Đang gửi..."
+                      : isEditing
+                      ? "Cập nhật ngay"
+                      : "Gửi bài đánh giá"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="text-center py-6 border border-zinc-800 rounded-xl bg-zinc-900/30">
+                <p className="text-zinc-400 mb-3 text-xs">
+                  Vui lòng đăng nhập để đánh giá phim này.
+                </p>
+                <button
+                  onClick={() => navigate("/auth")}
+                  className="bg-white text-black font-bold uppercase tracking-wide text-[10px] px-6 py-2.5 rounded-full shadow-lg w-full"
+                >
+                  Đăng nhập ngay
                 </button>
               </div>
+            )}
+          </div>
+        </div>
+
+        {/* MAIN: Reviews List */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* FILTER BUTTONS */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-sm border-b border-zinc-800 pb-6">
+            <span className="text-zinc-100 font-bold text-lg">
+              {reviews.length} đánh giá cộng đồng
+            </span>
+            <div className="flex p-1 bg-zinc-900/90 border border-zinc-800/50 rounded-full shadow-inner">
+              <button
+                onClick={() => setFilter("helpful")}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${
+                  filter === "helpful"
+                    ? "bg-red-600 text-white shadow-lg"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                Hữu ích
+              </button>
+              <button
+                onClick={() => setFilter("rating")}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${
+                  filter === "rating"
+                    ? "bg-red-600 text-white shadow-lg"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                Điểm cao
+              </button>
+              <button
+                onClick={() => setFilter("newest")}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${
+                  filter === "newest"
+                    ? "bg-red-600 text-white shadow-lg"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                Mới nhất
+              </button>
             </div>
-          );
-        })}
+          </div>
+
+          <div className="relative group/reviews">
+            <div className={`space-y-4 pr-1 ${sortedReviews.length > 5 ? "max-h-[680px] overflow-y-auto scroll-smooth custom-scrollbar" : ""}`}>
+              {sortedReviews.map((r) => {
+                const isCurrentUser =
+                  user && String(user.user_id) === String(r.user_id);
+                const finalName =
+                  r.user_name || (isCurrentUser ? user.displayName : "Thành viên");
+                const finalAvatar =
+                  r.avatar || (isCurrentUser ? user.photoURL : null);
+
+                // Real likes count from DB
+                const likeCount = r.likes_count || 0;
+
+                return (
+                  <div
+                    key={r.review_id}
+                    className={`bg-[#111116] border rounded-2xl p-4 transition-all duration-300 ${
+                      isCurrentUser
+                        ? "border-red-600/40 ring-1 ring-red-600/10"
+                        : "border-zinc-800/80 hover:border-zinc-700"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-3">
+                        {finalAvatar ? (
+                          <img
+                            src={finalAvatar}
+                            alt={finalName}
+                            className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-zinc-800"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-red-600 to-red-400 flex items-center justify-center text-white font-bold text-base shrink-0 border-2 border-zinc-800">
+                            {finalName
+                              ? finalName.substring(0, 1).toUpperCase()
+                              : "U"}
+                          </div>
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-bold text-base tracking-tight">
+                              {finalName}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1.5">
+                            <div className="flex">
+                              {[1, 2, 3, 4, 5].map((i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-3.5 h-3.5 ${
+                                    i <= r.rating
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-zinc-700"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleLike(r.review_id)}
+                            className="flex items-center gap-1.5 text-zinc-500 hover:text-red-500 transition-all duration-300 group/like"
+                            title="Thích"
+                          >
+                            <Heart className={`w-3.5 h-3.5 transition-colors ${likeCount > 0 ? "fill-red-500 text-red-500" : "group-hover/like:fill-red-500 group-hover/like:text-red-500"}`} />
+                            <span className="text-[11px] font-bold">
+                              {formatLikes(likeCount)}
+                            </span>
+                          </button>
+                          <div className="text-zinc-500 text-[11px] font-medium">
+                            {r.created_at
+                              ? new Date(r.created_at).toLocaleDateString("vi-VN")
+                              : ""}
+                          </div>
+                        </div>
+                        {isCurrentUser && (
+                          <button
+                            onClick={handleEdit}
+                            className="p-2 rounded-xl bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all border border-zinc-700/50"
+                            title="Chỉnh sửa đánh giá"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-zinc-300 text-[14.5px] leading-relaxed mt-2 font-medium">
+                      {r.comment}
+                    </p>
+
+                    <div className="pt-1"></div>
+                  </div>
+                );
+              })}
+            </div>
+            {sortedReviews.length > 5 && (
+              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#09090b] to-transparent pointer-events-none z-10 rounded-b-2xl" />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

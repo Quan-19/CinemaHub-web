@@ -767,8 +767,8 @@ export const MovieDetailPage = () => {
 
   const displayScore =
     reviewsList.length > 0
-      ? parseFloat((averageReviewScore * 2).toFixed(1))
-      : parseFloat(movie.score).toFixed(1);
+      ? parseFloat(averageReviewScore.toFixed(1))
+      : parseFloat(movie.score / 2).toFixed(1);
   const displayVotes =
     reviewsList.length > 0
       ? reviewsList.length
@@ -816,8 +816,8 @@ export const MovieDetailPage = () => {
 
       <div className="relative z-10 flex flex-col space-y-8 lg:space-y-12">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-start md:-mt-32 lg:-mt-48 xl:-mt-64 relative z-20">
-            <div className="w-36 sm:w-44 md:w-48 lg:w-56 shrink-0 overflow-hidden rounded-2xl sm:rounded-3xl border-4 border-zinc-900 shadow-[0_20px_50px_rgba(0,0,0,0.8)] bg-zinc-900 aspect-[2/3] ring-1 ring-white/10 relative z-30">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start md:-mt-32 lg:-mt-48 xl:-mt-64 relative z-20">
+            <div className="w-40 sm:w-48 md:w-48 lg:w-56 shrink-0 overflow-hidden rounded-2xl sm:rounded-3xl border-4 border-zinc-900 shadow-[0_20px_50px_rgba(0,0,0,0.8)] bg-zinc-900 aspect-[2/3] ring-1 ring-white/10 relative z-30">
               <img
                 src={movie.poster}
                 alt={movie.title}
@@ -825,8 +825,8 @@ export const MovieDetailPage = () => {
               />
             </div>
 
-            <div className="space-y-4 flex-1 md:pt-4 drop-shadow-2xl">
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="space-y-4 flex-1 md:pt-4 drop-shadow-2xl w-full">
+              <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start">
                 <span
                   className="px-2.5 py-1 rounded-lg text-xs text-white font-bold"
                   style={{
@@ -838,28 +838,28 @@ export const MovieDetailPage = () => {
                 </span>
               </div>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,1)] leading-tight">
+              <h1 className="text-2xl sm:text-4xl lg:text-[42px] font-extrabold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,1)] leading-tight text-center md:text-left px-4 md:px-0">
                 {movie.title}
               </h1>
 
-              <p className="text-zinc-400 text-sm font-medium drop-shadow-md">
+              <p className="text-zinc-400 text-sm font-medium drop-shadow-md text-center md:text-left">
                 Tên gốc: {movie.originalTitle}
               </p>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 justify-center md:justify-start">
                 <div className="flex items-center gap-2">
                   <div className="flex">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star
                         key={i}
-                        className="w-4 h-4"
+                        className="w-3.5 h-3.5 sm:w-4 h-4"
                         fill={i < stars ? "#facc15" : "none"}
                         color={i < stars ? "#facc15" : "#52525b"}
                       />
                     ))}
                   </div>
                   <span className="text-yellow-400 text-sm font-bold">
-                    {displayScore}/10
+                    {displayScore}/5
                   </span>
                   <span className="text-zinc-400 text-xs">
                     ({voteCount} lượt)
@@ -868,7 +868,7 @@ export const MovieDetailPage = () => {
               </div>
 
               {/* Information Cards Grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 py-2">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 py-2 px-2 md:px-0">
                 {[
                   {
                     label: "Thời lượng",
@@ -889,26 +889,27 @@ export const MovieDetailPage = () => {
                 ].map((item, idx) => (
                   <div
                     key={idx}
-                    className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 flex flex-col gap-2 hover:bg-zinc-800/40 transition-colors"
+                    className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-3 sm:p-4 flex flex-col gap-1.5 sm:gap-2 hover:bg-zinc-800/40 transition-colors"
                   >
                     <div className="flex items-center gap-2 text-zinc-500">
-                      <item.icon className="w-4 h-4" />
-                      <span className="text-[10px] uppercase tracking-wider font-bold">
+                      <item.icon className="w-3.5 h-3.5 sm:w-4 h-4" />
+                      <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold">
                         {item.label}
                       </span>
                     </div>
-                    <div className="text-white text-sm font-bold truncate">
+                    <div className="text-white text-xs sm:text-sm font-bold truncate">
                       {item.value}
                     </div>
                   </div>
                 ))}
               </div>
+
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-3 pt-1 border-b border-zinc-700 pb-5">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 sm:gap-3 pt-2 border-b border-zinc-700 pb-6 px-4 md:px-0">
                 {movie.status === "now_showing" && (
                   <button
                     onClick={handleBooking}
-                    className="flex items-center gap-2 px-7 py-3 rounded-full font-bold text-white transition-all hover:-translate-y-[1px] active:scale-[0.98] shadow-[0_0_20px_rgba(229,9,20,0.3)] hover:shadow-[0_0_25px_rgba(229,9,20,0.5)] z-30"
+                    className="flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full font-bold text-white transition-all hover:-translate-y-[1px] active:scale-[0.98] shadow-[0_0_20px_rgba(229,9,20,0.3)] hover:shadow-[0_0_25px_rgba(229,9,20,0.5)] z-30 text-sm sm:text-base"
                     style={{
                       background: "linear-gradient(135deg, #e50914, #b20710)",
                     }}
@@ -920,7 +921,7 @@ export const MovieDetailPage = () => {
 
                 <button
                   onClick={() => setShowTrailer(true)}
-                  className="flex items-center gap-2 px-7 py-3 rounded-full font-bold text-white border border-zinc-700 bg-zinc-800/80 hover:bg-zinc-700 backdrop-blur-sm transition-colors z-30"
+                  className="flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full font-bold text-white border border-zinc-700 bg-zinc-800/80 hover:bg-zinc-700 backdrop-blur-sm transition-colors z-30 text-sm sm:text-base"
                 >
                   <Play className="w-4 h-4" fill="white" />
                   Xem trailer
@@ -928,7 +929,7 @@ export const MovieDetailPage = () => {
 
                 <button
                   onClick={handleViewShowtimes}
-                  className="flex items-center gap-2 px-7 py-3 rounded-full font-bold text-white border border-zinc-700 bg-zinc-900/40 hover:bg-zinc-800 transition-colors z-30 shadow-sm"
+                  className="flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full font-bold text-white border border-zinc-700 bg-zinc-900/40 hover:bg-zinc-800 transition-colors z-30 shadow-sm text-sm sm:text-base"
                 >
                   <Clock className="w-4 h-4" />
                   Xem suất chiếu
@@ -936,7 +937,7 @@ export const MovieDetailPage = () => {
 
                 <button
                   onClick={handleShare}
-                  className="flex items-center justify-center p-3 rounded-full bg-zinc-800/80 border border-zinc-700 text-white hover:bg-zinc-700 transition-colors z-30 shadow-sm"
+                  className="flex items-center justify-center p-2.5 sm:p-3 rounded-full bg-zinc-800/80 border border-zinc-700 text-white hover:bg-zinc-700 transition-colors z-30 shadow-sm"
                   title="Chia sẻ"
                 >
                   <Share2 className="w-4 h-4" />
@@ -1058,27 +1059,27 @@ export const MovieDetailPage = () => {
                   </div>
 
                   {/* Specs Panel */}
-                  <div className="bg-[#111113] border border-zinc-800/60 rounded-3xl p-6 sm:p-8 flex flex-wrap lg:grid lg:grid-cols-4 gap-6 items-center">
-                    <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto">
-                      <p className="text-zinc-500 text-xs font-semibold mb-1">
+                  <div className="bg-[#111113] border border-zinc-800/60 rounded-3xl p-5 sm:p-8 grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 items-start">
+                    {/* Điểm EbizCinema */}
+                    <div className="flex flex-col items-center justify-center w-full text-center">
+                      <p className="text-zinc-500 text-[10px] sm:text-xs font-semibold mb-2 uppercase tracking-wide">
                         Điểm EbizCinema
                       </p>
-                      <p className="text-yellow-500 text-[26px] font-bold leading-tight">
+                      <p className="text-yellow-500 text-2xl sm:text-3xl font-bold leading-tight">
                         {displayScore}
-                        <span className="text-base text-yellow-500/80">
-                          /10
-                        </span>
+                        <span className="text-sm sm:text-base text-yellow-500/80">/5</span>
                       </p>
-                      <p className="text-zinc-500 text-[11px] mt-1">
+                      <p className="text-zinc-500 text-[10px] sm:text-xs mt-1">
                         {voteCount} votes
                       </p>
                     </div>
 
-                    <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto lg:border-l border-zinc-800/60 lg:pl-6">
-                      <p className="text-zinc-500 text-xs font-semibold mb-1">
+                    {/* User Reviews */}
+                    <div className="flex flex-col items-center justify-center w-full text-center lg:border-l lg:border-zinc-800/60 lg:pl-6">
+                      <p className="text-zinc-500 text-[10px] sm:text-xs font-semibold mb-2 uppercase tracking-wide">
                         User Reviews
                       </p>
-                      <p className="text-green-500 text-[26px] font-bold leading-tight">
+                      <p className="text-emerald-500 text-2xl sm:text-3xl font-bold leading-tight">
                         {reviewsList.length > 0
                           ? (
                               reviewsList.reduce(
@@ -1088,30 +1089,31 @@ export const MovieDetailPage = () => {
                             ).toFixed(1)
                           : 0}
                       </p>
-                      <p className="text-zinc-500 text-[11px] mt-1">
+                      <p className="text-zinc-500 text-[10px] sm:text-xs mt-1">
                         {reviewsList.length} đánh giá
                       </p>
                     </div>
 
-                    <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto lg:border-l border-zinc-800/60 lg:pl-6">
-                      <p className="text-zinc-500 text-xs font-semibold mb-2">
+                    {/* Thể loại */}
+                    <div className="flex flex-col items-center justify-center w-full text-center lg:border-l lg:border-zinc-800/60 lg:pl-6">
+                      <p className="text-zinc-500 text-[10px] sm:text-xs font-semibold mb-2 uppercase tracking-wide">
                         Thể loại
                       </p>
-                      <div className="flex flex-wrap items-center justify-center gap-1.5 min-h-[30px]">
-                        <span className="text-[#c084fc] font-extrabold text-[15px] leading-tight">
-                          {movieGenres.slice(0, 2).join(", ")}
+                      <div className="flex items-center justify-center min-h-[32px] sm:min-h-[40px]">
+                        <span className="text-[#c084fc] font-extrabold text-sm sm:text-lg leading-tight">
+                          {movieGenres.join(", ")}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex flex-col items-center justify-center min-w-[120px] mx-auto w-full lg:w-auto lg:border-l border-zinc-800/60 lg:pl-6">
-                      <p className="text-zinc-500 text-xs font-semibold mb-1">
+                    {/* Giới hạn tuổi */}
+                    <div className="flex flex-col items-center justify-center w-full text-center lg:border-l lg:border-zinc-800/60 lg:pl-6">
+                      <p className="text-zinc-500 text-[10px] sm:text-xs font-semibold mb-2 uppercase tracking-wide">
                         Giới hạn tuổi
                       </p>
-                      <p className="text-red-500 text-[26px] font-bold leading-tight uppercase">
-                        {movie.ageRating || "T18"}
+                      <p className="text-red-500 text-2xl sm:text-3xl font-bold leading-tight uppercase">
+                        {movie.ageRating || movie.rating || "P"}
                       </p>
-                      {/* <p className="text-zinc-500 text-[11px] mt-1">Từ 18 tuổi</p> */}
                     </div>
                   </div>
                 </div>
