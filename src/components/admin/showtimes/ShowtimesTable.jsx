@@ -185,6 +185,9 @@ export default function ShowtimesTable({
                               <Sparkles size={8} /> Suất đặc biệt
                             </span>
                           )}
+                          <span className="inline-flex items-center gap-1 text-[10px] text-purple-400/80 bg-purple-500/10 px-1.5 py-0.5 rounded-full border border-purple-500/20">
+                            {item.language === 'DUB' ? 'Lồng tiếng' : item.language === 'ENGLISH' ? 'Tiếng Anh' : 'Phụ đề'}
+                          </span>
                           {(item.bookedCount || 0) > 0 && (
                             <span className="inline-flex items-center gap-1 text-[10px] text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded-full border border-blue-500/20 font-bold">
                               🎟️ {item.bookedCount} vé đã đặt

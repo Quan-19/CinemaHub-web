@@ -290,7 +290,7 @@ export const ShowtimesTab = ({ showtimes }) => {
                                   : "bg-purple-600 text-white"
                               }`}
                             >
-                              {st.language === "DUB" ? "Lồng tiếng" : st.language === "ENGLISH" ? "Tiếng Anh" : "VietSub"}
+                               {st.language === "DUB" ? "Lồng tiếng" : st.language === "ENGLISH" ? "Tiếng Anh" : "Phụ đề"}
                             </span>
                             <span
                               className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${

@@ -97,6 +97,7 @@ export default function ShowtimesPage() {
       movieId: "", movieTitle: "", movieDuration: null,
       cinemaId: "", cinemaName: "", roomId: "", roomName: "", type: "",
       date: getTodayDate(), time: "14:00", endTime: "",
+      language: "VIETSUB",
       prices: { Thường: 0, VIP: 0, Couple: 0 },
       regularPrices: { Thường: 0, VIP: 0, Couple: 0 },
       specialPrices: null,
@@ -327,6 +328,7 @@ export default function ShowtimesPage() {
         time: finalFormData.time,
         endTime: cleanEndTime,
         type: finalFormData.type,
+        language: finalFormData.language || "VIETSUB",
         base_price: finalFormData.isSpecial
           ? finalFormData.specialPrices?.Thường || finalFormData.prices?.Thường || 90000
           : finalFormData.regularPrices?.Thường || finalFormData.prices?.Thường || 90000,
