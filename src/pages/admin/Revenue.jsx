@@ -23,7 +23,6 @@ import {
   Clapperboard,
   DollarSign,
   Download,
-  ChevronDown,
   RefreshCw,
   Ticket,
   TrendingUp,
@@ -59,6 +58,41 @@ function RevenueChartTooltip({ active, payload, label }) {
   );
 }
 
+// Custom label cho pie chart để tránh tràn chữ
+const renderCustomizedLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+  index,
+  payload,
+}) => {
+  const RADIAN = Math.PI / 180;
+  const radius = outerRadius * 1.2;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  let movieName = payload?.movie_title || "";
+  if (movieName.length > 15) {
+    movieName = movieName.substring(0, 12) + "...";
+  }
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="rgba(255, 255, 255, 0.7)"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      fontSize={11}
+    >
+      {`${movieName} (${(percent * 100).toFixed(0)}%)`}
+    </text>
+  );
+};
+
 export default function RevenueReport() {
   const [loading, setLoading] = useState(true);
   const [revenueData, setRevenueData] = useState([]);
@@ -87,22 +121,23 @@ export default function RevenueReport() {
     return list;
   }, []);
 
-  const months = useMemo(
-    () => Array.from({ length: 12 }, (_, i) => i + 1),
-    []
-  );
+  const months = useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
 
-  // Chart colors (avoid hard-coded hex; rely on theme vars + neutral rgba)
+  // Chart colors
   const CHART_COLORS = useMemo(
     () => [
       "var(--color-cinema-primary)",
       "var(--color-cinema-gold)",
-      "var(--color-cinema-primary-dark)",
-      "rgba(255, 255, 255, 0.28)",
-      "rgba(255, 255, 255, 0.18)",
-      "rgba(255, 255, 255, 0.1)",
+      "#3b82f6",
+      "#10b981",
+      "#f59e0b",
+      "#ef4444",
+      "#8b5cf6",
+      "#ec4899",
+      "#06b6d4",
+      "#84cc16",
     ],
-    []
+    [],
   );
 
   const getDateRangeLabel = () => {
@@ -124,11 +159,6 @@ export default function RevenueReport() {
     const params = new URLSearchParams();
     params.set("type", reportType);
 
-    // Backend behavior:
-    // - day: requires year + month (group by day within month)
-    // - month: requires year (group by months within year)
-    // - quarter: requires year + quarter
-    // - year: do NOT send year/month/quarter (group by years)
     if (reportType !== "year") {
       params.set("year", String(selectedYear));
     }
@@ -150,12 +180,14 @@ export default function RevenueReport() {
 
   const fetchCinemas = async () => {
     try {
-      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/reports/cinemas", {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const token =
+        sessionStorage.getItem("token") || localStorage.getItem("token");
+      const response = await fetch(
+        "http://localhost:5000/api/reports/cinemas",
+        {
+          headers: { Authorization: `Bearer ${token}` },
         },
-      });
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -169,7 +201,8 @@ export default function RevenueReport() {
   const fetchRevenueData = async () => {
     setLoading(true);
     try {
-      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+      const token =
+        sessionStorage.getItem("token") || localStorage.getItem("token");
       const params = buildReportParams();
 
       const response = await fetch(
@@ -179,7 +212,7 @@ export default function RevenueReport() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -188,12 +221,53 @@ export default function RevenueReport() {
 
       const result = await response.json();
 
-      // Set data from API response
-      setRevenueData(result.revenueByPeriod || []);
+      // Tạo đủ 12 tháng nếu là báo cáo theo năm
+      let processedData = result.revenueByPeriod || [];
+
+      if (reportType === "month") {
+        // Tạo mảng 12 tháng
+        const fullYearData = [];
+        for (let i = 1; i <= 12; i++) {
+          const existingData = processedData.find((item) => {
+            const monthNum = parseInt(item.period.match(/\d+/)?.[0] || 0);
+            return monthNum === i;
+          });
+
+          if (existingData) {
+            fullYearData.push(existingData);
+          } else {
+            fullYearData.push({
+              period: `Tháng ${i}`,
+              revenue: 0,
+              tickets: 0,
+            });
+          }
+        }
+        processedData = fullYearData;
+      }
+
+      // Sắp xếp dữ liệu
+      const sortedRevenueData = processedData.sort((a, b) => {
+        if (reportType === "year") {
+          return parseInt(a.period) - parseInt(b.period);
+        }
+        if (reportType === "month") {
+          const aNum = parseInt(a.period.match(/\d+/)?.[0] || 0);
+          const bNum = parseInt(b.period.match(/\d+/)?.[0] || 0);
+          return aNum - bNum;
+        }
+        if (reportType === "quarter") {
+          const aNum = parseInt(a.period.match(/\d+/)?.[0] || 0);
+          const bNum = parseInt(b.period.match(/\d+/)?.[0] || 0);
+          return aNum - bNum;
+        }
+        return 0;
+      });
+
+      setRevenueData(sortedRevenueData);
       setCinemaRevenue(result.revenueByCinema || []);
       setMovieRevenue(result.revenueByMovie || []);
 
-      // Update summary
       setSummary({
         totalRevenue: result.summary?.totalRevenue || 0,
         totalTickets: result.summary?.totalTickets || 0,
@@ -213,16 +287,13 @@ export default function RevenueReport() {
 
   const handleExportExcel = async () => {
     try {
-      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+      const token =
+        sessionStorage.getItem("token") || localStorage.getItem("token");
       const params = buildReportParams();
 
       const res = await fetch(
         `http://localhost:5000/api/reports/revenue/export?${params.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (!res.ok) {
@@ -243,15 +314,19 @@ export default function RevenueReport() {
     }
   };
 
-  // Fetch danh sách rạp khi component mount
   useEffect(() => {
     fetchCinemas();
   }, []);
 
-  // Fetch data when filters change
   useEffect(() => {
     fetchRevenueData();
-  }, [reportType, selectedYear, selectedMonth, selectedQuarter, selectedCinema]);
+  }, [
+    reportType,
+    selectedYear,
+    selectedMonth,
+    selectedQuarter,
+    selectedCinema,
+  ]);
 
   if (loading) {
     return (
@@ -284,7 +359,6 @@ export default function RevenueReport() {
               type="button"
               onClick={fetchRevenueData}
               className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition"
-              title="Xem báo cáo"
             >
               <RefreshCw size={16} />
               Xem báo cáo
@@ -303,28 +377,24 @@ export default function RevenueReport() {
         {/* Filters */}
         <div className="mt-5 cinema-surface p-4 print:hidden">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-lg bg-zinc-900 border border-white/10 px-3 py-2">
-              <Calendar size={16} className="text-zinc-400" />
-              <select
-                value={reportType}
-                onChange={(e) => setReportType(e.target.value)}
-                className="bg-transparent text-sm font-medium text-white outline-none cursor-pointer [&>option]:bg-zinc-900"
-              >
-                <option value="day">Theo tháng</option>
-                <option value="month">Theo năm</option>
-                <option value="quarter">Theo quý</option>
-                <option value="year">Theo nhiều năm</option>
-              </select>
-              <ChevronDown size={14} className="text-zinc-500" />
-            </div>
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value)}
+              className="rounded-lg bg-zinc-900 border border-white/10 px-3 py-2 text-sm font-medium text-white outline-none cursor-pointer"
+            >
+              <option value="day">📅 Theo tháng</option>
+              <option value="month">📆 Theo năm</option>
+              <option value="quarter">📊 Theo quý</option>
+              <option value="year">📈 Theo nhiều năm</option>
+            </select>
 
             {reportType !== "year" && (
-              <div className="flex items-center gap-2 rounded-lg bg-zinc-900 border border-white/10 px-3 py-2">
-                <span className="text-xs font-semibold text-zinc-400">Năm</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-zinc-400">Năm:</span>
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                  className="bg-transparent text-sm font-medium text-white outline-none cursor-pointer [&>option]:bg-zinc-900"
+                  className="rounded-lg bg-zinc-900 border border-white/10 px-3 py-2 text-sm font-medium text-white outline-none cursor-pointer min-w-[96px] text-center"
                 >
                   {years.map((y) => (
                     <option key={y} value={y}>
@@ -332,17 +402,16 @@ export default function RevenueReport() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={14} className="text-zinc-500" />
               </div>
             )}
 
             {reportType === "day" && (
-              <div className="flex items-center gap-2 rounded-lg bg-zinc-900 border border-white/10 px-3 py-2">
-                <span className="text-xs font-semibold text-zinc-400">Tháng</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-zinc-400">Tháng:</span>
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                  className="bg-transparent text-sm font-medium text-white outline-none cursor-pointer [&>option]:bg-zinc-900"
+                  className="rounded-lg bg-zinc-900 border border-white/10 px-3 py-2 text-sm font-medium text-white outline-none cursor-pointer"
                 >
                   {months.map((m) => (
                     <option key={m} value={m}>
@@ -350,43 +419,40 @@ export default function RevenueReport() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={14} className="text-zinc-500" />
               </div>
             )}
 
             {reportType === "quarter" && (
-              <div className="flex items-center gap-2 rounded-lg bg-zinc-900 border border-white/10 px-3 py-2">
-                <span className="text-xs font-semibold text-zinc-400">Quý</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-zinc-400">Quý:</span>
                 <select
                   value={selectedQuarter}
                   onChange={(e) => setSelectedQuarter(parseInt(e.target.value))}
-                  className="bg-transparent text-sm font-medium text-white outline-none cursor-pointer [&>option]:bg-zinc-900"
+                  className="rounded-lg bg-zinc-900 border border-white/10 px-3 py-2 text-sm font-medium text-white outline-none cursor-pointer"
                 >
                   <option value={1}>Quý 1 (Tháng 1-3)</option>
                   <option value={2}>Quý 2 (Tháng 4-6)</option>
                   <option value={3}>Quý 3 (Tháng 7-9)</option>
                   <option value={4}>Quý 4 (Tháng 10-12)</option>
                 </select>
-                <ChevronDown size={14} className="text-zinc-500" />
               </div>
             )}
 
             {cinemas.length > 0 && (
-              <div className="flex items-center gap-2 rounded-lg bg-zinc-900 border border-white/10 px-3 py-2">
-                <Building size={16} className="text-zinc-400" />
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-zinc-400">Rạp:</span>
                 <select
                   value={selectedCinema}
                   onChange={(e) => setSelectedCinema(e.target.value)}
-                  className="bg-transparent text-sm font-medium text-white outline-none cursor-pointer [&>option]:bg-zinc-900"
+                  className="rounded-lg bg-zinc-900 border border-white/10 px-3 py-2 text-sm font-medium text-white outline-none cursor-pointer"
                 >
-                  <option value="all">Tất cả rạp</option>
+                  <option value="all">🏠 Tất cả rạp</option>
                   {cinemas.map((cinema) => (
                     <option key={cinema.cinema_id} value={cinema.cinema_id}>
                       {cinema.name}
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={14} className="text-zinc-400" />
               </div>
             )}
           </div>
@@ -400,9 +466,7 @@ export default function RevenueReport() {
                 <DollarSign size={20} className="text-cinema-primary" />
               </div>
               <span
-                className={`text-xs flex items-center gap-1 ${
-                  summary.growthRate >= 0 ? "text-emerald-400" : "text-red-400"
-                }`}
+                className={`text-xs flex items-center gap-1 ${summary.growthRate >= 0 ? "text-emerald-400" : "text-red-400"}`}
               >
                 {summary.growthRate >= 0 ? (
                   <ArrowUpRight size={12} />
@@ -457,14 +521,24 @@ export default function RevenueReport() {
           </div>
         </div>
 
-        {/* Revenue Trend Chart */}
+        {/* Revenue Trend Chart - Bỏ Legend */}
         <div className="mt-6 cinema-surface p-5">
           <h3 className="font-semibold mb-1">Xu hướng doanh thu</h3>
-          <div className="text-sm text-zinc-400 mb-4">{getDateRangeLabel()}</div>
+          <div className="text-sm text-zinc-400 mb-4">
+            {getDateRangeLabel()}
+          </div>
           {revenueData.length > 0 ? (
             <div className="text-zinc-300">
               <ResponsiveContainer width="100%" height={360}>
-                <AreaChart data={revenueData}>
+                <AreaChart
+                  data={revenueData}
+                  margin={{
+                    top: 8,
+                    right: reportType === "month" ? 28 : 16,
+                    bottom: reportType === "month" ? 16 : 8,
+                    left: 8,
+                  }}
+                >
                   <defs>
                     <linearGradient
                       id="revenueGradient"
@@ -476,7 +550,7 @@ export default function RevenueReport() {
                       <stop
                         offset="5%"
                         stopColor="var(--color-cinema-primary)"
-                        stopOpacity={0.25}
+                        stopOpacity={0.3}
                       />
                       <stop
                         offset="95%"
@@ -493,21 +567,31 @@ export default function RevenueReport() {
                     dataKey="period"
                     stroke="rgba(255, 255, 255, 0.35)"
                     tick={{ fill: "rgba(255, 255, 255, 0.65)", fontSize: 12 }}
+                    interval={reportType === "month" ? 0 : "preserveStartEnd"}
+                    angle={0}
+                    textAnchor="middle"
+                    height={reportType === "month" ? 50 : 30}
+                    tickMargin={12}
+                    padding={{
+                      left: reportType === "month" ? 12 : 0,
+                      right: reportType === "month" ? 24 : 0,
+                    }}
                   />
                   <YAxis
                     stroke="rgba(255, 255, 255, 0.35)"
                     tick={{ fill: "rgba(255, 255, 255, 0.65)", fontSize: 12 }}
                     tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`}
+                    width={60}
                   />
                   <Tooltip content={<RevenueChartTooltip />} />
-                  <Legend />
+                  {/* ĐÃ BỎ LEGEND */}
                   <Area
                     type="monotone"
                     dataKey="revenue"
                     name="Doanh thu"
                     stroke="var(--color-cinema-primary)"
-                    fill="url(#revenueGradient)"
                     strokeWidth={2}
+                    fill="url(#revenueGradient)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -518,7 +602,6 @@ export default function RevenueReport() {
             </div>
           )}
         </div>
-
         {/* Revenue by Cinema & Revenue by Movie */}
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Doanh thu theo rạp */}
@@ -543,7 +626,10 @@ export default function RevenueReport() {
                       <XAxis
                         type="number"
                         stroke="rgba(255, 255, 255, 0.35)"
-                        tick={{ fill: "rgba(255, 255, 255, 0.65)", fontSize: 12 }}
+                        tick={{
+                          fill: "rgba(255, 255, 255, 0.65)",
+                          fontSize: 12,
+                        }}
                         tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`}
                       />
                       <YAxis
@@ -551,10 +637,17 @@ export default function RevenueReport() {
                         dataKey="cinema_name"
                         width={110}
                         stroke="rgba(255, 255, 255, 0.35)"
-                        tick={{ fill: "rgba(255, 255, 255, 0.65)", fontSize: 12 }}
+                        tick={{
+                          fill: "rgba(255, 255, 255, 0.65)",
+                          fontSize: 12,
+                        }}
                       />
                       <Tooltip content={<RevenueChartTooltip />} />
-                      <Bar dataKey="revenue" radius={[0, 6, 6, 0]}>
+                      <Bar
+                        dataKey="revenue"
+                        radius={[0, 6, 6, 0]}
+                        isAnimationActive={false}
+                      >
                         {cinemaRevenue.map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
@@ -578,7 +671,7 @@ export default function RevenueReport() {
                     return (
                       <div
                         key={idx}
-                        className="flex items-center justify-between rounded-lg p-2 hover:bg-white/5"
+                        className="flex items-center justify-between rounded-lg p-2 bg-white/5"
                       >
                         <div className="flex-1">
                           <p className="font-medium">{cinema.cinema_name}</p>
@@ -623,17 +716,15 @@ export default function RevenueReport() {
             </div>
             {movieRevenue.length > 0 ? (
               <>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={320}>
                   <PieChart>
                     <Pie
                       data={movieRevenue}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
-                      label={({ payload, percent }) =>
-                        `${payload?.movie_title || ""}: ${(percent * 100).toFixed(0)}%`
-                      }
-                      outerRadius={80}
+                      labelLine={true}
+                      label={renderCustomizedLabel}
+                      outerRadius={100}
                       dataKey="revenue"
                       nameKey="movie_title"
                     >
@@ -641,10 +732,13 @@ export default function RevenueReport() {
                         <Cell
                           key={`cell-${index}`}
                           fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          stroke="rgba(0,0,0,0.3)"
+                          strokeWidth={2}
                         />
                       ))}
                     </Pie>
                     <Tooltip content={<RevenueChartTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
                   </PieChart>
                 </ResponsiveContainer>
 
@@ -660,14 +754,17 @@ export default function RevenueReport() {
                     return (
                       <div
                         key={idx}
-                        className="flex items-center justify-between rounded-lg p-2 hover:bg-white/5"
+                        className="flex items-center justify-between rounded-lg p-2 bg-white/5"
                       >
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className="w-6 h-6 rounded-full bg-white/10 text-zinc-100 flex items-center justify-center text-xs font-bold">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-6 h-6 rounded-full bg-white/10 text-zinc-100 flex items-center justify-center text-xs font-bold flex-shrink-0">
                             {idx + 1}
                           </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className="font-medium text-sm truncate"
+                              title={movie.movie_title}
+                            >
                               {movie.movie_title}
                             </p>
                             <div className="flex items-center gap-2 mt-1">
@@ -677,13 +774,13 @@ export default function RevenueReport() {
                                   style={{ width: `${percentage}%` }}
                                 />
                               </div>
-                              <span className="text-xs text-zinc-400">
+                              <span className="text-xs text-zinc-400 flex-shrink-0">
                                 {percentage.toFixed(1)}%
                               </span>
                             </div>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex-shrink-0 ml-2">
                           <p className="font-semibold text-zinc-100 text-sm">
                             {formatCurrency(movie.revenue)}
                           </p>
@@ -739,10 +836,7 @@ export default function RevenueReport() {
                       ? (item.revenue / summary.totalRevenue) * 100
                       : 0;
                   return (
-                    <tr
-                      key={idx}
-                      className="border-b border-white/5 hover:bg-white/5 transition"
-                    >
+                    <tr key={idx} className="border-b border-white/5">
                       <td className="py-3 px-4 font-medium">{item.period}</td>
                       <td className="text-right py-3 px-4 font-semibold text-cinema-primary">
                         {formatCurrency(item.revenue)}
