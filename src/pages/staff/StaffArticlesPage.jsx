@@ -48,7 +48,6 @@ const MOCK_ARTICLES = [
     publishDate: "2026-03-01",
     views: 12450,
     status: "published",
-    summary: "Danh sách 10 bộ phim chiếu rạp đáng xem nhất trong tháng 3 tới.",
     iconType: "clapper",
   },
   {
@@ -60,7 +59,6 @@ const MOCK_ARTICLES = [
     publishDate: "2026-02-20",
     views: 8920,
     status: "published",
-    summary: "Đánh giá chi tiết về siêu bom tấn hành động mới nhất của năm.",
     iconType: "star",
   },
   {
@@ -72,7 +70,6 @@ const MOCK_ARTICLES = [
     publishDate: "2026-02-13",
     views: 15800,
     status: "published",
-    summary: "Chương trình khuyến mãi đặc biệt nhân dịp Lễ Tình Nhân 14/2.",
     iconType: "heart",
   },
   {
@@ -84,7 +81,6 @@ const MOCK_ARTICLES = [
     publishDate: "2026-02-25",
     views: 6780,
     status: "published",
-    summary: "Trải nghiệm điện ảnh 270 độ lần đầu tiên xuất hiện tại Hà Nội.",
     iconType: "monitor",
   },
   {
@@ -96,7 +92,6 @@ const MOCK_ARTICLES = [
     publishDate: "",
     views: 0,
     status: "draft",
-    summary: "Điểm qua những bộ phim nổi bật sắp tranh giải tại Liên hoan phim.",
     iconType: "masks",
   },
   {
@@ -108,7 +103,6 @@ const MOCK_ARTICLES = [
     publishDate: "2026-01-15",
     views: 22300,
     status: "published",
-    summary: "Các bước đơn giản để mua vé xem phim và bắp nước trực tuyến.",
     iconType: "mobile",
   },
 ];
@@ -148,7 +142,6 @@ function EditArticleModal({
     title: article?.title || "",
     category: article?.category || "news",
     author: article?.author || "",
-    summary: article?.summary || "",
     status: article?.status || "draft",
   }));
 
@@ -158,7 +151,6 @@ function EditArticleModal({
 
     if (!form.title.trim()) nextErrors.title = "Vui lòng nhập tiêu đề";
     if (!form.author.trim()) nextErrors.author = "Vui lòng nhập tác giả";
-    if (!form.summary.trim()) nextErrors.summary = "Vui lòng nhập tóm tắt";
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -234,16 +226,7 @@ function EditArticleModal({
           </div>
         </div>
 
-        <div>
-          <label className={labelBase}>Tóm tắt</label>
-          <textarea
-            className={[inputBase, "min-h-[120px] resize-none", errors.summary ? "border-red-500" : ""].join(" ")}
-            value={form.summary}
-            onChange={(e) => setForm((p) => ({ ...p, summary: e.target.value }))}
-            placeholder="Nhập nội dung tóm tắt..."
-          />
-          {errors.summary ? <div className={errorText}>{errors.summary}</div> : null}
-        </div>
+
 
         <div>
           <label className={labelBase}>Trạng thái</label>

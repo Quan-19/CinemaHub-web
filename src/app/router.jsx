@@ -10,6 +10,7 @@ import MoviesPage from "../pages/MoviesPage.jsx";
 import { MovieDetailPage } from "../pages/MovieDetailPage.jsx";
 import CinemaPage from "../pages/CinemaPage.jsx";
 import PromotionsPage from "../pages/PromotionsPage.jsx";
+import ArticleDetailPage from "../pages/ArticleDetailPage.jsx";
 import AuthPage from "../pages/AuthPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
 import ProfilePage from "../pages/ProfilePage.jsx";
@@ -34,6 +35,7 @@ import AccountsPage from "../pages/admin/AccountsPage.jsx";
 import AdminPromotionsPage from "../pages/admin/AdminPromotionsPage";
 import Foods from "../pages/admin/Foods.jsx";
 import TwoFAPage from "../pages/TwoFAPage.jsx";
+import AdminArticlesPage from "../pages/admin/Articles.jsx";
 // Staff pages
 import StaffDashboardPage from "../pages/staff/StaffDashboardPage.jsx";
 import StaffMoviesPage from "../pages/staff/StaffMoviesPage.jsx";
@@ -67,6 +69,7 @@ export const router = createBrowserRouter([
       { path: "ticket/:bookingCode", element: <TicketPage /> },
       { path: "cinemas", element: <CinemaPage /> },
       { path: "promotions", element: <PromotionsPage /> },
+      { path: "articles/:id", element: <ArticleDetailPage /> },
       { path: "auth", element: <AuthPage /> },
       { path: "2fa", element: <TwoFAPage /> },
       { path: "profile", element: <ProfilePage /> },
@@ -93,6 +96,7 @@ export const router = createBrowserRouter([
       { path: "prices", element: <AdminPricingPage /> },
       { path: "accounts", element: <AccountsPage /> },
       { path: "promotions", element: <AdminPromotionsPage /> },
+      { path: "posts", element: <AdminArticlesPage /> },
       { path: "foods", element: <Foods /> },
     ],
   },

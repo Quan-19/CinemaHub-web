@@ -1,7 +1,7 @@
 // PromotionsPage.jsx
 import {
   Clock, Copy, Check, Info, Gift, MapPin, AlertCircle,
-  Search, Filter, ChevronRight
+  Search, Filter, ChevronRight, FileText, Calendar
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -9,10 +9,13 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export const PromotionsPage = () => {
   const [promotions, setPromotions] = useState([]);
+  const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [articlesLoading, setArticlesLoading] = useState(true);
   const [copiedPromoId, setCopiedPromoId] = useState(null);
   const [expandedPromos, setExpandedPromos] = useState(() => new Set());
   const [error, setError] = useState(null);
+  const [articlesError, setArticlesError] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -99,6 +102,51 @@ export const PromotionsPage = () => {
     fetchPromotions();
   }, []);
 
+  useEffect(() => {
+    const fetchArticles = async () => {
+      setArticlesLoading(true);
+      setArticlesError(null);
+      try {
+        const res = await fetch(
+          "http://localhost:5000/api/articles?scope=public"
+        );
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
+        const payload = await res.json();
+        const data = Array.isArray(payload?.data)
+          ? payload.data
+          : Array.isArray(payload)
+            ? payload
+            : [];
+
+        const formatted = data.map((article, index) => ({
+          article_id: article.article_id || article.id || null,
+          client_id: `${article.article_id || article.id || "article"}-${index}`,
+          title: article.title || "",
+          summary: article.summary || "",
+          content: article.content || "",
+          image: article.image || "",
+          category: article.category || "promotion",
+          author: article.author || "",
+          status: article.status || "draft",
+          publish_date: article.publish_date || null,
+        }));
+
+        setArticles(formatted);
+      } catch (err) {
+        console.error("Error loading articles:", err);
+        setArticlesError("Không thể tải dữ liệu bài viết. Vui lòng thử lại sau.");
+      } finally {
+        setArticlesLoading(false);
+      }
+    };
+
+    fetchArticles();
+  }, []);
+
   const handleCopy = (promoId, code) => {
     if (navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(code).catch(() => { });
@@ -141,6 +189,26 @@ export const PromotionsPage = () => {
     if (Number.isNaN(date.getTime())) return "Không rõ";
     return date.toLocaleDateString("vi-VN");
   };
+
+  const ARTICLE_CATEGORIES = {
+    promotion: { label: "Khuyến mãi", cls: "bg-red-600 text-white" },
+    gift: { label: "Quà tặng", cls: "bg-emerald-500 text-white" },
+    news: { label: "Tin mới", cls: "bg-blue-600 text-white" },
+    event: { label: "Sự kiện", cls: "bg-purple-600 text-white" },
+  };
+
+  const getArticleCategory = (category) => {
+    const key = String(category || "promotion").toLowerCase();
+    return ARTICLE_CATEGORIES[key] || ARTICLE_CATEGORIES.promotion;
+  };
+
+  const filteredArticles = articles.filter((article) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    const inTitle = article.title.toLowerCase().includes(q);
+    const inSummary = article.summary.toLowerCase().includes(q);
+    return inTitle || inSummary;
+  });
 
   const filteredPromotions = promotions.filter(promo => {
     // Tab filter
@@ -186,7 +254,7 @@ export const PromotionsPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-cinema-bg">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-          <p className="text-zinc-400 font-medium animate-pulse">Đang chuẩn bị ưu đãi đặc biệt...</p>
+          <p className="text-zinc-400 text-sm font-medium animate-pulse">Đang chuẩn bị ưu đãi đặc biệt...</p>
         </div>
       </div>
     );
@@ -200,7 +268,7 @@ export const PromotionsPage = () => {
             <AlertCircle className="w-10 h-10 text-red-500" />
           </div>
           <h2 className="text-white text-xl font-bold mb-3">Rất tiếc!</h2>
-          <p className="text-zinc-400 mb-6">{error}</p>
+          <p className="text-zinc-300 text-base mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="cinema-btn-primary w-full"
@@ -233,7 +301,7 @@ export const PromotionsPage = () => {
               SĂN <span className="text-gradient">ƯU ĐÃI</span><br />
               NHẬN NIỀM VUI
             </h1>
-            <p className="text-zinc-400 text-base md:text-lg leading-relaxed mb-8 animate-fade-slide-up" style={{ animationDelay: "0.1s" }}>
+            <p className="text-zinc-300 text-base md:text-lg leading-relaxed mb-8 animate-fade-slide-up" style={{ animationDelay: "0.1s" }}>
               Hàng ngàn mã giảm giá và chương trình khuyến mãi hấp dẫn đang chờ đón bạn.
               Đặt vé ngay để tận hưởng trải nghiệm điện ảnh tuyệt vời nhất!
             </p>
@@ -286,6 +354,108 @@ export const PromotionsPage = () => {
           </div>
         </div>
       </nav>
+
+      {/* ARTICLES SECTION */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-10 md:mb-14">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-6">
+          <div>
+            <h2 className="text-white text-2xl md:text-3xl font-black">Tin mới</h2>
+            <p className="text-zinc-400 text-sm">
+              Cập nhật khuyến mãi sắp tới, quà tặng và thông báo nổi bật.
+            </p>
+          </div>
+          <span className="text-xs text-zinc-500">
+            {filteredArticles.length} bài viết
+          </span>
+        </div>
+
+        {articlesLoading ? (
+          <div className="text-center py-10 text-zinc-500">
+            Đang tải bài viết...
+          </div>
+        ) : articlesError ? (
+          <div className="text-center py-10 text-red-400">
+            {articlesError}
+          </div>
+        ) : filteredArticles.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {filteredArticles.map((article, idx) => {
+              const category = getArticleCategory(article.category);
+              const articleId = article.article_id || article.id;
+              const cardClassName =
+                "group relative glass-card overflow-hidden hover:translate-y-[-6px] transition-all duration-500 animate-scale-in";
+              const cardStyle = { animationDelay: `${idx * 0.05}s` };
+
+              const cardContent = (
+                <>
+                  <div className="relative h-40 sm:h-44 overflow-hidden">
+                    {article.image ? (
+                      <img
+                        src={article.image}
+                        alt={article.title}
+                        title={article.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center">
+                        <FileText className="w-12 h-12 text-zinc-700 group-hover:text-red-500/50 transition-colors" />
+                      </div>
+                    )}
+
+                    <div className="absolute top-4 left-4 z-20">
+                      <span
+                        className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${category.cls}`}
+                      >
+                        {category.label}
+                      </span>
+                    </div>
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/30 to-transparent opacity-60"></div>
+                  </div>
+
+                  <div className="p-4 sm:p-5">
+                    <h3 className="text-white text-lg font-bold mb-2 line-clamp-2 group-hover:text-red-400 transition-colors">
+                      {article.title}
+                    </h3>
+                    <p className="text-zinc-400 text-xs mb-4 line-clamp-2 leading-relaxed">
+                      {article.summary || "Chưa có tóm tắt."}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-zinc-500">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-4 h-4" />
+                        {formatDate(article.publish_date)}
+                      </div>
+                      {article.author ? (
+                        <span className="text-zinc-400">{article.author}</span>
+                      ) : null}
+                    </div>
+                  </div>
+                </>
+              );
+
+              return articleId ? (
+                <Link
+                  key={article.client_id}
+                  to={`/articles/${articleId}`}
+                  className={cardClassName}
+                  style={cardStyle}
+                >
+                  {cardContent}
+                </Link>
+              ) : (
+                <article key={article.client_id} className={cardClassName} style={cardStyle}>
+                  {cardContent}
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-10 text-zinc-500">
+            Chưa có bài viết nào được đăng.
+          </div>
+        )}
+      </section>
 
       {/* CONTENT GRID */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -344,7 +514,7 @@ export const PromotionsPage = () => {
                     {promo.title}
                   </h2>
 
-                  <p className="text-zinc-400 text-xs mb-4 line-clamp-2 leading-relaxed">
+                  <p className="text-zinc-300 text-sm mb-4 line-clamp-2 leading-relaxed">
                     {promo.description}
                   </p>
 
@@ -420,28 +590,28 @@ export const PromotionsPage = () => {
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-zinc-300 mb-4">
                         <div className="flex items-center justify-between gap-3 bg-black/30 rounded-lg px-3 py-2">
-                          <span className="text-zinc-500">Mức ưu đãi</span>
-                          <span className="font-bold text-white">{getDiscountDisplay(promo)}</span>
+                          <span className="text-white font-bold">Mức ưu đãi:</span>
+                          <span className="text-zinc-300 font-normal">{getDiscountDisplay(promo)}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3 bg-black/30 rounded-lg px-3 py-2">
-                          <span className="text-zinc-500">Áp dụng tại</span>
-                          <span className="font-bold text-white">{promo.cinema_name || "Toàn hệ thống"}</span>
+                          <span className="text-white font-bold">Áp dụng tại:</span>
+                          <span className="text-zinc-300 font-normal">{promo.cinema_name || "Toàn hệ thống"}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3 bg-black/30 rounded-lg px-3 py-2">
-                          <span className="text-zinc-500">Thời gian</span>
-                          <span className="font-bold text-white">{formatDate(promo.start_date)} - {formatDate(promo.end_date)}</span>
+                          <span className="text-white font-bold">Thời gian:</span>
+                          <span className="text-zinc-300 font-normal">{formatDate(promo.start_date)} - {formatDate(promo.end_date)}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3 bg-black/30 rounded-lg px-3 py-2">
-                          <span className="text-zinc-500">Tối thiểu</span>
-                          <span className="font-bold text-white">{promo.min_order > 0 ? `${promo.min_order.toLocaleString()}đ` : "Không yêu cầu"}</span>
+                          <span className="text-white font-bold">Tối thiểu:</span>
+                          <span className="text-zinc-300 font-normal">{promo.min_order > 0 ? `${promo.min_order.toLocaleString()}đ` : "Không yêu cầu"}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3 bg-black/30 rounded-lg px-3 py-2">
-                          <span className="text-zinc-500">Giới hạn</span>
-                          <span className="font-bold text-white">{promo.usage_limit > 0 ? `${promo.used_count}/${promo.usage_limit}` : "Không giới hạn"}</span>
+                          <span className="text-white font-bold">Giới hạn:</span>
+                          <span className="text-zinc-300 font-normal">{promo.usage_limit > 0 ? `${promo.used_count}/${promo.usage_limit}` : "Không giới hạn"}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3 bg-black/30 rounded-lg px-3 py-2">
-                          <span className="text-zinc-500">Trạng thái</span>
-                          <span className={`font-bold ${promo.status === "active" ? "text-green-400" : "text-zinc-400"}`}>{promo.status === "active" ? "Đang hoạt động" : "Tạm dừng"}</span>
+                          <span className="text-white font-bold">Trạng thái:</span>
+                          <span className={`font-normal ${promo.status === "active" ? "text-green-400" : "text-zinc-400"}`}>{promo.status === "active" ? "Đang hoạt động" : "Tạm dừng"}</span>
                         </div>
                       </div>
 
@@ -451,34 +621,37 @@ export const PromotionsPage = () => {
                       </h3>
                       <ul className="space-y-2">
                         {promo.apply_days.length > 0 && promo.apply_days.length < 7 ? (
-                          <li className="text-zinc-400 text-xs flex gap-2">
+                          <li className="text-zinc-300 text-sm flex gap-2">
                             <span className="text-red-500">•</span>
-                            Chỉ áp dụng các ngày: {promo.apply_days.map(d => getDayName(d)).join(", ")}
+                            <span className="font-bold text-white">Ngày áp dụng:</span>
+                            {promo.apply_days.map(d => getDayName(d)).join(", ")}
                           </li>
                         ) : (
-                          <li className="text-zinc-400 text-xs flex gap-2">
+                          <li className="text-zinc-300 text-sm flex gap-2">
                             <span className="text-red-500">•</span>
                             Áp dụng tất cả các ngày trong tuần.
                           </li>
                         )}
                         {promo.apply_seat_types.length > 0 ? (
-                          <li className="text-zinc-400 text-xs flex gap-2">
+                          <li className="text-zinc-300 text-sm flex gap-2">
                             <span className="text-red-500">•</span>
-                            Loại ghế: {promo.apply_seat_types.join(", ")}
+                            <span className="font-bold text-white">Loại ghế:</span>
+                            {promo.apply_seat_types.join(", ")}
                           </li>
                         ) : (
-                          <li className="text-zinc-400 text-xs flex gap-2">
+                          <li className="text-zinc-300 text-sm flex gap-2">
                             <span className="text-red-500">•</span>
                             Áp dụng cho tất cả loại ghế.
                           </li>
                         )}
                         {promo.usage_limit > 0 ? (
-                          <li className="text-zinc-400 text-xs flex gap-2">
+                          <li className="text-zinc-300 text-sm flex gap-2">
                             <span className="text-red-500">•</span>
-                            Lượt sử dụng: {promo.used_count}/{promo.usage_limit}
+                            <span className="font-bold text-white">Lượt sử dụng:</span>
+                            {promo.used_count}/{promo.usage_limit}
                           </li>
                         ) : null}
-                        <li className="text-zinc-400 text-xs flex gap-2">
+                        <li className="text-zinc-300 text-sm flex gap-2">
                           <span className="text-red-500">•</span>
                           Mỗi tài khoản chỉ được sử dụng 1 lần cho chương trình này.
                         </li>
@@ -503,7 +676,7 @@ export const PromotionsPage = () => {
               <Filter className="w-10 h-10 text-zinc-700" />
             </div>
             <h2 className="text-white text-2xl font-bold mb-4">Không tìm thấy ưu đãi</h2>
-            <p className="text-zinc-400 mb-8 max-w-md mx-auto leading-relaxed">
+            <p className="text-zinc-500 text-sm mb-8 max-w-md mx-auto leading-relaxed">
               Rất tiếc, chúng tôi không tìm thấy khuyến mãi nào phù hợp với yêu cầu của bạn.
               Hãy thử thay đổi từ khóa tìm kiếm hoặc chọn danh mục khác.
             </p>
