@@ -71,6 +71,7 @@ export const normalizeShowtimesData = (showtimesData) => {
       endTime: formattedEndTime || "---",
       start_time: s.start_time,
       end_time: s.end_time,
+      language: s.language || "VIETSUB",
       isSpecial: Boolean(s.isSpecial ?? s.special ?? s.is_special ?? false),
       specialType: s.specialType || s.special_type || null,
       specialPromotionId: s.specialPromotionId || s.special_promotion_id || null,

@@ -837,7 +837,7 @@ export default function ShowtimeModal({
                       className={selectClass}
                       required
                     >
-                      <option value="VIETSUB">Phụ đề (VietSub)</option>
+                      <option value="VIETSUB">Phụ đề</option>
                       <option value="DUB">Lồng tiếng</option>
                     </select>
                   </div>
