@@ -12,6 +12,12 @@ import {
   ListOrdered,
   Quote,
   Link2,
+  Type,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Eraser,
+  SeparatorHorizontal,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { sanitizeArticleHtml } from "../../../utils/articleContent";
@@ -98,8 +104,11 @@ export default function ArticleModal({
   useEffect(() => {
     if (!show) return;
     if (!contentRef.current) return;
+    
+    // Only update innerHTML if it's significantly different (initial load or external update)
+    // Avoid updating while user is typing
     const nextHtml = form.content || "";
-    if (contentRef.current.innerHTML !== nextHtml) {
+    if (contentRef.current.innerHTML !== nextHtml && document.activeElement !== contentRef.current) {
       contentRef.current.innerHTML = nextHtml;
     }
   }, [show, form.content]);
@@ -210,12 +219,17 @@ export default function ArticleModal({
   const applyCommand = (command, value = null) => {
     if (!contentRef.current) return;
     contentRef.current.focus();
-    saveSelection();
-    restoreSelection();
+    
+    // Some commands like insertOrderedList might behave better if we ensure 
+    // the selection is within a valid block.
+    
     document.execCommand(command, false, value);
-    syncContentState();
-    saveSelection();
-    updateFormatState();
+    
+    // Delay sync slightly to allow browser to finish DOM updates
+    setTimeout(() => {
+      syncContentState();
+      updateFormatState();
+    }, 0);
   };
 
   const insertHtmlAtSelection = (html) => {
@@ -569,99 +583,159 @@ export default function ArticleModal({
                   <div className="sticky top-0 z-10 border-b border-white/10 bg-zinc-900/90 backdrop-blur">
                     <div className="flex flex-wrap items-center gap-2 px-2 py-2">
                       <div className="flex flex-wrap items-center gap-1">
-                      <button
-                        type="button"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => toggleInlineStyle("bold")}
-                        className={toolbarButtonClass(formatState.bold)}
-                        title="Đậm (Ctrl+B)"
-                      >
-                        <Bold className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => toggleInlineStyle("italic")}
-                        className={toolbarButtonClass(formatState.italic)}
-                        title="Nghiêng (Ctrl+I)"
-                      >
-                        <Italic className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => toggleInlineStyle("underline")}
-                        className={toolbarButtonClass(formatState.underline)}
-                        title="Gạch chân (Ctrl+U)"
-                      >
-                        <Underline className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => handleHeading(2)}
-                        className={toolbarTextButtonClass(formatState.block === "h2")}
-                        title="Tiêu đề lớn"
-                      >
-                        H2
-                      </button>
-                      <button
-                        type="button"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => handleHeading(3)}
-                        className={toolbarTextButtonClass(formatState.block === "h3")}
-                        title="Tiêu đề vừa"
-                      >
-                        H3
-                      </button>
-                      <button
-                        type="button"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={handleParagraph}
-                        className={toolbarTextButtonClass(isParagraph)}
-                        title="Đoạn văn"
-                      >
-                        P
-                      </button>
-                      <div className="h-5 w-px bg-white/10" />
-                      <button
-                        type="button"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={handleBlockquote}
-                        className={toolbarButtonClass(formatState.block === "blockquote")}
-                        title="Trích dẫn"
-                      >
-                        <Quote className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => applyCommand("insertUnorderedList")}
-                        className={toolbarButtonClass(formatState.unorderedList)}
-                        title="Danh sách"
-                      >
-                        <List className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => applyCommand("insertOrderedList")}
-                        className={toolbarButtonClass(formatState.orderedList)}
-                        title="Danh sách số"
-                      >
-                        <ListOrdered className="w-4 h-4" />
-                      </button>
-                      <div className="h-5 w-px bg-white/10" />
-                      <button
-                        type="button"
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={openLinkEditor}
-                        className={toolbarButtonClass(false)}
-                        title="Chèn liên kết (Ctrl+K)"
-                      >
-                        <Link2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => toggleInlineStyle("bold")}
+                          className={toolbarButtonClass(formatState.bold)}
+                          title="Đậm (Ctrl+B)"
+                        >
+                          <Bold className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => toggleInlineStyle("italic")}
+                          className={toolbarButtonClass(formatState.italic)}
+                          title="Nghiêng (Ctrl+I)"
+                        >
+                          <Italic className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => toggleInlineStyle("underline")}
+                          className={toolbarButtonClass(formatState.underline)}
+                          title="Gạch chân (Ctrl+U)"
+                        >
+                          <Underline className="w-4 h-4" />
+                        </button>
+                        
+                        <div className="h-5 w-px bg-white/10 mx-1" />
+                        
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => handleHeading(2)}
+                          className={toolbarTextButtonClass(formatState.block === "h2")}
+                          title="Tiêu đề lớn"
+                        >
+                          H2
+                        </button>
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => handleHeading(3)}
+                          className={toolbarTextButtonClass(formatState.block === "h3")}
+                          title="Tiêu đề vừa"
+                        >
+                          H3
+                        </button>
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={handleParagraph}
+                          className={toolbarTextButtonClass(isParagraph)}
+                          title="Đoạn văn"
+                        >
+                          P
+                        </button>
+
+                        <div className="h-5 w-px bg-white/10 mx-1" />
+
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => applyCommand("justifyLeft")}
+                          className={toolbarButtonClass(false)}
+                          style={{ minWidth: '32px' }}
+                          title="Căn lề trái"
+                        >
+                          <AlignLeft className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => applyCommand("justifyCenter")}
+                          className={toolbarButtonClass(false)}
+                          style={{ minWidth: '32px' }}
+                          title="Căn giữa"
+                        >
+                          <AlignCenter className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => applyCommand("justifyRight")}
+                          className={toolbarButtonClass(false)}
+                          style={{ minWidth: '32px' }}
+                          title="Căn lề phải"
+                        >
+                          <AlignRight className="w-4 h-4" />
+                        </button>
+
+                        <div className="h-5 w-px bg-white/10 mx-1" />
+
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={handleBlockquote}
+                          className={toolbarButtonClass(formatState.block === "blockquote")}
+                          title="Trích dẫn"
+                        >
+                          <Quote className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => applyCommand("insertUnorderedList")}
+                          className={toolbarButtonClass(formatState.unorderedList)}
+                          title="Danh sách dấu chấm"
+                        >
+                          <List className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => applyCommand("insertOrderedList")}
+                          className={toolbarButtonClass(formatState.orderedList)}
+                          title="Danh sách số (1. 2. 3.)"
+                        >
+                          <ListOrdered className="w-4 h-4" />
+                        </button>
+                        
+                        <div className="h-5 w-px bg-white/10 mx-1" />
+                        
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => insertHtmlAtSelection("<hr />")}
+                          className={toolbarButtonClass(false)}
+                          style={{ minWidth: '32px' }}
+                          title="Đường kẻ ngang"
+                        >
+                          <SeparatorHorizontal className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={openLinkEditor}
+                          className={toolbarButtonClass(false)}
+                          title="Chèn liên kết (Ctrl+K)"
+                        >
+                          <Link2 className="w-4 h-4" />
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => applyCommand("removeFormat")}
+                          className={toolbarButtonClass(false)}
+                          title="Xóa định dạng"
+                        >
+                          <Eraser className="w-4 h-4" />
+                        </button>
+                      </div>
 
                       <div className="ml-auto flex flex-wrap items-center gap-2">
                         <span className="text-xs text-zinc-500">
@@ -721,7 +795,7 @@ export default function ArticleModal({
                   <div className="relative min-h-[240px]">
                     {!plainText ? (
                       <p className="pointer-events-none absolute top-3 left-3 text-sm text-zinc-500">
-                        Bắt đầu gõ nội dung... (bôi đen để định dạng)
+                        {/* Bắt đầu gõ nội dung... (bôi đen để định dạng) */}
                       </p>
                     ) : null}
                     <div
