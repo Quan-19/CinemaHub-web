@@ -545,8 +545,21 @@ export default function BookingConfirmationPage() {
         params.set("date", showtimeDate.toISOString().split("T")[0]);
       }
 
+      const auth = getAuth();
+      const user = auth.currentUser;
+      let token = "";
+      if (user) {
+        token = await user.getIdToken(true);
+      }
+      
+      const headers = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch(
         `${API_BASE_URL}/api/promotions/calculate?${params.toString()}`,
+        { headers }
       );
       const data = await res.json();
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { 
+import {
   ChevronDown,
   Star,
   Clock,
@@ -28,21 +28,21 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 // Hàm extract YouTube ID từ nhiều dạng URL khác nhau
 const extractYouTubeId = (url) => {
   if (!url) return null;
-  
+
   // Các dạng URL YouTube hỗ trợ
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&?#]+)/,
     /youtube\.com\/watch\?.*[?&]v=([^&?#]+)/,
     /youtube\.com\/shorts\/([^/?]+)/
   ];
-  
+
   for (const pattern of patterns) {
     const match = url.match(pattern);
     if (match && match[1]) {
       return match[1];
     }
   }
-  
+
   return null;
 };
 
@@ -80,11 +80,10 @@ const PremiumMovieCard = ({ movie, index }) => {
 
         <div className="absolute top-3 left-3 z-10">
           <span
-            className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase backdrop-blur-md ${
-              isNowShowing
-                ? "bg-red-500/90 text-white"
-                : "bg-yellow-500/90 text-black"
-            }`}
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase backdrop-blur-md ${isNowShowing
+              ? "bg-red-500/90 text-white"
+              : "bg-yellow-500/90 text-black"
+              }`}
           >
             {isNowShowing ? "Đang chiếu" : "Sắp chiếu"}
           </span>
@@ -261,17 +260,6 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="max-w-2xl"
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 backdrop-blur-sm border border-red-500/30 mb-4"
-            >
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-xs font-semibold text-red-400">
-                ĐANG CHIẾU
-              </span>
-            </motion.div>
 
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -338,13 +326,12 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
                 <span>{movie.duration} phút</span>
               </div>
               <div
-                className={`px-2 md:px-3 py-1 rounded-full text-xs font-bold ${
-                  movie.age_rating === "T18"
-                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                    : movie.age_rating === "T16"
-                      ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
-                      : "bg-green-500/20 text-green-400 border border-green-500/30"
-                }`}
+                className={`px-2 md:px-3 py-1 rounded-full text-xs font-bold ${movie.age_rating === "T18"
+                  ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                  : movie.age_rating === "T16"
+                    ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                    : "bg-green-500/20 text-green-400 border border-green-500/30"
+                  }`}
               >
                 {movie.age_rating || "T13"}
               </div>
@@ -417,7 +404,7 @@ const CinemaCard = ({ cinema }) => {
 // Home Promotion Card Component
 const HomePromotionCard = ({ promo, index }) => {
   const navigate = useNavigate();
-  
+
   const getDiscountDisplay = (promo) => {
     const discountType = promo.discount_type || "percent";
     const discountPercent = Number(promo.discount_percent ?? 0);
@@ -453,7 +440,7 @@ const HomePromotionCard = ({ promo, index }) => {
         {/* Left Side - Discount Badge */}
         <div className="w-full sm:w-24 h-20 sm:h-auto shrink-0 flex items-center justify-center bg-zinc-800/30 relative">
           <div className="absolute inset-0 opacity-5">
-             <div className="w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '10px 10px' }}></div>
+            <div className="w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '10px 10px' }}></div>
           </div>
           <div className="relative z-10 flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-red-600 text-white shadow-lg rotate-[-5deg] group-hover:rotate-0 transition-transform duration-500">
             <span className="text-[8px] font-black uppercase leading-none opacity-80">Giảm</span>
@@ -471,8 +458,8 @@ const HomePromotionCard = ({ promo, index }) => {
         {/* Right Side - Content */}
         <div className="flex-1 p-4 flex flex-col justify-center min-w-0">
           <div className="flex items-center justify-between mb-1">
-             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{promo.cinema_id ? "Tại rạp" : "Hệ thống"}</span>
-             <span className="text-[8px] font-medium text-zinc-600 flex items-center gap-0.5"><Clock className="w-2 h-2" /> {formatDate(promo.end_date)}</span>
+            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{promo.cinema_id ? "Tại rạp" : "Hệ thống"}</span>
+            <span className="text-[8px] font-medium text-zinc-600 flex items-center gap-0.5"><Clock className="w-2 h-2" /> {formatDate(promo.end_date)}</span>
           </div>
           <h3 className="text-white font-bold text-sm mb-1 group-hover:text-red-500 transition-colors line-clamp-1">
             {promo.title}
@@ -481,10 +468,10 @@ const HomePromotionCard = ({ promo, index }) => {
             {promo.description}
           </p>
           <div className="flex items-center gap-2">
-             <div className="flex-1 px-2 py-1 bg-black/40 border border-white/5 rounded-lg text-[10px] font-mono font-bold text-zinc-400 tracking-wider">
-                {promo.code}
-             </div>
-             <div className="text-[10px] font-bold text-red-500 group-hover:translate-x-1 transition-transform">Lấy mã →</div>
+            <div className="flex-1 px-2 py-1 bg-black/40 border border-white/5 rounded-lg text-[10px] font-mono font-bold text-zinc-400 tracking-wider">
+              {promo.code}
+            </div>
+            <div className="text-[10px] font-bold text-red-500 group-hover:translate-x-1 transition-transform">Lấy mã →</div>
           </div>
         </div>
       </div>
@@ -714,11 +701,10 @@ const HomePage = () => {
                     setHeroIndex((idx) => (idx + 1) % featured.length);
                   }, 6000);
                 }}
-                className={`transition-all duration-300 rounded-full ${
-                  i === heroIndex
-                    ? "w-8 h-2 bg-red-500"
-                    : "w-2 h-2 bg-white/30 hover:bg-white/60"
-                }`}
+                className={`transition-all duration-300 rounded-full ${i === heroIndex
+                  ? "w-8 h-2 bg-red-500"
+                  : "w-2 h-2 bg-white/30 hover:bg-white/60"
+                  }`}
               />
             ))}
           </div>
@@ -973,11 +959,10 @@ const HomePage = () => {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              m.status === "now_showing"
-                                ? "bg-red-500/15 text-red-300 border border-red-500/20"
-                                : "bg-yellow-500/15 text-yellow-300 border border-yellow-500/20"
-                            }`}
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${m.status === "now_showing"
+                              ? "bg-red-500/15 text-red-300 border border-red-500/20"
+                              : "bg-yellow-500/15 text-yellow-300 border border-yellow-500/20"
+                              }`}
                           >
                             {m.status === "now_showing"
                               ? "Đang chiếu"
@@ -1067,7 +1052,7 @@ const HomePage = () => {
               <div className="relative pt-[56.25%]">
                 {(() => {
                   const youtubeId = extractYouTubeId(selectedTrailerMovie.trailer);
-                  
+
                   if (youtubeId) {
                     return (
                       <iframe
@@ -1080,7 +1065,7 @@ const HomePage = () => {
                       />
                     );
                   }
-                  
+
                   // Fallback nếu không có trailer hợp lệ
                   return (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900">
@@ -1097,7 +1082,7 @@ const HomePage = () => {
                   );
                 })()}
               </div>
-              
+
               <button
                 onClick={() => setShowTrailerModal(false)}
                 className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors"

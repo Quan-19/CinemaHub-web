@@ -510,15 +510,20 @@ export const PromotionsPage = () => {
                 <div className="relative flex flex-col md:flex-row h-auto rounded-3xl overflow-hidden bg-zinc-900/50 border border-white/5 backdrop-blur-md group-hover:border-cinema-primary/30 group-hover:bg-zinc-900/80 transition-all duration-500">
                   
                   {/* Left Side - Discount Badge */}
-                  <div className="relative w-full md:w-32 h-24 md:h-auto shrink-0 flex items-center justify-center bg-zinc-800/30 overflow-hidden">
+                  <div className="relative w-full md:w-28 h-20 md:h-auto shrink-0 flex items-center justify-center bg-zinc-800/30 overflow-hidden">
                     {/* Background Pattern */}
                     <div className="absolute inset-0 opacity-10">
                       <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '12px 12px' }}></div>
                     </div>
                     
-                    <div className="relative z-10 flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-cinema-primary text-white shadow-xl rotate-[-5deg] group-hover:rotate-0 transition-transform duration-500">
-                        <span className="text-[10px] font-black uppercase leading-none opacity-80">Giảm</span>
-                        <span className="text-xl font-black leading-none">{getDiscountDisplay(promo).replace('-', '')}</span>
+                    <div className="relative z-10 flex flex-col items-center justify-center min-w-[4rem] w-fit px-3 h-16 rounded-2xl bg-cinema-primary text-white shadow-xl rotate-[-5deg] group-hover:rotate-0 transition-all duration-500">
+                        <span className="text-[9px] font-black uppercase leading-none opacity-80 mb-0.5">Giảm</span>
+                        <span className={`font-black leading-none whitespace-nowrap ${
+                          getDiscountDisplay(promo).replace('-', '').length > 10 ? 'text-[13px]' : 
+                          getDiscountDisplay(promo).replace('-', '').length > 8 ? 'text-[15px]' : 'text-lg'
+                        }`}>
+                          {getDiscountDisplay(promo).replace('-', '')}
+                        </span>
                     </div>
                   </div>
 
@@ -530,11 +535,11 @@ export const PromotionsPage = () => {
                   </div>
 
                   {/* Right Side - Content */}
-                  <div className="flex-1 p-6 flex flex-col justify-between">
+                  <div className="flex-1 p-4 md:p-5 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-1.5 text-cinema-gold text-[10px] font-black uppercase tracking-widest">
-                          {promo.cinema_id ? <><MapPin className="w-3 h-3" /> Tại rạp</> : <><Sparkles className="w-3 h-3" /> Toàn hệ thống</>}
+                          {promo.cinema_id ? <><MapPin className="w-3 h-3" /> Tại rạp {promo.cinema_name}</> : <><Sparkles className="w-3 h-3" /> Toàn hệ thống</>}
                         </div>
                         <div className="flex items-center gap-1 text-zinc-500 text-xs font-medium">
                           <Clock className="w-3.5 h-3.5" />
@@ -542,10 +547,10 @@ export const PromotionsPage = () => {
                         </div>
                       </div>
 
-                      <h3 className="text-white text-xl font-bold mb-2 group-hover:text-cinema-primary transition-colors">
+                      <h3 className="text-white text-lg font-bold mb-1.5 group-hover:text-cinema-primary transition-colors">
                         {promo.title}
                       </h3>
-                      <p className="text-zinc-400 text-sm line-clamp-2 mb-6">
+                      <p className="text-zinc-400 text-xs line-clamp-2 mb-4">
                         {promo.description}
                       </p>
                     </div>
@@ -553,16 +558,16 @@ export const PromotionsPage = () => {
                     <div className="space-y-4">
                       {/* Code and Copy */}
                       <div className="flex items-center gap-3">
-                        <div className="flex-1 bg-black/40 border border-white/5 rounded-2xl p-4 flex items-center justify-between group/code">
+                        <div className="flex-1 bg-black/40 border border-white/5 rounded-2xl p-3 flex items-center justify-between group/code">
                           <div className="flex flex-col">
-                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mã ưu đãi</span>
-                            <span className="text-white font-mono font-black tracking-[0.2em] text-lg">
+                            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mã ưu đãi</span>
+                            <span className="text-white font-mono font-black tracking-[0.2em] text-base">
                               {promo.code}
                             </span>
                           </div>
                           <button
                             onClick={() => handleCopy(promo.client_id, promo.code)}
-                            className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                               copiedPromoId === promo.client_id ? "bg-green-500/20 text-green-500" : "bg-white/5 text-zinc-400 hover:bg-cinema-primary hover:text-white"
                             }`}
                           >
@@ -582,10 +587,10 @@ export const PromotionsPage = () => {
                         
                         <button 
                           onClick={() => toggleExpand(promo.client_id)}
-                          className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white transition-all shrink-0"
+                          className="w-10 h-10 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white transition-all shrink-0"
                           title="Xem điều kiện"
                         >
-                          <Info className={`w-6 h-6 transition-transform ${expandedPromos.has(promo.client_id) ? "rotate-180 text-cinema-primary" : ""}`} />
+                          <Info className={`w-5 h-5 transition-transform ${expandedPromos.has(promo.client_id) ? "rotate-180 text-cinema-primary" : ""}`} />
                         </button>
                       </div>
 

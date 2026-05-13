@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Bell, CheckCircle2, X, Clock, Zap, CreditCard, Tag, Info, ChevronRight, Inbox } from "lucide-react";
 import { useNotification } from "../context/NotificationContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,6 +8,7 @@ const NotificationDropdown = ({ isOpen, onClose }) => {
     const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotification();
     const [filter, setFilter] = useState("all");
     const dropdownRef = useRef(null);
+    const navigate = useNavigate();
 
     const filteredNotifications = (filter === "all"
         ? notifications
@@ -32,9 +33,11 @@ const NotificationDropdown = ({ isOpen, onClose }) => {
     };
 
     const getIcon = (type) => {
+        if (type?.startsWith("article_")) return <Tag className="h-4 w-4 text-amber-400" />;
         switch (type) {
             case "payment_success":
             case "payment": return <CreditCard className="h-4 w-4 text-emerald-400" />;
+            case "article":
             case "promotion": return <Tag className="h-4 w-4 text-amber-400" />;
             case "movie_update":
             case "movie": return <Zap className="h-4 w-4 text-blue-400" />;
@@ -108,7 +111,14 @@ const NotificationDropdown = ({ isOpen, onClose }) => {
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
                                         key={n.notification_id}
-                                        onClick={() => !n.is_read && markAsRead(n.notification_id)}
+                                        onClick={() => {
+                                            if (!n.is_read) markAsRead(n.notification_id);
+                                            if (n.type?.startsWith("article_")) {
+                                                const articleId = n.type.split("_")[1];
+                                                if (articleId) navigate(`/articles/${articleId}`);
+                                                onClose();
+                                            }
+                                        }}
                                         className={`group relative p-4 border-b border-white/5 transition-all cursor-pointer hover:bg-white/[0.04] ${!n.is_read ? "bg-cinema-primary/[0.03]" : ""}`}
                                     >
                                         <div className="flex gap-4">

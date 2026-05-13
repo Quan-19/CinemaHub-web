@@ -193,6 +193,28 @@ export const SeatSelectionPage = () => {
     return data;
   }, [roomLayout]);
 
+  // Sync missing seat types for auto-recovered seats
+  useEffect(() => {
+    if (seatRows.length > 0 && picked.length > 0) {
+      let changed = false;
+      const updatedPicked = picked.map(p => {
+        if (!p.type) {
+          for (const row of seatRows) {
+            const seat = row.seats.find(s => s.id === p.id);
+            if (seat) {
+              changed = true;
+              return { ...p, type: seat.type };
+            }
+          }
+        }
+        return p;
+      });
+      if (changed) {
+        setPicked(updatedPicked);
+      }
+    }
+  }, [seatRows, picked]);
+
   // ✅ KHI VÀO TRANG HOẶC KHI USER THAY ĐỔI, FETCH DỮ LIỆU GHẾ
   useEffect(() => {
     if (!showtimeId) return;
