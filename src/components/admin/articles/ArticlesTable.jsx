@@ -104,7 +104,7 @@ export default function ArticlesTable({ articles, onEdit, onDelete, onView }) {
                             {truncateText(item.title, 60)}
                           </div>
                           <div className="text-xs text-zinc-500 line-clamp-1">
-                            {item.summary || "Chưa có tóm tắt"}
+                            {item.summary}
                           </div>
                         </div>
                       </div>

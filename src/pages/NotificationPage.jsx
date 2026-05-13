@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useNotification } from "../context/NotificationContext";
-import { Bell, CreditCard, Zap, Info, Clock, CheckCircle2, ChevronRight, ChevronLeft, Inbox } from "lucide-react";
+import { Bell, CreditCard, Zap, Info, Clock, CheckCircle2, ChevronRight, ChevronLeft, Inbox, Tag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function NotificationPage() {
@@ -8,6 +9,7 @@ export default function NotificationPage() {
     const [filter, setFilter] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const navigate = useNavigate();
 
     // SEO Optimization
     useEffect(() => {
@@ -17,7 +19,7 @@ export default function NotificationPage() {
     const filteredNotifs = notifications.filter(n => {
         if (filter === "all") return true;
         if (filter === "payment") return n.type === "payment_success" || n.type === "payment";
-        if (filter === "movie") return n.type === "movie_update" || n.type === "movie";
+        if (filter === "article") return n.type?.startsWith("article") || n.type === "promotion" || n.type === "news" || n.type === "event";
         return true;
     });
 
@@ -30,9 +32,11 @@ export default function NotificationPage() {
     );
 
     const getIcon = (type) => {
+        if (type?.startsWith("article")) return <Tag className="h-5 w-5 text-amber-400" />;
         switch (type) {
             case "payment_success":
             case "payment": return <CreditCard className="h-5 w-5 text-emerald-400" />;
+            case "promotion": return <Tag className="h-5 w-5 text-amber-400" />;
             case "movie_update":
             case "movie": return <Zap className="h-5 w-5 text-blue-400" />;
             default: return <Info className="h-5 w-5 text-zinc-400" />;
@@ -80,7 +84,7 @@ export default function NotificationPage() {
                     {[
                         { id: "all", label: "Tất cả", icon: Inbox },
                         { id: "payment", label: "Thanh toán", icon: CreditCard },
-                        { id: "movie", label: "Lịch chiếu & Phim", icon: Zap },
+                        { id: "article", label: "Tin tức & sự kiện", icon: Tag },
                     ].map((tab) => (
                         <button
                             key={tab.id}
@@ -110,7 +114,13 @@ export default function NotificationPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
                                     key={n.notification_id}
-                                    onClick={() => !n.is_read && markAsRead(n.notification_id)}
+                                    onClick={() => {
+                                        if (!n.is_read) markAsRead(n.notification_id);
+                                        if (n.type?.startsWith("article_")) {
+                                            const articleId = n.type.split("_")[1];
+                                            if (articleId) navigate(`/articles/${articleId}`);
+                                        }
+                                    }}
                                     className={`group relative overflow-hidden p-5 sm:p-6 rounded-2xl border transition-all duration-300 ${!n.is_read
                                         ? "bg-zinc-900/50 border-cinema-primary/30 shadow-[0_8px_30px_rgb(0,0,0,0.4)]"
                                         : "bg-zinc-900/20 border-white/5 hover:border-white/10"
@@ -145,10 +155,11 @@ export default function NotificationPage() {
                                                         {getTimeString(n.created_at)}
                                                     </span>
                                                     <span className={`px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider text-[10px] ${n.type === 'payment_success' ? 'bg-emerald-500/10 text-emerald-400' :
+                                                        (n.type?.startsWith('article') || n.type === 'promotion') ? 'bg-amber-500/10 text-amber-400' :
                                                         n.type === 'movie_update' ? 'bg-blue-500/10 text-blue-400' :
                                                             'bg-zinc-500/10 text-zinc-400'
                                                         }`}>
-                                                        {n.type === 'payment_success' ? 'Thanh toán' : n.type === 'movie_update' ? 'Lịch chiếu' : 'Hệ thống'}
+                                                        {n.type === 'payment_success' ? 'Thanh toán' : (n.type?.startsWith('article') || n.type === 'promotion') ? 'Tin tức' : n.type === 'movie_update' ? 'Lịch chiếu' : 'Hệ thống'}
                                                     </span>
                                                 </div>
                                             </footer>
