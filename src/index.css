@@ -262,3 +262,48 @@
   filter: blur(8px);
   pointer-events: none;
 }
+
+/* Article Rich Text Styles */
+.article-richtext {
+  @apply text-zinc-300 leading-relaxed;
+}
+
+.article-richtext h2 {
+  @apply text-white text-2xl font-bold mt-6 mb-3;
+}
+
+.article-richtext h3 {
+  @apply text-white text-xl font-bold mt-5 mb-2;
+}
+
+.article-richtext p {
+  @apply mb-4;
+}
+
+.article-richtext ul {
+  @apply list-disc pl-6 mb-4 space-y-1;
+}
+
+.article-richtext ol {
+  @apply list-decimal pl-6 mb-4 space-y-1;
+}
+
+.article-richtext li {
+  @apply mb-1;
+}
+
+.article-richtext blockquote {
+  @apply border-l-4 border-red-600/50 pl-4 italic text-zinc-400 my-4 py-1 bg-white/5 rounded-r-lg;
+}
+
+.article-richtext a {
+  @apply text-red-500 underline hover:text-red-400 transition-colors;
+}
+
+.article-richtext hr {
+  @apply my-6 border-t border-white/10;
+}
+
+.article-richtext strong, .article-richtext b {
+  @apply text-white font-bold;
+}

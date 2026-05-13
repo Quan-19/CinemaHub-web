@@ -388,7 +388,7 @@ const CinemaCard = ({ cinema }) => {
           {cinema.brand?.[0] || "C"}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-white font-semibold text-sm mb-1">
+          <h3 className="text-white font-semibold text-sm mb-1 line-clamp-1">
             {cinema.name}
           </h3>
           <p className="text-zinc-500 text-xs line-clamp-2">{cinema.address}</p>

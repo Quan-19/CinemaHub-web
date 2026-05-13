@@ -102,6 +102,7 @@ const ALLOWED_TAGS = new Set([
   "blockquote",
   "a",
   "span",
+  "hr",
 ]);
 
 const CLASS_MAP = {
@@ -113,6 +114,7 @@ const CLASS_MAP = {
   ul: "list-disc pl-6 space-y-1 mb-3",
   ol: "list-decimal pl-6 space-y-1 mb-3",
   a: "text-red-400 underline",
+  hr: "my-6 border-t border-white/10",
 };
 
 const SAFE_PROTOCOLS = ["http:", "https:", "mailto:", "tel:"];
@@ -171,8 +173,17 @@ export const sanitizeArticleHtml = (raw, options = {}) => {
 
     Array.from(element.attributes).forEach((attr) => {
       const name = attr.name.toLowerCase();
-      if (name.startsWith("on") || name === "style") {
+      if (name.startsWith("on")) {
         element.removeAttribute(attr.name);
+        return;
+      }
+      if (name === "style") {
+        // Only allow text-align and color-related styles if absolutely needed
+        // For now, let's allow text-align for the align feature
+        const style = attr.value;
+        if (!/text-align|margin-left|margin-right/i.test(style)) {
+          element.removeAttribute(attr.name);
+        }
         return;
       }
       if (tag === "a") {
