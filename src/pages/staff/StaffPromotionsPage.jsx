@@ -16,6 +16,7 @@ import { makeId } from "../../components/staff/staffUtils.js";
 import { StaffCenteredModalShell } from "../../components/staff/StaffModalShell.jsx";
 import StaffIconButton from "../../components/staff/StaffIconButton.jsx";
 import StaffConfirmModal from "../../components/staff/StaffConfirmModal.jsx";
+import StaffSuccessToast from "../../components/staff/StaffSuccessToast.jsx";
 import { formatNumberInput, parseNumberInput } from "../../utils/numberFormat";
 
 const DAY_LABELS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
@@ -182,6 +183,75 @@ function StatMini({ accentClassName, value, label }) {
   );
 }
 
+// Helper component to handle Vietnamese IME (VIE keyboard) duplication bug
+const StaffNumericInput = ({ value, onChange, placeholder, className }) => {
+  const inputRef = useRef(null);
+
+  // Sync value from parent when it changes externally (not by user typing)
+  useEffect(() => {
+    if (inputRef.current) {
+      const formatted = formatNumberInput(value);
+      if (inputRef.current.value.replace(/[^0-9]/g, "") !== String(value || 0).replace(/[^0-9]/g, "")) {
+        inputRef.current.value = formatted;
+      }
+    }
+  }, [value]);
+
+  const handleInternalChange = (e) => {
+    const input = e.target;
+    const selectionStart = input.selectionStart;
+    const rawValue = input.value;
+
+    // 1. Get raw numeric value
+    const numericPart = rawValue.replace(/[^0-9]/g, "");
+    const numericValue = numericPart ? Number(numericPart) : 0;
+
+    // 2. Format it
+    const formattedValue = formatNumberInput(numericValue);
+
+    // 3. Count digits before cursor to maintain position
+    const digitsBeforeCursor = rawValue
+      .substring(0, selectionStart)
+      .replace(/[^0-9]/g, "").length;
+
+    // 4. Update the DOM directly to avoid IME composition issues in React
+    input.value = formattedValue;
+
+    // 5. Calculate new selection range
+    let newPos = 0;
+    let digitsFound = 0;
+    for (let i = 0; i < formattedValue.length; i++) {
+      if (digitsFound >= digitsBeforeCursor) break;
+      if (/[0-9]/.test(formattedValue[i])) {
+        digitsFound++;
+      }
+      newPos = i + 1;
+    }
+
+    // Special case for appending at the end
+    if (selectionStart === rawValue.length) {
+      newPos = formattedValue.length;
+    }
+
+    input.setSelectionRange(newPos, newPos);
+
+    // 6. Notify parent
+    onChange(numericValue);
+  };
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      inputMode="numeric"
+      defaultValue={formatNumberInput(value)}
+      onChange={handleInternalChange}
+      placeholder={placeholder}
+      className={className}
+    />
+  );
+};
+
 function PromotionFormModal({
   promotion,
   title,
@@ -271,34 +341,18 @@ function PromotionFormModal({
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div>
             <div className={labelCls}>Mức giảm (đ)</div>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9,]*"
-              value={formatNumberInput(form.discountValue)}
-              onChange={(e) =>
-                setForm((p) => ({
-                  ...p,
-                  discountValue: parseNumberInput(e.target.value),
-                }))
-              }
+            <StaffNumericInput
+              value={form.discountValue}
+              onChange={(val) => setForm((p) => ({ ...p, discountValue: val }))}
               placeholder="VD: 30000"
               className={inputCls}
             />
           </div>
           <div>
             <div className={labelCls}>Đơn tối thiểu (đ)</div>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9,]*"
-              value={formatNumberInput(form.minOrder)}
-              onChange={(e) =>
-                setForm((p) => ({
-                  ...p,
-                  minOrder: parseNumberInput(e.target.value),
-                }))
-              }
+            <StaffNumericInput
+              value={form.minOrder}
+              onChange={(val) => setForm((p) => ({ ...p, minOrder: val }))}
               className={inputCls}
             />
           </div>
@@ -316,17 +370,9 @@ function PromotionFormModal({
           </div>
           <div>
             <div className={labelCls}>Giới hạn lượt dùng</div>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9,]*"
-              value={formatNumberInput(form.usageLimit)}
-              onChange={(e) =>
-                setForm((p) => ({
-                  ...p,
-                  usageLimit: parseNumberInput(e.target.value),
-                }))
-              }
+            <StaffNumericInput
+              value={form.usageLimit}
+              onChange={(val) => setForm((p) => ({ ...p, usageLimit: val }))}
               className={inputCls}
             />
           </div>
@@ -550,6 +596,8 @@ function StaffPromotionsPage() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
   const copiedTimeoutRef = useRef(null);
+  const [toast, setToast] = useState(null);
+  const toastTimeoutRef = useRef(null);
 
   const mapPromotionFromApi = (p) => ({
     id: p.promotion_id ?? p.id,
@@ -617,8 +665,23 @@ function StaffPromotionsPage() {
         clearTimeout(copiedTimeoutRef.current);
         copiedTimeoutRef.current = null;
       }
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+        toastTimeoutRef.current = null;
+      }
     };
   }, []);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast(null);
+    }, 4000);
+  };
+
+  const showSuccess = (msg) => showToast(msg, "success");
+  const showError = (msg) => showToast(msg, "error");
 
   const activeCount = useMemo(
     () => promotions.filter((p) => p.status === "active").length,
@@ -719,16 +782,17 @@ function StaffPromotionsPage() {
       if (res.ok) {
         await loadPromotions(user?.cinema_id);
         setAdding(false);
+        showSuccess("Thêm khuyến mãi thành công");
       } else {
         const errorData = await res.json().catch(() => ({}));
-        alert(
+        showError(
           "Lỗi thêm khuyến mãi: " +
-            (errorData.error || errorData.message || "Unknown error")
+            (errorData.error || errorData.message || "Lỗi không xác định")
         );
       }
     } catch (err) {
       console.error(err);
-      alert("Network error: " + err.message);
+      showError("Lỗi kết nối: " + err.message);
     }
   };
 
@@ -764,16 +828,17 @@ function StaffPromotionsPage() {
       if (res.ok) {
         await loadPromotions(user?.cinema_id);
         setEditing(null);
+        showSuccess("Cập nhật khuyến mãi thành công");
       } else {
         const errorData = await res.json().catch(() => ({}));
-        alert(
+        showError(
           "Lỗi cập nhật: " +
-            (errorData.error || errorData.message || "Unknown error")
+            (errorData.error || errorData.message || "Lỗi không xác định")
         );
       }
     } catch (err) {
       console.error(err);
-      alert("Network error: " + err.message);
+      showError("Lỗi kết nối: " + err.message);
     }
   };
 
@@ -787,14 +852,24 @@ function StaffPromotionsPage() {
       if (res.ok) {
         await loadPromotions(user?.cinema_id);
         setConfirmDelete(null);
+        showSuccess("Xóa khuyến mãi thành công");
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        showError("Lỗi xóa: " + (errorData.error || errorData.message || "Lỗi không xác định"));
       }
     } catch (err) {
       console.error(err);
+      showError("Lỗi kết nối: " + err.message);
     }
   };
 
   return (
     <div className="space-y-5">
+      <StaffSuccessToast
+        message={toast?.message}
+        type={toast?.type}
+        onClose={() => setToast(null)}
+      />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold sm:text-3xl">Quản lý khuyến mãi</h1>
