@@ -74,6 +74,15 @@ export const NotificationProvider = ({ children }) => {
                 ));
             });
 
+            newSocket.on("delete-notification", (notificationType) => {
+                console.log("🗑️ Notification deleted via socket:", notificationType);
+                setNotifications((prev) => {
+                    const filtered = prev.filter(n => n.type !== notificationType);
+                    setUnreadCount(filtered.filter(n => !n.is_read).length);
+                    return filtered;
+                });
+            });
+
             return () => {
                 newSocket.disconnect();
             };
