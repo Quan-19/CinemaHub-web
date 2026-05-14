@@ -36,6 +36,7 @@ const RATING_OPTIONS = ["P", "T13", "T16", "T18"];
 const STATUS_OPTIONS = [
   { label: "Đang chiếu", value: "now_showing" },
   { label: "Sắp chiếu", value: "coming_soon" },
+  { label: "Đã kết thúc", value: "ended" },
 ];
 
 const LANGUAGE_OPTIONS = ["Phụ đề Việt", "Lồng tiếng Việt"];
@@ -75,16 +76,20 @@ function normalizeMovie(movie) {
 
 function StatusBadge({ status }) {
   const isNowShowing = status === "now_showing";
+  const isEnded = status === "ended";
+
   return (
     <span
       className={[
         "rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide",
-        isNowShowing
+        isEnded
+          ? "bg-zinc-500/20 text-zinc-300"
+          : isNowShowing
           ? "bg-emerald-500/20 text-emerald-300"
           : "bg-amber-500/20 text-amber-300",
       ].join(" ")}
     >
-      {isNowShowing ? "Đang chiếu" : "Sắp chiếu"}
+      {isEnded ? "Đã kết thúc" : isNowShowing ? "Đang chiếu" : "Sắp chiếu"}
     </span>
   );
 }
@@ -1028,6 +1033,7 @@ function StaffMoviesPage() {
               { label: "Tất cả", value: "all" },
               { label: "Đang chiếu", value: "now_showing" },
               { label: "Sắp chiếu", value: "coming_soon" },
+              { label: "Đã kết thúc", value: "ended" },
             ].map((t) => {
               const active = tab === t.value;
               return (
