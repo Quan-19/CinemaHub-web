@@ -104,6 +104,20 @@ const POSTER_PLACEHOLDER =
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
+const tierDiscountPercent = {
+  bronze: 5,
+  silver: 10,
+  gold: 20,
+  platinum: 30,
+};
+
+const tierNameVi = {
+  bronze: "Đồng",
+  silver: "Bạc",
+  gold: "Vàng",
+  platinum: "Bạch kim",
+};
+
 // Constants
 const PAYMENT_METHODS = [
   {
@@ -197,11 +211,14 @@ export default function BookingConfirmationPage() {
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoDiscountAmount, setPromoDiscountAmount] = useState(0);
   const [promoError, setPromoError] = useState("");
+  const [discountMode, setDiscountMode] = useState("auto");
   const [bookingCode, setBookingCode] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [selectedFoodImage, setSelectedFoodImage] = useState(null);
   const [showFoodImageModal, setShowFoodImageModal] = useState(false);
+
+  const [loyaltySummary, setLoyaltySummary] = useState(null);
 
   // Dữ liệu booking từ API (cho callback)
   const [bookingData, setBookingData] = useState(null);
@@ -450,8 +467,8 @@ export default function BookingConfirmationPage() {
         console.error("Failed to fetch booking data:", error);
         setFetchError(
           error.response?.data?.message ||
-          error.message ||
-          "Không thể tải thông tin vé",
+            error.message ||
+            "Không thể tải thông tin vé",
         );
       } finally {
         setIsFetchingBooking(false);
@@ -492,6 +509,27 @@ export default function BookingConfirmationPage() {
     }
   }, [isPaymentCallback, showtime, seats, navigate]);
 
+  // Fetch loyalty summary to display tier discount on the order (backend applies it when creating booking)
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (!user) return;
+        const token = await user.getIdToken(true);
+        const res = await axios.get(`${API_BASE_URL}/api/loyalty/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setLoyaltySummary(res.data || null);
+      } catch (e) {
+        // loyalty is optional for displaying; ignore errors
+        setLoyaltySummary(null);
+      }
+    };
+
+    run();
+  }, []);
+
   const formatCurrency = (amount) => {
     const numeric = Number(amount);
     const safe = Number.isFinite(numeric) ? Math.round(numeric) : 0;
@@ -508,7 +546,50 @@ export default function BookingConfirmationPage() {
     return sum + f.price * (comboCounts[f.food_id] || 0);
   }, 0);
   const discount = promoApplied ? promoDiscountAmount : 0;
-  const grandTotal = ticketTotal + comboTotal - discount;
+  const baseTotal = ticketTotal + comboTotal;
+  const totalAfterPromo = Math.max(0, baseTotal - discount);
+
+  const loyaltyTierCode = String(
+    loyaltySummary?.tier?.code || "",
+  ).toLowerCase();
+  const loyaltyDiscountPercent = tierDiscountPercent[loyaltyTierCode] || 0;
+  const loyaltyDiscountPotentialAmount =
+    loyaltyDiscountPercent > 0 && baseTotal > 0
+      ? Math.round(baseTotal * (loyaltyDiscountPercent / 100))
+      : 0;
+  const loyaltyTierLabel =
+    tierNameVi[loyaltyTierCode] || loyaltySummary?.tier?.name || "";
+
+  const canChooseDiscount = promoApplied && loyaltyDiscountPercent > 0;
+
+  useEffect(() => {
+    setDiscountMode((prev) => {
+      const safePrev = String(prev || "").toLowerCase();
+      const prevIsUserChoice = safePrev === "promo" || safePrev === "loyalty";
+
+      if (prevIsUserChoice) {
+        if (safePrev === "promo" && promoApplied) return "promo";
+        if (safePrev === "loyalty" && loyaltyDiscountPercent > 0)
+          return "loyalty";
+      }
+
+      if (promoApplied) return "promo";
+      if (loyaltyDiscountPercent > 0) return "loyalty";
+      return "none";
+    });
+  }, [promoApplied, loyaltyDiscountPercent]);
+
+  const appliedPromoDiscount =
+    discountMode === "promo" && promoApplied ? discount : 0;
+  const appliedLoyaltyDiscount =
+    discountMode === "loyalty" && loyaltyDiscountPercent > 0
+      ? loyaltyDiscountPotentialAmount
+      : 0;
+
+  const payableTotal = Math.max(
+    0,
+    baseTotal - appliedPromoDiscount - appliedLoyaltyDiscount,
+  );
 
   // ========== HANDLERS ==========
   const updateCombo = (id, change) => {
@@ -551,7 +632,7 @@ export default function BookingConfirmationPage() {
       if (user) {
         token = await user.getIdToken(true);
       }
-      
+
       const headers = {};
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
@@ -559,7 +640,7 @@ export default function BookingConfirmationPage() {
 
       const res = await fetch(
         `${API_BASE_URL}/api/promotions/calculate?${params.toString()}`,
-        { headers }
+        { headers },
       );
       const data = await res.json();
 
@@ -570,8 +651,8 @@ export default function BookingConfirmationPage() {
       } else {
         setPromoError(
           data?.message ||
-          data?.error ||
-          "Mã khuyến mãi không hợp lệ hoặc đã hết hạn",
+            data?.error ||
+            "Mã khuyến mãi không hợp lệ hoặc đã hết hạn",
         );
         setPromoApplied(false);
         setPromoDiscountAmount(0);
@@ -648,7 +729,6 @@ export default function BookingConfirmationPage() {
       const bookingPayload = {
         user_id: user.user_id,
         showtime_id: actualShowtimeId,
-        total_price: finalGrandTotal,
         seats: seats.map((s) => ({
           id: s.id,
           price: getShowtimeSeatPrice(
@@ -657,7 +737,8 @@ export default function BookingConfirmationPage() {
           ),
         })),
         payment_method: method,
-        promo_code: promoApplied ? promoCode : null,
+        discount_mode: discountMode,
+        promo_code: discountMode === "promo" && promoApplied ? promoCode : null,
         foods: selectedFoods,
       };
 
@@ -671,7 +752,7 @@ export default function BookingConfirmationPage() {
 
       const bookingId =
         bookingRes.data?.booking_id ?? bookingRes.data?.insertId;
-      const payableAmount = finalGrandTotal;
+      const payableAmount = Number(bookingRes.data?.total_price || 0);
 
       console.log("✅ Booking created:", { bookingId, payableAmount });
 
@@ -685,7 +766,6 @@ export default function BookingConfirmationPage() {
           "http://localhost:5000/api/payments/vnpay",
           {
             booking_id: bookingId,
-            amount: payableAmount,
           },
           { headers: { Authorization: `Bearer ${token}` } },
         );
@@ -702,7 +782,6 @@ export default function BookingConfirmationPage() {
           "http://localhost:5000/api/payments/momo",
           {
             booking_id: bookingId,
-            amount: payableAmount,
             orderInfo: `Thanh toan booking ${bookingId} - Ve xem phim`,
           },
           { headers: { Authorization: `Bearer ${token}` } },
@@ -721,7 +800,6 @@ export default function BookingConfirmationPage() {
           "http://localhost:5000/api/payments/zalopay",
           {
             booking_id: bookingId,
-            amount: payableAmount,
           },
           { headers: { Authorization: `Bearer ${token}` } },
         );
@@ -754,7 +832,7 @@ export default function BookingConfirmationPage() {
       }));
 
       setBookingData({
-        booking: { ...bookingRes.data, total_price: payableAmount },
+        booking: bookingRes.data,
         seats: formattedSuccessSeats,
         foods: selectedFoods,
         showtime: showtime,
@@ -869,8 +947,8 @@ export default function BookingConfirmationPage() {
             </h2>
             <p className="text-red-400 text-sm mb-6">
               {paymentStatus === "failed" ||
-                paymentStatus === "cancelled" ||
-                paymentStatus === "error"
+              paymentStatus === "cancelled" ||
+              paymentStatus === "error"
                 ? "Giao dịch đã bị hủy hoặc không thể hoàn tất. Đừng lo lắng, tiền của bạn chưa bị trừ."
                 : "Đã có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại sau."}
             </p>
@@ -912,7 +990,7 @@ export default function BookingConfirmationPage() {
                   <img
                     src={
                       typeof displayMovie?.poster === "string" &&
-                        displayMovie.poster
+                      displayMovie.poster
                         ? displayMovie.poster
                         : POSTER_PLACEHOLDER
                     }
@@ -1065,7 +1143,7 @@ export default function BookingConfirmationPage() {
                     <img
                       src={
                         typeof displayMovie?.poster === "string" &&
-                          displayMovie.poster
+                        displayMovie.poster
                           ? displayMovie.poster
                           : POSTER_PLACEHOLDER
                       }
@@ -1171,7 +1249,10 @@ export default function BookingConfirmationPage() {
 
                   {/* Danh sách thức ăn chi tiết */}
                   {foodItems.map((item, idx) => (
-                    <div key={idx} className="flex justify-between text-zinc-400">
+                    <div
+                      key={idx}
+                      className="flex justify-between text-zinc-400"
+                    >
                       <span>
                         {item.quantity}x {item.name}
                       </span>
@@ -1465,12 +1546,13 @@ export default function BookingConfirmationPage() {
               ].map((s, i) => (
                 <div key={s.n} className="flex items-center gap-1.5">
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${s.done
-                      ? "bg-green-500 text-white"
-                      : s.active
-                        ? "bg-red-600 text-white"
-                        : "bg-zinc-800 text-zinc-400"
-                      }`}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      s.done
+                        ? "bg-green-500 text-white"
+                        : s.active
+                          ? "bg-red-600 text-white"
+                          : "bg-zinc-800 text-zinc-400"
+                    }`}
                   >
                     {s.done ? "✓" : s.n}
                   </div>
@@ -1522,7 +1604,13 @@ export default function BookingConfirmationPage() {
                     <div>
                       <p className="text-zinc-400 text-xs">Suất chiếu</p>
                       <p className="text-zinc-200 text-xs font-semibold">
-                        {formatTimeVI(showtime)} • {showtime?.language === "DUB" ? "Lồng tiếng" : showtime?.language === "ENGLISH" ? "Tiếng Anh" : "VietSub"} • {showtime?.type || "2D"}
+                        {formatTimeVI(showtime)} •{" "}
+                        {showtime?.language === "DUB"
+                          ? "Lồng tiếng"
+                          : showtime?.language === "ENGLISH"
+                            ? "Tiếng Anh"
+                            : "VietSub"}{" "}
+                        • {showtime?.type || "2D"}
                       </p>
                     </div>
                     <div>
@@ -1673,8 +1761,10 @@ export default function BookingConfirmationPage() {
               </div>
               {promoApplied && (
                 <p className="text-green-400 text-xs mt-2 flex items-center gap-1">
-                  <Check className="w-3 h-3" /> Áp dụng thành công! Giảm{" "}
-                  {formatCurrency(discount)}{" "}
+                  <Check className="w-3 h-3" />
+                  {discountMode === "promo"
+                    ? `Áp dụng thành công! Giảm ${formatCurrency(discount)}`
+                    : `Voucher đã lưu (giảm ${formatCurrency(discount)}), nhưng hiện đang chọn ưu đãi khác.`}
                 </p>
               )}
               {promoError && (
@@ -1702,14 +1792,16 @@ export default function BookingConfirmationPage() {
                   <button
                     key={method.id}
                     onClick={() => setSelectedPaymentMethod(method.id)}
-                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${selectedPaymentMethod === method.id
-                      ? "border-red-500 bg-red-500/10"
-                      : "border-zinc-700 bg-zinc-900 hover:border-zinc-600"
-                      }`}
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                      selectedPaymentMethod === method.id
+                        ? "border-red-500 bg-red-500/10"
+                        : "border-zinc-700 bg-zinc-900 hover:border-zinc-600"
+                    }`}
                   >
                     <div
-                      className={`w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center ${method.icon.startsWith("http") ? "bg-white p-1" : ""
-                        }`}
+                      className={`w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center ${
+                        method.icon.startsWith("http") ? "bg-white p-1" : ""
+                      }`}
                     >
                       {method.icon.startsWith("http") ? (
                         <img
@@ -1765,22 +1857,86 @@ export default function BookingConfirmationPage() {
                     <span>{formatCurrency(comboTotal)}</span>
                   </div>
                 )}
-                {promoApplied && (
-                  <div className="flex justify-between text-green-400">
-                    <span>Giảm giá</span>
-                    <span>-{formatCurrency(discount)}</span>
-                  </div>
-                )}
                 <div className="flex justify-between text-zinc-400">
                   <span>Phí dịch vụ</span>
                   <span>Miễn phí</span>
                 </div>
               </div>
 
+              {canChooseDiscount ? (
+                <div className="mb-4 rounded-xl p-3 bg-white/5 border border-white/10">
+                  <p className="text-white text-sm font-semibold mb-2">
+                    Chọn ưu đãi (chỉ áp dụng 1)
+                  </p>
+                  <div className="space-y-2">
+                    <label className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 bg-zinc-900/40 border border-white/10 cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="discountMode"
+                          value="promo"
+                          checked={discountMode === "promo"}
+                          onChange={() => setDiscountMode("promo")}
+                        />
+                        <span className="text-zinc-200 text-sm">
+                          Dùng voucher
+                        </span>
+                      </div>
+                      <span className="text-green-400 text-sm font-semibold">
+                        -{formatCurrency(discount)}
+                      </span>
+                    </label>
+
+                    <label className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 bg-zinc-900/40 border border-white/10 cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="discountMode"
+                          value="loyalty"
+                          checked={discountMode === "loyalty"}
+                          onChange={() => setDiscountMode("loyalty")}
+                        />
+                        <span className="text-zinc-200 text-sm">
+                          Giảm thành viên
+                          {loyaltyTierLabel
+                            ? ` (${loyaltyTierLabel} ${loyaltyDiscountPercent}%)`
+                            : loyaltyDiscountPercent
+                              ? ` (${loyaltyDiscountPercent}%)`
+                              : ""}
+                        </span>
+                      </div>
+                      <span className="text-green-400 text-sm font-semibold">
+                        -{formatCurrency(loyaltyDiscountPotentialAmount)}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              ) : null}
+
+              {discountMode === "promo" && promoApplied ? (
+                <div className="flex justify-between text-green-400 mb-2">
+                  <span>Giảm giá voucher</span>
+                  <span>-{formatCurrency(discount)}</span>
+                </div>
+              ) : null}
+
+              {discountMode === "loyalty" &&
+              loyaltyDiscountPotentialAmount > 0 ? (
+                <div className="flex justify-between text-green-400 mb-2">
+                  <span>
+                    Giảm thành viên
+                    {loyaltyTierLabel
+                      ? ` (${loyaltyTierLabel} ${loyaltyDiscountPercent}%)`
+                      : ` (${loyaltyDiscountPercent}%)`}
+                  </span>
+                  <span>-{formatCurrency(loyaltyDiscountPotentialAmount)}</span>
+                </div>
+              ) : null}
+
               <div className="flex justify-between items-center py-3 border-t border-zinc-700 mb-4">
                 <span className="text-white font-bold">Tổng thanh toán</span>
                 <span className="text-lg text-red-500 font-bold">
-                  {formatCurrency(grandTotal)}
+                  {formatCurrency(payableTotal)}
                 </span>
               </div>
 
@@ -1806,7 +1962,7 @@ export default function BookingConfirmationPage() {
                 ) : (
                   <>
                     <CreditCard className="w-4 h-4" />
-                    Thanh toán {formatCurrency(grandTotal)}
+                    Thanh toán {formatCurrency(payableTotal)}
                   </>
                 )}
               </motion.button>

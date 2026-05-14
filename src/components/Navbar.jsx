@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  Award,
   Bell,
   ChevronDown,
   Film,
@@ -26,9 +27,7 @@ const movieDropdown = [
   { label: "Phim Sắp Chiếu", path: "/movies?status=coming-soon" },
 ];
 
-const cinemaDropdown = [
-  { label: "Tất cả các rạp", path: "/cinemas" },
-];
+const cinemaDropdown = [{ label: "Tất cả các rạp", path: "/cinemas" }];
 
 const isLinkActive = (pathname, path) => {
   if (path === "/") {
@@ -274,6 +273,20 @@ function Navbar() {
                       {user.email}
                     </p>
                   </button>
+
+                  {user?.role === "customer" && (
+                    <button
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        navigate("/loyalty");
+                      }}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-sm text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
+                    >
+                      <Award className="h-4 w-4" />
+                      Điểm thưởng
+                    </button>
+                  )}
+
                   <button
                     onClick={handleLogout}
                     className="flex w-full items-center gap-2 px-4 py-2 text-sm text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
@@ -345,6 +358,24 @@ function Navbar() {
                   <ChevronDown className="h-4 w-4 text-zinc-400 -rotate-90" />
                 </div>
               </div>
+            )}
+
+            {user?.role === "customer" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  navigate("/loyalty");
+                }}
+                className={
+                  isLinkActive(location.pathname, "/loyalty")
+                    ? "flex w-full items-center gap-2 rounded-lg bg-white/10 px-4 py-2.5 text-sm font-medium text-white"
+                    : "flex w-full items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
+                }
+              >
+                <Award className="h-4 w-4" />
+                Điểm thưởng
+              </button>
             )}
             {navLinks.map((link) => {
               const active = isLinkActive(location.pathname, link.path);
