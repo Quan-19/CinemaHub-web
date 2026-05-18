@@ -90,24 +90,26 @@ export default function ShowtimesTable({
 
   const canCancel = (showtime) => {
     if (!showtime.status) return false;
-    if (showtime.status === 'cancelled') return false;
-    if (showtime.status === 'ended') return false;
-    if (showtime.status !== 'scheduled') return false;
+    if (showtime.status === "cancelled") return false;
+    if (showtime.status === "ended") return false;
+    if (showtime.status !== "scheduled") return false;
     return true;
   };
 
   const canEdit = (showtime) => {
     if (!showtime.status) return false;
-    if (showtime.status === 'cancelled') return false;
-    if (showtime.status === 'ended') return false;
+    if (showtime.status === "cancelled") return false;
+    if (showtime.status === "ended") return false;
+    if (showtime.status === "ongoing") return false;
     if ((showtime.bookedCount || 0) > 0) return false;
     return true;
   };
 
   const canDelete = (showtime) => {
     if (!showtime.status) return false;
-    if (showtime.status === 'cancelled') return false;
-    if (showtime.status === 'ended') return false;
+    if (showtime.status === "cancelled") return false;
+    if (showtime.status === "ended") return false;
+    if (showtime.status === "ongoing") return false;
     if ((showtime.bookedCount || 0) > 0) return false;
     return true;
   };
@@ -135,19 +137,23 @@ export default function ShowtimesTable({
               <th className="p-4 text-center w-[10%]">Định dạng</th>
               <th className="p-4 text-left w-[17%]">Cấu trúc giá</th>
               <th className="p-4 text-center w-[10%]">Trạng thái</th>
-              <th className="p-4 text-right w-28 whitespace-nowrap">Thao tác</th>
+              <th className="p-4 text-right w-28 whitespace-nowrap">
+                Thao tác
+              </th>
             </tr>
           </thead>
           <tbody>
             {paginatedData.length > 0 ? (
               paginatedData.map((item) => {
-                const isSpecialShowtime = Boolean(item.isSpecial || item.special);
+                const isSpecialShowtime = Boolean(
+                  item.isSpecial || item.special
+                );
                 const status = getStatusStyle(item.status);
-                
-                const prices = isSpecialShowtime 
-                  ? (item.specialPrices || {}) 
-                  : (item.regularPrices || item.prices || {});
-                
+
+                const prices = isSpecialShowtime
+                  ? item.specialPrices || {}
+                  : item.regularPrices || item.prices || {};
+
                 const showCanCancel = canCancel(item);
                 const showCanEdit = canEdit(item);
                 const showCanDelete = canDelete(item);
@@ -156,7 +162,7 @@ export default function ShowtimesTable({
                   <tr
                     key={item.id}
                     className={`border-b border-white/5 hover:bg-white/[0.03] transition-colors group ${
-                      item.status === 'cancelled' ? 'opacity-60' : ''
+                      item.status === "cancelled" ? "opacity-60" : ""
                     }`}
                   >
                     <td className="p-4 text-center">
@@ -171,7 +177,7 @@ export default function ShowtimesTable({
                       />
                     </td>
                     <td className="p-4">
-                      <div 
+                      <div
                         className="flex flex-col gap-1 cursor-pointer"
                         onClick={() => onViewDetail && onViewDetail(item)}
                         title="Xem chi tiết suất chiếu"
@@ -186,7 +192,11 @@ export default function ShowtimesTable({
                             </span>
                           )}
                           <span className="inline-flex items-center gap-1 text-[10px] text-purple-400/80 bg-purple-500/10 px-1.5 py-0.5 rounded-full border border-purple-500/20">
-                            {item.language === 'DUB' ? 'Lồng tiếng' : item.language === 'ENGLISH' ? 'Tiếng Anh' : 'Phụ đề'}
+                            {item.language === "DUB"
+                              ? "Lồng tiếng"
+                              : item.language === "ENGLISH"
+                              ? "Tiếng Anh"
+                              : "Phụ đề"}
                           </span>
                           {(item.bookedCount || 0) > 0 && (
                             <span className="inline-flex items-center gap-1 text-[10px] text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded-full border border-blue-500/20 font-bold">
@@ -198,8 +208,12 @@ export default function ShowtimesTable({
                     </td>
                     <td className="p-4">
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-gray-200 font-medium">{item.cinemaName}</span>
-                        <span className="text-xs text-gray-500">Phòng: {item.roomName}</span>
+                        <span className="text-gray-200 font-medium">
+                          {item.cinemaName}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Phòng: {item.roomName}
+                        </span>
                       </div>
                     </td>
                     <td className="p-4 text-center">
@@ -210,15 +224,23 @@ export default function ShowtimesTable({
                         </div>
                         <div className="flex items-center gap-1.5 text-sm text-gray-400 font-mono justify-center">
                           <Clock size={13} className="text-gray-500" />
-                          <span className="text-white font-medium">{item.time}</span>
+                          <span className="text-white font-medium">
+                            {item.time}
+                          </span>
                           <span className="text-gray-600">-</span>
-                          <span className="text-gray-100">{item.endTime || "---"}</span>
+                          <span className="text-gray-100">
+                            {item.endTime || "---"}
+                          </span>
                         </div>
                       </div>
                     </td>
                     <td className="p-4 text-center">
                       <span
-                        className={`inline-block min-w-[50px] px-2 py-0.5 rounded-md text-[11px] font-bold bg-${getTypeColor(item.type)}-500/10 text-${getTypeColor(item.type)}-400 border border-${getTypeColor(item.type)}-500/20`}
+                        className={`inline-block min-w-[50px] px-2 py-0.5 rounded-md text-[11px] font-bold bg-${getTypeColor(
+                          item.type
+                        )}-500/10 text-${getTypeColor(
+                          item.type
+                        )}-400 border border-${getTypeColor(item.type)}-500/20`}
                       >
                         {item.type}
                       </span>
@@ -227,19 +249,31 @@ export default function ShowtimesTable({
                       <div className="flex flex-col gap-1.5 min-w-[150px]">
                         <div className="grid grid-cols-1 gap-1">
                           <div className="flex justify-between items-center bg-white/[0.03] px-2 py-0.5 rounded border border-transparent hover:border-white/5">
-                            <span className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Thường</span>
-                            <span className={`font-bold text-xs tracking-tight ${isSpecialShowtime ? 'text-amber-400' : 'text-zinc-100'}`}>
+                            <span className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">
+                              Thường
+                            </span>
+                            <span
+                              className={`font-bold text-xs tracking-tight ${
+                                isSpecialShowtime
+                                  ? "text-amber-400"
+                                  : "text-zinc-100"
+                              }`}
+                            >
                               {formatMoney(prices.Thường)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center bg-purple-500/[0.03] px-2 py-0.5 rounded border border-transparent hover:border-purple-500/10">
-                            <span className="text-[9px] text-purple-400/60 font-bold uppercase tracking-tighter">VIP</span>
+                            <span className="text-[9px] text-purple-400/60 font-bold uppercase tracking-tighter">
+                              VIP
+                            </span>
                             <span className="text-purple-400 font-bold text-xs tracking-tight">
                               {formatMoney(prices.VIP)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center bg-red-500/[0.03] px-2 py-0.5 rounded border border-transparent hover:border-red-500/10">
-                            <span className="text-[9px] text-red-400/60 font-bold uppercase tracking-tighter">Couple</span>
+                            <span className="text-[9px] text-red-400/60 font-bold uppercase tracking-tighter">
+                              Couple
+                            </span>
                             <span className="text-red-500 font-bold text-xs tracking-tight">
                               {formatMoney(prices.Couple)}
                             </span>
@@ -255,11 +289,12 @@ export default function ShowtimesTable({
                           <span>{status.icon}</span>
                           {status.label}
                         </span>
-                        {item.status !== 'cancelled' && item.status !== 'ended' && (
-                          <div className="text-[9px] text-white/30 mt-1">
-                            Tự động
-                          </div>
-                        )}
+                        {item.status !== "cancelled" &&
+                          item.status !== "ended" && (
+                            <div className="text-[9px] text-white/30 mt-1">
+                              Tự động
+                            </div>
+                          )}
                       </div>
                     </td>
                     <td className="p-4 text-right">
@@ -268,15 +303,19 @@ export default function ShowtimesTable({
                           onClick={() => onEdit(item)}
                           disabled={!showCanEdit}
                           className="p-2 hover:bg-white/10 rounded-lg transition-all text-gray-400 hover:text-green-500 disabled:opacity-30 disabled:cursor-not-allowed"
-                          title={!showCanEdit 
-                            ? (item.bookedCount > 0 
-                                ? `Không thể sửa: đã có ${item.bookedCount} vé được đặt` 
-                                : "Không thể chỉnh sửa suất đã kết thúc hoặc đã hủy") 
-                            : "Chỉnh sửa"}
+                          title={
+                            !showCanEdit
+                              ? item.bookedCount > 0
+                                ? `Không thể sửa: đã có ${item.bookedCount} vé được đặt`
+                                : item.status === "ongoing"
+                                ? "Không thể sửa suất đang chiếu"
+                                : "Không thể chỉnh sửa suất đã kết thúc hoặc đã hủy"
+                              : "Chỉnh sửa"
+                          }
                         >
                           <Edit2 size={16} />
                         </button>
-                        
+
                         {onCancel && showCanCancel && (
                           <button
                             onClick={() => onCancel(item)}
@@ -286,16 +325,20 @@ export default function ShowtimesTable({
                             <Ban size={16} />
                           </button>
                         )}
-                        
+
                         <button
                           onClick={() => onDelete(item)}
                           disabled={!showCanDelete}
                           className="p-2 hover:bg-red-500/10 rounded-lg transition-all text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed"
-                          title={!showCanDelete 
-                            ? (item.bookedCount > 0 
-                                ? `Không thể xóa: đã có ${item.bookedCount} vé được đặt` 
-                                : "Không thể xóa suất đã kết thúc hoặc đã hủy") 
-                            : "Xóa"}
+                          title={
+                            !showCanDelete
+                              ? item.bookedCount > 0
+                                ? `Không thể xóa: đã có ${item.bookedCount} vé được đặt`
+                                : item.status === "ongoing"
+                                ? "Không thể xóa suất đang chiếu"
+                                : "Không thể xóa suất đã kết thúc hoặc đã hủy"
+                              : "Xóa"
+                          }
                         >
                           <Trash2 size={16} />
                         </button>
@@ -321,8 +364,14 @@ export default function ShowtimesTable({
       {showtimes.length > 0 && (
         <div className="bg-[#1a1a1a]/50 flex flex-col sm:flex-row justify-between items-center gap-4 px-6 py-4 border-t border-white/10">
           <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Hiển thị <span className="text-gray-300 font-bold">{(currentPage - 1) * itemsPerPage + 1} -{" "}
-            {Math.min(currentPage * itemsPerPage, showtimes.length)}</span> trong tổng số <span className="text-white font-bold">{showtimes.length}</span> kết quả
+            Hiển thị{" "}
+            <span className="text-gray-300 font-bold">
+              {(currentPage - 1) * itemsPerPage + 1} -{" "}
+              {Math.min(currentPage * itemsPerPage, showtimes.length)}
+            </span>{" "}
+            trong tổng số{" "}
+            <span className="text-white font-bold">{showtimes.length}</span> kết
+            quả
           </div>
 
           <div className="flex items-center gap-2">

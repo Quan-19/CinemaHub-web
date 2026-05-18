@@ -1,8 +1,23 @@
 // PromotionsPage.jsx
 import {
-  Clock, Copy, Check, Info, Gift, MapPin, AlertCircle,
-  Search, Filter, ChevronRight, FileText, Calendar, Tag,
-  Ticket, Sparkles, TrendingUp, Share2, MousePointer2
+  Clock,
+  Copy,
+  Check,
+  Info,
+  Gift,
+  MapPin,
+  AlertCircle,
+  Search,
+  Filter,
+  ChevronRight,
+  FileText,
+  Calendar,
+  Tag,
+  Ticket,
+  Sparkles,
+  TrendingUp,
+  Share2,
+  MousePointer2,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -41,8 +56,8 @@ export const PromotionsPage = () => {
         const data = Array.isArray(payload?.data)
           ? payload.data
           : Array.isArray(payload)
-            ? payload
-            : [];
+          ? payload
+          : [];
 
         // Format data
         const parseArrayField = (value) => {
@@ -64,17 +79,27 @@ export const PromotionsPage = () => {
           let discountPercent = Number.isFinite(rawPercent) ? rawPercent : 0;
           let discountValue = Number.isFinite(rawValue) ? rawValue : 0;
 
-          if (discountType === "percent" && discountPercent <= 0 && discountValue > 0) {
+          if (
+            discountType === "percent" &&
+            discountPercent <= 0 &&
+            discountValue > 0
+          ) {
             discountPercent = discountValue;
           }
 
-          if ((discountType === "value" || discountType === "fixed") && discountValue <= 0 && discountPercent > 0) {
+          if (
+            (discountType === "value" || discountType === "fixed") &&
+            discountValue <= 0 &&
+            discountPercent > 0
+          ) {
             discountValue = discountPercent;
           }
 
           return {
             promotion_id: promo.promotion_id || promo.id || null,
-            client_id: `${promo.promotion_id || promo.id || promo.code || "promo"}-${index}`,
+            client_id: `${
+              promo.promotion_id || promo.id || promo.code || "promo"
+            }-${index}`,
             title: promo.title || "",
             description: promo.description || "",
             code: promo.code || "",
@@ -138,12 +163,14 @@ export const PromotionsPage = () => {
         const data = Array.isArray(payload?.data)
           ? payload.data
           : Array.isArray(payload)
-            ? payload
-            : [];
+          ? payload
+          : [];
 
         const formatted = data.map((article, index) => ({
           article_id: article.article_id || article.id || null,
-          client_id: `${article.article_id || article.id || "article"}-${index}`,
+          client_id: `${
+            article.article_id || article.id || "article"
+          }-${index}`,
           title: article.title || "",
           summary: article.summary || "",
           content: article.content || "",
@@ -157,7 +184,9 @@ export const PromotionsPage = () => {
         setArticles(formatted);
       } catch (err) {
         console.error("Error loading articles:", err);
-        setArticlesError("Không thể tải dữ liệu bài viết. Vui lòng thử lại sau.");
+        setArticlesError(
+          "Không thể tải dữ liệu bài viết. Vui lòng thử lại sau."
+        );
       } finally {
         setArticlesLoading(false);
       }
@@ -168,11 +197,12 @@ export const PromotionsPage = () => {
 
   const handleCopy = (promoId, code) => {
     if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(code)
+      navigator.clipboard
+        .writeText(code)
         .then(() => {
           toast.success("Đã sao chép mã ưu đãi!");
         })
-        .catch(() => { 
+        .catch(() => {
           toast.error("Không thể sao chép mã.");
         });
     }
@@ -196,7 +226,10 @@ export const PromotionsPage = () => {
     if (promo.discount_type === "percent") {
       const pct = promo.discount_percent || promo.discount_value || 0;
       return `-${pct}%`;
-    } else if (promo.discount_type === "value" || promo.discount_type === "fixed") {
+    } else if (
+      promo.discount_type === "value" ||
+      promo.discount_type === "fixed"
+    ) {
       const value = promo.discount_value || promo.discount_percent || 0;
       return `-${value.toLocaleString()}đ`;
     }
@@ -213,6 +246,30 @@ export const PromotionsPage = () => {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "Không rõ";
     return date.toLocaleDateString("vi-VN");
+  };
+
+  const getRelativeTime = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) return `Vừa xong`;
+
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} giờ trước`;
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 30) return `${diffInDays} ngày trước`;
+
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) return `${diffInMonths} tháng trước`;
+
+    const diffInYears = Math.floor(diffInDays / 365);
+    return `${diffInYears} năm trước`;
   };
 
   const ARTICLE_CATEGORIES = {
@@ -235,7 +292,7 @@ export const PromotionsPage = () => {
     return inTitle || inSummary;
   });
 
-  const filteredPromotions = promotions.filter(promo => {
+  const filteredPromotions = promotions.filter((promo) => {
     if (activeTab === "system" && promo.cinema_id) return false;
     if (activeTab === "cinema" && !promo.cinema_id) return false;
 
@@ -254,22 +311,22 @@ export const PromotionsPage = () => {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "itemListElement": filteredPromotions.map((promo, index) => ({
+    itemListElement: filteredPromotions.map((promo, index) => ({
       "@type": "ListItem",
-      "position": index + 1,
-      "item": {
+      position: index + 1,
+      item: {
         "@type": "Offer",
-        "name": promo.title,
-        "description": promo.description,
-        "priceCurrency": "VND",
-        "validFrom": promo.start_date,
-        "validThrough": promo.end_date,
-        "seller": {
+        name: promo.title,
+        description: promo.description,
+        priceCurrency: "VND",
+        validFrom: promo.start_date,
+        validThrough: promo.end_date,
+        seller: {
           "@type": "Organization",
-          "name": "CinemaHub"
-        }
-      }
-    }))
+          name: "CinemaHub",
+        },
+      },
+    })),
   };
 
   if (loading) {
@@ -277,7 +334,9 @@ export const PromotionsPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-cinema-bg">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-cinema-primary border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-          <p className="text-zinc-400 text-sm font-medium animate-pulse">Đang tải vũ trụ ưu đãi...</p>
+          <p className="text-zinc-400 text-sm font-medium animate-pulse">
+            Đang tải vũ trụ ưu đãi...
+          </p>
         </div>
       </div>
     );
@@ -290,7 +349,9 @@ export const PromotionsPage = () => {
           <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="w-10 h-10 text-red-500" />
           </div>
-          <h2 className="text-white text-xl font-bold mb-3">Kết nối gián đoạn</h2>
+          <h2 className="text-white text-xl font-bold mb-3">
+            Kết nối gián đoạn
+          </h2>
           <p className="text-zinc-400 text-base mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
@@ -306,12 +367,10 @@ export const PromotionsPage = () => {
   return (
     <main className="min-h-screen bg-cinema-bg pb-24 overflow-x-hidden">
       {/* Structured Data */}
-      <script type="application/ld+json">
-        {JSON.stringify(jsonLd)}
-      </script>
+      <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
 
       {/* HERO SECTION - REFINED */}
-      <header className="relative pt-20 pb-12 md:pt-28 md:pb-20 overflow-hidden">
+      <header className="relative overflow-hidden">
         {/* Background Decorative Elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] bg-cinema-primary/10 blur-[120px] rounded-full"></div>
@@ -321,36 +380,28 @@ export const PromotionsPage = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-sm"
-            >
-              <Sparkles className="w-4 h-4 text-cinema-gold" />
-              <span className="text-xs font-bold text-zinc-300 uppercase tracking-widest">Ưu đãi độc quyền cho thành viên</span>
-            </motion.div>
-
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-white text-4xl md:text-7xl font-black mb-6 tracking-tight leading-[1.1]"
             >
-              KHÁM PHÁ <span className="text-gradient">ƯU ĐÃI</span><br />
+              KHÁM PHÁ <span className="text-gradient">ƯU ĐÃI</span>
+              <br />
               <span className="text-zinc-500">PHẤN KHÍCH MỖI NGÀY</span>
             </motion.h1>
 
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
             >
-              Hàng ngàn mã giảm giá, quà tặng combo và chương trình hoàn tiền đang chờ đón bạn tại CinemaHub. Đừng bỏ lỡ!
+              Hàng ngàn mã giảm giá, quà tặng combo và chương trình hoàn tiền
+              đang chờ đón bạn tại CinemaHub. Đừng bỏ lỡ!
             </motion.p>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
@@ -378,6 +429,7 @@ export const PromotionsPage = () => {
           <div className="flex items-center justify-center gap-2 md:gap-4 overflow-x-auto no-scrollbar">
             {[
               { id: "all", label: "Tất cả", icon: TrendingUp },
+              { id: "news", label: "Tin tức & Sự kiện", icon: FileText },
               { id: "system", label: "Toàn hệ thống", icon: Sparkles },
               { id: "cinema", label: "Ưu đãi tại rạp", icon: MapPin },
             ].map((tab) => (
@@ -397,7 +449,13 @@ export const PromotionsPage = () => {
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
-                <tab.icon className={`relative w-4 h-4 ${activeTab === tab.id ? "text-white" : "text-zinc-500 group-hover:text-zinc-300"}`} />
+                <tab.icon
+                  className={`relative w-4 h-4 ${
+                    activeTab === tab.id
+                      ? "text-white"
+                      : "text-zinc-500 group-hover:text-zinc-300"
+                  }`}
+                />
                 <span className="relative">{tab.label}</span>
               </button>
             ))}
@@ -406,253 +464,374 @@ export const PromotionsPage = () => {
       </div>
 
       {/* ARTICLES / NEWS SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-20">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-1.5 h-8 bg-cinema-primary rounded-full"></div>
-            <div>
-              <h2 className="text-white text-2xl md:text-3xl font-black uppercase tracking-tight">Tin tức & Sự kiện</h2>
-              <p className="text-zinc-500 text-sm">Cập nhật những chuyển động mới nhất từ CinemaHub</p>
+      {(activeTab === "all" || activeTab === "news") && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-20">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-8 bg-cinema-primary rounded-full"></div>
+              <div>
+                <h2 className="text-white text-2xl md:text-3xl font-black uppercase tracking-tight">
+                  Tin tức & Sự kiện
+                </h2>
+                <p className="text-zinc-500 text-sm">
+                  Cập nhật những chuyển động mới nhất từ CinemaHub
+                </p>
+              </div>
             </div>
+            <Link
+              to="/articles"
+              className="text-zinc-400 hover:text-white text-sm font-bold flex items-center gap-1 group transition-colors"
+            >
+              Xem tất cả{" "}
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
-          <Link to="/articles" className="text-zinc-400 hover:text-white text-sm font-bold flex items-center gap-1 group transition-colors">
-            Xem tất cả <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
 
-        {articlesLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="aspect-[16/10] bg-white/5 rounded-2xl animate-pulse"></div>
-            ))}
-          </div>
-        ) : filteredArticles.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {filteredArticles.slice(0, 3).map((article, idx) => {
-              const category = getArticleCategory(article.category);
-              return (
-                <motion.div
-                  key={article.client_id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="group"
-                >
-                  <Link to={`/articles/${article.article_id || article.id}`} className="block">
-                    <div className="relative aspect-[16/10] rounded-3xl overflow-hidden mb-5">
-                      <img
-                        src={article.image || "https://via.placeholder.com/800x500?text=CinemaHub+News"}
-                        alt={article.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-cinema-bg via-transparent to-transparent opacity-60"></div>
-                      <div className="absolute top-4 left-4">
-                        <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider backdrop-blur-md ${category.cls}`}>
-                          {category.label}
-                        </span>
+          {articlesLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="aspect-[16/10] bg-white/5 rounded-2xl animate-pulse"
+                ></div>
+              ))}
+            </div>
+          ) : filteredArticles.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              {filteredArticles.slice(0, 3).map((article, idx) => {
+                const category = getArticleCategory(article.category);
+                return (
+                  <motion.div
+                    key={article.client_id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="group"
+                  >
+                    <Link
+                      to={`/articles/${article.article_id || article.id}`}
+                      className="block"
+                    >
+                      <div className="relative aspect-[16/10] rounded-3xl overflow-hidden mb-5">
+                        <img
+                          src={
+                            article.image ||
+                            "https://via.placeholder.com/800x500?text=CinemaHub+News"
+                          }
+                          alt={article.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-cinema-bg via-transparent to-transparent opacity-60"></div>
+                        <div className="absolute top-4 left-4">
+                          <span
+                            className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider backdrop-blur-md ${category.cls}`}
+                          >
+                            {category.label}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3 text-zinc-500 text-xs font-bold">
-                        <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(article.publish_date)}</span>
-                        <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
-                        <span className="flex items-center gap-1"><MousePointer2 className="w-3 h-3" /> 5 phút đọc</span>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 text-zinc-500 text-xs font-bold">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />{" "}
+                            {formatDate(article.publish_date)}
+                          </span>
+                          <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
+                          <span className="flex items-center gap-1">
+                            <MousePointer2 className="w-3 h-3" />{" "}
+                            {getRelativeTime(article.publish_date)}
+                          </span>
+                        </div>
+                        <h3 className="text-white text-xl font-bold leading-tight group-hover:text-cinema-primary transition-colors line-clamp-2">
+                          {article.title}
+                        </h3>
+                        <p className="text-zinc-500 text-sm line-clamp-2 leading-relaxed">
+                          {article.summary}
+                        </p>
                       </div>
-                      <h3 className="text-white text-xl font-bold leading-tight group-hover:text-cinema-primary transition-colors line-clamp-2">
-                        {article.title}
-                      </h3>
-                      <p className="text-zinc-500 text-sm line-clamp-2 leading-relaxed">
-                        {article.summary}
-                      </p>
-                    </div>
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-12 glass-card rounded-3xl border-dashed border-white/10">
-             <FileText className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-             <p className="text-zinc-500 font-medium">Hiện tại không có tin tức nào phù hợp.</p>
-          </div>
-        )}
-      </section>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12 glass-card rounded-3xl border-dashed border-white/10">
+              <FileText className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
+              <p className="text-zinc-500 font-medium">
+                Hiện tại không có tin tức nào phù hợp.
+              </p>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* PROMOTIONS GRID - TICKET DESIGN */}
-      <section id="promotions-list" className="max-w-7xl mx-auto px-4 sm:px-6 scroll-mt-24">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
-          <div className="flex items-center gap-3">
-            <div className="w-1.5 h-8 bg-cinema-gold rounded-full"></div>
-            <div>
-              <h2 className="text-white text-2xl md:text-3xl font-black uppercase tracking-tight">Mã Giảm Giá & Ưu Đãi</h2>
-              <p className="text-zinc-500 text-sm">Lấy mã ngay để tận hưởng rạp phim chất lượng cao với giá hời</p>
+      {(activeTab === "all" ||
+        activeTab === "system" ||
+        activeTab === "cinema") && (
+        <section
+          id="promotions-list"
+          className="max-w-7xl mx-auto px-4 sm:px-6 scroll-mt-24"
+        >
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-8 bg-cinema-gold rounded-full"></div>
+              <div>
+                <h2 className="text-white text-2xl md:text-3xl font-black uppercase tracking-tight">
+                  Mã Giảm Giá & Ưu Đãi
+                </h2>
+                <p className="text-zinc-500 text-sm">
+                  Lấy mã ngay để tận hưởng rạp phim chất lượng cao với giá hời
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-zinc-400 text-xs font-bold">
+              <Filter className="w-3.5 h-3.5" />
+              Hiển thị {filteredPromotions.length} kết quả
             </div>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-zinc-400 text-xs font-bold">
-            <Filter className="w-3.5 h-3.5" />
-            Hiển thị {filteredPromotions.length} kết quả
-          </div>
-        </div>
 
-        {filteredPromotions.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            {filteredPromotions.map((promo, idx) => (
-              <motion.article
-                key={promo.client_id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.05 }}
-                className="group relative"
-              >
-                {/* TICKET STYLE CONTAINER */}
-                <div className="relative flex flex-col md:flex-row h-auto rounded-3xl overflow-hidden bg-zinc-900/50 border border-white/5 backdrop-blur-md group-hover:border-cinema-primary/30 group-hover:bg-zinc-900/80 transition-all duration-500">
-                  
-                  {/* Left Side - Discount Badge */}
-                  <div className="relative w-full md:w-28 h-20 md:h-auto shrink-0 flex items-center justify-center bg-zinc-800/30 overflow-hidden">
-                    {/* Background Pattern */}
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '12px 12px' }}></div>
-                    </div>
-                    
-                    <div className="relative z-10 flex flex-col items-center justify-center min-w-[4rem] w-fit px-3 h-16 rounded-2xl bg-cinema-primary text-white shadow-xl rotate-[-5deg] group-hover:rotate-0 transition-all duration-500">
-                        <span className="text-[9px] font-black uppercase leading-none opacity-80 mb-0.5">Giảm</span>
-                        <span className={`font-black leading-none whitespace-nowrap ${
-                          getDiscountDisplay(promo).replace('-', '').length > 10 ? 'text-[13px]' : 
-                          getDiscountDisplay(promo).replace('-', '').length > 8 ? 'text-[15px]' : 'text-lg'
-                        }`}>
-                          {getDiscountDisplay(promo).replace('-', '')}
-                        </span>
-                    </div>
-                  </div>
-
-                  {/* Divider Dash (Horizontal on Desktop, Vertical on Mobile) */}
-                  <div className="hidden md:flex flex-col items-center justify-center gap-2 px-1 relative">
-                    <div className="absolute -top-3 w-6 h-6 bg-cinema-bg rounded-full border border-white/5"></div>
-                    <div className="w-[1px] h-full border-l border-dashed border-white/20"></div>
-                    <div className="absolute -bottom-3 w-6 h-6 bg-cinema-bg rounded-full border border-white/5"></div>
-                  </div>
-
-                  {/* Right Side - Content */}
-                  <div className="flex-1 p-4 md:p-5 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-1.5 text-cinema-gold text-[10px] font-black uppercase tracking-widest">
-                          {promo.cinema_id ? <><MapPin className="w-3 h-3" /> Tại rạp {promo.cinema_name}</> : <><Sparkles className="w-3 h-3" /> Toàn hệ thống</>}
-                        </div>
-                        <div className="flex items-center gap-1 text-zinc-500 text-xs font-medium">
-                          <Clock className="w-3.5 h-3.5" />
-                          {formatDate(promo.end_date)}
-                        </div>
+          {filteredPromotions.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+              {filteredPromotions.map((promo, idx) => (
+                <motion.article
+                  key={promo.client_id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="group relative"
+                >
+                  {/* TICKET STYLE CONTAINER */}
+                  <div className="relative flex flex-col md:flex-row h-auto rounded-3xl overflow-hidden bg-zinc-900/50 border border-white/5 backdrop-blur-md group-hover:border-cinema-primary/30 group-hover:bg-zinc-900/80 transition-all duration-500">
+                    {/* Left Side - Discount Badge */}
+                    <div className="relative w-full md:w-28 h-20 md:h-auto shrink-0 flex items-center justify-center bg-zinc-800/30 overflow-hidden">
+                      {/* Background Pattern */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div
+                          className="absolute top-0 left-0 w-full h-full"
+                          style={{
+                            backgroundImage:
+                              "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
+                            backgroundSize: "12px 12px",
+                          }}
+                        ></div>
                       </div>
 
-                      <h3 className="text-white text-lg font-bold mb-1.5 group-hover:text-cinema-primary transition-colors">
-                        {promo.title}
-                      </h3>
-                      <p className="text-zinc-400 text-xs line-clamp-2 mb-4">
-                        {promo.description}
-                      </p>
+                      <div className="relative z-10 flex flex-col items-center justify-center min-w-[4rem] w-fit px-3 h-16 rounded-2xl bg-cinema-primary text-white shadow-xl rotate-[-5deg] group-hover:rotate-0 transition-all duration-500">
+                        <span className="text-[9px] font-black uppercase leading-none opacity-80 mb-0.5">
+                          Giảm
+                        </span>
+                        <span
+                          className={`font-black leading-none whitespace-nowrap ${
+                            getDiscountDisplay(promo).replace("-", "").length >
+                            10
+                              ? "text-[13px]"
+                              : getDiscountDisplay(promo).replace("-", "")
+                                  .length > 8
+                              ? "text-[15px]"
+                              : "text-lg"
+                          }`}
+                        >
+                          {getDiscountDisplay(promo).replace("-", "")}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="space-y-4">
-                      {/* Code and Copy */}
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 bg-black/40 border border-white/5 rounded-2xl p-3 flex items-center justify-between group/code">
-                          <div className="flex flex-col">
-                            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Mã ưu đãi</span>
-                            <span className="text-white font-mono font-black tracking-[0.2em] text-base">
-                              {promo.code}
-                            </span>
+                    {/* Divider Dash (Horizontal on Desktop, Vertical on Mobile) */}
+                    <div className="hidden md:flex flex-col items-center justify-center gap-2 px-1 relative">
+                      <div className="absolute -top-3 w-6 h-6 bg-cinema-bg rounded-full border border-white/5"></div>
+                      <div className="w-[1px] h-full border-l border-dashed border-white/20"></div>
+                      <div className="absolute -bottom-3 w-6 h-6 bg-cinema-bg rounded-full border border-white/5"></div>
+                    </div>
+
+                    {/* Right Side - Content */}
+                    <div className="flex-1 p-4 md:p-5 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-1.5 text-cinema-gold text-[10px] font-black uppercase tracking-widest">
+                            {promo.cinema_id ? (
+                              <>
+                                <MapPin className="w-3 h-3" /> Tại rạp{" "}
+                                {promo.cinema_name}
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-3 h-3" /> Toàn hệ thống
+                              </>
+                            )}
                           </div>
+                          <div className="flex items-center gap-1 text-zinc-500 text-xs font-medium">
+                            <Clock className="w-3.5 h-3.5" />
+                            {formatDate(promo.end_date)}
+                          </div>
+                        </div>
+
+                        <h3 className="text-white text-lg font-bold mb-1.5 group-hover:text-cinema-primary transition-colors">
+                          {promo.title}
+                        </h3>
+                        <p className="text-zinc-400 text-xs line-clamp-2 mb-4">
+                          {promo.description}
+                        </p>
+                      </div>
+
+                      <div className="space-y-4">
+                        {/* Code and Copy */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 bg-black/40 border border-white/5 rounded-2xl p-3 flex items-center justify-between group/code">
+                            <div className="flex flex-col">
+                              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">
+                                Mã ưu đãi
+                              </span>
+                              <span className="text-white font-mono font-black tracking-[0.2em] text-base">
+                                {promo.code}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() =>
+                                handleCopy(promo.client_id, promo.code)
+                              }
+                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                                copiedPromoId === promo.client_id
+                                  ? "bg-green-500/20 text-green-500"
+                                  : "bg-white/5 text-zinc-400 hover:bg-cinema-primary hover:text-white"
+                              }`}
+                            >
+                              <AnimatePresence mode="wait">
+                                {copiedPromoId === promo.client_id ? (
+                                  <motion.div
+                                    key="check"
+                                    initial={{ scale: 0.5 }}
+                                    animate={{ scale: 1 }}
+                                    exit={{ scale: 0.5 }}
+                                  >
+                                    <Check className="w-5 h-5" />
+                                  </motion.div>
+                                ) : (
+                                  <motion.div
+                                    key="copy"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                  >
+                                    <Copy className="w-5 h-5" />
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </button>
+                          </div>
+
                           <button
-                            onClick={() => handleCopy(promo.client_id, promo.code)}
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                              copiedPromoId === promo.client_id ? "bg-green-500/20 text-green-500" : "bg-white/5 text-zinc-400 hover:bg-cinema-primary hover:text-white"
-                            }`}
+                            onClick={() => toggleExpand(promo.client_id)}
+                            className="w-10 h-10 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white transition-all shrink-0"
+                            title="Xem điều kiện"
                           >
-                            <AnimatePresence mode="wait">
-                              {copiedPromoId === promo.client_id ? (
-                                <motion.div key="check" initial={{ scale: 0.5 }} animate={{ scale: 1 }} exit={{ scale: 0.5 }}>
-                                  <Check className="w-5 h-5" />
-                                </motion.div>
-                              ) : (
-                                <motion.div key="copy" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                  <Copy className="w-5 h-5" />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
+                            <Info
+                              className={`w-5 h-5 transition-transform ${
+                                expandedPromos.has(promo.client_id)
+                                  ? "rotate-180 text-cinema-primary"
+                                  : ""
+                              }`}
+                            />
                           </button>
                         </div>
-                        
-                        <button 
-                          onClick={() => toggleExpand(promo.client_id)}
-                          className="w-10 h-10 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white transition-all shrink-0"
-                          title="Xem điều kiện"
-                        >
-                          <Info className={`w-5 h-5 transition-transform ${expandedPromos.has(promo.client_id) ? "rotate-180 text-cinema-primary" : ""}`} />
-                        </button>
-                      </div>
 
-                      {/* Expandable Info */}
-                      <AnimatePresence>
-                        {expandedPromos.has(promo.client_id) && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="pt-4 border-t border-white/5 space-y-4">
-                               <div className="grid grid-cols-2 gap-3">
+                        {/* Expandable Info */}
+                        <AnimatePresence>
+                          {expandedPromos.has(promo.client_id) && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="pt-4 border-t border-white/5 space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
                                   <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                                    <span className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">Đơn tối thiểu</span>
-                                    <span className="text-white text-sm font-bold">{promo.min_order > 0 ? `${promo.min_order.toLocaleString()}đ` : "Mọi đơn hàng"}</span>
+                                    <span className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">
+                                      Đơn tối thiểu
+                                    </span>
+                                    <span className="text-white text-sm font-bold">
+                                      {promo.min_order > 0
+                                        ? `${promo.min_order.toLocaleString()}đ`
+                                        : "Mọi đơn hàng"}
+                                    </span>
                                   </div>
                                   <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                                    <span className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">Lượt dùng</span>
-                                    <span className="text-white text-sm font-bold">{promo.usage_limit > 0 ? `${promo.used_count}/${promo.usage_limit}` : "Không giới hạn"}</span>
+                                    <span className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">
+                                      Lượt dùng
+                                    </span>
+                                    <span className="text-white text-sm font-bold">
+                                      {promo.usage_limit > 0
+                                        ? `${promo.used_count}/${promo.usage_limit}`
+                                        : "Không giới hạn"}
+                                    </span>
                                   </div>
-                               </div>
-                               <div className="text-[11px] text-zinc-400 leading-relaxed bg-cinema-primary/5 p-3 rounded-xl border border-cinema-primary/10">
+                                </div>
+                                <div className="text-[11px] text-zinc-400 leading-relaxed bg-cinema-primary/5 p-3 rounded-xl border border-cinema-primary/10">
                                   <span className="text-white font-bold block mb-1 flex items-center gap-1">
-                                    <Tag className="w-3 h-3" /> Điều kiện áp dụng:
+                                    <Tag className="w-3 h-3" /> Điều kiện áp
+                                    dụng:
                                   </span>
-                                  • {promo.apply_days.length > 0 && promo.apply_days.length < 7 ? `Chỉ áp dụng các ngày: ${promo.apply_days.map(d => getDayName(d)).join(", ")}` : "Áp dụng tất cả các ngày trong tuần"}<br/>
-                                  • {promo.apply_seat_types.length > 0 ? `Dành cho: ${promo.apply_seat_types.join(", ")}` : "Áp dụng cho mọi loại ghế"}<br/>
-                                  • Mỗi tài khoản được sử dụng tối đa 1 lần trong suốt chương trình.
-                               </div>
-                               <Link to="/movies" className="cinema-btn-primary w-full flex items-center justify-center gap-2 py-3">
-                                  Sử dụng ngay <ChevronRight className="w-4 h-4" />
+                                  •{" "}
+                                  {promo.apply_days.length > 0 &&
+                                  promo.apply_days.length < 7
+                                    ? `Chỉ áp dụng các ngày: ${promo.apply_days
+                                        .map((d) => getDayName(d))
+                                        .join(", ")}`
+                                    : "Áp dụng tất cả các ngày trong tuần"}
+                                  <br />•{" "}
+                                  {promo.apply_seat_types.length > 0
+                                    ? `Dành cho: ${promo.apply_seat_types.join(
+                                        ", "
+                                      )}`
+                                    : "Áp dụng cho mọi loại ghế"}
+                                  <br />• Mỗi tài khoản được sử dụng tối đa 1
+                                  lần trong suốt chương trình.
+                                </div>
+                                <Link
+                                  to="/movies"
+                                  className="cinema-btn-primary w-full flex items-center justify-center gap-2 py-3"
+                                >
+                                  Sử dụng ngay{" "}
+                                  <ChevronRight className="w-4 h-4" />
                                 </Link>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.article>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-32 glass-card rounded-3xl">
-            <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8">
-              <Ticket className="w-10 h-10 text-zinc-700" />
+                </motion.article>
+              ))}
             </div>
-            <h2 className="text-white text-2xl font-bold mb-3">Không tìm thấy mã ưu đãi</h2>
-            <p className="text-zinc-500 text-sm mb-8 max-w-md mx-auto">
-              Rất tiếc, không có khuyến mãi nào khớp với từ khóa của bạn. Thử thay đổi bộ lọc hoặc quay lại sau nhé!
-            </p>
-            <button
-              onClick={() => { setSearchQuery(""); setActiveTab("all"); }}
-              className="text-cinema-primary font-black hover:underline transition-all"
-            >
-              Xóa tất cả bộ lọc
-            </button>
-          </div>
-        )}
-      </section>
+          ) : (
+            <div className="text-center py-32 glass-card rounded-3xl">
+              <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8">
+                <Ticket className="w-10 h-10 text-zinc-700" />
+              </div>
+              <h2 className="text-white text-2xl font-bold mb-3">
+                Không tìm thấy mã ưu đãi
+              </h2>
+              <p className="text-zinc-500 text-sm mb-8 max-w-md mx-auto">
+                Rất tiếc, không có khuyến mãi nào khớp với từ khóa của bạn. Thử
+                thay đổi bộ lọc hoặc quay lại sau nhé!
+              </p>
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setActiveTab("all");
+                }}
+                className="text-cinema-primary font-black hover:underline transition-all"
+              >
+                Xóa tất cả bộ lọc
+              </button>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* FOOTER CALL TO ACTION */}
       {!user && (
@@ -660,17 +839,26 @@ export const PromotionsPage = () => {
           <div className="relative rounded-[40px] overflow-hidden p-8 md:p-16 text-center">
             <div className="absolute inset-0 bg-gradient-to-br from-cinema-primary/20 via-cinema-bg to-cinema-gold/10"></div>
             <div className="absolute inset-0 border border-white/5 rounded-[40px]"></div>
-            
+
             <div className="relative z-10">
-              <h2 className="text-3xl md:text-5xl font-black text-white mb-6">Bạn chưa có tài khoản?</h2>
+              <h2 className="text-3xl md:text-5xl font-black text-white mb-6">
+                Bạn chưa có tài khoản?
+              </h2>
               <p className="text-zinc-400 text-lg mb-10 max-w-2xl mx-auto">
-                Đăng ký ngay để nhận thêm nhiều ưu đãi độc quyền và tích điểm đổi quà hấp dẫn cho mỗi lượt xem phim.
+                Đăng ký ngay để nhận thêm nhiều ưu đãi độc quyền và tích điểm
+                đổi quà hấp dẫn cho mỗi lượt xem phim.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link to="/auth?tab=register" className="cinema-btn-primary px-10 py-4 text-base w-full sm:w-auto">
+                <Link
+                  to="/auth?tab=register"
+                  className="cinema-btn-primary px-10 py-4 text-base w-full sm:w-auto"
+                >
                   Đăng ký ngay
                 </Link>
-                <Link to="/auth?tab=login" className="px-10 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all w-full sm:w-auto">
+                <Link
+                  to="/auth?tab=login"
+                  className="px-10 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all w-full sm:w-auto"
+                >
                   Đăng nhập
                 </Link>
               </div>

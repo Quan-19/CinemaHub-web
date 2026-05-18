@@ -145,7 +145,9 @@ function Navbar() {
             >
               Phim
               <ChevronDown
-                className={`w-3.5 h-3.5 transition-transform ${movieDropdownOpen ? "rotate-180" : ""}`}
+                className={`w-3.5 h-3.5 transition-transform ${
+                  movieDropdownOpen ? "rotate-180" : ""
+                }`}
               />
             </button>
             {movieDropdownOpen && (
@@ -164,36 +166,16 @@ function Navbar() {
             )}
           </div>
 
-          {/* Rạp chiếu dropdown */}
-          <div className="relative" ref={cinemaDropdownRef}>
-            <button
-              onClick={() => setCinemaDropdownOpen((o) => !o)}
-              className={`flex items-center gap-1 rounded-full px-4 py-2 text-[15px] font-semibold transition-all drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${
-                isLinkActive(location.pathname, "/cinemas")
-                  ? "bg-white/20 backdrop-blur-md text-white border border-white/10"
-                  : "text-white/90 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              Rạp chiếu
-              <ChevronDown
-                className={`w-3.5 h-3.5 transition-transform ${cinemaDropdownOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-            {cinemaDropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-48 rounded-xl border border-zinc-700 bg-cinema-surface py-2 shadow-xl z-50 animate-fade-slide-up">
-                {cinemaDropdown.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setCinemaDropdownOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+          <Link
+            to="/cinemas"
+            className={`rounded-full px-4 py-2 text-[15px] font-semibold transition-all drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${
+              isLinkActive(location.pathname, "/cinemas")
+                ? "bg-white/20 backdrop-blur-md text-white border border-white/10"
+                : "text-white/90 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            Rạp chiếu
+          </Link>
 
           <Link
             to="/promotions"

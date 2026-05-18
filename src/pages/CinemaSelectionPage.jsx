@@ -190,7 +190,6 @@ export const CinemaSelectionPage = () => {
       })
       .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-
     return uniqueDateKeys.map((value) => {
       const currentDate = new Date(value);
       const dayLabel =
@@ -234,6 +233,7 @@ export const CinemaSelectionPage = () => {
 
       // Check if showtime is expired
       let isExpired = false;
+      let isOngoing = false;
       if (showtime.date && showtime.time && showtime.endTime) {
         const now = new Date();
         const startParts = showtime.time.split(":");
@@ -262,6 +262,8 @@ export const CinemaSelectionPage = () => {
 
         if (endDateObj < now) {
           isExpired = true;
+        } else if (startDateObj <= now && endDateObj >= now) {
+          isOngoing = true;
         }
       }
 
@@ -278,6 +280,7 @@ export const CinemaSelectionPage = () => {
         prices: pricing.prices,
         isSpecial: pricing.isSpecial,
         isExpired,
+        isOngoing,
         availableSeats: showtime.availableSeats,
       });
     });
@@ -337,12 +340,11 @@ export const CinemaSelectionPage = () => {
   useEffect(() => {
     if (cachedCinema && !expandedCinema && apiCinemas.length > 0) {
       const cinemaId = String(cachedCinema.id || cachedCinema.cinema_id);
-      if (apiCinemas.some(c => String(c.id) === cinemaId)) {
+      if (apiCinemas.some((c) => String(c.id) === cinemaId)) {
         setExpandedCinema(cinemaId);
       }
     }
   }, [cachedCinema, expandedCinema, apiCinemas]);
-
 
   useEffect(() => {
     let active = true;
@@ -518,7 +520,10 @@ export const CinemaSelectionPage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-16" style={{ background: "var(--color-cinema-bg)" }}>
+    <div
+      className="min-h-screen pt-16"
+      style={{ background: "var(--color-cinema-bg)" }}
+    >
       {/* Header */}
       <div
         className="border-b border-zinc-700"
@@ -633,7 +638,10 @@ export const CinemaSelectionPage = () => {
               {/* Mobile: scroll ngang 1 hàng */}
               <div
                 className="flex sm:hidden gap-2 overflow-x-auto pb-2"
-                style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+                style={{
+                  scrollbarWidth: "none",
+                  WebkitOverflowScrolling: "touch",
+                }}
               >
                 {dateOptions.map((d, i) => (
                   <button
@@ -645,7 +653,10 @@ export const CinemaSelectionPage = () => {
                         : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
                     }`}
                   >
-                    <span className="text-[11px] mb-0.5" style={{ opacity: 0.7 }}>
+                    <span
+                      className="text-[11px] mb-0.5"
+                      style={{ opacity: 0.7 }}
+                    >
                       {d.day}
                     </span>
                     <span className="text-lg" style={{ fontWeight: 700 }}>
@@ -829,7 +840,8 @@ export const CinemaSelectionPage = () => {
                             typeof st.availableSeats === "number";
                           const isFull = hasSeatInfo && st.availableSeats === 0;
                           const isExpired = st.isExpired;
-                          const isDisabled = isFull || isExpired;
+                          const isOngoing = st.isOngoing;
+                          const isDisabled = isFull || isExpired || isOngoing;
                           const isLow =
                             hasSeatInfo &&
                             st.availableSeats > 0 &&
@@ -841,15 +853,26 @@ export const CinemaSelectionPage = () => {
                               onClick={() =>
                                 handleSelectShowtime(cinema.id, st.id)
                               }
-                              className={`group flex flex-col items-start p-3 rounded-xl border min-w-[110px] transition-all ${
-                                isDisabled
-                                  ? "border-zinc-700 opacity-40 cursor-not-allowed"
+                              className={`group relative flex flex-col items-start p-3 rounded-xl border min-w-[110px] transition-all overflow-hidden ${
+                                isOngoing
+                                  ? "border-amber-600/30 bg-amber-600/10 opacity-75 cursor-not-allowed"
+                                  : isExpired
+                                  ? "bg-zinc-900/50 border-white/5 opacity-50 cursor-not-allowed"
+                                  : isFull
+                                  ? "bg-red-900/10 border-red-900/30 opacity-70 cursor-not-allowed"
                                   : "border-zinc-700 hover:border-red-500 hover:bg-red-500/5 cursor-pointer"
                               }`}
                             >
+                              {isOngoing && (
+                                <div className="absolute top-0 right-0 bg-amber-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-bl-lg z-10">
+                                  Đang chiếu
+                                </div>
+                              )}
                               <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
                                 <span
-                                  className="text-white text-sm font-bold"
+                                  className={`text-sm font-bold ${
+                                    isDisabled ? "text-zinc-500" : "text-white"
+                                  }`}
                                 >
                                   {st.time}
                                 </span>
@@ -860,7 +883,9 @@ export const CinemaSelectionPage = () => {
                                       : "bg-purple-600 text-white"
                                   }`}
                                 >
-                                  {st.language === "DUB" ? "Lồng tiếng" : "Phụ đề"}
+                                  {st.language === "DUB"
+                                    ? "Lồng tiếng"
+                                    : "Phụ đề"}
                                 </span>
                                 <span
                                   className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
@@ -868,23 +893,41 @@ export const CinemaSelectionPage = () => {
                                       ? "bg-zinc-800 text-zinc-500 border border-zinc-700"
                                       : ""
                                   }`}
-                                  style={!isDisabled ? {
-                                    background: typeInfo?.color || "#52525b",
-                                    color: "white"
-                                  } : {}}
+                                  style={
+                                    !isDisabled
+                                      ? {
+                                          background:
+                                            typeInfo?.color || "#52525b",
+                                          color: "white",
+                                        }
+                                      : {}
+                                  }
                                 >
                                   {st.type}
                                 </span>
                               </div>
-                              <span className="text-zinc-400 text-xs">
-                                {Math.round(Number(st.price || 0)).toLocaleString("vi-VN")}đ
+                              <span
+                                className={`text-xs ${
+                                  isDisabled ? "text-zinc-500" : "text-zinc-400"
+                                }`}
+                              >
+                                {Math.round(
+                                  Number(st.price || 0)
+                                ).toLocaleString("vi-VN")}
+                                đ
                               </span>
                               <div className="flex items-center gap-1 mt-1">
-                                <Users className="w-3 h-3 text-zinc-400" />
-                                <span
-                                  className={`text-xs ${
+                                <Users
+                                  className={`w-3 h-3 ${
                                     isDisabled
                                       ? "text-zinc-500"
+                                      : "text-zinc-400"
+                                  }`}
+                                />
+                                <span
+                                  className={`text-xs ${
+                                    isOngoing || isExpired || isFull
+                                      ? "text-zinc-500 font-medium"
                                       : isLow
                                       ? "text-orange-400"
                                       : "text-zinc-400"
@@ -892,6 +935,8 @@ export const CinemaSelectionPage = () => {
                                 >
                                   {isExpired
                                     ? "Đã chiếu"
+                                    : isOngoing
+                                    ? "Đang chiếu"
                                     : isFull
                                     ? "Hết vé"
                                     : isLow
