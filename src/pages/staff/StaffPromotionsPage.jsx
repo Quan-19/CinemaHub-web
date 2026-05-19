@@ -17,7 +17,7 @@ import { StaffCenteredModalShell } from "../../components/staff/StaffModalShell.
 import StaffIconButton from "../../components/staff/StaffIconButton.jsx";
 import StaffConfirmModal from "../../components/staff/StaffConfirmModal.jsx";
 import StaffSuccessToast from "../../components/staff/StaffSuccessToast.jsx";
-import { formatNumberInput, parseNumberInput } from "../../utils/numberFormat";
+import { formatNumberInput } from "../../utils/numberFormat";
 
 const DAY_LABELS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 const DEFAULT_DAYS = [0, 1, 2, 3, 4, 5, 6];
@@ -787,7 +787,7 @@ function StaffPromotionsPage() {
         const errorData = await res.json().catch(() => ({}));
         showError(
           "Lỗi thêm khuyến mãi: " +
-            (errorData.error || errorData.message || "Lỗi không xác định")
+          (errorData.error || errorData.message || "Lỗi không xác định")
         );
       }
     } catch (err) {
@@ -833,7 +833,7 @@ function StaffPromotionsPage() {
         const errorData = await res.json().catch(() => ({}));
         showError(
           "Lỗi cập nhật: " +
-            (errorData.error || errorData.message || "Lỗi không xác định")
+          (errorData.error || errorData.message || "Lỗi không xác định")
         );
       }
     } catch (err) {

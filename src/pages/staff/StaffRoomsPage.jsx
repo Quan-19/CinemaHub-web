@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Eye,
   Layers,
+  Lock,
   Plus,
   Settings,
   Trash2,
@@ -641,10 +642,12 @@ function RoomCard({
   onConfig,
   onDelete,
   maintenanceSeats,
+  configLocked,
 }) {
   const total = room.rows * room.seatsPerRow;
   const vipCount = room.vipRows.length;
   const isInactive = room.status !== "active";
+  const isConfigDisabled = !!configLocked;
 
   return (
     <div
@@ -666,17 +669,31 @@ function RoomCard({
           </div>
         </div>
 
-        <Badge
-          className={[
-            "border-zinc-700",
-            room.status === "active"
-              ? "bg-emerald-500/10 text-emerald-400"
-              : "bg-red-500/10 text-red-400",
-          ].join(" ")}
-        >
-          {room.status === "active" ? "Hoạt động" : "Tạm dừng"}
-        </Badge>
+        <div className="flex items-center gap-2">
+          {isConfigDisabled && (
+            <Badge className="border-amber-500/40 bg-amber-500/10 text-amber-400">
+              <Lock className="mr-1 inline h-3 w-3" />
+              Đang có vé
+            </Badge>
+          )}
+          <Badge
+            className={[
+              "border-zinc-700",
+              room.status === "active"
+                ? "bg-emerald-500/10 text-emerald-400"
+                : "bg-red-500/10 text-red-400",
+            ].join(" ")}
+          >
+            {room.status === "active" ? "Hoạt động" : "Tạm dừng"}
+          </Badge>
+        </div>
       </div>
+
+      {isConfigDisabled && (
+        <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-300">
+          Phòng có suất chiếu đã đặt vé — không thể thay đổi sơ đồ ghế.
+        </div>
+      )}
 
       <div className="mt-4">
         <MiniSeatPreview
@@ -730,10 +747,21 @@ function RoomCard({
 
         <button
           type="button"
-          onClick={onConfig}
-          className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-700 bg-sky-500/10 text-sm font-semibold text-sky-300 hover:bg-sky-500/15"
+          onClick={isConfigDisabled ? undefined : onConfig}
+          disabled={isConfigDisabled}
+          className={[
+            "inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-700 text-sm font-semibold",
+            isConfigDisabled
+              ? "cursor-not-allowed bg-zinc-800/30 text-zinc-500"
+              : "bg-sky-500/10 text-sky-300 hover:bg-sky-500/15",
+          ].join(" ")}
+          title={isConfigDisabled ? "Phòng có suất chiếu đã đặt vé — không thể thay đổi sơ đồ ghế" : ""}
         >
-          <Settings className="h-4 w-4" aria-hidden="true" />
+          {isConfigDisabled ? (
+            <Lock className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <Settings className="h-4 w-4" aria-hidden="true" />
+          )}
           Cấu hình
         </button>
 
@@ -780,6 +808,7 @@ function StaffRoomsPage() {
 
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lockedRooms, setLockedRooms] = useState(new Set());
   // const cinemaName = useMemo(() => {
   //   if (rooms.length > 0) {
   //     return rooms[0].cinemaName || "";
@@ -815,7 +844,6 @@ function StaffRoomsPage() {
 
       const roomsData = Array.isArray(data) ? data : data.data || [];
 
-      // ✅ KHÔNG MAP LẠI SAI FIELD NỮA
       const mapped = roomsData.map((r) => ({
         id: r.id || r.room_id,
         cinemaId: r.cinemaId || r.cinema_id,
@@ -826,10 +854,49 @@ function StaffRoomsPage() {
         seatsPerRow: r.cols || r.seat_cols,
         vipRows: r.vipRows || (typeof r.vip_rows === 'string' ? JSON.parse(r.vip_rows) : r.vip_rows) || [],
         coupleRow: r.coupleRow || r.couple_row,
+        maintenanceSeats: r.maintenanceSeats || r.maintenance_seats || [],
         status: r.status,
       }));
 
       setRooms(mapped);
+
+      // Populate maintenanceMap từ dữ liệu server
+      const newMaintenanceMap = new Map();
+      mapped.forEach((room) => {
+        const seats = Array.isArray(room.maintenanceSeats) ? room.maintenanceSeats : [];
+        if (seats.length > 0) {
+          newMaintenanceMap.set(room.id, new Set(seats));
+        }
+      });
+      setMaintenanceMap(newMaintenanceMap);
+
+      // Load config-status cho mỗi phòng
+      try {
+        const token = await getAuth().currentUser?.getIdToken();
+        const statusPromises = mapped.map(async (room) => {
+          try {
+            const statusRes = await fetch(
+              `http://localhost:5000/api/rooms/${room.id}/config-status`,
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            if (statusRes.ok) {
+              const statusData = await statusRes.json();
+              return { roomId: room.id, locked: statusData.locked };
+            }
+          } catch {
+            // ignore individual failures
+          }
+          return { roomId: room.id, locked: false };
+        });
+        const statuses = await Promise.all(statusPromises);
+        const lockedSet = new Set();
+        statuses.forEach((s) => {
+          if (s.locked) lockedSet.add(s.roomId);
+        });
+        setLockedRooms(lockedSet);
+      } catch {
+        // ignore config-status errors
+      }
     } catch (err) {
       console.error("Load rooms error:", err);
     } finally {
@@ -871,7 +938,9 @@ function StaffRoomsPage() {
   // Map of roomId -> Set of maintenance seat IDs
   const [maintenanceMap, setMaintenanceMap] = useState(() => new Map());
 
-  const handleToggleMaintenance = useCallback((roomId, seatId) => {
+  const handleToggleMaintenance = useCallback(async (roomId, seatId) => {
+    // Cập nhật local state trước
+    let updatedSeats;
     setMaintenanceMap((prev) => {
       const next = new Map(prev);
       const seats = new Set(next.get(roomId) ?? []);
@@ -881,8 +950,27 @@ function StaffRoomsPage() {
         seats.add(seatId);
       }
       next.set(roomId, seats);
+      updatedSeats = Array.from(seats);
       return next;
     });
+
+    // Auto-save lên server
+    try {
+      const token = await getAuth().currentUser?.getIdToken();
+      await fetch(
+        `http://localhost:5000/api/rooms/${roomId}/maintenance`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ maintenance_seats: updatedSeats }),
+        },
+      );
+    } catch (err) {
+      console.error("Save maintenance seats error:", err);
+    }
   }, []);
   if (loading) {
     return <div className="text-white p-6">Loading...</div>;
@@ -954,9 +1042,10 @@ function StaffRoomsPage() {
         {pagedRooms.map((room) => (
           <RoomCard
             key={room.id}
-            cinemaName={room.cinemaName} // ✅ FIX CHUẨN
+            cinemaName={room.cinemaName}
             room={room}
             maintenanceSeats={maintenanceMap.get(room.id) ?? new Set()}
+            configLocked={lockedRooms.has(room.id)}
             onView={() => setSeatRoom(room)}
             onConfig={() => setConfigRoom(room)}
             onDelete={async () => {
@@ -1030,7 +1119,15 @@ function StaffRoomsPage() {
                 },
               );
 
-              if (!res.ok) throw new Error("Update failed");
+              if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                if (res.status === 409) {
+                  alert(errData.message || "Phòng có suất chiếu đã đặt vé — không thể thay đổi sơ đồ ghế.");
+                } else {
+                  alert(errData.message || "Cập nhật phòng thất bại.");
+                }
+                return;
+              }
 
               await loadRooms();
               setConfigRoom(null);

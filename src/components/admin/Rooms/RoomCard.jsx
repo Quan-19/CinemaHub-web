@@ -1,4 +1,4 @@
-import { Eye, Settings, Trash2, Power } from "lucide-react";
+import { Eye, Settings, Trash2, Power, Lock } from "lucide-react";
 
 const typeColors = {
   "2D": { color: "#06b6d4", bg: "rgba(6,182,212,0.12)" },
@@ -7,7 +7,7 @@ const typeColors = {
   "4DX": { color: "#e50914", bg: "rgba(229,9,20,0.12)" },
 };
 
-export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatus }) {
+export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatus, configLocked }) {
   const typeStyle = typeColors[room.type] || { color: "#fff", bg: "rgba(255,255,255,0.1)" };
   
   // ensure numeric
@@ -15,6 +15,7 @@ export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatu
   const cols = Number(room.cols) || 0;
   const vipRows = Array.isArray(room.vipRows) ? room.vipRows : [];
   const coupleRow = Number(room.coupleRow) || null;
+  const isConfigDisabled = !!configLocked;
 
   return (
     <div
@@ -34,6 +35,12 @@ export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatu
             >
               {room.type || "Unknown"}
             </span>
+            {isConfigDisabled && (
+              <span className="px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1" style={{ background: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}>
+                <Lock size={10} />
+                Đang có vé
+              </span>
+            )}
           </div>
           <p className="text-sm text-gray-400">{room.cinemaName || "Unknown Cinema"}</p>
         </div>
@@ -51,6 +58,13 @@ export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatu
           {room.status === "active" ? "Hoạt động" : "Bảo trì"}
         </button>
       </div>
+
+      {/* Config locked warning */}
+      {isConfigDisabled && (
+        <div className="mb-4 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-300">
+          Phòng có suất chiếu đã đặt vé — không thể thay đổi sơ đồ ghế.
+        </div>
+      )}
 
       {/* Mini Seat Preview */}
       <div className="rounded-lg p-3 mb-4" style={{ background: "rgba(255,255,255,0.04)" }}>
@@ -116,15 +130,21 @@ export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatu
           <Eye size={12} /> Xem sơ đồ
         </button>
         <button
-          onClick={() => onEdit(room)}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs hover:opacity-80 transition-opacity"
+          onClick={isConfigDisabled ? undefined : () => onEdit(room)}
+          disabled={isConfigDisabled}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs transition-opacity ${
+            isConfigDisabled
+              ? "cursor-not-allowed opacity-50"
+              : "hover:opacity-80"
+          }`}
           style={{
-            background: "rgba(96,165,250,0.12)",
-            color: "#60a5fa",
-            border: "1px solid rgba(96,165,250,0.2)",
+            background: isConfigDisabled ? "rgba(255,255,255,0.04)" : "rgba(96,165,250,0.12)",
+            color: isConfigDisabled ? "#71717a" : "#60a5fa",
+            border: isConfigDisabled ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(96,165,250,0.2)",
           }}
+          title={isConfigDisabled ? "Phòng có suất chiếu đã đặt vé — không thể thay đổi sơ đồ ghế" : ""}
         >
-          <Settings size={12} /> Cấu hình
+          {isConfigDisabled ? <Lock size={12} /> : <Settings size={12} />} Cấu hình
         </button>
         <button
           onClick={() => onDelete(room)}
