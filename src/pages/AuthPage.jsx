@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   Eye,
   EyeOff,
@@ -190,7 +190,7 @@ function LoginForm({ onSuccess, on2FARequired, notice }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(
-    () => localStorage.getItem("rememberLogin") === "true",
+    () => localStorage.getItem("rememberLogin") === "true"
   );
   const [error, setError] = useState("");
   const [info, setInfo] = useState(notice ?? "");
@@ -501,13 +501,19 @@ function RegisterForm({ onSuccess }) {
         />
         <span>
           Tôi đồng ý với{" "}
-          <span className="cursor-pointer text-cinema-primary hover:underline">
+          <Link
+            to="/policies#terms"
+            className="text-cinema-primary hover:underline"
+          >
             điều khoản sử dụng
-          </span>{" "}
+          </Link>{" "}
           và{" "}
-          <span className="cursor-pointer text-cinema-primary hover:underline">
+          <Link
+            to="/policies#privacy"
+            className="text-cinema-primary hover:underline"
+          >
             chính sách bảo mật
-          </span>
+          </Link>
         </span>
       </label>
 
@@ -550,22 +556,24 @@ function getErrorMessage(code) {
 function AuthPage() {
   const { user, loading, verify2FALogin } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState("login");
+  const location = useLocation();
+  const initialTab = (() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get("tab");
+    return tabParam === "login" || tabParam === "register" ? tabParam : "login";
+  })();
+  const [tab, setTab] = useState(initialTab);
   const [loginNotice, setLoginNotice] = useState("");
   const [show2FA, setShow2FA] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
-  const location = useLocation(); // 🔥 ĐẢM BẢO ĐÃ IMPORT useLocation
 
-  // AuthPage.jsx - useEffect đọc URL params
-  // AuthPage.jsx - useEffect đọc URL params
-  useEffect(() => {
+  const urlTab = useMemo(() => {
     const params = new URLSearchParams(location.search);
     const tabParam = params.get("tab");
-    if (tabParam === "login" || tabParam === "register") {
-      setTab(tabParam);
-    }
+    return tabParam === "login" || tabParam === "register" ? tabParam : null;
   }, [location.search]);
+  const activeTab = urlTab ?? tab;
   useEffect(() => {
     // 🔥 QUAN TRỌNG: Không redirect nếu đang ở chế độ 2FA
     if (show2FA) {
@@ -593,52 +601,12 @@ function AuthPage() {
     setShow2FA(true);
   };
 
-  // AuthPage.jsx - handleVerify2FA
-  const handleVerify2FA = async (token, backupCode) => {
-    console.log("🔵 Verifying 2FA for email:", pendingEmail);
-    console.log("🔵 Token before verify:", token);
-    console.log("🔵 Backup code:", backupCode);
-
-    try {
-      const userData = await verify2FALogin(pendingEmail, token, backupCode);
-
-      console.log("🔵 After verify, checking storage...");
-      console.log(
-        "localStorage twoFactorVerified:",
-        localStorage.getItem("twoFactorVerified"),
-      );
-      console.log(
-        "sessionStorage twoFactorVerified:",
-        sessionStorage.getItem("twoFactorVerified"),
-      );
-
-      if (userData) {
-        // 🔥 ĐỢI 1 CHÚT ĐỂ LƯU XONG
-        setTimeout(() => {
-          const role = String(userData.role || "").toLowerCase();
-          console.log("🔵 Redirecting to dashboard with role:", role);
-
-          // 🔥 Force reload để đảm bảo interceptor đọc được storage mới
-          if (role === "admin") {
-            window.location.href = "/admin/dashboard";
-          } else if (role === "staff") {
-            window.location.href = "/staff";
-          } else {
-            window.location.href = "/";
-          }
-        }, 100);
-      }
-    } catch (error) {
-      console.error("2FA failed:", error);
-      alert(error.message);
-    }
-  };
   // Hiển thị màn hình 2FA
   console.log(
     "🔵 AuthPage render - show2FA:",
     show2FA,
     "pendingEmail:",
-    pendingEmail,
+    pendingEmail
   );
 
   // AuthPage.jsx - Phần render phải đúng
@@ -687,7 +655,7 @@ function AuthPage() {
                 const userData = await verify2FALogin(
                   pendingEmail,
                   otpCode,
-                  null,
+                  null
                 );
                 console.log("🔵 Verify result:", userData);
 
@@ -748,7 +716,7 @@ function AuthPage() {
           <button
             onClick={() => setTab("login")}
             className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
-              tab === "login"
+              activeTab === "login"
                 ? "bg-zinc-700 text-white shadow"
                 : "text-zinc-400 hover:text-white"
             }`}
@@ -758,7 +726,7 @@ function AuthPage() {
           <button
             onClick={() => setTab("register")}
             className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
-              tab === "register"
+              activeTab === "register"
                 ? "bg-zinc-700 text-white shadow"
                 : "text-zinc-400 hover:text-white"
             }`}
@@ -767,7 +735,7 @@ function AuthPage() {
           </button>
         </div>
 
-        {tab === "login" ? (
+        {activeTab === "login" ? (
           <LoginForm
             notice={loginNotice}
             onSuccess={() => {
@@ -780,7 +748,7 @@ function AuthPage() {
           <RegisterForm
             onSuccess={(registeredEmail) => {
               setLoginNotice(
-                `Đăng ký thành công. Chúng tôi đã gửi email xác minh tới ${registeredEmail}.`,
+                `Đăng ký thành công. Chúng tôi đã gửi email xác minh tới ${registeredEmail}.`
               );
               setTab("login");
             }}

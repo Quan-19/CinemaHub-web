@@ -10,6 +10,7 @@ import MoviesPage from "../pages/MoviesPage.jsx";
 import { MovieDetailPage } from "../pages/MovieDetailPage.jsx";
 import CinemaPage from "../pages/CinemaPage.jsx";
 import PromotionsPage from "../pages/PromotionsPage.jsx";
+import PoliciesPage from "../pages/PoliciesPage.jsx";
 import ArticleDetailPage from "../pages/ArticleDetailPage.jsx";
 import AuthPage from "../pages/AuthPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
@@ -70,6 +71,7 @@ export const router = createBrowserRouter([
       { path: "ticket/:bookingCode", element: <TicketPage /> },
       { path: "cinemas", element: <CinemaPage /> },
       { path: "promotions", element: <PromotionsPage /> },
+      { path: "policies", element: <PoliciesPage /> },
       { path: "articles/:id", element: <ArticleDetailPage /> },
       { path: "auth", element: <AuthPage /> },
       { path: "2fa", element: <TwoFAPage /> },
