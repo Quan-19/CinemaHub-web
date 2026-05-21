@@ -1,8 +1,9 @@
 export const formatNumberInput = (value) => {
   if (value === null || value === undefined || value === "") return "";
-  const numericValue = Number(String(value).replace(/,/g, ""));
-  if (!Number.isFinite(numericValue)) return "";
-  return Math.round(numericValue).toLocaleString("en-US");
+  const cleaned = String(value).replace(/[^0-9]/g, "");
+  if (!cleaned) return "";
+  // Use regex to add commas for thousands
+  return cleaned.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
 
 export const parseNumberInput = (value) => {

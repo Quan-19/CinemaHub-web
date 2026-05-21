@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  Award,
   Bell,
   ChevronDown,
   Film,
@@ -26,9 +27,7 @@ const movieDropdown = [
   { label: "Phim Sắp Chiếu", path: "/movies?status=coming-soon" },
 ];
 
-const cinemaDropdown = [
-  { label: "Tất cả các rạp", path: "/cinemas" },
-];
+const cinemaDropdown = [{ label: "Tất cả các rạp", path: "/cinemas" }];
 
 const isLinkActive = (pathname, path) => {
   if (path === "/") {
@@ -146,7 +145,9 @@ function Navbar() {
             >
               Phim
               <ChevronDown
-                className={`w-3.5 h-3.5 transition-transform ${movieDropdownOpen ? "rotate-180" : ""}`}
+                className={`w-3.5 h-3.5 transition-transform ${
+                  movieDropdownOpen ? "rotate-180" : ""
+                }`}
               />
             </button>
             {movieDropdownOpen && (
@@ -165,36 +166,16 @@ function Navbar() {
             )}
           </div>
 
-          {/* Rạp chiếu dropdown */}
-          <div className="relative" ref={cinemaDropdownRef}>
-            <button
-              onClick={() => setCinemaDropdownOpen((o) => !o)}
-              className={`flex items-center gap-1 rounded-full px-4 py-2 text-[15px] font-semibold transition-all drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${
-                isLinkActive(location.pathname, "/cinemas")
-                  ? "bg-white/20 backdrop-blur-md text-white border border-white/10"
-                  : "text-white/90 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              Rạp chiếu
-              <ChevronDown
-                className={`w-3.5 h-3.5 transition-transform ${cinemaDropdownOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-            {cinemaDropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-48 rounded-xl border border-zinc-700 bg-cinema-surface py-2 shadow-xl z-50 animate-fade-slide-up">
-                {cinemaDropdown.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setCinemaDropdownOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+          <Link
+            to="/cinemas"
+            className={`rounded-full px-4 py-2 text-[15px] font-semibold transition-all drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${
+              isLinkActive(location.pathname, "/cinemas")
+                ? "bg-white/20 backdrop-blur-md text-white border border-white/10"
+                : "text-white/90 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            Rạp chiếu
+          </Link>
 
           <Link
             to="/promotions"
@@ -274,6 +255,20 @@ function Navbar() {
                       {user.email}
                     </p>
                   </button>
+
+                  {user?.role === "customer" && (
+                    <button
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        navigate("/loyalty");
+                      }}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-sm text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
+                    >
+                      <Award className="h-4 w-4" />
+                      Điểm thưởng
+                    </button>
+                  )}
+
                   <button
                     onClick={handleLogout}
                     className="flex w-full items-center gap-2 px-4 py-2 text-sm text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
@@ -345,6 +340,24 @@ function Navbar() {
                   <ChevronDown className="h-4 w-4 text-zinc-400 -rotate-90" />
                 </div>
               </div>
+            )}
+
+            {user?.role === "customer" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  navigate("/loyalty");
+                }}
+                className={
+                  isLinkActive(location.pathname, "/loyalty")
+                    ? "flex w-full items-center gap-2 rounded-lg bg-white/10 px-4 py-2.5 text-sm font-medium text-white"
+                    : "flex w-full items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
+                }
+              >
+                <Award className="h-4 w-4" />
+                Điểm thưởng
+              </button>
             )}
             {navLinks.map((link) => {
               const active = isLinkActive(location.pathname, link.path);

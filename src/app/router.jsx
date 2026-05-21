@@ -20,6 +20,7 @@ import BookingConfirmationPage from "../pages/BookingConfirmationPage.jsx";
 import TicketPage from "../pages/TicketPage.jsx";
 import PaymentResultPage from "../pages/PaymentResult.jsx";
 import NotificationPage from "../pages/NotificationPage.jsx";
+import LoyaltyPage from "../pages/LoyaltyPage.jsx";
 
 // Admin pages
 import Dashboard from "../pages/admin/Dashboard.jsx";
@@ -73,6 +74,14 @@ export const router = createBrowserRouter([
       { path: "auth", element: <AuthPage /> },
       { path: "2fa", element: <TwoFAPage /> },
       { path: "profile", element: <ProfilePage /> },
+      {
+        path: "loyalty",
+        element: (
+          <ProtectedRoute allowedRoles={["customer"]}>
+            <LoyaltyPage />
+          </ProtectedRoute>
+        ),
+      },
       { path: "notifications", element: <NotificationPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],

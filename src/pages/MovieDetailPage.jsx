@@ -75,14 +75,14 @@ export const HomePage = () => {
         // Fetch promotions
         try {
           const promoRes = await fetch(
-            "http://localhost:5000/api/promotions?scope=public",
+            "http://localhost:5000/api/promotions?scope=public"
           );
           const promoPayload = await promoRes.json();
           const promoData = Array.isArray(promoPayload?.data)
             ? promoPayload.data
             : Array.isArray(promoPayload)
-              ? promoPayload
-              : [];
+            ? promoPayload
+            : [];
           setPromotions(promoData);
         } catch {
           setPromotions([
@@ -127,7 +127,7 @@ export const HomePage = () => {
     if (featured.length === 0) return;
     const t = setInterval(
       () => setHeroIndex((i) => (i + 1) % featured.length),
-      5000,
+      5000
     );
     return () => clearInterval(t);
   }, [featured.length]);
@@ -247,10 +247,10 @@ export const HomePage = () => {
                         current?.rating === "T18"
                           ? "bg-red-500"
                           : current?.rating === "T16"
-                            ? "bg-orange-500"
-                            : current?.rating === "T13"
-                              ? "bg-amber-500"
-                              : "bg-green-500"
+                          ? "bg-orange-500"
+                          : current?.rating === "T13"
+                          ? "bg-amber-500"
+                          : "bg-green-500"
                       }`}
                     >
                       {current?.rating}
@@ -430,7 +430,7 @@ export const HomePage = () => {
                     <span className="text-zinc-400 text-xs">
                       {movie.releaseDate
                         ? new Date(movie.releaseDate).toLocaleDateString(
-                            "vi-VN",
+                            "vi-VN"
                           )
                         : "Sắp ra mắt"}
                     </span>
@@ -615,15 +615,15 @@ export const MovieDetailPage = () => {
         const cinemasList = Array.isArray(cinemasData?.data)
           ? cinemasData.data
           : Array.isArray(cinemasData)
-            ? cinemasData
-            : [];
+          ? cinemasData
+          : [];
 
         stList = stList.map((st) => {
           if (!st.cinemaAddress && !st.address && st.cinemaId) {
             const cinema = cinemasList.find(
               (c) =>
                 String(c.cinema_id) === String(st.cinemaId) ||
-                String(c.id) === String(st.cinemaId),
+                String(c.id) === String(st.cinemaId)
             );
             if (cinema && cinema.address) {
               st.cinemaAddress = cinema.address;
@@ -773,8 +773,8 @@ export const MovieDetailPage = () => {
     reviewsList.length > 0
       ? reviewsList.length
       : typeof movie.votes === "number"
-        ? movie.votes
-        : 0;
+      ? movie.votes
+      : 0;
 
   const stars = Math.round(averageReviewScore);
   const voteCount = displayVotes.toLocaleString();
@@ -783,7 +783,7 @@ export const MovieDetailPage = () => {
 
   return (
     <div
-      className="space-y-2 relative min-h-screen pb-16"
+      className="space-y-2 relative min-h-screen pb-16 overflow-x-hidden"
       style={{ background: "var(--color-cinema-bg)" }}
     >
       {/* Banner / Backdrop layer with masking */}
@@ -973,7 +973,11 @@ export const MovieDetailPage = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 pb-4 px-2 font-bold text-[15px] transition-colors duration-200 relative ${activeTab === tab.id ? "text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+                className={`flex items-center gap-2 pb-4 px-2 font-bold text-[15px] transition-colors duration-200 relative ${
+                  activeTab === tab.id
+                    ? "text-white"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
               >
                 {tab.icon}
                 {tab.label}
@@ -1067,7 +1071,9 @@ export const MovieDetailPage = () => {
                       </p>
                       <p className="text-yellow-500 text-2xl sm:text-3xl font-bold leading-tight">
                         {displayScore}
-                        <span className="text-sm sm:text-base text-yellow-500/80">/5</span>
+                        <span className="text-sm sm:text-base text-yellow-500/80">
+                          /5
+                        </span>
                       </p>
                       <p className="text-zinc-500 text-[10px] sm:text-xs mt-1">
                         {voteCount} votes
@@ -1084,7 +1090,7 @@ export const MovieDetailPage = () => {
                           ? (
                               reviewsList.reduce(
                                 (acc, r) => acc + Number(r.rating),
-                                0,
+                                0
                               ) / reviewsList.length
                             ).toFixed(1)
                           : 0}

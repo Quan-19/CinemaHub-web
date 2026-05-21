@@ -68,7 +68,12 @@ const normalizeMovieStatus = (status) => {
   return normalized;
 };
 
-const CustomTimePicker24h = ({ value, onChange, label, activeColorClass = "ring-cinema-primary/30" }) => {
+const CustomTimePicker24h = ({
+  value,
+  onChange,
+  label,
+  activeColorClass = "ring-cinema-primary/30",
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
   const hour = value ? value.split(":")[0] : "00";
@@ -76,7 +81,10 @@ const CustomTimePicker24h = ({ value, onChange, label, activeColorClass = "ring-
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -84,8 +92,12 @@ const CustomTimePicker24h = ({ value, onChange, label, activeColorClass = "ring-
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const hours = Array.from({ length: 24 }).map((_, i) => String(i).padStart(2, "0"));
-  const minutes = Array.from({ length: 60 }).map((_, i) => String(i).padStart(2, "0"));
+  const hours = Array.from({ length: 24 }).map((_, i) =>
+    String(i).padStart(2, "0")
+  );
+  const minutes = Array.from({ length: 60 }).map((_, i) =>
+    String(i).padStart(2, "0")
+  );
 
   return (
     <div className="relative" ref={containerRef}>
@@ -94,14 +106,26 @@ const CustomTimePicker24h = ({ value, onChange, label, activeColorClass = "ring-
       </label>
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`h-11 flex items-center bg-zinc-900/40 border border-zinc-700 rounded-xl px-4 cursor-pointer hover:border-zinc-500 transition-all group ${isOpen ? "ring-2 " + activeColorClass : ""}`}
+        className={`h-11 flex items-center bg-zinc-900/40 border border-zinc-700 rounded-xl px-4 cursor-pointer hover:border-zinc-500 transition-all group ${
+          isOpen ? "ring-2 " + activeColorClass : ""
+        }`}
       >
         <span className="text-sm font-medium text-zinc-100 group-hover:text-cinema-primary transition-colors">
           {hour} : {minute}
         </span>
         <div className="ml-auto text-zinc-500 group-hover:text-zinc-300">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
         </div>
       </div>
@@ -109,14 +133,19 @@ const CustomTimePicker24h = ({ value, onChange, label, activeColorClass = "ring-
       {isOpen && (
         <div className="absolute z-[63] bottom-full mb-2 w-48 bg-white border border-zinc-200 rounded-2xl shadow-2xl p-3 flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
           <div className="flex-1 max-h-64 overflow-y-auto custom-scrollbar pr-1">
-            <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold mb-2 px-2">Giờ</div>
+            <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold mb-2 px-2">
+              Giờ
+            </div>
             {hours.map((h) => (
               <button
                 key={h}
                 type="button"
                 onClick={() => onChange(`${h}:${minute}`)}
-                className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors mb-0.5 ${hour === h ? "bg-cinema-primary/10 text-cinema-primary font-bold" : "text-zinc-700 hover:bg-zinc-100"
-                  }`}
+                className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors mb-0.5 ${
+                  hour === h
+                    ? "bg-cinema-primary/10 text-cinema-primary font-bold"
+                    : "text-zinc-700 hover:bg-zinc-100"
+                }`}
               >
                 {h}h
               </button>
@@ -124,21 +153,28 @@ const CustomTimePicker24h = ({ value, onChange, label, activeColorClass = "ring-
           </div>
           <div className="w-px bg-zinc-100 self-stretch" />
           <div className="flex-1 max-h-64 overflow-y-auto custom-scrollbar pr-1">
-            <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold mb-2 px-2">Phút</div>
-            {minutes.filter(m => parseInt(m) % 5 === 0).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => {
-                  onChange(`${hour}:${m}`);
-                  setIsOpen(false);
-                }}
-                className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors mb-0.5 ${minute === m ? "bg-cinema-primary/10 text-cinema-primary font-bold" : "text-zinc-700 hover:bg-zinc-100"
+            <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold mb-2 px-2">
+              Phút
+            </div>
+            {minutes
+              .filter((m) => parseInt(m) % 5 === 0)
+              .map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => {
+                    onChange(`${hour}:${m}`);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors mb-0.5 ${
+                    minute === m
+                      ? "bg-cinema-primary/10 text-cinema-primary font-bold"
+                      : "text-zinc-700 hover:bg-zinc-100"
                   }`}
-              >
-                {m}
-              </button>
-            ))}
+                >
+                  {m}
+                </button>
+              ))}
           </div>
         </div>
       )}
@@ -447,8 +483,8 @@ function CalendarPicker({ selectedDate, onSelectDate, onClose }) {
                 isSelectedDate
                   ? "bg-cinema-primary text-white"
                   : isTodayDate
-                    ? "bg-cinema-primary/20 text-cinema-primary border border-cinema-primary/30"
-                    : "hover:bg-zinc-800 text-zinc-300",
+                  ? "bg-cinema-primary/20 text-cinema-primary border border-cinema-primary/30"
+                  : "hover:bg-zinc-800 text-zinc-300",
               ].join(" ")}
             >
               {dayNumber}
@@ -478,24 +514,34 @@ function CalendarPicker({ selectedDate, onSelectDate, onClose }) {
 
 function ShowtimeCard({ showtime, onEdit, onDelete }) {
   const isPast = showtime.isPast;
-  const effectiveStatus = isPast && showtime.status !== 'cancelled' ? 'ended' : showtime.status;
-  const isInactive = effectiveStatus === 'ended' || effectiveStatus === 'cancelled';
+  const effectiveStatus =
+    isPast && showtime.status !== "cancelled" ? "ended" : showtime.status;
+  const isInactive =
+    effectiveStatus === "ended" || effectiveStatus === "cancelled";
   const hasBookings = (showtime.bookedCount || 0) > 0;
 
   return (
-    <div className={`rounded-2xl border bg-zinc-950/30 p-4 transition-all ${
-      effectiveStatus === 'cancelled'
-        ? 'border-red-500/20 opacity-60'
-        : effectiveStatus === 'ended'
-          ? 'border-zinc-700/50 opacity-50'
-          : effectiveStatus === 'ongoing'
-            ? 'border-yellow-500/30'
-            : 'border-zinc-700'
-    }`}>
+    <div
+      className={`rounded-2xl border bg-zinc-950/30 p-4 transition-all ${
+        effectiveStatus === "cancelled"
+          ? "border-red-500/20 opacity-60"
+          : effectiveStatus === "ended"
+          ? "border-zinc-700/50 opacity-50"
+          : effectiveStatus === "ongoing"
+          ? "border-yellow-500/30"
+          : "border-zinc-700"
+      }`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2 text-lg font-bold text-white">
-            <Clock4 className={`h-5 w-5 ${effectiveStatus === 'ongoing' ? 'text-yellow-400' : 'text-cinema-primary'}`} />
+            <Clock4
+              className={`h-5 w-5 ${
+                effectiveStatus === "ongoing"
+                  ? "text-yellow-400"
+                  : "text-cinema-primary"
+              }`}
+            />
             <span>
               {formatTime(showtime.start)} – {formatTime(showtime.end)}
             </span>
@@ -529,36 +575,44 @@ function ShowtimeCard({ showtime, onEdit, onDelete }) {
 
         {isInactive ? (
           <span className="inline-flex items-center rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-xs font-semibold text-zinc-400">
-            {effectiveStatus === 'cancelled' ? 'Suất chiếu đã hủy' : 'Suất chiếu đã kết thúc'}
+            {effectiveStatus === "cancelled"
+              ? "Suất chiếu đã hủy"
+              : "Suất chiếu đã kết thúc"}
           </span>
         ) : (
           <div className="flex items-center gap-2">
-            {hasBookings ? (
+            {hasBookings || effectiveStatus === "ongoing" ? (
               <span
-                title={`Không thể sửa: đã có ${showtime.bookedCount} vé được đặt`}
+                title={
+                  effectiveStatus === "ongoing"
+                    ? "Không thể sửa: suất chiếu đang diễn ra"
+                    : `Không thể sửa: đã có ${showtime.bookedCount} vé được đặt`
+                }
                 className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-zinc-700/50 bg-zinc-900/20 px-3 text-sm font-semibold text-zinc-500 cursor-not-allowed"
               >
                 <Pencil className="h-4 w-4" />
                 🔒 Đã khóa
               </span>
             ) : (
-              <button
-                type="button"
-                onClick={onEdit}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
-              >
-                <Pencil className="h-4 w-4" />
-                Sửa
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm font-semibold text-zinc-200 hover:bg-zinc-900"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Sửa
+                </button>
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm font-semibold text-cinema-primary hover:bg-zinc-900"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Xóa
+                </button>
+              </>
             )}
-            <button
-              type="button"
-              onClick={onDelete}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm font-semibold text-cinema-primary hover:bg-zinc-900"
-            >
-              <Trash2 className="h-4 w-4" />
-              Xóa
-            </button>
           </div>
         )}
       </div>
@@ -583,9 +637,9 @@ function EditShowtimeModal({
   const format = initial.format;
   const [language, setLanguage] = useState(
     initial.languageCode ||
-    initial.language ||
-    languageOptions[0]?.value ||
-    DEFAULT_LANGUAGE_OPTION.value
+      initial.language ||
+      languageOptions[0]?.value ||
+      DEFAULT_LANGUAGE_OPTION.value
   );
   const [isSpecial, setIsSpecial] = useState(
     Boolean(initial.isSpecial || initial.special || initial.is_special || false)
@@ -627,7 +681,7 @@ function EditShowtimeModal({
   const filteredMovies = useMemo(() => {
     if (!movieSearchQuery.trim()) return movieOptions;
     const query = normalizeText(movieSearchQuery);
-    return movieOptions.filter(m => normalizeText(m.title).includes(query));
+    return movieOptions.filter((m) => normalizeText(m.title).includes(query));
   }, [movieOptions, movieSearchQuery]);
 
   const modalLanguageOptions = useMemo(() => {
@@ -673,7 +727,8 @@ function EditShowtimeModal({
 
     const fetchHolidayPromos = async () => {
       try {
-        const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+        const token =
+          sessionStorage.getItem("token") || localStorage.getItem("token");
         const res = await fetch("http://localhost:5000/api/pricing", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -687,7 +742,11 @@ function EditShowtimeModal({
           const applicableRules = rules.filter((rule) => {
             if (!(rule.active ?? rule.is_active ?? false)) return false;
 
-            if (roomType && rule.holiday_room_type && rule.holiday_room_type !== roomType) {
+            if (
+              roomType &&
+              rule.holiday_room_type &&
+              rule.holiday_room_type !== roomType
+            ) {
               return false;
             }
 
@@ -710,7 +769,7 @@ function EditShowtimeModal({
           setHolidayPromos(applicableRules);
           // Auto-select first promo if none selected
           if (applicableRules.length > 0) {
-            setSelectedPromoId(prev => prev || applicableRules[0].id);
+            setSelectedPromoId((prev) => prev || applicableRules[0].id);
           }
         }
       } catch (err) {
@@ -724,10 +783,14 @@ function EditShowtimeModal({
   // Fetch preview prices
   useEffect(() => {
     if (effectiveIsSpecial) {
-      const rule = holidayPromos.find((r) => String(r.id) === String(selectedPromoId));
+      const rule = holidayPromos.find(
+        (r) => String(r.id) === String(selectedPromoId)
+      );
       if (rule) {
         const prices = { Thường: 0, VIP: 0, Couple: 0 };
-        const list = Array.isArray(rule?.holiday_prices) ? rule.holiday_prices : [];
+        const list = Array.isArray(rule?.holiday_prices)
+          ? rule.holiday_prices
+          : [];
         for (const item of list) {
           const seatType = item?.seat_type;
           const price = Number(item?.price);
@@ -760,9 +823,10 @@ function EditShowtimeModal({
         // Only regular prices here anyway:
         url.searchParams.append("special", "false");
 
-        const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+        const token =
+          sessionStorage.getItem("token") || localStorage.getItem("token");
         const res = await fetch(url.toString(), {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         const json = await res.json();
 
@@ -784,7 +848,14 @@ function EditShowtimeModal({
     // Use a small delay to avoid excessive calls
     const timer = setTimeout(fetchPrices, 300);
     return () => clearTimeout(timer);
-  }, [date, roomType, start, effectiveIsSpecial, selectedPromoId, holidayPromos]);
+  }, [
+    date,
+    roomType,
+    start,
+    effectiveIsSpecial,
+    selectedPromoId,
+    holidayPromos,
+  ]);
 
   const handleSave = () => {
     if (!movieId || !date || !start || !roomId || !format || !language) {
@@ -903,7 +974,9 @@ function EditShowtimeModal({
                               if (m.languageOptions?.length > 0) {
                                 setLanguage(m.languageOptions[0].value);
                               }
-                              if (normalizeMovieStatus(m.status) === "coming_soon") {
+                              if (
+                                normalizeMovieStatus(m.status) === "coming_soon"
+                              ) {
                                 setIsSpecial(true);
                               }
                             }}
@@ -915,7 +988,9 @@ function EditShowtimeModal({
                             ].join(" ")}
                           >
                             <span className="truncate">{m.title}</span>
-                            <span className="text-xs text-zinc-400">{m.duration}p</span>
+                            <span className="text-xs text-zinc-400">
+                              {m.duration}p
+                            </span>
                           </button>
                         ))
                       )}
@@ -1007,17 +1082,28 @@ function EditShowtimeModal({
                       Giờ kết thúc
                     </label>
                     <div className="h-11 w-full border rounded-xl px-3 flex items-center text-sm text-white bg-zinc-900/40 border-zinc-700">
-                      {date && start && duration ? (
-                        (() => {
-                          const startIso = `${date}T${start}:00`;
-                          const endIso = durationToEnd(startIso, parseInt(duration, 10));
-                          const endDateObj = new Date(endIso);
-                          const h = endDateObj.getHours().toString().padStart(2, "0");
-                          const m = endDateObj.getMinutes().toString().padStart(2, "0");
-                          const isNextDay = endDateObj.getDate() !== new Date(startIso).getDate();
-                          return `${h}:${m} ${isNextDay ? "(Hôm sau)" : ""}`;
-                        })()
-                      ) : "Chọn phim và giờ"}
+                      {date && start && duration
+                        ? (() => {
+                            const startIso = `${date}T${start}:00`;
+                            const endIso = durationToEnd(
+                              startIso,
+                              parseInt(duration, 10)
+                            );
+                            const endDateObj = new Date(endIso);
+                            const h = endDateObj
+                              .getHours()
+                              .toString()
+                              .padStart(2, "0");
+                            const m = endDateObj
+                              .getMinutes()
+                              .toString()
+                              .padStart(2, "0");
+                            const isNextDay =
+                              endDateObj.getDate() !==
+                              new Date(startIso).getDate();
+                            return `${h}:${m} ${isNextDay ? "(Hôm sau)" : ""}`;
+                          })()
+                        : "Chọn phim và giờ"}
                     </div>
                     {duration ? (
                       <p className="text-[10px] text-blue-400 mt-1">
@@ -1051,22 +1137,24 @@ function EditShowtimeModal({
                       }
                     }}
                     disabled={isComingSoonMovie}
-                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${isComingSoonMovie
-                      ? "bg-zinc-900 text-zinc-500 border border-white/10 cursor-not-allowed"
-                      : !effectiveIsSpecial
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      isComingSoonMovie
+                        ? "bg-zinc-900 text-zinc-500 border border-white/10 cursor-not-allowed"
+                        : !effectiveIsSpecial
                         ? "bg-green-600 text-white shadow-lg shadow-green-600/30"
                         : "bg-zinc-900 text-gray-400 hover:text-white border border-white/10 hover:bg-zinc-800"
-                      }`}
+                    }`}
                   >
                     Suất chiếu thường
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsSpecial(true)}
-                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${effectiveIsSpecial
-                      ? "bg-yellow-600 text-white shadow-lg shadow-yellow-600/30"
-                      : "bg-zinc-900 text-gray-400 hover:text-white border border-white/10 hover:bg-zinc-800"
-                      }`}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      effectiveIsSpecial
+                        ? "bg-yellow-600 text-white shadow-lg shadow-yellow-600/30"
+                        : "bg-zinc-900 text-gray-400 hover:text-white border border-white/10 hover:bg-zinc-800"
+                    }`}
                   >
                     <Sparkles size={12} className="inline mr-1" />
                     Suất chiếu đặc biệt
@@ -1076,8 +1164,8 @@ function EditShowtimeModal({
                   {isComingSoonMovie
                     ? "Phim sắp chiếu chỉ được tạo suất chiếu đặc biệt."
                     : effectiveIsSpecial
-                      ? "Suất này sẽ được đánh dấu là suất chiếu đặc biệt."
-                      : "Suất này là suất chiếu thường."}
+                    ? "Suất này sẽ được đánh dấu là suất chiếu đặc biệt."
+                    : "Suất này là suất chiếu thường."}
                 </p>
               </div>
 
@@ -1110,18 +1198,24 @@ function EditShowtimeModal({
               )}
 
               <div
-                className={`p-4 rounded-xl border mt-4 ${effectiveIsSpecial
-                  ? "border-yellow-500/15 bg-yellow-500/5"
-                  : "border-green-500/15 bg-green-500/5"
-                  }`}
+                className={`p-4 rounded-xl border mt-4 ${
+                  effectiveIsSpecial
+                    ? "border-yellow-500/15 bg-yellow-500/5"
+                    : "border-green-500/15 bg-green-500/5"
+                }`}
               >
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
                     <h3
-                      className={`text-sm font-semibold ${effectiveIsSpecial ? "text-yellow-300" : "text-green-300"
-                        }`}
+                      className={`text-sm font-semibold ${
+                        effectiveIsSpecial
+                          ? "text-yellow-300"
+                          : "text-green-300"
+                      }`}
                     >
-                      {effectiveIsSpecial ? "Giá suất chiếu đặc biệt" : "Giá suất chiếu thường"}
+                      {effectiveIsSpecial
+                        ? "Giá suất chiếu đặc biệt"
+                        : "Giá suất chiếu thường"}
                     </h3>
                     <p className="text-[10px] text-white/40 mt-1">
                       {effectiveIsSpecial
@@ -1169,10 +1263,14 @@ function EditShowtimeModal({
                           className={`rounded-xl border ${border} ${bg} p-2.5 flex items-center justify-between`}
                         >
                           <div>
-                            <label className={`block text-xs font-semibold ${color} leading-5`}>
+                            <label
+                              className={`block text-xs font-semibold ${color} leading-5`}
+                            >
                               Ghế {seat}
                             </label>
-                            <span className="text-[10px] text-white/40">{desc}</span>
+                            <span className="text-[10px] text-white/40">
+                              {desc}
+                            </span>
                           </div>
                           <div className="relative w-32">
                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white/40 text-xs">
@@ -1469,7 +1567,10 @@ export default function StaffShowtimesPage() {
             end: `${formattedDate}T${formattedEndTime}:00`,
             startTime: formattedTime,
             duration: duration,
-            prices: s.prices || (isSpecialShowtime ? s.special_prices : null) || { Thường: 50000 },
+            prices: s.prices ||
+              (isSpecialShowtime ? s.special_prices : null) || {
+                Thường: 50000,
+              },
             bookedCount: Number(s.bookedCount) || 0,
           };
         })

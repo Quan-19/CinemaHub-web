@@ -10,7 +10,6 @@ const formatDate = (value) => {
   return date.toLocaleDateString("vi-VN");
 };
 
-
 export default function ArticleDetailPage() {
   const { id } = useParams();
   const [article, setArticle] = useState(null);
@@ -50,7 +49,9 @@ export default function ArticleDetailPage() {
       <div className="min-h-screen flex items-center justify-center bg-cinema-bg">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-          <p className="text-zinc-400 font-medium animate-pulse">Đang tải bài viết...</p>
+          <p className="text-zinc-400 font-medium animate-pulse">
+            Đang tải bài viết...
+          </p>
         </div>
       </div>
     );
@@ -64,8 +65,13 @@ export default function ArticleDetailPage() {
             <AlertCircle className="w-10 h-10 text-red-500" />
           </div>
           <h2 className="text-white text-xl font-bold mb-3">Rất tiếc!</h2>
-          <p className="text-zinc-300 text-base mb-6">{error || "Bài viết không tồn tại."}</p>
-          <Link to="/promotions" className="cinema-btn-primary w-full inline-flex justify-center">
+          <p className="text-zinc-300 text-base mb-6">
+            {error || "Bài viết không tồn tại."}
+          </p>
+          <Link
+            to="/promotions"
+            className="cinema-btn-primary w-full inline-flex justify-center"
+          >
             Quay lại ưu đãi
           </Link>
         </div>
@@ -82,7 +88,7 @@ export default function ArticleDetailPage() {
             className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Tin moi & uu dai
+            Tin mới & Ưu đãi
           </Link>
 
           <h1 className="text-white text-3xl md:text-4xl font-black mt-4 mb-3">
@@ -92,12 +98,14 @@ export default function ArticleDetailPage() {
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <span className="flex items-center gap-2 text-zinc-300">
               <Calendar className="w-4 h-4 text-zinc-500" />
-              <strong className="text-white">Ngày đăng:</strong> {formatDate(article.publish_date)}
+              <strong className="text-white">Ngày đăng:</strong>{" "}
+              {formatDate(article.publish_date)}
             </span>
             {article.author ? (
               <span className="flex items-center gap-2 text-zinc-300">
                 <User className="w-4 h-4 text-zinc-500" />
-                <strong className="text-white">Tác giả:</strong> {article.author}
+                <strong className="text-white">Tác giả:</strong>{" "}
+                {article.author}
               </span>
             ) : null}
           </div>

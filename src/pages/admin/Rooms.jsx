@@ -18,6 +18,7 @@ export default function RoomsPage() {
   const [rooms, setRooms] = useState([]);
   const [cinemas, setCinemas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lockedRooms, setLockedRooms] = useState(new Set());
   const [cinemaFilter, setCinemaFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -59,6 +60,35 @@ export default function RoomsPage() {
 
       setCinemas(cinemasData);
       setRooms(roomsData);
+
+      // Load config-status cho mỗi phòng
+      try {
+        const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+        const statusPromises = roomsData.map(async (room) => {
+          const roomId = room.id || room.room_id;
+          try {
+            const statusRes = await fetch(
+              `http://localhost:5000/api/rooms/${roomId}/config-status`,
+              { headers: { Authorization: `Bearer ${token}` } },
+            );
+            if (statusRes.ok) {
+              const statusData = await statusRes.json();
+              return { roomId, locked: statusData.locked };
+            }
+          } catch {
+            // ignore individual failures
+          }
+          return { roomId, locked: false };
+        });
+        const statuses = await Promise.all(statusPromises);
+        const lockedSet = new Set();
+        statuses.forEach((s) => {
+          if (s.locked) lockedSet.add(s.roomId);
+        });
+        setLockedRooms(lockedSet);
+      } catch {
+        // ignore config-status errors
+      }
     } catch (err) {
       console.error("Load rooms error:", err);
       setRooms([]);
@@ -170,8 +200,13 @@ export default function RoomsPage() {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Update failed");
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 409) {
+          toast.error(errorData.message || "Phòng có suất chiếu đã đặt vé — không thể thay đổi sơ đồ ghế.");
+        } else {
+          toast.error(errorData.message || "Cập nhật thất bại");
+        }
+        return;
       }
 
       toast.success("Cập nhật thành công");
@@ -501,6 +536,7 @@ export default function RoomsPage() {
                 onDelete={setDeleteRoom}
                 onView={setViewRoom}
                 onToggleStatus={handleToggleStatus}
+                configLocked={lockedRooms.has(room.id || room.room_id)}
               />
             ))}
           </div>
