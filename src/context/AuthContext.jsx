@@ -325,13 +325,17 @@ export function AuthProvider({ children }) {
       const token = await credential.user.getIdToken();
 
       // Sync user với backend
-      await fetch(`${API_URL}/auth/sync-user`, {
+      const syncRes = await fetch(`${API_URL}/auth/sync-user`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
+
+      if (!syncRes.ok) {
+        throw new Error("Không đồng bộ được thông tin user với backend");
+      }
 
       // Lấy thông tin user từ backend (có role)
       const res = await fetch(`${API_URL}/users/me`, {
@@ -458,13 +462,17 @@ export function AuthProvider({ children }) {
       const credential = await signInWithPopup(auth, googleProvider);
       const token = await credential.user.getIdToken();
 
-      await fetch(`${API_URL}/auth/sync-user`, {
+      const syncRes = await fetch(`${API_URL}/auth/sync-user`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
+
+      if (!syncRes.ok) {
+        throw new Error("Không đồng bộ được thông tin user với backend");
+      }
 
       const res = await fetch(`${API_URL}/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
