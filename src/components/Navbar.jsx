@@ -282,7 +282,7 @@ function Navbar() {
           ) : (
             <button
               onClick={() => navigate("/auth")}
-              className="hidden items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white transition-all bg-red-600 hover:bg-red-700 shadow-[0_0_15px_rgba(220,38,38,0.4)] sm:flex drop-shadow-md"
+              className="cinema-btn-primary hidden px-4 py-2 md:inline-flex"
               aria-label="Tài khoản"
             >
               Đăng nhập

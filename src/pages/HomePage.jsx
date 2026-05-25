@@ -1,7 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+} from "framer-motion";
+import { useAuth } from "../context/AuthContext";
 import {
   ChevronDown,
   Star,
@@ -33,7 +38,7 @@ const extractYouTubeId = (url) => {
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&?#]+)/,
     /youtube\.com\/watch\?.*[?&]v=([^&?#]+)/,
-    /youtube\.com\/shorts\/([^/?]+)/
+    /youtube\.com\/shorts\/([^/?]+)/,
   ];
 
   for (const pattern of patterns) {
@@ -80,10 +85,11 @@ const PremiumMovieCard = ({ movie, index }) => {
 
         <div className="absolute top-3 left-3 z-10">
           <span
-            className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase backdrop-blur-md ${isNowShowing
-              ? "bg-red-500/90 text-white"
-              : "bg-yellow-500/90 text-black"
-              }`}
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase backdrop-blur-md ${
+              isNowShowing
+                ? "bg-red-500/90 text-white"
+                : "bg-yellow-500/90 text-black"
+            }`}
           >
             {isNowShowing ? "Đang chiếu" : "Sắp chiếu"}
           </span>
@@ -92,7 +98,9 @@ const PremiumMovieCard = ({ movie, index }) => {
         <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-sm">
           <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
           <span className="text-white text-xs font-bold">
-            {movie.rating ? (movie.rating / 2).toFixed(1) : (movie.score / 2).toFixed(1) || "0.0"}
+            {movie.rating
+              ? (movie.rating / 2).toFixed(1)
+              : (movie.score / 2).toFixed(1) || "0.0"}
           </span>
         </div>
 
@@ -166,7 +174,7 @@ const AnimatedSection = ({
           observer.disconnect();
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1 }
     );
     if (sectionRef.current) observer.observe(sectionRef.current);
     return () => observer.disconnect();
@@ -234,7 +242,10 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
   if (!movie) return null;
 
   return (
-    <div ref={ref} className="relative h-[85vh] min-h-[600px] overflow-hidden">
+    <div
+      ref={ref}
+      className="relative h-[65vh] sm:h-[70vh] lg:h-[85vh] min-h-[520px] sm:min-h-[560px] lg:min-h-[600px] overflow-hidden"
+    >
       <motion.div style={{ y, scale: 1.1 }} className="absolute inset-0">
         <img
           src={movie.backdrop || movie.poster}
@@ -260,7 +271,6 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="max-w-2xl"
           >
-
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -315,7 +325,10 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
               <div className="flex items-center gap-2 text-zinc-300">
                 <Star className="w-4 h-4 md:w-5 md:h-5 fill-yellow-500 text-yellow-500" />
                 <span className="font-semibold">
-                  {movie.rating ? (movie.rating / 2).toFixed(1) : (movie.score / 2).toFixed(1) || "0.0"}/5
+                  {movie.rating
+                    ? (movie.rating / 2).toFixed(1)
+                    : (movie.score / 2).toFixed(1) || "0.0"}
+                  /5
                 </span>
                 <span className="text-xs md:text-sm text-zinc-400">
                   ({movie.votes?.toLocaleString() || "0"} đánh giá)
@@ -326,12 +339,13 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
                 <span>{movie.duration} phút</span>
               </div>
               <div
-                className={`px-2 md:px-3 py-1 rounded-full text-xs font-bold ${movie.age_rating === "T18"
-                  ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                  : movie.age_rating === "T16"
+                className={`px-2 md:px-3 py-1 rounded-full text-xs font-bold ${
+                  movie.age_rating === "T18"
+                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                    : movie.age_rating === "T16"
                     ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
                     : "bg-green-500/20 text-green-400 border border-green-500/30"
-                  }`}
+                }`}
               >
                 {movie.age_rating || "T13"}
               </div>
@@ -364,7 +378,7 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
 const CinemaCard = ({ cinema }) => {
   const navigate = useNavigate();
   const brandColors = {
-    EbizCinema: '#c9a0a2',
+    EbizCinema: "#c9a0a2",
   };
   const color = brandColors[cinema.brand] || "#e50914";
   const cinemaId = cinema.cinema_id ?? cinema.id;
@@ -385,7 +399,7 @@ const CinemaCard = ({ cinema }) => {
           className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
           style={{ background: color }}
         >
-          {cinema.brand?.[0] || "C"}
+          Ebiz
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-white font-semibold text-sm mb-1 line-clamp-1">
@@ -440,11 +454,22 @@ const HomePromotionCard = ({ promo, index }) => {
         {/* Left Side - Discount Badge */}
         <div className="w-full sm:w-24 h-20 sm:h-auto shrink-0 flex items-center justify-center bg-zinc-800/30 relative">
           <div className="absolute inset-0 opacity-5">
-            <div className="w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '10px 10px' }}></div>
+            <div
+              className="w-full h-full"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
+                backgroundSize: "10px 10px",
+              }}
+            ></div>
           </div>
           <div className="relative z-10 flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-red-600 text-white shadow-lg rotate-[-5deg] group-hover:rotate-0 transition-transform duration-500">
-            <span className="text-[8px] font-black uppercase leading-none opacity-80">Giảm</span>
-            <span className="text-sm font-black leading-none">{getDiscountDisplay(promo).replace('-', '')}</span>
+            <span className="text-[8px] font-black uppercase leading-none opacity-80">
+              Giảm
+            </span>
+            <span className="text-sm font-black leading-none">
+              {getDiscountDisplay(promo).replace("-", "")}
+            </span>
           </div>
         </div>
 
@@ -458,8 +483,12 @@ const HomePromotionCard = ({ promo, index }) => {
         {/* Right Side - Content */}
         <div className="flex-1 p-4 flex flex-col justify-center min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{promo.cinema_id ? "Tại rạp" : "Hệ thống"}</span>
-            <span className="text-[8px] font-medium text-zinc-600 flex items-center gap-0.5"><Clock className="w-2 h-2" /> {formatDate(promo.end_date)}</span>
+            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">
+              {promo.cinema_id ? "Tại rạp" : "Hệ thống"}
+            </span>
+            <span className="text-[8px] font-medium text-zinc-600 flex items-center gap-0.5">
+              <Clock className="w-2 h-2" /> {formatDate(promo.end_date)}
+            </span>
           </div>
           <h3 className="text-white font-bold text-sm mb-1 group-hover:text-red-500 transition-colors line-clamp-1">
             {promo.title}
@@ -471,7 +500,9 @@ const HomePromotionCard = ({ promo, index }) => {
             <div className="flex-1 px-2 py-1 bg-black/40 border border-white/5 rounded-lg text-[10px] font-mono font-bold text-zinc-400 tracking-wider">
               {promo.code}
             </div>
-            <div className="text-[10px] font-bold text-red-500 group-hover:translate-x-1 transition-transform">Lấy mã →</div>
+            <div className="text-[10px] font-bold text-red-500 group-hover:translate-x-1 transition-transform">
+              Lấy mã →
+            </div>
           </div>
         </div>
       </div>
@@ -510,7 +541,7 @@ const HomePage = () => {
           const rawStatus = String(m.status || "").toLowerCase();
           const normalizedStatus = rawStatus.replace(/-/g, "_");
           const ratingScore = Number(
-            m.rating_score ?? m.ratingScore ?? m.rating ?? 0,
+            m.rating_score ?? m.ratingScore ?? m.rating ?? 0
           );
           const reviewCount = Number(m.reviewCount ?? m.review_count ?? 0);
           const tickets = Number(m.tickets ?? 0);
@@ -524,10 +555,10 @@ const HomePage = () => {
             votes: Number.isFinite(Number(m.votes))
               ? Number(m.votes)
               : Number.isFinite(reviewCount) && reviewCount > 0
-                ? reviewCount
-                : Number.isFinite(tickets)
-                  ? tickets
-                  : 0,
+              ? reviewCount
+              : Number.isFinite(tickets)
+              ? tickets
+              : 0,
             poster: m.poster,
             backdrop: m.backdrop || m.poster,
             description: m.description || "",
@@ -550,26 +581,26 @@ const HomePage = () => {
 
         setNowShowing(
           formattedMovies.filter(
-            (m) => m.status === "now_showing" || m.status === "now-showing",
-          ),
+            (m) => m.status === "now_showing" || m.status === "now-showing"
+          )
         );
         setComingSoon(
           formattedMovies.filter(
-            (m) => m.status === "coming_soon" || m.status === "coming-soon",
-          ),
+            (m) => m.status === "coming_soon" || m.status === "coming-soon"
+          )
         );
 
         // Fetch promotions
         try {
           const promoRes = await fetch(
-            `${API_BASE_URL}/api/promotions?scope=public`,
+            `${API_BASE_URL}/api/promotions?scope=public`
           );
           const promoPayload = await promoRes.json();
           const promoData = Array.isArray(promoPayload?.data)
             ? promoPayload.data
             : Array.isArray(promoPayload)
-              ? promoPayload
-              : [];
+            ? promoPayload
+            : [];
           setPromotions(promoData);
         } catch (err) {
           console.error("Error fetching promotions:", err);
@@ -686,10 +717,7 @@ const HomePage = () => {
 
       {/* Slider Navigation Dots */}
       {featured.length > 1 && (
-        <div
-          className="absolute left-1/2 -translate-x-1/2 z-20"
-          style={{ top: "75vh" }}
-        >
+        <div className="absolute left-1/2 -translate-x-1/2 z-20 top-[48vh] sm:top-[58vh] lg:top-[75vh]">
           <div className="flex gap-2">
             {featured.map((_, i) => (
               <button
@@ -701,10 +729,11 @@ const HomePage = () => {
                     setHeroIndex((idx) => (idx + 1) % featured.length);
                   }, 6000);
                 }}
-                className={`transition-all duration-300 rounded-full ${i === heroIndex
-                  ? "w-8 h-2 bg-red-500"
-                  : "w-2 h-2 bg-white/30 hover:bg-white/60"
-                  }`}
+                className={`transition-all duration-300 rounded-full ${
+                  i === heroIndex
+                    ? "w-8 h-2 bg-red-500"
+                    : "w-2 h-2 bg-white/30 hover:bg-white/60"
+                }`}
               />
             ))}
           </div>
@@ -712,7 +741,7 @@ const HomePage = () => {
       )}
 
       {/* Main Content */}
-      <div className="relative z-10 mt-16 md:mt-24">
+      <div className="relative z-10 mt-6 md:mt-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Quick Booking Bar */}
           {nowShowing.length > 0 && (
@@ -815,7 +844,7 @@ const HomePage = () => {
                     (a, b) =>
                       (b.tickets || 0) - (a.tickets || 0) ||
                       (b.views || 0) - (a.views || 0) ||
-                      (b.rating || b.score || 0) - (a.rating || a.score || 0),
+                      (b.rating || b.score || 0) - (a.rating || a.score || 0)
                   )
                   .slice(0, 10)
                   .map((movie, idx) => (
@@ -959,10 +988,11 @@ const HomePage = () => {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${m.status === "now_showing"
-                              ? "bg-red-500/15 text-red-300 border border-red-500/20"
-                              : "bg-yellow-500/15 text-yellow-300 border border-yellow-500/20"
-                              }`}
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              m.status === "now_showing"
+                                ? "bg-red-500/15 text-red-300 border border-red-500/20"
+                                : "bg-yellow-500/15 text-yellow-300 border border-yellow-500/20"
+                            }`}
                           >
                             {m.status === "now_showing"
                               ? "Đang chiếu"
@@ -972,7 +1002,7 @@ const HomePage = () => {
                             <span className="text-[10px] font-semibold text-zinc-500">
                               {
                                 String(m.created_at || m.releaseDate).split(
-                                  "T",
+                                  "T"
                                 )[0]
                               }
                             </span>
@@ -1034,64 +1064,75 @@ const HomePage = () => {
 
       {/* Trailer Modal - SỬA GIỐNG MovieDetailPage */}
       <AnimatePresence>
-        {showTrailerModal && selectedTrailerMovie && selectedTrailerMovie.trailer && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md"
-            onClick={() => setShowTrailerModal(false)}
-          >
+        {showTrailerModal &&
+          selectedTrailerMovie &&
+          selectedTrailerMovie.trailer && (
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-4xl mx-4 rounded-2xl overflow-hidden bg-black"
-              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md"
+              onClick={() => setShowTrailerModal(false)}
             >
-              <div className="relative pt-[56.25%]">
-                {(() => {
-                  const youtubeId = extractYouTubeId(selectedTrailerMovie.trailer);
-
-                  if (youtubeId) {
-                    return (
-                      <iframe
-                        className="absolute inset-0 w-full h-full"
-                        src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`}
-                        title={`Trailer: ${selectedTrailerMovie.title}`}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowFullScreen
-                      />
-                    );
-                  }
-
-                  // Fallback nếu không có trailer hợp lệ
-                  return (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900">
-                      <Play className="w-16 h-16 text-red-500 mb-4" fill="currentColor" />
-                      <p className="text-white font-semibold mb-2">{selectedTrailerMovie.title}</p>
-                      <p className="text-zinc-400 text-sm">Chưa có trailer cho phim này</p>
-                      <button
-                        onClick={() => setShowTrailerModal(false)}
-                        className="mt-6 px-6 py-2 rounded-full bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
-                      >
-                        Đóng
-                      </button>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              <button
-                onClick={() => setShowTrailerModal(false)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="relative w-full max-w-4xl mx-4 rounded-2xl overflow-hidden bg-black"
+                onClick={(e) => e.stopPropagation()}
               >
-                <X className="w-5 h-5" />
-              </button>
+                <div className="relative pt-[56.25%]">
+                  {(() => {
+                    const youtubeId = extractYouTubeId(
+                      selectedTrailerMovie.trailer
+                    );
+
+                    if (youtubeId) {
+                      return (
+                        <iframe
+                          className="absolute inset-0 w-full h-full"
+                          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+                          title={`Trailer: ${selectedTrailerMovie.title}`}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                        />
+                      );
+                    }
+
+                    // Fallback nếu không có trailer hợp lệ
+                    return (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900">
+                        <Play
+                          className="w-16 h-16 text-red-500 mb-4"
+                          fill="currentColor"
+                        />
+                        <p className="text-white font-semibold mb-2">
+                          {selectedTrailerMovie.title}
+                        </p>
+                        <p className="text-zinc-400 text-sm">
+                          Chưa có trailer cho phim này
+                        </p>
+                        <button
+                          onClick={() => setShowTrailerModal(false)}
+                          className="mt-6 px-6 py-2 rounded-full bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+                        >
+                          Đóng
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                <button
+                  onClick={() => setShowTrailerModal(false)}
+                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          )}
       </AnimatePresence>
     </div>
   );

@@ -1,6 +1,6 @@
 // components/AuthModal.jsx
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Eye,
   EyeOff,
@@ -192,7 +192,7 @@ function LoginForm({ onLogin, on2FARequired }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(
-    () => localStorage.getItem("rememberLogin") === "true",
+    () => localStorage.getItem("rememberLogin") === "true"
   );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -463,13 +463,19 @@ function RegisterForm({ onSuccess }) {
         />
         <span>
           Tôi đồng ý với{" "}
-          <span className="cursor-pointer text-cinema-primary hover:underline">
+          <Link
+            to="/policies#terms"
+            className="text-cinema-primary hover:underline"
+          >
             điều khoản sử dụng
-          </span>{" "}
+          </Link>{" "}
           và{" "}
-          <span className="cursor-pointer text-cinema-primary hover:underline">
+          <Link
+            to="/policies#privacy"
+            className="text-cinema-primary hover:underline"
+          >
             chính sách bảo mật
-          </span>
+          </Link>
         </span>
       </label>
 
@@ -506,7 +512,7 @@ function getErrorMessage(code) {
 }
 
 // ---------- Auth Modal ----------
-function AuthModal({ onClose, onLoginSuccess, notice, backLabel }) {
+function AuthModal({ onClose, onLoginSuccess, backLabel }) {
   const navigate = useNavigate();
   const { verify2FALogin } = useAuth();
   const [tab, setTab] = useState("login");

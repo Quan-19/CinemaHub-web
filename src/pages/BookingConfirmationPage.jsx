@@ -24,7 +24,7 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getShowtimeSeatPrice } from "../utils/showtimePricing";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   useLocation,
   useNavigate,
@@ -263,7 +263,9 @@ export default function BookingConfirmationPage() {
   ]);
 
   // ✅ CẢNH BÁO KHI THOÁT TRANG
+  const blockerNextLocationRef = useRef(null);
   const blocker = useBlocker(({ nextLocation }) => {
+    blockerNextLocationRef.current = nextLocation;
     return (
       step === "confirm" && !paying && seats.length > 0 && !isPaymentCallback
     );
@@ -2067,7 +2069,37 @@ export default function BookingConfirmationPage() {
                     Tiếp tục thanh toán
                   </button>
                   <button
-                    onClick={() => blocker.proceed()}
+                    onClick={async () => {
+                      // ✅ Chỉ giải phóng ghế nếu không quay về trang chọn ghế
+                      const nextPath = blockerNextLocationRef.current?.pathname || "";
+                      const isGoingBackToSeats = 
+                        nextPath.includes("/seats/") ||
+                        /\/booking\/\d+\/\d+\/\d+/.test(nextPath); // /booking/:movieId/:cinemaId/:showtimeId
+
+                      if (!isGoingBackToSeats) {
+                        try {
+                          const auth = getAuth();
+                          const user = auth.currentUser;
+                          if (user && showtime) {
+                            const token = await user.getIdToken();
+                            const showtimeId = showtime?.showtime_id || showtime?.id;
+                            if (showtimeId) {
+                              await axios.post(
+                                `${API_BASE_URL}/api/seats/release-my-locks`,
+                                { showtime_id: showtimeId },
+                                { headers: { Authorization: `Bearer ${token}` } }
+                              );
+                              console.log("✅ Released all seats (user exiting booking flow)");
+                            }
+                          }
+                        } catch (err) {
+                          console.error("⚠️ Error releasing seats on exit:", err);
+                        }
+                      } else {
+                        console.log("↩️ Going back to seat selection - keeping locks");
+                      }
+                      blocker.proceed();
+                    }}
                     className="w-full py-3.5 rounded-2xl bg-zinc-800/50 hover:bg-zinc-800 text-zinc-400 font-semibold text-sm transition-all"
                   >
                     Thoát

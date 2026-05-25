@@ -131,7 +131,9 @@ export const SeatSelectionPage = () => {
   }, []);
 
   // ✅ CẢNH BÁO KHI THOÁT TRANG (Dùng useBlocker cho nút Back/Chuyển hướng)
+  const blockerNextLocationRef = useRef(null);
   const blocker = useBlocker(({ nextLocation }) => {
+    blockerNextLocationRef.current = nextLocation;
     // Chỉ chặn nếu đang có ghế được chọn VÀ không phải là đi tới trang Confirm
     const hasActiveLock = remainingTime !== null && remainingTime > 0;
     return hasActiveLock && picked.length > 0 && !nextLocation.pathname.includes("/confirm");
@@ -832,7 +834,25 @@ export const SeatSelectionPage = () => {
                     Tiếp tục thanh toán
                   </button>
                   <button
-                    onClick={() => blocker.proceed()}
+                    onClick={async () => {
+                      // ✅ Giải phóng ghế trước khi thoát
+                      try {
+                        const auth = getAuth();
+                        const user = auth.currentUser;
+                        if (user && showtimeId) {
+                          const token = await user.getIdToken();
+                          await axios.post(
+                            "http://localhost:5000/api/seats/release-my-locks",
+                            { showtime_id: showtimeId },
+                            { headers: { Authorization: `Bearer ${token}` } }
+                          );
+                          console.log("✅ Released all seats before leaving seat selection");
+                        }
+                      } catch (err) {
+                        console.error("⚠️ Error releasing seats on exit:", err);
+                      }
+                      blocker.proceed();
+                    }}
                     className="w-full py-3.5 rounded-2xl bg-zinc-800/50 hover:bg-zinc-800 text-zinc-400 font-semibold text-sm transition-all"
                   >
                     Thoát

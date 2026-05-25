@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import {
   MapPin,
@@ -187,7 +187,6 @@ function CinemaPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [cinemaShowtimes, setCinemaShowtimes] = useState([]);
   const [loadingShowtimes, setLoadingShowtimes] = useState(false);
-  const containerRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
