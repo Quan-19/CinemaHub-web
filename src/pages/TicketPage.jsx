@@ -79,7 +79,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const formatVnd = (value) => {
   const numeric = Number(value);
   const safe = Number.isFinite(numeric) ? Math.round(numeric) : 0;
-  return `${safe.toLocaleString("vi-VN")}₫`;
+  return `${safe.toLocaleString("vi-VN")} VNĐ`;
 };
 
 const normalizeSeatLabel = (value) => {

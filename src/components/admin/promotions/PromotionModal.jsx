@@ -313,7 +313,7 @@ export default function PromotionModal({ show, onClose, onSave, editingItem }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Đơn hàng tối thiểu (₫)
+                Đơn hàng tối thiểu ( VNĐ)
               </label>
               <input
                 type="text"

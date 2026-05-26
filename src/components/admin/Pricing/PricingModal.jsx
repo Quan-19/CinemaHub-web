@@ -332,7 +332,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-300 mb-2 block">Giá gốc (₫) <span className="text-red-400">*</span></label>
+                  <label className="text-sm font-medium text-gray-300 mb-2 block">Giá gốc ( VNĐ) <span className="text-red-400">*</span></label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -351,7 +351,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-300 mb-2 block">Giá áp dụng (₫)</label>
+                  <label className="text-sm font-medium text-gray-300 mb-2 block">Giá áp dụng ( VNĐ)</label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -446,7 +446,7 @@ export default function PricingModal({ show, onClose, onAdd, onUpdate, editingIt
                         <span className={`text-sm font-medium ${seat.color}`}>{seat.label}</span>
                       </div>
                       <div className="flex-1 relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₫</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"> VNĐ</span>
                         <input
                           type="text"
                           inputMode="numeric"

@@ -30,10 +30,7 @@ import {
 } from "lucide-react";
 
 function formatCurrency(value) {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(Number(value || 0));
+  return new Intl.NumberFormat("vi-VN").format(Number(value || 0)) + " VNĐ";
 }
 
 function formatNumber(value) {

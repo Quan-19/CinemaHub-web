@@ -348,7 +348,7 @@ function ProfilePage() {
   };
 
   const formatCurrency = (amount) =>
-    amount ? new Intl.NumberFormat("vi-VN").format(amount) + " đ" : "0 đ";
+    amount ? new Intl.NumberFormat("vi-VN").format(amount) + " VNĐ" : "0 VNĐ";
 
   const tabs = [
     { id: "profile", label: "Cá nhân", icon: User },

@@ -26,7 +26,7 @@ export default function Foods() {
 
   const formatCurrency = (amount) => {
     const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
-    return Math.round(numAmount).toLocaleString("vi-VN") + "₫";
+    return Math.round(numAmount).toLocaleString("vi-VN") + " VNĐ";
   };
 
   const getToken = async () => {
@@ -264,7 +264,7 @@ export default function Foods() {
               </p>
             </div>
             <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-              <span className="text-blue-400 text-sm font-semibold">₫</span>
+              <span className="text-blue-400 text-sm font-semibold"> VNĐ</span>
             </div>
           </div>
         </div>

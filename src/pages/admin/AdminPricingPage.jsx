@@ -651,7 +651,7 @@ function ViewDetailModal({ item, onClose, onEdit }) {
 
   const formatPrice = (price) => {
     if (!price && price !== 0) return "---";
-    return price.toLocaleString() + "₫";
+    return price.toLocaleString() + " VNĐ";
   };
 
   return (

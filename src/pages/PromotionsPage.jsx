@@ -231,7 +231,7 @@ export const PromotionsPage = () => {
       promo.discount_type === "fixed"
     ) {
       const value = promo.discount_value || promo.discount_percent || 0;
-      return `-${value.toLocaleString()}đ`;
+      return `-${value.toLocaleString()} VNĐ`;
     }
     return "Ưu đãi";
   };
@@ -754,7 +754,7 @@ export const PromotionsPage = () => {
                                     </span>
                                     <span className="text-white text-sm font-bold">
                                       {promo.min_order > 0
-                                        ? `${promo.min_order.toLocaleString()}đ`
+                                        ? `${promo.min_order.toLocaleString()} VNĐ`
                                         : "Mọi đơn hàng"}
                                     </span>
                                   </div>

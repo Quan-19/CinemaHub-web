@@ -53,8 +53,8 @@ export default function PricingStats({ data, filterCategory = "all" }) {
   
   const formatPrice = (price) => {
     const value = Number(price);
-    if (!Number.isFinite(value)) return "0₫";
-    return Math.round(value).toLocaleString("vi-VN") + "₫";
+    if (!Number.isFinite(value)) return "0 VNĐ";
+    return Math.round(value).toLocaleString("vi-VN") + " VNĐ";
   };
   
   
@@ -95,7 +95,7 @@ export default function PricingStats({ data, filterCategory = "all" }) {
           <div className="bg-cinema-surface p-4 rounded-xl border border-white/10">
             <div className="text-2xl font-bold text-yellow-400">{displayHolidayData.length}</div>
             <div className="text-xs text-gray-400 mt-1">Tổng quy tắc ngày lễ</div>
-            <div className="text-[10px] text-gray-500">{activeHolidayCount} đang áp dụng</div>
+            <div className="text-[10px] text-gray-500">{activeHolidayCount} VNĐang áp dụng</div>
           </div>
           <div className="bg-cinema-surface p-4 rounded-xl border border-white/10">
             <div className="text-2xl font-bold text-white">
@@ -120,7 +120,7 @@ export default function PricingStats({ data, filterCategory = "all" }) {
         <div className="bg-cinema-surface p-4 rounded-xl border border-white/10">
           <div className="text-2xl font-bold text-white">{displayRegularData.length}</div>
           <div className="text-xs text-gray-400 mt-1">Tổng quy tắc thường</div>
-          <div className="text-[10px] text-gray-500">{activeCount} đang áp dụng</div>
+          <div className="text-[10px] text-gray-500">{activeCount} VNĐang áp dụng</div>
         </div>
         
         <div className="bg-cinema-surface p-4 rounded-xl border border-white/10">

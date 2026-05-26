@@ -51,7 +51,7 @@ export default function PromotionsTable({ promotions, onEdit, onDelete }) {
     return (
       <span className="flex items-center gap-1 text-blue-400">
         <DollarSign size={14} />
-        {promotion.discount_value?.toLocaleString()}₫
+        {promotion.discount_value?.toLocaleString()} VNĐ
       </span>
     );
   };
@@ -117,7 +117,7 @@ export default function PromotionsTable({ promotions, onEdit, onDelete }) {
                         {getSeatTypesDisplay(item)}
                         {item.min_order > 0 && (
                           <p className="text-[10px] text-gray-500">
-                            Đơn tối thiểu: {item.min_order.toLocaleString()}₫
+                            Đơn tối thiểu: {item.min_order.toLocaleString()} VNĐ
                           </p>
                         )}
                       </div>

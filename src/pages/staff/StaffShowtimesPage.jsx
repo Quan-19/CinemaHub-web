@@ -1274,7 +1274,7 @@ function EditShowtimeModal({
                           </div>
                           <div className="relative w-32">
                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white/40 text-xs">
-                              ₫
+                               VNĐ
                             </span>
                             <input
                               type="text"

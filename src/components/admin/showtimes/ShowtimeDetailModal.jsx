@@ -19,7 +19,7 @@ export default function ShowtimeDetailModal({ showtime, isOpen, onClose }) {
    const formatMoney = (value) => {
       const amount = Number(value);
       if (!Number.isFinite(amount) || amount <= 0) return "—";
-      return `${amount.toLocaleString()}₫`;
+      return `${amount.toLocaleString()} VNĐ`;
    };
 
    const getStatusInfo = (status) => {

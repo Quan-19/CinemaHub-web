@@ -9,13 +9,11 @@ import {
   Download,
   Calendar,
   Filter,
+  Coffee,
 } from "lucide-react";
 
 function formatCurrency(value) {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(Number(value || 0));
+  return new Intl.NumberFormat("vi-VN").format(Number(value || 0)) + " VNĐ";
 }
 
 function getCurrentYear() {
@@ -228,6 +226,9 @@ function StaffRevenuePage() {
   const revenueByMovie = Array.isArray(data?.revenueByMovie)
     ? data.revenueByMovie
     : [];
+  const revenueByFood = Array.isArray(data?.revenueByFood)
+    ? data.revenueByFood
+    : [];
 
   const periodHeader = useMemo(() => {
     switch (reportType) {
@@ -388,17 +389,17 @@ function StaffRevenuePage() {
               accentClass="bg-cinema-primary/15 text-cinema-primary"
             />
             <StatCard
+              icon={Coffee}
+              title="Doanh thu bắp nước"
+              value={formatCurrency(summary.totalFoodRevenue)}
+              sub="Món ăn & đồ uống"
+              accentClass="bg-amber-500/15 text-amber-400"
+            />
+            <StatCard
               icon={ShoppingBag}
               title="Giá vé trung bình"
               value={formatCurrency(summary.averageTicketPrice)}
               accentClass="bg-violet-500/15 text-violet-400"
-            />
-            <StatCard
-              icon={Percent}
-              title="Tỷ lệ tăng trưởng"
-              value={`${Number(summary.growthRate || 0).toFixed(1)}%`}
-              sub="So với kỳ trước"
-              accentClass="bg-amber-500/15 text-amber-400"
             />
           </>
         )}
@@ -407,7 +408,7 @@ function StaffRevenuePage() {
       {!loading && !error && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* REVENUE BY PERIOD */}
-          <section className="cinema-surface p-4 sm:p-5 lg:col-span-2 overflow-hidden">
+          <section className="cinema-surface p-4 sm:p-5 lg:col-span-3 overflow-hidden">
             <div className="flex items-center gap-2 mb-5">
               <Calendar className="h-4 w-4 text-zinc-300" />
               <h2 className="text-base font-bold text-zinc-100">Chi tiết doanh thu theo {periodHeader.toLowerCase()}</h2>
@@ -419,7 +420,8 @@ function StaffRevenuePage() {
                 <thead>
                   <tr className="border-b border-zinc-800 text-left text-zinc-400 font-bold uppercase text-[10px] tracking-widest">
                     <th className="pb-3 pr-4">{periodHeader}</th>
-                    <th className="pb-3 pr-4 text-right">Doanh thu</th>
+                    <th className="pb-3 pr-4 text-right">Tổng doanh thu</th>
+                    <th className="pb-3 pr-4 text-right">Bắp nước</th>
                     <th className="pb-3 pr-4 text-right">Số vé</th>
                     <th className="pb-3 text-right">Đơn đặt</th>
                   </tr>
@@ -427,13 +429,14 @@ function StaffRevenuePage() {
                 <tbody className="divide-y divide-zinc-800/50">
                   {revenueByPeriod.length === 0 ? (
                     <tr>
-                      <td className="py-8 text-center text-zinc-400 italic" colSpan={4}>Không tìm thấy dữ liệu trong kỳ này.</td>
+                      <td className="py-8 text-center text-zinc-400 italic" colSpan={5}>Không tìm thấy dữ liệu trong kỳ này.</td>
                     </tr>
                   ) : (
                     revenueByPeriod.map((row, idx) => (
                       <tr key={idx} className="hover:bg-zinc-800/20 transition-colors group">
                         <td className="py-3 pr-4 font-semibold text-zinc-200 group-hover:text-white transition-colors">{row.period}</td>
                         <td className="py-3 pr-4 text-right text-emerald-400 font-mono font-bold">{formatCurrency(row.revenue)}</td>
+                        <td className="py-3 pr-4 text-right text-amber-400 font-mono">{formatCurrency(row.food_revenue)}</td>
                         <td className="py-3 pr-4 text-right text-zinc-200">{row.tickets || 0}</td>
                         <td className="py-3 text-right text-zinc-300">{row.bookings || 0}</td>
                       </tr>
@@ -444,7 +447,9 @@ function StaffRevenuePage() {
             </div>
           </section>
 
-          {/* TOP MOVIES */}
+          {/* TWO COLUMN GRID FOR TOP LISTS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:col-span-3">
+            {/* TOP MOVIES */}
           <section className="cinema-surface p-4 sm:p-5">
             <div className="flex items-center gap-2 mb-5">
               <Ticket className="h-4 w-4 text-zinc-300" />
@@ -475,7 +480,41 @@ function StaffRevenuePage() {
                 ))
               )}
             </div>
-          </section>
+            </section>
+
+            {/* TOP FOODS */}
+            <section className="cinema-surface p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-5">
+                <Coffee className="h-4 w-4 text-amber-400" />
+                <h2 className="text-base font-bold text-zinc-100">Top bắp nước doanh thu</h2>
+              </div>
+              
+              <div className="space-y-4">
+                {revenueByFood.length === 0 ? (
+                  <div className="py-8 text-center text-zinc-400 italic text-sm">Chưa có dữ liệu bắp nước</div>
+                ) : (
+                  revenueByFood.map((row, idx) => (
+                    <div key={idx} className="space-y-2 group">
+                      <div className="flex items-center justify-between gap-3 text-xs">
+                        <span className="font-bold text-zinc-100 truncate group-hover:text-amber-400 transition-colors">{row.food_name}</span>
+                        <span className="text-amber-400 flex-shrink-0 font-mono">{formatCurrency(row.revenue)}</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-zinc-800 overflow-hidden">
+                        <div 
+                          className="h-full rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)] transition-all duration-1000 ease-out"
+                          style={{ width: `${Math.max(2, row.percentage)}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-zinc-400">
+                        <span>{row.total_quantity || 0} sản phẩm</span>
+                        <span className="font-bold text-amber-500">{Number(row.percentage || 0).toFixed(1)}%</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+          </div>
         </div>
       )}
 

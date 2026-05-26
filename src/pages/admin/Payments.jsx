@@ -98,7 +98,7 @@ export const AdminPaymentsPage = () => {
           { label: "Tổng giao dịch", value: mockPayments.length, color: "#8b5cf6" },
           { label: "Thành công", value: mockPayments.filter(p => p.status === "success").length, color: "#22c55e" },
           { label: "Chờ xử lý", value: mockPayments.filter(p => p.status === "pending").length, color: "#f59e0b" },
-          { label: "Tổng thu (thành công)", value: `${(totalRevenue / 1000000).toFixed(1)}M₫`, color: "#e50914" },
+          { label: "Tổng thu (thành công)", value: `${(totalRevenue / 1000000).toFixed(1)}M VNĐ`, color: "#e50914" },
         ].map((s) => (
           <div key={s.label} className="rounded-xl p-4 flex items-center gap-3"
             style={{ background: "var(--color-cinema-surface)", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -181,7 +181,7 @@ export const AdminPaymentsPage = () => {
                   <td style={{ padding: "12px 14px", fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{p.cinema}</td>
                   <td style={{ padding: "12px 14px", fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{p.seats}</td>
                   <td style={{ padding: "12px 14px", fontSize: 13, fontWeight: 700, color: "#f59e0b" }}>
-                    {p.amount.toLocaleString()}₫
+                    {p.amount.toLocaleString()} VNĐ
                   </td>
                   <td style={{ padding: "12px 14px" }}>
                     <span className="px-2 py-0.5 rounded-full text-xs font-semibold"
@@ -275,7 +275,7 @@ export const AdminPaymentsPage = () => {
               <div className="flex justify-between items-center pt-2">
                 <span style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>Tổng tiền</span>
                 <span style={{ fontSize: 18, fontWeight: 700, color: "#f59e0b" }}>
-                  {selectedPayment.amount.toLocaleString()}₫
+                  {selectedPayment.amount.toLocaleString()} VNĐ
                 </span>
               </div>
             </div>

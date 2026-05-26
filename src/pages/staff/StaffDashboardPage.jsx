@@ -13,10 +13,7 @@ import {
 } from "recharts";
 
 const formatCurrency = (value) =>
-  new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(Number(value || 0));
+  new Intl.NumberFormat("vi-VN").format(Number(value || 0)) + " VNĐ";
 
 const formatNumber = (value) =>
   new Intl.NumberFormat("vi-VN").format(Number(value || 0));

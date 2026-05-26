@@ -217,7 +217,7 @@ export default function LoyaltyPage() {
               <div className="flex items-center justify-between text-sm">
                 <p className="text-zinc-300 font-semibold">
                   {viewModel.nextTier
-                    ? `Còn ${formatNumber(viewModel.pointsToNext)} điểm để lên ${viewModel.nextTier.name}`
+                    ? `Còn ${formatNumber(viewModel.pointsToNext)} VNĐiểm để lên ${viewModel.nextTier.name}`
                     : "Bạn đã đạt hạng cao nhất"}
                 </p>
                 <p className="text-zinc-500 font-medium">
