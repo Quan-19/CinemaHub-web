@@ -56,8 +56,8 @@ export const PromotionsPage = () => {
         const data = Array.isArray(payload?.data)
           ? payload.data
           : Array.isArray(payload)
-          ? payload
-          : [];
+            ? payload
+            : [];
 
         // Format data
         const parseArrayField = (value) => {
@@ -97,9 +97,8 @@ export const PromotionsPage = () => {
 
           return {
             promotion_id: promo.promotion_id || promo.id || null,
-            client_id: `${
-              promo.promotion_id || promo.id || promo.code || "promo"
-            }-${index}`,
+            client_id: `${promo.promotion_id || promo.id || promo.code || "promo"
+              }-${index}`,
             title: promo.title || "",
             description: promo.description || "",
             code: promo.code || "",
@@ -163,14 +162,13 @@ export const PromotionsPage = () => {
         const data = Array.isArray(payload?.data)
           ? payload.data
           : Array.isArray(payload)
-          ? payload
-          : [];
+            ? payload
+            : [];
 
         const formatted = data.map((article, index) => ({
           article_id: article.article_id || article.id || null,
-          client_id: `${
-            article.article_id || article.id || "article"
-          }-${index}`,
+          client_id: `${article.article_id || article.id || "article"
+            }-${index}`,
           title: article.title || "",
           summary: article.summary || "",
           content: article.content || "",
@@ -398,7 +396,7 @@ export const PromotionsPage = () => {
               className="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
             >
               Hàng ngàn mã giảm giá, quà tặng combo và chương trình hoàn tiền
-              đang chờ đón bạn tại CinemaHub. Đừng bỏ lỡ!
+              đang chờ đón bạn tại EbizCinema. Đừng bỏ lỡ!
             </motion.p>
 
             <motion.div
@@ -436,11 +434,10 @@ export const PromotionsPage = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap overflow-hidden group ${
-                  activeTab === tab.id
-                    ? "text-white"
-                    : "text-zinc-500 hover:text-zinc-300"
-                }`}
+                className={`relative px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap overflow-hidden group ${activeTab === tab.id
+                  ? "text-white"
+                  : "text-zinc-500 hover:text-zinc-300"
+                  }`}
               >
                 {activeTab === tab.id && (
                   <motion.div
@@ -450,11 +447,10 @@ export const PromotionsPage = () => {
                   />
                 )}
                 <tab.icon
-                  className={`relative w-4 h-4 ${
-                    activeTab === tab.id
-                      ? "text-white"
-                      : "text-zinc-500 group-hover:text-zinc-300"
-                  }`}
+                  className={`relative w-4 h-4 ${activeTab === tab.id
+                    ? "text-white"
+                    : "text-zinc-500 group-hover:text-zinc-300"
+                    }`}
                 />
                 <span className="relative">{tab.label}</span>
               </button>
@@ -474,7 +470,7 @@ export const PromotionsPage = () => {
                   Tin tức & Sự kiện
                 </h2>
                 <p className="text-zinc-500 text-sm">
-                  Cập nhật những chuyển động mới nhất từ CinemaHub
+                  Cập nhật những chuyển động mới nhất từ EbizCinema
                 </p>
               </div>
             </div>
@@ -570,268 +566,265 @@ export const PromotionsPage = () => {
       {(activeTab === "all" ||
         activeTab === "system" ||
         activeTab === "cinema") && (
-        <section
-          id="promotions-list"
-          className="max-w-7xl mx-auto px-4 sm:px-6 scroll-mt-24"
-        >
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
-            <div className="flex items-center gap-3">
-              <div className="w-1.5 h-8 bg-cinema-gold rounded-full"></div>
-              <div>
-                <h2 className="text-white text-2xl md:text-3xl font-black uppercase tracking-tight">
-                  Mã Giảm Giá & Ưu Đãi
-                </h2>
-                <p className="text-zinc-500 text-sm">
-                  Lấy mã ngay để tận hưởng rạp phim chất lượng cao với giá hời
-                </p>
+          <section
+            id="promotions-list"
+            className="max-w-7xl mx-auto px-4 sm:px-6 scroll-mt-24"
+          >
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-8 bg-cinema-gold rounded-full"></div>
+                <div>
+                  <h2 className="text-white text-2xl md:text-3xl font-black uppercase tracking-tight">
+                    Mã Giảm Giá & Ưu Đãi
+                  </h2>
+                  <p className="text-zinc-500 text-sm">
+                    Lấy mã ngay để tận hưởng rạp phim chất lượng cao với giá hời
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-zinc-400 text-xs font-bold">
+                <Filter className="w-3.5 h-3.5" />
+                Hiển thị {filteredPromotions.length} kết quả
               </div>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-zinc-400 text-xs font-bold">
-              <Filter className="w-3.5 h-3.5" />
-              Hiển thị {filteredPromotions.length} kết quả
-            </div>
-          </div>
 
-          {filteredPromotions.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-              {filteredPromotions.map((promo, idx) => (
-                <motion.article
-                  key={promo.client_id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="group relative"
-                >
-                  {/* TICKET STYLE CONTAINER */}
-                  <div className="relative flex flex-col md:flex-row h-auto rounded-3xl overflow-hidden bg-zinc-900/50 border border-white/5 backdrop-blur-md group-hover:border-cinema-primary/30 group-hover:bg-zinc-900/80 transition-all duration-500">
-                    {/* Left Side - Discount Badge */}
-                    <div className="relative w-full md:w-28 h-20 md:h-auto shrink-0 flex items-center justify-center bg-zinc-800/30 overflow-hidden">
-                      {/* Background Pattern */}
-                      <div className="absolute inset-0 opacity-10">
-                        <div
-                          className="absolute top-0 left-0 w-full h-full"
-                          style={{
-                            backgroundImage:
-                              "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
-                            backgroundSize: "12px 12px",
-                          }}
-                        ></div>
-                      </div>
-
-                      <div className="relative z-10 flex flex-col items-center justify-center min-w-[4rem] w-fit px-3 h-16 rounded-2xl bg-cinema-primary text-white shadow-xl rotate-[-5deg] group-hover:rotate-0 transition-all duration-500">
-                        <span className="text-[9px] font-black uppercase leading-none opacity-80 mb-0.5">
-                          Giảm
-                        </span>
-                        <span
-                          className={`font-black leading-none whitespace-nowrap ${
-                            getDiscountDisplay(promo).replace("-", "").length >
-                            10
-                              ? "text-[13px]"
-                              : getDiscountDisplay(promo).replace("-", "")
-                                  .length > 8
-                              ? "text-[15px]"
-                              : "text-lg"
-                          }`}
-                        >
-                          {getDiscountDisplay(promo).replace("-", "")}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Divider Dash (Horizontal on Desktop, Vertical on Mobile) */}
-                    <div className="hidden md:flex flex-col items-center justify-center gap-2 px-1 relative">
-                      <div className="absolute -top-3 w-6 h-6 bg-cinema-bg rounded-full border border-white/5"></div>
-                      <div className="w-[1px] h-full border-l border-dashed border-white/20"></div>
-                      <div className="absolute -bottom-3 w-6 h-6 bg-cinema-bg rounded-full border border-white/5"></div>
-                    </div>
-
-                    {/* Right Side - Content */}
-                    <div className="flex-1 p-4 md:p-5 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-1.5 text-cinema-gold text-[10px] font-black uppercase tracking-widest">
-                            {promo.cinema_id ? (
-                              <>
-                                <MapPin className="w-3 h-3" /> Tại rạp{" "}
-                                {promo.cinema_name}
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="w-3 h-3" /> Toàn hệ thống
-                              </>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1 text-zinc-500 text-xs font-medium">
-                            <Clock className="w-3.5 h-3.5" />
-                            {formatDate(promo.end_date)}
-                          </div>
+            {filteredPromotions.length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                {filteredPromotions.map((promo, idx) => (
+                  <motion.article
+                    key={promo.client_id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="group relative"
+                  >
+                    {/* TICKET STYLE CONTAINER */}
+                    <div className="relative flex flex-col md:flex-row h-auto rounded-3xl overflow-hidden bg-zinc-900/50 border border-white/5 backdrop-blur-md group-hover:border-cinema-primary/30 group-hover:bg-zinc-900/80 transition-all duration-500">
+                      {/* Left Side - Discount Badge */}
+                      <div className="relative w-full md:w-28 h-20 md:h-auto shrink-0 flex items-center justify-center bg-zinc-800/30 overflow-hidden">
+                        {/* Background Pattern */}
+                        <div className="absolute inset-0 opacity-10">
+                          <div
+                            className="absolute top-0 left-0 w-full h-full"
+                            style={{
+                              backgroundImage:
+                                "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
+                              backgroundSize: "12px 12px",
+                            }}
+                          ></div>
                         </div>
 
-                        <h3 className="text-white text-lg font-bold mb-1.5 group-hover:text-cinema-primary transition-colors">
-                          {promo.title}
-                        </h3>
-                        <p className="text-zinc-400 text-xs line-clamp-2 mb-4">
-                          {promo.description}
-                        </p>
+                        <div className="relative z-10 flex flex-col items-center justify-center min-w-[4rem] w-fit px-3 h-16 rounded-2xl bg-cinema-primary text-white shadow-xl rotate-[-5deg] group-hover:rotate-0 transition-all duration-500">
+                          <span className="text-[9px] font-black uppercase leading-none opacity-80 mb-0.5">
+                            Giảm
+                          </span>
+                          <span
+                            className={`font-black leading-none whitespace-nowrap ${getDiscountDisplay(promo).replace("-", "").length >
+                              10
+                              ? "text-[13px]"
+                              : getDiscountDisplay(promo).replace("-", "")
+                                .length > 8
+                                ? "text-[15px]"
+                                : "text-lg"
+                              }`}
+                          >
+                            {getDiscountDisplay(promo).replace("-", "")}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="space-y-4">
-                        {/* Code and Copy */}
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 bg-black/40 border border-white/5 rounded-2xl p-3 flex items-center justify-between group/code">
-                            <div className="flex flex-col">
-                              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">
-                                Mã ưu đãi
-                              </span>
-                              <span className="text-white font-mono font-black tracking-[0.2em] text-base">
-                                {promo.code}
-                              </span>
+                      {/* Divider Dash (Horizontal on Desktop, Vertical on Mobile) */}
+                      <div className="hidden md:flex flex-col items-center justify-center gap-2 px-1 relative">
+                        <div className="absolute -top-3 w-6 h-6 bg-cinema-bg rounded-full border border-white/5"></div>
+                        <div className="w-[1px] h-full border-l border-dashed border-white/20"></div>
+                        <div className="absolute -bottom-3 w-6 h-6 bg-cinema-bg rounded-full border border-white/5"></div>
+                      </div>
+
+                      {/* Right Side - Content */}
+                      <div className="flex-1 p-4 md:p-5 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-1.5 text-cinema-gold text-[10px] font-black uppercase tracking-widest">
+                              {promo.cinema_id ? (
+                                <>
+                                  <MapPin className="w-3 h-3" /> Tại rạp{" "}
+                                  {promo.cinema_name}
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="w-3 h-3" /> Toàn hệ thống
+                                </>
+                              )}
                             </div>
-                            <button
-                              onClick={() =>
-                                handleCopy(promo.client_id, promo.code)
-                              }
-                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                                copiedPromoId === promo.client_id
+                            <div className="flex items-center gap-1 text-zinc-500 text-xs font-medium">
+                              <Clock className="w-3.5 h-3.5" />
+                              {formatDate(promo.end_date)}
+                            </div>
+                          </div>
+
+                          <h3 className="text-white text-lg font-bold mb-1.5 group-hover:text-cinema-primary transition-colors">
+                            {promo.title}
+                          </h3>
+                          <p className="text-zinc-400 text-xs line-clamp-2 mb-4">
+                            {promo.description}
+                          </p>
+                        </div>
+
+                        <div className="space-y-4">
+                          {/* Code and Copy */}
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 bg-black/40 border border-white/5 rounded-2xl p-3 flex items-center justify-between group/code">
+                              <div className="flex flex-col">
+                                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">
+                                  Mã ưu đãi
+                                </span>
+                                <span className="text-white font-mono font-black tracking-[0.2em] text-base">
+                                  {promo.code}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() =>
+                                  handleCopy(promo.client_id, promo.code)
+                                }
+                                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${copiedPromoId === promo.client_id
                                   ? "bg-green-500/20 text-green-500"
                                   : "bg-white/5 text-zinc-400 hover:bg-cinema-primary hover:text-white"
-                              }`}
+                                  }`}
+                              >
+                                <AnimatePresence mode="wait">
+                                  {copiedPromoId === promo.client_id ? (
+                                    <motion.div
+                                      key="check"
+                                      initial={{ scale: 0.5 }}
+                                      animate={{ scale: 1 }}
+                                      exit={{ scale: 0.5 }}
+                                    >
+                                      <Check className="w-5 h-5" />
+                                    </motion.div>
+                                  ) : (
+                                    <motion.div
+                                      key="copy"
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      exit={{ opacity: 0 }}
+                                    >
+                                      <Copy className="w-5 h-5" />
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </button>
+                            </div>
+
+                            <button
+                              onClick={() => toggleExpand(promo.client_id)}
+                              className="w-10 h-10 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white transition-all shrink-0"
+                              title="Xem điều kiện"
                             >
-                              <AnimatePresence mode="wait">
-                                {copiedPromoId === promo.client_id ? (
-                                  <motion.div
-                                    key="check"
-                                    initial={{ scale: 0.5 }}
-                                    animate={{ scale: 1 }}
-                                    exit={{ scale: 0.5 }}
-                                  >
-                                    <Check className="w-5 h-5" />
-                                  </motion.div>
-                                ) : (
-                                  <motion.div
-                                    key="copy"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                  >
-                                    <Copy className="w-5 h-5" />
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
+                              <Info
+                                className={`w-5 h-5 transition-transform ${expandedPromos.has(promo.client_id)
+                                  ? "rotate-180 text-cinema-primary"
+                                  : ""
+                                  }`}
+                              />
                             </button>
                           </div>
 
-                          <button
-                            onClick={() => toggleExpand(promo.client_id)}
-                            className="w-10 h-10 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white transition-all shrink-0"
-                            title="Xem điều kiện"
-                          >
-                            <Info
-                              className={`w-5 h-5 transition-transform ${
-                                expandedPromos.has(promo.client_id)
-                                  ? "rotate-180 text-cinema-primary"
-                                  : ""
-                              }`}
-                            />
-                          </button>
-                        </div>
-
-                        {/* Expandable Info */}
-                        <AnimatePresence>
-                          {expandedPromos.has(promo.client_id) && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="pt-4 border-t border-white/5 space-y-4">
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                                    <span className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">
-                                      Đơn tối thiểu
-                                    </span>
-                                    <span className="text-white text-sm font-bold">
-                                      {promo.min_order > 0
-                                        ? `${promo.min_order.toLocaleString()} VNĐ`
-                                        : "Mọi đơn hàng"}
-                                    </span>
+                          {/* Expandable Info */}
+                          <AnimatePresence>
+                            {expandedPromos.has(promo.client_id) && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="pt-4 border-t border-white/5 space-y-4">
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-black/20 p-3 rounded-xl border border-white/5">
+                                      <span className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">
+                                        Đơn tối thiểu
+                                      </span>
+                                      <span className="text-white text-sm font-bold">
+                                        {promo.min_order > 0
+                                          ? `${promo.min_order.toLocaleString()} VNĐ`
+                                          : "Mọi đơn hàng"}
+                                      </span>
+                                    </div>
+                                    <div className="bg-black/20 p-3 rounded-xl border border-white/5">
+                                      <span className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">
+                                        Lượt dùng
+                                      </span>
+                                      <span className="text-white text-sm font-bold">
+                                        {promo.usage_limit > 0
+                                          ? `${promo.used_count}/${promo.usage_limit}`
+                                          : "Không giới hạn"}
+                                      </span>
+                                    </div>
                                   </div>
-                                  <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                                    <span className="text-[10px] text-zinc-500 font-bold uppercase block mb-1">
-                                      Lượt dùng
+                                  <div className="text-[11px] text-zinc-400 leading-relaxed bg-cinema-primary/5 p-3 rounded-xl border border-cinema-primary/10">
+                                    <span className="text-white font-bold block mb-1 flex items-center gap-1">
+                                      <Tag className="w-3 h-3" /> Điều kiện áp
+                                      dụng:
                                     </span>
-                                    <span className="text-white text-sm font-bold">
-                                      {promo.usage_limit > 0
-                                        ? `${promo.used_count}/${promo.usage_limit}`
-                                        : "Không giới hạn"}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="text-[11px] text-zinc-400 leading-relaxed bg-cinema-primary/5 p-3 rounded-xl border border-cinema-primary/10">
-                                  <span className="text-white font-bold block mb-1 flex items-center gap-1">
-                                    <Tag className="w-3 h-3" /> Điều kiện áp
-                                    dụng:
-                                  </span>
-                                  •{" "}
-                                  {promo.apply_days.length > 0 &&
-                                  promo.apply_days.length < 7
-                                    ? `Chỉ áp dụng các ngày: ${promo.apply_days
+                                    •{" "}
+                                    {promo.apply_days.length > 0 &&
+                                      promo.apply_days.length < 7
+                                      ? `Chỉ áp dụng các ngày: ${promo.apply_days
                                         .map((d) => getDayName(d))
                                         .join(", ")}`
-                                    : "Áp dụng tất cả các ngày trong tuần"}
-                                  <br />•{" "}
-                                  {promo.apply_seat_types.length > 0
-                                    ? `Dành cho: ${promo.apply_seat_types.join(
+                                      : "Áp dụng tất cả các ngày trong tuần"}
+                                    <br />•{" "}
+                                    {promo.apply_seat_types.length > 0
+                                      ? `Dành cho: ${promo.apply_seat_types.join(
                                         ", "
                                       )}`
-                                    : "Áp dụng cho mọi loại ghế"}
-                                  <br />• Mỗi tài khoản được sử dụng tối đa 1
-                                  lần trong suốt chương trình.
+                                      : "Áp dụng cho mọi loại ghế"}
+                                    <br />• Mỗi tài khoản được sử dụng tối đa 1
+                                    lần trong suốt chương trình.
+                                  </div>
+                                  <Link
+                                    to="/movies"
+                                    className="cinema-btn-primary w-full flex items-center justify-center gap-2 py-3"
+                                  >
+                                    Sử dụng ngay{" "}
+                                    <ChevronRight className="w-4 h-4" />
+                                  </Link>
                                 </div>
-                                <Link
-                                  to="/movies"
-                                  className="cinema-btn-primary w-full flex items-center justify-center gap-2 py-3"
-                                >
-                                  Sử dụng ngay{" "}
-                                  <ChevronRight className="w-4 h-4" />
-                                </Link>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.article>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-32 glass-card rounded-3xl">
-              <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8">
-                <Ticket className="w-10 h-10 text-zinc-700" />
+                  </motion.article>
+                ))}
               </div>
-              <h2 className="text-white text-2xl font-bold mb-3">
-                Không tìm thấy mã ưu đãi
-              </h2>
-              <p className="text-zinc-500 text-sm mb-8 max-w-md mx-auto">
-                Rất tiếc, không có khuyến mãi nào khớp với từ khóa của bạn. Thử
-                thay đổi bộ lọc hoặc quay lại sau nhé!
-              </p>
-              <button
-                onClick={() => {
-                  setSearchQuery("");
-                  setActiveTab("all");
-                }}
-                className="text-cinema-primary font-black hover:underline transition-all"
-              >
-                Xóa tất cả bộ lọc
-              </button>
-            </div>
-          )}
-        </section>
-      )}
+            ) : (
+              <div className="text-center py-32 glass-card rounded-3xl">
+                <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8">
+                  <Ticket className="w-10 h-10 text-zinc-700" />
+                </div>
+                <h2 className="text-white text-2xl font-bold mb-3">
+                  Không tìm thấy mã ưu đãi
+                </h2>
+                <p className="text-zinc-500 text-sm mb-8 max-w-md mx-auto">
+                  Rất tiếc, không có khuyến mãi nào khớp với từ khóa của bạn. Thử
+                  thay đổi bộ lọc hoặc quay lại sau nhé!
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setActiveTab("all");
+                  }}
+                  className="text-cinema-primary font-black hover:underline transition-all"
+                >
+                  Xóa tất cả bộ lọc
+                </button>
+              </div>
+            )}
+          </section>
+        )}
 
       {/* FOOTER CALL TO ACTION */}
       {!user && (

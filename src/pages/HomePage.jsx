@@ -376,7 +376,7 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
 const CinemaCard = ({ cinema }) => {
   const navigate = useNavigate();
   const brandColors = {
-    EbizCinema: "#c9a0a2",
+    EbizCinema: "#e50914",
   };
   const color = brandColors[cinema.brand] || "#e50914";
   const cinemaId = cinema.cinema_id ?? cinema.id;
@@ -387,17 +387,32 @@ const CinemaCard = ({ cinema }) => {
     }
   };
 
+  const getShadowColor = (hex) => {
+    if (hex === '#e50914') return '229, 9, 20';
+    return '229, 9, 20';
+  };
+  const shadowRgb = getShadowColor(color);
+
   return (
-    <GlowCard
-      className="bg-cinema-surface border border-white/10 p-4"
+    <motion.div
+      whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
+      whileTap={{ scale: 0.98 }}
       onClick={handleClick}
+      className="group relative rounded-2xl overflow-hidden cursor-pointer bg-cinema-surface border border-white/10 p-4"
     >
-      <div className="flex items-start gap-3">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+      <div
+        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{
+          boxShadow: `inset 0 0 0 1px rgba(${shadowRgb}, 0.5), 0 0 20px rgba(${shadowRgb}, 0.2)`,
+        }}
+      />
+      <div className="flex items-start gap-3 relative z-10">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
+          className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 uppercase"
           style={{ background: color }}
         >
-          Ebiz
+          {cinema.brand?.replace("Cinema", "") || "Ebiz"}
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-white font-semibold text-sm mb-1 line-clamp-1">
@@ -409,7 +424,7 @@ const CinemaCard = ({ cinema }) => {
           <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-white transition-colors" />
         </div>
       </div>
-    </GlowCard>
+    </motion.div>
   );
 };
 
@@ -461,11 +476,11 @@ const HomePromotionCard = ({ promo, index }) => {
               }}
             ></div>
           </div>
-          <div className="relative z-10 flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-red-600 text-white shadow-lg rotate-[-5deg] group-hover:rotate-0 transition-transform duration-500">
-            <span className="text-[8px] font-black uppercase leading-none opacity-80">
+          <div className="relative z-10 flex flex-col items-center justify-center w-[60px] min-h-[60px] p-1 rounded-xl bg-red-600 text-white shadow-lg rotate-[-5deg] group-hover:rotate-0 transition-transform duration-500">
+            <span className="text-[9px] font-black uppercase leading-none opacity-80 mb-1 text-center w-full">
               Giảm
             </span>
-            <span className="text-sm font-black leading-none">
+            <span className="text-sm font-black leading-tight text-center w-full break-words">
               {getDiscountDisplay(promo).replace("-", "")}
             </span>
           </div>
