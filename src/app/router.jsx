@@ -127,6 +127,7 @@ export const router = createBrowserRouter([
       { path: "rooms", element: <StaffRoomsPage /> },
       { path: "promotions", element: <StaffPromotionsPage /> },
       { path: "scanner", element: <StaffScannerPage /> },
+      { path: "articles", element: <StaffArticlesPage /> },
     ],
   },
 ]);

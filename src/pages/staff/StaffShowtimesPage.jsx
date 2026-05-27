@@ -19,6 +19,7 @@ import { makeId } from "../../components/staff/staffUtils.js";
 import { StaffCenteredModalShell } from "../../components/staff/StaffModalShell.jsx";
 import StaffConfirmModal from "../../components/staff/StaffConfirmModal.jsx";
 import StaffSuccessToast from "../../components/staff/StaffSuccessToast.jsx";
+import StaffShowtimeTimeline from "../../components/staff/StaffShowtimeTimeline.jsx";
 import { useEffect } from "react";
 import { getAuth } from "firebase/auth";
 
@@ -300,8 +301,8 @@ function durationToEnd(startIso, duration) {
 
   const start = new Date(year, month - 1, day, hour, minute);
   const end = new Date(start);
-  // Thêm thời lượng phim + 15 phút dọn dẹp/quảng cáo
-  end.setMinutes(start.getMinutes() + duration + 15);
+  // Chỉ cộng đúng thời lượng của phim (không cộng thêm 15 phút dọn dẹp ở đây)
+  end.setMinutes(start.getMinutes() + duration);
 
   // Format back to YYYY-MM-DDTHH:MM:00
   const yyyy = end.getFullYear();
@@ -566,10 +567,6 @@ function ShowtimeCard({ showtime, onEdit, onDelete }) {
             </span>
             <span>{showtime.language}</span>
             <span>{showtime.duration} phút</span>
-            <span className="h-1 w-1 rounded-full bg-zinc-700" />
-            <span className="font-bold text-cinema-primary">
-              Từ {(showtime.prices?.Thường || 0).toLocaleString()}đ
-            </span>
           </div>
         </div>
 
@@ -1105,11 +1102,6 @@ function EditShowtimeModal({
                           })()
                         : "Chọn phim và giờ"}
                     </div>
-                    {duration ? (
-                      <p className="text-[10px] text-blue-400 mt-1">
-                        ⏱️ {duration} phút + 15' quảng cáo
-                      </p>
-                    ) : null}
                   </div>
                 </div>
               </div>
@@ -1348,6 +1340,7 @@ export default function StaffShowtimesPage() {
 
   const dates = useMemo(() => dayRange(7), []);
   const [selectedDate, setSelectedDate] = useState(dates[0]?.value ?? "");
+  const [viewMode, setViewMode] = useState("list");
   const [search, setSearch] = useState("");
   const [roomFilter, setRoomFilter] = useState("all");
   const [formatFilter, setFormatFilter] = useState("all");
@@ -1655,6 +1648,25 @@ export default function StaffShowtimesPage() {
   };
 
   const openEdit = (st) => {
+    const isOngoingOrEnded = st.status === "ongoing" || st.status === "ended" || st.status === "sold_out";
+    const hasBookedTickets = Number(st.bookedCount) > 0;
+
+    if (isOngoingOrEnded) {
+      setToast({
+        type: "error",
+        message: "Không thể chỉnh sửa suất chiếu đang chiếu hoặc đã kết thúc.",
+      });
+      return;
+    }
+
+    if (hasBookedTickets) {
+      setToast({
+        type: "error",
+        message: "Không thể chỉnh sửa suất chiếu đã có khách hàng đặt vé.",
+      });
+      return;
+    }
+
     setEditModal({
       mode: "edit",
       data: {
@@ -1672,8 +1684,32 @@ export default function StaffShowtimesPage() {
         throw new Error(STAFF_PAST_DATE_ERROR);
       }
 
-      // ✅ Kiểm tra chồng lấn suất chiếu (Conflict Detection)
-      const conflictingShow = showtimes.find((st) => {
+      // ✅ Kiểm tra chồng lấn suất chiếu và thời gian dọn dẹp (Conflict Detection)
+      const formatTimeOnly = (dateTimeStrOrObj) => {
+        try {
+          const d = new Date(dateTimeStrOrObj);
+          const hh = String(d.getHours()).padStart(2, "0");
+          const mm = String(d.getMinutes()).padStart(2, "0");
+          return `${hh}:${mm}`;
+        } catch {
+          return "";
+        }
+      };
+
+      const getCleaningTimeForRoom = (roomId) => {
+        const room = roomsList.find((r) => String(r.id) === String(roomId));
+        const format = room?.type || "2D";
+        const CLEANING_TIME_BY_ROOM_TYPE = {
+          "2D": 15,
+          "3D": 15,
+          "4DX": 20,
+          "IMAX": 30,
+        };
+        return CLEANING_TIME_BY_ROOM_TYPE[format] || 15;
+      };
+
+      // 1. Kiểm tra trùng giờ chiếu (Overlap screening time)
+      const overlapShow = showtimes.find((st) => {
         if (st.id === next.id) return false; // Bỏ qua chính nó khi sửa
         if (String(st.roomId) !== String(next.roomId)) return false;
         if (st.date !== next.date) return false;
@@ -1687,10 +1723,51 @@ export default function StaffShowtimesPage() {
         return startB < endA && endB > startA;
       });
 
-      if (conflictingShow) {
+      if (overlapShow) {
         throw new Error(
-          `Xung đột lịch: Phòng đã có suất "${conflictingShow.movieTitle}" lúc ${conflictingShow.startTime}.`
+          `Xung đột lịch chiếu: Phòng đã có suất "${overlapShow.movieTitle}" đang chiếu từ ${overlapShow.startTime} đến ${formatTimeOnly(overlapShow.end)}.`
         );
+      }
+
+      // 2. Kiểm tra cấn thời gian dọn dẹp (Cleaning time conflict)
+      const cleaningConflictShow = showtimes.find((st) => {
+        if (st.id === next.id) return false;
+        if (String(st.roomId) !== String(next.roomId)) return false;
+        if (st.date !== next.date) return false;
+        if (st.status === "cancelled") return false;
+
+        const startA = new Date(st.start).getTime();
+        const endA = new Date(st.end).getTime();
+        const startB = new Date(next.start).getTime();
+        const endB = new Date(next.end).getTime();
+
+        const cleanA = getCleaningTimeForRoom(st.roomId) * 60 * 1000;
+        const cleanB = getCleaningTimeForRoom(next.roomId) * 60 * 1000;
+
+        // Suất chiếu sau bắt đầu trong khi suất chiếu trước đang dọn dẹp
+        if (startB >= endA && startB < endA + cleanA) {
+          return true;
+        }
+        // Suất chiếu trước bắt đầu trong khi suất chiếu sau đang dọn dẹp
+        if (startA >= endB && startA < endB + cleanB) {
+          return true;
+        }
+        return false;
+      });
+
+      if (cleaningConflictShow) {
+        const startA = new Date(cleaningConflictShow.start).getTime();
+        const startB = new Date(next.start).getTime();
+        const cleanMin = getCleaningTimeForRoom(next.roomId);
+        if (startB > startA) {
+          throw new Error(
+            `Cấn thời gian dọn dẹp: Suất chiếu này cấn vào thời gian dọn dẹp (${cleanMin} phút) của suất "${cleaningConflictShow.movieTitle}" trước đó (kết thúc chiếu lúc ${formatTimeOnly(cleaningConflictShow.end)}).`
+          );
+        } else {
+          throw new Error(
+            `Cấn thời gian dọn dẹp: Thời gian dọn dẹp (${cleanMin} phút) của suất chiếu này cấn vào suất "${cleaningConflictShow.movieTitle}" tiếp theo (bắt đầu lúc ${cleaningConflictShow.startTime}).`
+          );
+        }
       }
 
       const auth = getAuth();
@@ -1824,19 +1901,47 @@ export default function StaffShowtimesPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold sm:text-3xl">Suất chiếu</h1>
           <p className="mt-1 text-sm text-zinc-400">{cinemaName}</p>
         </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="inline-flex h-10 items-center gap-2 rounded-2xl bg-cinema-primary px-4 text-sm font-semibold text-white hover:opacity-95"
-        >
-          <Plus className="h-4 w-4" />
-          Thêm suất chiếu
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="inline-flex items-center gap-1.5 rounded-2xl border border-zinc-700 bg-zinc-950/40 p-1 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={[
+                "rounded-xl px-3 py-1.5 transition-colors font-bold",
+                viewMode === "list"
+                  ? "bg-cinema-primary text-white"
+                  : "text-zinc-400 hover:text-white"
+              ].join(" ")}
+            >
+              Danh sách
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("timeline")}
+              className={[
+                "rounded-xl px-3 py-1.5 transition-colors font-bold",
+                viewMode === "timeline"
+                  ? "bg-cinema-primary text-white"
+                  : "text-zinc-400 hover:text-white"
+              ].join(" ")}
+            >
+              Dòng thời gian
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={openCreate}
+            className="inline-flex h-10 items-center gap-2 rounded-2xl bg-cinema-primary px-4 text-sm font-semibold text-white hover:opacity-95"
+          >
+            <Plus className="h-4 w-4" />
+            Thêm suất chiếu
+          </button>
+        </div>
       </div>
 
       <div className="calendar-container relative flex flex-wrap items-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-950/40 p-3">
@@ -1872,108 +1977,153 @@ export default function StaffShowtimesPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[2fr_1fr]">
-        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/40 p-3">
-          <div className="flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-2">
-            <Search className="h-4 w-4 text-zinc-400" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-transparent text-sm text-white placeholder:text-zinc-400 focus:outline-none"
-              placeholder="Tìm phim..."
-            />
-          </div>
-          <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
-            <select
-              value={roomFilter}
-              onChange={(e) => setRoomFilter(e.target.value)}
-              className="h-10 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
-            >
-              <option value="all">Tất cả phòng</option>
-              {roomFilterOptions.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-            <select
-              value={formatFilter}
-              onChange={(e) => setFormatFilter(e.target.value)}
-              className="h-10 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
-            >
-              <option value="all">Tất cả định dạng</option>
-              {formatOptions.map((f) => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-            </select>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-10 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
-            >
-              <option value="all">Tất cả trạng thái</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+      {viewMode === "list" ? (
+        <>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[2fr_1fr]">
+            <div className="rounded-2xl border border-zinc-700 bg-zinc-950/40 p-3">
+              <div className="flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-2">
+                <Search className="h-4 w-4 text-zinc-400" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-transparent text-sm text-white placeholder:text-zinc-400 focus:outline-none"
+                  placeholder="Tìm phim..."
+                />
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                <select
+                  value={roomFilter}
+                  onChange={(e) => setRoomFilter(e.target.value)}
+                  className="h-10 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
+                >
+                  <option value="all">Tất cả phòng</option>
+                  {roomFilterOptions.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={formatFilter}
+                  onChange={(e) => setFormatFilter(e.target.value)}
+                  className="h-10 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
+                >
+                  <option value="all">Tất cả định dạng</option>
+                  {formatOptions.map((f) => (
+                    <option key={f} value={f}>
+                      {f}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="h-10 rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 text-sm text-zinc-100 focus:outline-none"
+                >
+                  <option value="all">Tất cả trạng thái</option>
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/40 p-3">
-          <div className="flex items-center gap-2 text-sm text-zinc-400">
-            <Film className="h-4 w-4" />
-            <span>Suất chiếu / ngày</span>
+            <div className="rounded-2xl border border-zinc-700 bg-zinc-950/40 p-3">
+              <div className="flex items-center gap-2 text-sm text-zinc-400">
+                <Film className="h-4 w-4" />
+                <span>Suất chiếu / ngày</span>
+              </div>
+              <div className="mt-2 text-3xl font-bold text-white">
+                {filtered.length}
+                <span className="ml-2 text-sm font-semibold text-zinc-400">
+                  suất
+                </span>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-1.5 text-xs text-zinc-400">
+                <div className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/40 px-2.5 py-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                  Sắp chiếu
+                </div>
+                <div className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/40 px-2.5 py-1.5">
+                  <span className="h-2 w-2 rounded-full bg-yellow-400" />
+                  Đang chiếu
+                </div>
+                <div className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/40 px-2.5 py-1.5">
+                  <span className="h-2 w-2 rounded-full bg-zinc-500" />
+                  Đã kết thúc
+                </div>
+                <div className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/40 px-2.5 py-1.5">
+                  <span className="h-2 w-2 rounded-full bg-red-400" />
+                  Đã hủy
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="mt-2 text-3xl font-bold text-white">
-            {filtered.length}
-            <span className="ml-2 text-sm font-semibold text-zinc-400">
-              suất
-            </span>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-1.5 text-xs text-zinc-400">
-            <div className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/40 px-2.5 py-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              Sắp chiếu
-            </div>
-            <div className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/40 px-2.5 py-1.5">
-              <span className="h-2 w-2 rounded-full bg-yellow-400" />
-              Đang chiếu
-            </div>
-            <div className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/40 px-2.5 py-1.5">
-              <span className="h-2 w-2 rounded-full bg-zinc-500" />
-              Đã kết thúc
-            </div>
-            <div className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/40 px-2.5 py-1.5">
-              <span className="h-2 w-2 rounded-full bg-red-400" />
-              Đã hủy
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="space-y-3">
-        {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-700 bg-zinc-950/40 p-5 text-center text-sm text-zinc-400">
-            Không có suất chiếu trong ngày.
+          <div className="space-y-3">
+            {filtered.length === 0 ? (
+              <div className="rounded-2xl border border-zinc-700 bg-zinc-950/40 p-5 text-center text-sm text-zinc-400">
+                Không có suất chiếu trong ngày.
+              </div>
+            ) : (
+              filtered.map((st) => (
+                <ShowtimeCard
+                  key={st.id}
+                  showtime={{
+                    ...st,
+                    isPast: isPastCalendarDate(st.date),
+                  }}
+                  onEdit={() => openEdit(st)}
+                  onDelete={() => setDeleteTarget(st)}
+                />
+              ))
+            )}
           </div>
-        ) : (
-          filtered.map((st) => (
-            <ShowtimeCard
-              key={st.id}
-              showtime={{
-                ...st,
-                isPast: isPastCalendarDate(st.date),
-              }}
-              onEdit={() => openEdit(st)}
-              onDelete={() => setDeleteTarget(st)}
-            />
-          ))
-        )}
-      </div>
+        </>
+      ) : (
+        <StaffShowtimeTimeline
+          showtimes={showtimes}
+          rooms={roomsList}
+          selectedDate={selectedDate}
+          onEditShowtime={openEdit}
+          onAddShowtimeAtTime={(roomId, time) => {
+            const firstMovie = moviesList[0];
+            const firstRoom = roomOptions.find((r) => String(r.id) === String(roomId));
+            const firstMovieStatus = normalizeMovieStatus(firstMovie?.status);
+            const forceSpecialForComingSoon = firstMovieStatus === "coming_soon";
+            const firstLanguage =
+              firstMovie?.languageOptions?.[0] ||
+              availableLanguageOptions[0] ||
+              DEFAULT_LANGUAGE_OPTION;
+
+            const initial = {
+              id: makeId("st"),
+              movieId: firstMovie?.id || "",
+              movieTitle: firstMovie?.title || "",
+              cinemaId: user?.cinema_id || firstRoom?.cinemaId || null,
+              date: selectedDate,
+              startTime: time,
+              start: `${selectedDate}T${time}:00`,
+              end: durationToEnd(
+                `${selectedDate}T${time}:00`,
+                firstMovie?.duration || 120
+              ),
+              duration: firstMovie?.duration || 120,
+              roomId: roomId,
+              room: firstRoom?.name || "",
+              format: firstRoom?.type || formatOptions[0] || "",
+              isSpecial: forceSpecialForComingSoon,
+              special: forceSpecialForComingSoon,
+              languageCode: firstLanguage.value,
+              language: firstLanguage.value,
+              status: "scheduled",
+            };
+            setEditModal({ mode: "create", data: initial });
+          }}
+        />
+      )}
 
       {editModal ? (
         <EditShowtimeModal
