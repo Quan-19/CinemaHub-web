@@ -683,7 +683,7 @@ export default function ShowtimeModal({
 
             <div className="relative w-36">
               <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40 text-xs font-medium">
-                ₫
+                 VNĐ
               </span>
               <input
                 type="text"

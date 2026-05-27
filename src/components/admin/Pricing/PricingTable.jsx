@@ -33,7 +33,7 @@ export default function PricingTable({ data, onEdit, onDelete, onView, onToggleA
 
   const formatPrice = (price) => {
     if (!price && price !== 0) return '---';
-    return price.toLocaleString() + '₫';
+    return price.toLocaleString() + " VNĐ";
   };
 
   return (

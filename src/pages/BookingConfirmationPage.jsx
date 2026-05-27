@@ -97,7 +97,7 @@ const formatDateTimeVI = (showtimeData) => {
 const formatCurrency = (amount) => {
   const numeric = Number(amount);
   const safe = Number.isFinite(numeric) ? Math.round(numeric) : 0;
-  return safe.toLocaleString("vi-VN") + "₫";
+  return safe.toLocaleString("vi-VN") + " VNĐ";
 };
 
 const POSTER_PLACEHOLDER =
@@ -490,7 +490,7 @@ export default function BookingConfirmationPage() {
           ...food,
           price: Math.round(parseFloat(food.price)),
           price_formatted:
-            Math.round(parseFloat(food.price)).toLocaleString("vi-VN") + "₫",
+            Math.round(parseFloat(food.price)).toLocaleString("vi-VN") + " VNĐ",
         }));
 
         setFoods(formattedFoods);
@@ -536,7 +536,7 @@ export default function BookingConfirmationPage() {
   const formatCurrency = (amount) => {
     const numeric = Number(amount);
     const safe = Number.isFinite(numeric) ? Math.round(numeric) : 0;
-    return safe.toLocaleString("vi-VN") + "₫";
+    return safe.toLocaleString("vi-VN") + " VNĐ";
   };
 
   // ========== TÍNH TOÁN GIÁ ==========

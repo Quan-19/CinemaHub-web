@@ -136,7 +136,7 @@ const EXTRA_PROMOTIONS = [
 
 function formatMoneyVnd(value) {
   const n = Number(value || 0);
-  return `${n.toLocaleString("vi-VN")}đ`;
+  return `${n.toLocaleString("vi-VN")} VNĐ`;
 }
 
 function formatDiscount(promo) {

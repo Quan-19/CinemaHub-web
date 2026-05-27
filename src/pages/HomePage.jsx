@@ -23,6 +23,7 @@ import {
   X,
   Film,
   TrendingUp,
+  Newspaper,
   ChevronRight as ChevronRightIcon,
 } from "lucide-react";
 
@@ -84,11 +85,10 @@ const PremiumMovieCard = ({ movie, index }) => {
 
         <div className="absolute top-3 left-3 z-10">
           <span
-            className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase backdrop-blur-md ${
-              isNowShowing
-                ? "bg-red-500/90 text-white"
-                : "bg-yellow-500/90 text-black"
-            }`}
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase backdrop-blur-md ${isNowShowing
+              ? "bg-red-500/90 text-white"
+              : "bg-yellow-500/90 text-black"
+              }`}
           >
             {isNowShowing ? "Đang chiếu" : "Sắp chiếu"}
           </span>
@@ -338,13 +338,12 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
                 <span>{movie.duration} phút</span>
               </div>
               <div
-                className={`px-2 md:px-3 py-1 rounded-full text-xs font-bold ${
-                  movie.age_rating === "T18"
-                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                    : movie.age_rating === "T16"
+                className={`px-2 md:px-3 py-1 rounded-full text-xs font-bold ${movie.age_rating === "T18"
+                  ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                  : movie.age_rating === "T16"
                     ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
                     : "bg-green-500/20 text-green-400 border border-green-500/30"
-                }`}
+                  }`}
               >
                 {movie.age_rating || "T13"}
               </div>
@@ -377,7 +376,7 @@ const ParallaxHero = ({ movie, onBook, onTrailer }) => {
 const CinemaCard = ({ cinema }) => {
   const navigate = useNavigate();
   const brandColors = {
-    EbizCinema: "#c9a0a2",
+    EbizCinema: "#e50914",
   };
   const color = brandColors[cinema.brand] || "#e50914";
   const cinemaId = cinema.cinema_id ?? cinema.id;
@@ -388,17 +387,32 @@ const CinemaCard = ({ cinema }) => {
     }
   };
 
+  const getShadowColor = (hex) => {
+    if (hex === '#e50914') return '229, 9, 20';
+    return '229, 9, 20';
+  };
+  const shadowRgb = getShadowColor(color);
+
   return (
-    <GlowCard
-      className="bg-cinema-surface border border-white/10 p-4"
+    <motion.div
+      whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
+      whileTap={{ scale: 0.98 }}
       onClick={handleClick}
+      className="group relative rounded-2xl overflow-hidden cursor-pointer bg-cinema-surface border border-white/10 p-4"
     >
-      <div className="flex items-start gap-3">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+      <div
+        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{
+          boxShadow: `inset 0 0 0 1px rgba(${shadowRgb}, 0.5), 0 0 20px rgba(${shadowRgb}, 0.2)`,
+        }}
+      />
+      <div className="flex items-start gap-3 relative z-10">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
+          className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 uppercase"
           style={{ background: color }}
         >
-          Ebiz
+          {cinema.brand?.replace("Cinema", "") || "Ebiz"}
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-white font-semibold text-sm mb-1 line-clamp-1">
@@ -410,7 +424,7 @@ const CinemaCard = ({ cinema }) => {
           <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-white transition-colors" />
         </div>
       </div>
-    </GlowCard>
+    </motion.div>
   );
 };
 
@@ -428,7 +442,7 @@ const HomePromotionCard = ({ promo, index }) => {
       return `-${pct}%`;
     } else if (discountType === "value" || discountType === "fixed") {
       const value = discountValue || discountPercent || 0;
-      return `-${value.toLocaleString()}đ`;
+      return `-${value.toLocaleString()} VNĐ`;
     }
     return "Ưu đãi";
   };
@@ -462,11 +476,11 @@ const HomePromotionCard = ({ promo, index }) => {
               }}
             ></div>
           </div>
-          <div className="relative z-10 flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-red-600 text-white shadow-lg rotate-[-5deg] group-hover:rotate-0 transition-transform duration-500">
-            <span className="text-[8px] font-black uppercase leading-none opacity-80">
+          <div className="relative z-10 flex flex-col items-center justify-center w-[60px] min-h-[60px] p-1 rounded-xl bg-red-600 text-white shadow-lg rotate-[-5deg] group-hover:rotate-0 transition-transform duration-500">
+            <span className="text-[9px] font-black uppercase leading-none opacity-80 mb-1 text-center w-full">
               Giảm
             </span>
-            <span className="text-sm font-black leading-none">
+            <span className="text-sm font-black leading-tight text-center w-full break-words">
               {getDiscountDisplay(promo).replace("-", "")}
             </span>
           </div>
@@ -514,7 +528,6 @@ const HomePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [heroIndex, setHeroIndex] = useState(0);
-  const [allMovies, setAllMovies] = useState([]);
   const [nowShowing, setNowShowing] = useState([]);
   const [comingSoon, setComingSoon] = useState([]);
   const [promotions, setPromotions] = useState([]);
@@ -554,10 +567,10 @@ const HomePage = () => {
             votes: Number.isFinite(Number(m.votes))
               ? Number(m.votes)
               : Number.isFinite(reviewCount) && reviewCount > 0
-              ? reviewCount
-              : Number.isFinite(tickets)
-              ? tickets
-              : 0,
+                ? reviewCount
+                : Number.isFinite(tickets)
+                  ? tickets
+                  : 0,
             poster: m.poster,
             backdrop: m.backdrop || m.poster,
             description: m.description || "",
@@ -575,8 +588,6 @@ const HomePage = () => {
             views: Number.isFinite(views) ? views : 0,
           };
         });
-
-        setAllMovies(formattedMovies);
 
         setNowShowing(
           formattedMovies.filter(
@@ -598,8 +609,8 @@ const HomePage = () => {
           const promoData = Array.isArray(promoPayload?.data)
             ? promoPayload.data
             : Array.isArray(promoPayload)
-            ? promoPayload
-            : [];
+              ? promoPayload
+              : [];
           setPromotions(promoData);
         } catch (err) {
           console.error("Error fetching promotions:", err);
@@ -633,6 +644,13 @@ const HomePage = () => {
 
   const featured = nowShowing.slice(0, 5);
   const currentHero = featured[heroIndex];
+  const cinemaNewsItems = [...nowShowing, ...comingSoon]
+    .sort(
+      (a, b) =>
+        new Date(b.created_at || b.releaseDate || 0).getTime() -
+        new Date(a.created_at || a.releaseDate || 0).getTime()
+    )
+    .slice(0, 6);
 
   // Auto slide
   useEffect(() => {
@@ -719,11 +737,10 @@ const HomePage = () => {
                     setHeroIndex((idx) => (idx + 1) % featured.length);
                   }, 6000);
                 }}
-                className={`transition-all duration-300 rounded-full ${
-                  i === heroIndex
-                    ? "w-8 h-2 bg-red-500"
-                    : "w-2 h-2 bg-white/30 hover:bg-white/60"
-                }`}
+                className={`transition-all duration-300 rounded-full ${i === heroIndex
+                  ? "w-8 h-2 bg-red-500"
+                  : "w-2 h-2 bg-white/30 hover:bg-white/60"
+                  }`}
               />
             ))}
           </div>
@@ -776,10 +793,120 @@ const HomePage = () => {
             </AnimatedSection>
           )}
 
-          {/* Now Showing Section */}
+          {/* Phim Hot Tuần Này */}
           {nowShowing.length > 0 && (
             <AnimatedSection>
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center justify-center gap-4 md:gap-8 mb-10 mt-6 px-4">
+                <div className="flex-1 h-[4px] border-y border-zinc-400/80 max-w-[80px] md:max-w-[200px]" />
+                
+                {/* Modern Running LED Text Container */}
+                <div className="relative">
+                  <style>{`
+                    @keyframes led-text-flow {
+                      0% { background-position: 0% 50%; }
+                      100% { background-position: 200% 50%; }
+                    }
+                    .led-title {
+                      background: linear-gradient(90deg, #a16207 0%, #eab308 25%, #fff 50%, #eab308 75%, #a16207 100%);
+                      background-size: 200% auto;
+                      -webkit-background-clip: text;
+                      -webkit-text-fill-color: transparent;
+                      animation: led-text-flow 4s linear infinite;
+                      filter: drop-shadow(0 0 10px rgba(234, 179, 8, 0.6));
+                    }
+                  `}</style>
+                  <h2 className="led-title text-2xl md:text-3xl font-black text-center tracking-widest uppercase select-none">
+                    Xu Hướng Tuần Này
+                  </h2>
+                </div>
+
+                <div className="flex-1 h-[4px] border-y border-zinc-400/80 max-w-[80px] md:max-w-[200px]" />
+              </div>
+              <div className="flex gap-12 overflow-x-auto pb-6 scrollbar-none justify-start sm:justify-center">
+                {[...nowShowing]
+                  .sort((a, b) => (b.tickets || 0) - (a.tickets || 0))
+                  .slice(0, 4)
+                  .map((movie, idx) => (
+                    <motion.div
+                      key={`trending-${movie.movie_id}`}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1, duration: 0.5 }}
+                      whileHover={{ y: -10 }}
+                      className="group relative cursor-pointer flex flex-col w-[200px] md:w-[220px] flex-shrink-0"
+                      onClick={() => navigate(`/movies/${movie.movie_id}`)}
+                    >
+                      {/* Poster Container with Premium Shadows and Effects */}
+                      <div className="relative aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl mb-4 bg-zinc-950 border border-white/10 transition-all duration-500 group-hover:border-orange-500/50 group-hover:shadow-[0_0_25px_rgba(249,115,22,0.15)]">
+                        <img
+                          src={movie.poster}
+                          alt={movie.title}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          onError={(e) => {
+                            e.target.src = "https://via.placeholder.com/300x450?text=No+Image";
+                          }}
+                        />
+                        {/* Elegant Dark Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
+
+                        {/* Age Rating Badge */}
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
+                          <div className="px-3 py-1 rounded bg-zinc-900/95 backdrop-blur-md shadow-lg border border-white/10 flex items-center justify-center">
+                            <span className="text-white text-[10px] font-black tracking-wider uppercase">
+                              {movie.age_rating || "T13"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Hover Action Button (Restored to Original Red Style) */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/60 backdrop-blur-sm">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/movies/${movie.movie_id}`);
+                            }}
+                            className="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-bold flex items-center gap-2 transform scale-90 group-hover:scale-100 transition-transform"
+                          >
+                            <Ticket className="w-4 h-4" />
+                            Đặt vé
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Rank Number & Titles */}
+                      <div className="flex items-center gap-2 mt-auto px-1">
+                        <div className="relative flex-shrink-0">
+                          <span
+                            className="text-6xl lg:text-7xl font-sans font-black leading-none tracking-tighter"
+                            style={{
+                              background: "linear-gradient(180deg, #ffffff 0%, #f8e1a1 30%, #c49a45 100%)",
+                              WebkitBackgroundClip: "text",
+                              WebkitTextFillColor: "transparent",
+                              filter: "drop-shadow(2px 3px 6px rgba(0,0,0,0.5))"
+                            }}
+                          >
+                            {idx + 1}
+                          </span>
+                        </div>
+                        <div className="flex flex-col justify-center flex-1 min-w-0 pb-1">
+                          <h3 className="text-white font-bold text-sm md:text-base line-clamp-1 group-hover:text-orange-400 transition-colors">
+                            {movie.title}
+                          </h3>
+                          <p className="text-zinc-500 text-[11px] line-clamp-1 mt-0.5 font-medium">
+                            {movie.originalTitle || movie.title}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+              </div>
+            </AnimatedSection>
+          )}
+
+          {/* Now Showing Section */}
+          {nowShowing.length > 0 && (
+            <AnimatedSection delay={0.1}>
+              <div className="flex justify-between items-center mb-6 mt-12">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-8 rounded-full bg-red-500" />
                   <h2 className="text-xl md:text-2xl font-bold text-white">
@@ -804,46 +931,6 @@ const HomePage = () => {
                     index={idx}
                   />
                 ))}
-              </div>
-            </AnimatedSection>
-          )}
-
-          {/* Phim Hot Tuần Này */}
-          {nowShowing.length > 0 && (
-            <AnimatedSection delay={0.1}>
-              <div className="flex justify-between items-center mb-6 mt-12">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-8 rounded-full bg-orange-500" />
-                  <h2 className="text-xl md:text-2xl font-bold text-white">
-                    Phim Hot Tuần Này
-                  </h2>
-                </div>
-                <motion.button
-                  whileHover={{ x: 5 }}
-                  onClick={() => navigate("/movies?sort=top-rated")}
-                  className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
-                >
-                  Xem tất cả
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </motion.button>
-              </div>
-
-              <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-none">
-                {[...nowShowing]
-                  .sort(
-                    (a, b) =>
-                      (b.tickets || 0) - (a.tickets || 0) ||
-                      (b.views || 0) - (a.views || 0) ||
-                      (b.rating || b.score || 0) - (a.rating || a.score || 0)
-                  )
-                  .slice(0, 10)
-                  .map((movie, idx) => (
-                    <PremiumMovieCard
-                      key={`hot-${movie.movie_id}`}
-                      movie={movie}
-                      index={idx}
-                    />
-                  ))}
               </div>
             </AnimatedSection>
           )}
@@ -939,6 +1026,78 @@ const HomePage = () => {
                     promo={promo}
                     index={idx}
                   />
+                ))}
+              </div>
+            </AnimatedSection>
+          )}
+
+          {/* Tin tức điện ảnh */}
+          {cinemaNewsItems.length > 0 && (
+            <AnimatedSection delay={0.45}>
+              <div className="flex justify-between items-center mb-6 mt-12">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-8 rounded-full bg-blue-500" />
+                  <h2 className="text-xl md:text-2xl font-bold text-white">
+                    Tin tức điện ảnh
+                  </h2>
+                </div>
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  onClick={() => navigate("/movies")}
+                  className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
+                >
+                  Xem phim
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </div>
+
+              <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-none">
+                {cinemaNewsItems.map((m, idx) => (
+                  <GlowCard
+                    key={m.movie_id || idx}
+                    onClick={() => navigate(`/movies/${m.movie_id}`)}
+                    className="bg-cinema-surface border border-white/10 p-5 w-[300px] md:w-[400px] shrink-0"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-blue-500/15 border border-blue-500/20 flex items-center justify-center shrink-0">
+                        <Newspaper className="w-6 h-6 text-blue-400" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${m.status === "now_showing"
+                              ? "bg-red-500/15 text-red-300 border border-red-500/20"
+                              : "bg-yellow-500/15 text-yellow-300 border border-yellow-500/20"
+                              }`}
+                          >
+                            {m.status === "now_showing"
+                              ? "Đang chiếu"
+                              : "Sắp chiếu"}
+                          </span>
+                          {(m.created_at || m.releaseDate) && (
+                            <span className="text-[10px] font-semibold text-zinc-500">
+                              {
+                                String(m.created_at || m.releaseDate).split(
+                                  "T"
+                                )[0]
+                              }
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-white font-bold text-base line-clamp-2">
+                          {m.title}
+                        </h3>
+                        <p className="text-zinc-400 text-sm mt-2 line-clamp-3">
+                          {m.description ||
+                            "Khám phá thông tin chi tiết về bộ phim này."}
+                        </p>
+                        <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-zinc-300">
+                          Xem chi tiết
+                          <ArrowRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+                  </GlowCard>
                 ))}
               </div>
             </AnimatedSection>

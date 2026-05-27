@@ -18,7 +18,7 @@ export default function ShowtimesTable({
   const formatMoney = (value) => {
     const amount = Number(value);
     if (!Number.isFinite(amount) || amount <= 0) return "—";
-    return `${amount.toLocaleString()}₫`;
+    return `${amount.toLocaleString()} VNĐ`;
   };
 
   const totalPages = Math.ceil(showtimes.length / itemsPerPage);

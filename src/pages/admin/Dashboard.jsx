@@ -1,9 +1,6 @@
 import {
   AreaChart,
   Area,
-  BarChart,
-  Bar,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -11,30 +8,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import {
-  DollarSign,
-  Ticket,
-  Users,
-  Film,
-  Clapperboard,
-  TrendingUp,
-  ArrowUpRight,
-  ArrowDownRight,
-  ShoppingBag,
-  Activity,
-  History,
-  Star,
-} from "lucide-react";
+import { DollarSign, Ticket, Users, Film, Clapperboard } from "lucide-react";
 
 import { useMemo, useState, useEffect } from "react";
 import axios from "axios";
 /* ===================== STAT CARD ===================== */
 
 const formatCurrency = (value) =>
-  new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(Number(value || 0));
+  new Intl.NumberFormat("vi-VN").format(Number(value || 0)) + " VNĐ";
 
 const formatNumber = (value) =>
   new Intl.NumberFormat("vi-VN").format(Number(value || 0));
@@ -54,33 +35,27 @@ const getQuarterMonthRange = (quarter) => {
   }
 };
 
-const StatCard = ({ icon: Icon, accentClassName, value, title, subtitle, trend }) => (
-  <div className="cinema-surface p-5 group hover:border-red-500/30 transition-all duration-300">
-    <div className="flex items-start justify-between">
+const StatCard = ({ icon: Icon, accentClassName, value, title, subtitle }) => (
+  <div className="cinema-surface p-4 sm:p-5">
+    <div className="flex items-start justify-between gap-4">
       <div
         className={[
-          "inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-transform group-hover:scale-110 duration-300",
+          "inline-flex h-10 w-10 items-center justify-center rounded-2xl",
           accentClassName,
         ].join(" ")}
       >
-        <Icon className="h-6 w-6" />
+        <Icon className="h-5 w-5" />
       </div>
-      {trend && (
-        <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${trend > 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-          {trend > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-          {Math.abs(trend)}%
+      {subtitle ? (
+        <div className="text-right text-xs font-medium text-zinc-400">
+          {subtitle}
         </div>
-      )}
+      ) : null}
     </div>
 
-    <div className="mt-5">
-      <div className="flex items-baseline gap-2">
-        <div className="text-3xl font-black tracking-tight text-white">{value}</div>
-      </div>
-      <div className="mt-1 flex items-center justify-between">
-        <div className="text-sm font-medium text-zinc-400 uppercase tracking-wider">{title}</div>
-        {subtitle && <div className="text-[10px] text-zinc-500 font-bold">{subtitle}</div>}
-      </div>
+    <div className="mt-4">
+      <div className="text-3xl font-bold tracking-tight">{value}</div>
+      <div className="mt-1 text-sm text-zinc-400">{title}</div>
     </div>
   </div>
 );
@@ -169,7 +144,7 @@ export default function Dashboard() {
     return Array.from({ length: daysInMonth }, (_, i) => {
       const dayNumber = i + 1;
       return {
-        period: `Ngày ${dayNumber}`,
+        period: `D${dayNumber}`,
         revenue: dayToRevenue.get(dayNumber) || 0,
       };
     });
@@ -201,11 +176,13 @@ export default function Dashboard() {
 
   const revenueByQuarter = useMemo(() => {
     const quarterToRevenue = new Map(
-      revenueByQuarterRaw.map((r) => [Number(r.quarter), Number(r.revenue || 0)])
+      revenueByQuarterRaw.map((r) => [
+        Number(r.quarter),
+        Number(r.revenue || 0),
+      ]),
     );
     return [1, 2, 3, 4].map((q) => ({
       quarter: q,
-      period: `Q${q}`,
       revenue: quarterToRevenue.get(q) || 0,
     }));
   }, [revenueByQuarterRaw]);
@@ -323,221 +300,291 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-black sm:text-3xl text-white">Dashboard Thống Kê</h1>
-        <p className="text-sm text-zinc-500 font-medium">
-          Dữ liệu hệ thống cập nhật lúc: {todayLabel}
+        <h1 className="text-2xl font-bold sm:text-3xl">Dashboard</h1>
+        <p className="text-sm text-zinc-400">
+          Cập nhật theo ngày: {todayLabel}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          icon={DollarSign}
-          accentClassName="bg-red-600/20 text-red-500 shadow-[0_0_20px_rgba(220,38,38,0.2)]"
-          value={formatCurrency(data?.todayRevenue)}
-          title="Doanh thu ngày"
-          subtitle={todayLabel}
-          trend={12.5}
-        />
-        <StatCard
-          icon={Ticket}
-          accentClassName="bg-amber-500/20 text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.2)]"
-          value={formatNumber(data?.todayTickets)}
-          title="Vé bán ngày"
-          subtitle={todayLabel}
-          trend={8.2}
-        />
-        <StatCard
-          icon={Clapperboard}
-          accentClassName="bg-emerald-500/20 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
-          value={formatNumber(data?.showtimes)}
-          title="Suất chiếu hôm nay"
-          subtitle={todayLabel}
-        />
-        <StatCard
-          icon={Users}
-          accentClassName="bg-blue-500/20 text-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.2)]"
-          value={formatNumber(data?.users)}
-          title="Tổng người dùng"
-          trend={2.4}
-        />
-      </div>
+      <section>
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="text-base font-semibold">Hôm nay</h2>
+          <span className="text-xs text-zinc-400">
+            Chỉ số phát sinh trong ngày
+          </span>
+        </div>
+        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StatCard
+            icon={DollarSign}
+            accentClassName="bg-cinema-primary/15 text-cinema-primary"
+            value={formatCurrency(data?.todayRevenue)}
+            title="Doanh thu"
+            subtitle={todayLabel}
+          />
+          <StatCard
+            icon={Ticket}
+            accentClassName="bg-amber-500/15 text-amber-300"
+            value={formatNumber(data?.todayTickets)}
+            title="Vé đã bán"
+            subtitle={todayLabel}
+          />
+          <StatCard
+            icon={Clapperboard}
+            accentClassName="bg-emerald-500/15 text-emerald-400"
+            value={formatNumber(data?.showtimes)}
+            title="Suất chiếu"
+            subtitle={todayLabel}
+          />
+        </div>
+      </section>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Unified Revenue Analytics Card */}
-          <div className="cinema-surface p-6">
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between mb-8">
-              <div>
-                <h2 className="text-xl font-black text-white flex items-center gap-3">
-                  <TrendingUp size={24} className="text-red-600" />
-                  Phân tích doanh thu
-                </h2>
-                <p className="text-xs text-zinc-500 font-medium">Theo dõi biến động dòng tiền theo ngày và tháng</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-zinc-600 uppercase">Xem theo</label>
-                  <select
-                    className="rounded-lg border border-white/5 bg-zinc-900 px-3 py-1.5 text-xs font-bold text-zinc-300 outline-none focus:border-red-500/50"
-                    value={revenueView}
-                    onChange={(e) => setRevenueView(e.target.value)}
+      <section>
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="text-base font-semibold">Tổng quan</h2>
+          <span className="text-xs text-zinc-400">
+            Tích lũy (không giới hạn thời gian)
+          </span>
+        </div>
+        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StatCard
+            icon={Ticket}
+            accentClassName="bg-cinema-primary/10 text-cinema-primary"
+            value={formatNumber(data?.tickets)}
+            title="Tổng vé đã bán"
+          />
+          <StatCard
+            icon={Users}
+            accentClassName="bg-violet-500/15 text-violet-300"
+            value={formatNumber(data?.users)}
+            title="Tổng người dùng"
+          />
+          <StatCard
+            icon={Film}
+            accentClassName="bg-sky-500/15 text-sky-300"
+            value={formatNumber(data?.movies)}
+            title="Tổng phim"
+          />
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="cinema-surface p-4 sm:p-5 lg:col-span-2">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+            <h2 className="text-base font-semibold">Doanh thu</h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <label
+                className="text-xs font-semibold text-zinc-400"
+                htmlFor="admin-dashboard-revenue-view"
+              >
+                Xem
+              </label>
+              <select
+                id="admin-dashboard-revenue-view"
+                className="rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-2 text-xs font-semibold text-zinc-100 outline-none"
+                value={revenueView}
+                onChange={(e) => setRevenueView(e.target.value)}
+              >
+                <option value="month">Theo tháng</option>
+                <option value="day">Theo ngày</option>
+                <option value="quarter">Theo quý</option>
+              </select>
+
+              <label
+                className="text-xs font-semibold text-zinc-400"
+                htmlFor="admin-dashboard-year"
+              >
+                Năm
+              </label>
+              <select
+                id="admin-dashboard-year"
+                className="rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-2 text-xs font-semibold text-zinc-100 outline-none"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+              >
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+
+              {revenueView === "day" ? (
+                <>
+                  <label
+                    className="text-xs font-semibold text-zinc-400"
+                    htmlFor="admin-dashboard-month"
                   >
-                    <option value="month">Từng Tháng</option>
-                    <option value="day">Từng Ngày</option>
-                    <option value="quarter">Từng Quý</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-zinc-600 uppercase">Năm</label>
+                    Tháng
+                  </label>
                   <select
-                    className="rounded-lg border border-white/5 bg-zinc-900 px-3 py-1.5 text-xs font-bold text-zinc-300 outline-none focus:border-red-500/50"
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    id="admin-dashboard-month"
+                    className="rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-2 text-xs font-semibold text-zinc-100 outline-none"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
                   >
-                    {yearOptions.map((y) => (
-                      <option key={y} value={y}>{y}</option>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                      <option key={m} value={m}>
+                        Tháng {m}
+                      </option>
                     ))}
                   </select>
-                </div>
-                {revenueView === "day" && (
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-zinc-600 uppercase">Tháng</label>
-                    <select
-                      className="rounded-lg border border-white/5 bg-zinc-900 px-3 py-1.5 text-xs font-bold text-zinc-300 outline-none focus:border-emerald-500/50"
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                    >
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                        <option key={m} value={m}>T{m}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                {revenueView === "quarter" && (
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-zinc-600 uppercase">Quý</label>
-                    <select
-                      className="rounded-lg border border-white/5 bg-zinc-900 px-3 py-1.5 text-xs font-bold text-zinc-300 outline-none focus:border-blue-500/50"
-                      value={selectedQuarter}
-                      onChange={(e) => setSelectedQuarter(Number(e.target.value))}
-                    >
-                      {[1, 2, 3, 4].map((q) => (
-                        <option key={q} value={q}>Quý {q}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-            </div>
+                </>
+              ) : null}
 
-            <div className="h-[320px] w-full">
-              {revenueView === "month" ? (
-                revenueData.length ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorRevMonth" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#e50914" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#e50914" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 10, fontWeight: 600 }} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 10, fontWeight: 600 }} tickFormatter={(v) => `${(v/1000000).toFixed(1)}M`} width={40} />
-                      <Tooltip content={<RevenueTooltip />} cursor={{ stroke: '#e50914', strokeWidth: 1 }} />
-                      <Area type="monotone" dataKey="revenue" stroke="#e50914" strokeWidth={3} fillOpacity={1} fill="url(#colorRevMonth)" animationDuration={1000} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : <div className="flex h-full items-center justify-center text-zinc-500 italic">Đang tải...</div>
-              ) : revenueView === "day" ? (
-                revenueByDayData.length ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={revenueByDayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorRevDay" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 10, fontWeight: 500 }} tickFormatter={(v) => v.replace('Ngày ', '')} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 10, fontWeight: 600 }} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} width={40} />
-                      <Tooltip content={<RevenueTooltip />} cursor={{ stroke: '#10b981', strokeWidth: 1 }} />
-                      <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevDay)" animationDuration={1000} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : <div className="flex h-full items-center justify-center text-zinc-500 italic">Không có dữ liệu ngày</div>
-              ) : (
-                revenueByQuarterMonthsData.length ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={revenueByQuarterMonthsData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorRevQuarter" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 10, fontWeight: 500 }} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 10, fontWeight: 600 }} tickFormatter={(v) => `${(v/1000000).toFixed(1)}M`} width={40} />
-                      <Tooltip content={<RevenueTooltip />} cursor={{ stroke: '#3b82f6', strokeWidth: 1 }} />
-                      <Area type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorRevQuarter)" animationDuration={1000} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : <div className="flex h-full items-center justify-center text-zinc-500 italic">Không có dữ liệu quý</div>
-              )}
+              {revenueView === "quarter" ? (
+                <>
+                  <label
+                    className="text-xs font-semibold text-zinc-400"
+                    htmlFor="admin-dashboard-quarter"
+                  >
+                    Quý
+                  </label>
+                  <select
+                    id="admin-dashboard-quarter"
+                    className="rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-2 text-xs font-semibold text-zinc-100 outline-none"
+                    value={selectedQuarter}
+                    onChange={(e) => setSelectedQuarter(Number(e.target.value))}
+                  >
+                    {[1, 2, 3, 4].map((q) => (
+                      <option key={q} value={q}>
+                        Quý {q} ({getQuarterMonthRange(q)})
+                      </option>
+                    ))}
+                  </select>
+                </>
+              ) : null}
             </div>
           </div>
 
-          {/* Unified Statistics Overview Card */}
-          <div className="cinema-surface p-6">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-xl font-black text-white flex items-center gap-3">
-                  <BarChart size={24} className="text-blue-500" />
-                  Thống kê chi tiết
-                </h2>
-                <p className="text-xs text-zinc-500 font-medium">Bảng xếp hạng phim và doanh thu theo kỳ</p>
+          <div className="mt-4">
+            {chartData.length ? (
+              <ResponsiveContainer width="100%" height={260}>
+                <AreaChart
+                  data={chartData}
+                  margin={{ top: 8, right: 28, left: 0, bottom: 8 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgba(255,255,255,0.06)"
+                  />
+                  <XAxis
+                    dataKey="period"
+                    stroke="rgba(255,255,255,0.45)"
+                    interval={revenueView === "day" ? "preserveStartEnd" : 0}
+                    tick={{ fontSize: 11 }}
+                    tickMargin={8}
+                    padding={{ left: 8, right: 16 }}
+                  />
+                  <YAxis
+                    stroke="rgba(255,255,255,0.45)"
+                    width={110}
+                    tick={{ fontSize: 11 }}
+                    tickFormatter={(v) => `${formatNumber(v)}\u00A0 VNĐ`}
+                  />
+                  <Tooltip content={<RevenueTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="var(--color-cinema-primary)"
+                    fill="var(--color-cinema-primary)"
+                    fillOpacity={0.14}
+                    dot={{ r: 3 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-sm text-zinc-400">
+                Chưa có dữ liệu doanh thu.
               </div>
-              <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl">
-                <span className="px-3 py-1.5 rounded-lg bg-red-600 text-[10px] font-black text-white uppercase tracking-widest">Tổng hợp</span>
-              </div>
-            </div>
+            )}
+          </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
-              {/* Top Movies Sub-section */}
+          {revenueView === "month" && latestMonthLabel ? (
+            <div className="mt-3 text-sm text-zinc-400">
+              Tháng gần nhất:{" "}
+              <span className="font-semibold text-zinc-100">
+                {latestMonthLabel}
+              </span>{" "}
+              —{" "}
+              <span className="font-semibold text-zinc-100">
+                {formatCurrency(latestRevenuePoint?.revenue)}
+              </span>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="space-y-4">
+          <div className="cinema-surface p-4 sm:p-5">
+            <h2 className="text-base font-semibold">Xếp hạng doanh thu phim</h2>
+            <p className="mt-1 text-xs text-zinc-400">Theo số vé (tích lũy)</p>
+
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs font-semibold text-zinc-400">
+                    <th className="pb-2">Phim</th>
+                    <th className="pb-2 text-right">Vé</th>
+                    <th className="pb-2 text-right">Doanh thu</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data?.topMovies || []).map((m) => (
+                    <tr key={m.title} className="border-t border-white/5">
+                      <td className="py-2 pr-2">
+                        <div className="max-w-[220px] truncate font-medium text-zinc-100">
+                          {m.title}
+                        </div>
+                      </td>
+                      <td className="py-2 text-right text-zinc-200">
+                        {formatNumber(m.tickets)}
+                      </td>
+                      <td className="py-2 text-right text-zinc-200">
+                        {formatCurrency(m.revenue)}
+                      </td>
+                    </tr>
+                  ))}
+
+                  {!data?.topMovies?.length ? (
+                    <tr>
+                      <td colSpan={3} className="py-3 text-sm text-zinc-400">
+                        Chưa có dữ liệu.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="cinema-surface p-4 sm:p-5">
+            <h2 className="text-base font-semibold">Doanh thu theo kỳ</h2>
+            <p className="mt-1 text-xs text-zinc-400">
+              Rõ theo tháng / quý / năm
+            </p>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-black text-zinc-300 uppercase tracking-widest flex items-center gap-2">
-                    <Star size={16} className="text-yellow-500" />
-                    Top Phim Doanh Thu
-                  </h3>
+                <div className="text-xs font-semibold text-zinc-400">
+                  Theo quý (Năm {selectedYear})
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
+                <div className="mt-2 overflow-x-auto">
+                  <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-[10px] font-black text-zinc-600 uppercase tracking-widest border-b border-white/5">
-                        <th className="pb-3 pr-4">Hạng</th>
-                        <th className="pb-3">Phim</th>
-                        <th className="pb-3 text-right px-4">Số vé</th>
-                        <th className="pb-3 text-right">Doanh thu</th>
+                      <tr className="text-left text-xs font-semibold text-zinc-400">
+                        <th className="pb-2">Quý</th>
+                        <th className="pb-2 text-right">Doanh thu</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {(data?.topMovies || []).map((m, idx) => (
-                        <tr key={idx} className="group hover:bg-white/[0.02] transition-colors">
-                          <td className="py-4 pr-4">
-                            <span className={`text-xs font-black ${idx === 0 ? 'text-red-500' : idx === 1 ? 'text-amber-500' : 'text-zinc-500'}`}>
-                              #{idx + 1}
-                            </span>
+                    <tbody>
+                      {revenueByQuarter.map((q) => (
+                        <tr key={q.quarter} className="border-t border-white/5">
+                          <td className="py-2 font-medium text-zinc-100">
+                            Quý {q.quarter} ({getQuarterMonthRange(q.quarter)})
                           </td>
-                          <td className="py-4 min-w-[150px]">
-                            <div className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors truncate max-w-[200px]">
-                              {m.title}
-                            </div>
+                          <td className="py-2 text-right font-semibold text-zinc-100">
+                            {formatCurrency(q.revenue)}
                           </td>
-                          <td className="py-4 text-right px-4 text-xs font-bold text-zinc-400">{formatNumber(m.tickets)}</td>
-                          <td className="py-4 text-right text-sm font-black text-white">{formatCurrency(m.revenue)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -545,104 +592,48 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Period Stats Sub-section */}
-              <div className="space-y-6">
-                <h3 className="text-sm font-black text-zinc-300 uppercase tracking-widest flex items-center gap-2">
-                  <DollarSign size={16} className="text-emerald-500" />
-                  Doanh thu định kỳ
-                </h3>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="text-[10px] font-black text-zinc-600 uppercase mb-3">Năm {selectedYear} (Quý)</h4>
-                    <div className="space-y-2">
-                      {revenueByQuarter.map((q) => (
-                        <div key={q.quarter} className="flex items-center justify-between p-3 rounded-xl bg-zinc-900/50 border border-white/5 group hover:border-red-500/30 transition-all">
-                          <span className="text-[10px] font-bold text-zinc-500">Quý {q.quarter}</span>
-                          <span className="text-xs font-black text-white">{formatCurrency(q.revenue)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[10px] font-black text-zinc-600 uppercase mb-3">Lịch sử các năm</h4>
-                    <div className="space-y-2 max-h-[190px] overflow-y-auto custom-scrollbar pr-2">
+              <div>
+                <div className="text-xs font-semibold text-zinc-400">
+                  Theo năm
+                </div>
+                <div className="mt-2 overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs font-semibold text-zinc-400">
+                        <th className="pb-2">Năm</th>
+                        <th className="pb-2 text-right">Doanh thu</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                       {revenueByYear.map((y) => (
-                        <div key={y.year} className="flex items-center justify-between p-3 rounded-xl bg-zinc-900/50 border border-white/5 group hover:border-emerald-500/30 transition-all">
-                          <span className="text-[10px] font-bold text-zinc-500">{y.year}</span>
-                          <span className="text-xs font-black text-white">{formatCurrency(y.revenue)}</span>
-                        </div>
+                        <tr key={y.year} className="border-t border-white/5">
+                          <td className="py-2 font-medium text-zinc-100">
+                            {y.year}
+                          </td>
+                          <td className="py-2 text-right font-semibold text-zinc-100">
+                            {formatCurrency(y.revenue)}
+                          </td>
+                        </tr>
                       ))}
-                    </div>
-                  </div>
+
+                      {!revenueByYear.length ? (
+                        <tr>
+                          <td
+                            colSpan={2}
+                            className="py-3 text-sm text-zinc-400"
+                          >
+                            Chưa có dữ liệu.
+                          </td>
+                        </tr>
+                      ) : null}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        <div className="space-y-6">
-          <div className="cinema-surface p-5">
-            <h2 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2 mb-4">
-              <Activity size={16} className="text-amber-500" />
-              Chỉ số tích lũy
-            </h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-red-500/10 text-red-500">
-                    <Ticket size={18} />
-                  </div>
-                  <div>
-                    <div className="text-xs text-zinc-500 font-bold">TỔNG VÉ</div>
-                    <div className="text-lg font-black text-white">{formatNumber(data?.tickets)}</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
-                    <Film size={18} />
-                  </div>
-                  <div>
-                    <div className="text-xs text-zinc-500 font-bold">TỔNG PHIM</div>
-                    <div className="text-lg font-black text-white">{formatNumber(data?.movies)}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="cinema-surface p-5">
-            <h2 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2 mb-4">
-              <History size={16} className="text-emerald-500" />
-              Giao dịch gần đây
-            </h2>
-            <div className="space-y-3">
-              {(data?.recent || []).map((order, idx) => (
-                <div key={idx} className="flex items-center justify-between group cursor-pointer">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-zinc-400 group-hover:bg-red-600 group-hover:text-white transition-colors">
-                      {order.user?.charAt(0)}
-                    </div>
-                    <div className="overflow-hidden">
-                      <div className="text-xs font-bold text-zinc-200 truncate">{order.user}</div>
-                      <div className="text-[10px] text-zinc-500 truncate">{order.movie}</div>
-                    </div>
-                  </div>
-                  <div className="text-xs font-black text-zinc-100 whitespace-nowrap">
-                    {formatCurrency(order.total_price)}
-                  </div>
-                </div>
-              ))}
-              {!data?.recent?.length && <p className="text-xs text-zinc-500 italic">Chưa có giao dịch mới</p>}
-            </div>
-          </div>
-        </div>
-      </div>
-
+      </section>
     </div>
   );
 }
