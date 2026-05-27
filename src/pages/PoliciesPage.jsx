@@ -1,6 +1,21 @@
-import { ShieldCheck, FileText, Mail, MapPin, Phone } from "lucide-react";
+import { ShieldCheck, FileText, Mail, MapPin, Phone, Info, Briefcase, HelpCircle, RefreshCcw } from "lucide-react";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 function PoliciesPage() {
+  const { hash } = useLocation();
+
+  useEffect(() => {
+    if (hash) {
+      const element = document.querySelector(hash);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [hash]);
+
   return (
     <main className="min-h-screen bg-cinema-bg">
       <section className="relative overflow-hidden border-b border-white/5">
@@ -199,9 +214,107 @@ function PoliciesPage() {
           </div>
 
           <div className="rounded-2xl border border-white/5 bg-cinema-surface/80 p-6 sm:p-8">
-            <h2 id="contact" className="text-xl font-semibold text-white">
-              Liên hệ
-            </h2>
+            <div className="flex items-center gap-3">
+              <Info className="h-5 w-5 text-cinema-primary" />
+              <h2 id="about" className="text-xl font-semibold text-white">
+                Giới thiệu
+              </h2>
+            </div>
+            <div className="mt-4 space-y-4 text-sm text-zinc-300">
+              <p>
+                EbizCinema là hệ thống rạp chiếu phim hiện đại hàng đầu mang đến trải nghiệm điện ảnh chân thực và sống động. Khởi đầu với chỉ một cụm rạp, EbizCinema đã phát triển đến hơn 50 rạp trên toàn quốc.
+              </p>
+              <p>
+                Với sứ mệnh mang lại cho khán giả những cảm xúc tuyệt vời nhất, chúng tôi không ngừng nâng cấp hệ thống âm thanh, hình ảnh và dịch vụ khách hàng để đảm bảo mỗi phút giây tại EbizCinema đều là những kỉ niệm đáng nhớ.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/5 bg-cinema-surface/80 p-6 sm:p-8">
+            <div className="flex items-center gap-3">
+              <Briefcase className="h-5 w-5 text-cinema-primary" />
+              <h2 id="careers" className="text-xl font-semibold text-white">
+                Tuyển dụng
+              </h2>
+            </div>
+            <div className="mt-4 space-y-4 text-sm text-zinc-300">
+              <p>
+                EbizCinema luôn mở rộng cánh cửa đón chào những nhân tài đam mê với điện ảnh và dịch vụ khách hàng. Chúng tôi xây dựng một môi trường làm việc chuyên nghiệp, năng động và sáng tạo.
+              </p>
+              <p>
+                Hiện tại, chúng tôi đang tuyển dụng các vị trí:
+              </p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                <li>Nhân viên rạp chiếu phim (Full-time / Part-time)</li>
+                <li>Quản lý rạp / Trưởng ca</li>
+                <li>Chuyên viên Marketing & Truyền thông</li>
+                <li>Hỗ trợ khách hàng (Customer Service)</li>
+              </ul>
+              <p>Vui lòng gửi CV về hòm thư tuyển dụng của chúng tôi tại <span className="text-cinema-primary">tuyendung@ebizcinema.vn</span></p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/5 bg-cinema-surface/80 p-6 sm:p-8">
+            <div className="flex items-center gap-3">
+              <HelpCircle className="h-5 w-5 text-cinema-primary" />
+              <h2 id="faq" className="text-xl font-semibold text-white">
+                Câu hỏi thường gặp
+              </h2>
+            </div>
+            <div className="mt-4 space-y-4 text-sm text-zinc-300">
+              <div>
+                <h3 className="text-base font-semibold text-white">
+                  Làm thế nào để tôi đặt vé online?
+                </h3>
+                <p className="mt-1">
+                  Bạn vui lòng tạo tài khoản trên website hoặc ứng dụng, sau đó chọn phim, chọn rạp và lịch chiếu phù hợp. Sau khi chọn ghế và đồ ăn kèm (nếu có), bạn tiếp tục tiến hành thanh toán trực tuyến.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white">
+                  EbizCinema hỗ trợ những hình thức thanh toán nào?
+                </h3>
+                <p className="mt-1">
+                  Chúng tôi hiện hỗ trợ thẻ tín dụng (Visa, Mastercard), thẻ ATM nội địa và các ví điện tử phổ biến như MoMo, ZaloPay, VNPAY.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white">
+                  Tôi bị trừ tiền nhưng không nhận được vé?
+                </h3>
+                <p className="mt-1">
+                  Trường hợp này có thể do giao dịch bị trễ. Xin vui lòng liên hệ ngay hotline 1900 6017 để được nhân viên hỗ trợ kiểm tra và xuất vé trong thời gian sớm nhất.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/5 bg-cinema-surface/80 p-6 sm:p-8">
+            <div className="flex items-center gap-3">
+              <RefreshCcw className="h-5 w-5 text-cinema-primary" />
+              <h2 id="refund" className="text-xl font-semibold text-white">
+                Chính sách hoàn vé
+              </h2>
+            </div>
+            <div className="mt-4 space-y-4 text-sm text-zinc-300">
+              <p>
+                EbizCinema cung cấp chính sách linh hoạt cho việc hủy và hoàn vé trong những điều kiện nhất định để đem đến sự thuận tiện tối đa cho khách hàng.
+              </p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                <li>Bạn có thể hủy vé và yêu cầu hoàn tiền cho các giao dịch trực tuyến lỗi.</li>
+                <li>Sau 30 phút trước thời gian chiếu, vé online không được phép hủy.</li>
+                <li>Thời gian xử lý hoàn tiền phụ thuộc vào ngân hàng hoặc cổng thanh toán bạn đã sử dụng, thường từ 3 đến 7 ngày làm việc.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/5 bg-cinema-surface/80 p-6 sm:p-8">
+            <div className="flex items-center gap-3">
+               <Mail className="h-5 w-5 text-cinema-primary" />
+               <h2 id="contact" className="text-xl font-semibold text-white">
+                 Liên hệ
+               </h2>
+            </div>
             <p className="mt-3 text-sm text-zinc-300">
               Nếu cần hỗ trợ, vui lòng liên hệ EbizCinema theo thông tin sau:
             </p>

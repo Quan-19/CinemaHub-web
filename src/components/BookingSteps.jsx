@@ -4,7 +4,7 @@ const steps = [
   { id: 1, label: "Chọn phim", icon: Film },
   { id: 2, label: "Chọn rạp & suất", icon: MapPin },
   { id: 3, label: "Chọn ghế", icon: Armchair },
-  { id: 4, label: "Thanh toán", icon: CreditCard },
+  { id: 4, label: "Xác nhận", icon: CreditCard },
 ];
 
 export default function BookingSteps({ currentStep = 1 }) {

@@ -125,8 +125,8 @@ function Navbar() {
           <Link
             to="/"
             className={
-              isLinkActive(location.pathname, "/")
-                ? "rounded-full bg-white/20 backdrop-blur-md px-4 py-2 text-[15px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] border border-white/10"
+              location.pathname === "/"
+                ? "rounded-full bg-cinema-primary backdrop-blur-md px-4 py-2 text-[15px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] border border-transparent shadow-[0_0_15px_rgba(229,9,20,0.4)]"
                 : "rounded-full px-4 py-2 text-[15px] font-semibold text-white/90 transition-all hover:bg-white/10 hover:text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
             }
           >
@@ -138,8 +138,8 @@ function Navbar() {
             <button
               onClick={() => setMovieDropdownOpen((o) => !o)}
               className={`flex items-center gap-1 rounded-full px-4 py-2 text-[15px] font-semibold transition-all drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${
-                isLinkActive(location.pathname, "/movies")
-                  ? "bg-white/20 backdrop-blur-md text-white border border-white/10"
+                location.pathname.startsWith("/movies")
+                  ? "bg-cinema-primary backdrop-blur-md text-white border border-transparent shadow-[0_0_15px_rgba(229,9,20,0.4)]"
                   : "text-white/90 hover:bg-white/10 hover:text-white"
               }`}
             >
@@ -169,8 +169,8 @@ function Navbar() {
           <Link
             to="/cinemas"
             className={`rounded-full px-4 py-2 text-[15px] font-semibold transition-all drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${
-              isLinkActive(location.pathname, "/cinemas")
-                ? "bg-white/20 backdrop-blur-md text-white border border-white/10"
+              location.pathname.startsWith("/cinemas")
+                ? "bg-cinema-primary backdrop-blur-md text-white border border-transparent shadow-[0_0_15px_rgba(229,9,20,0.4)]"
                 : "text-white/90 hover:bg-white/10 hover:text-white"
             }`}
           >
@@ -180,8 +180,8 @@ function Navbar() {
           <Link
             to="/promotions"
             className={
-              isLinkActive(location.pathname, "/promotions")
-                ? "rounded-full bg-white/20 backdrop-blur-md px-4 py-2 text-[15px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] border border-white/10"
+              location.pathname.startsWith("/promotions")
+                ? "rounded-full bg-cinema-primary backdrop-blur-md px-4 py-2 text-[15px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] border border-transparent shadow-[0_0_15px_rgba(229,9,20,0.4)]"
                 : "rounded-full px-4 py-2 text-[15px] font-semibold text-white/90 transition-all hover:bg-white/10 hover:text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
             }
           >

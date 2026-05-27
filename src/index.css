@@ -33,6 +33,20 @@
     cursor: pointer;
   }
 
+  /* Base Button Adjustments - UX Opt */
+  button {
+    @apply transition-all duration-300;
+  }
+  
+  button:active {
+    @apply scale-95;
+  }
+
+  /* Form Focus Ring Opt */
+  input:focus, select:focus, textarea:focus {
+    @apply outline-none ring-2 ring-cinema-primary/50 border-cinema-primary/50 transition-shadow duration-300;
+  }
+
   .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -43,8 +57,28 @@
   }
 
   /* Custom premium scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-cinema-bg);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+    border-radius: 10px;
+    transition: background 0.3s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-cinema-primary);
+  }
+  
   .custom-scrollbar::-webkit-scrollbar {
     width: 5px;
+    height: 5px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {

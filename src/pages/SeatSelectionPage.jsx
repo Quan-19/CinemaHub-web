@@ -4,6 +4,7 @@ import { useParams, useNavigate, useBlocker, useLocation } from "react-router-do
 import { ChevronLeft, Ticket } from "lucide-react";
 import { useBooking } from "../context/BookingContext";
 import { calculateShowtimeTotal } from "../utils/showtimePricing";
+import BookingSteps from "../components/BookingSteps";
 import axios from "axios";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -500,57 +501,44 @@ export const SeatSelectionPage = () => {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-cinema-bg)" }}>
-      <div
-        className="border-b border-zinc-700"
-        style={{ background: "var(--color-cinema-surface)" }}
-      >
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
+      {/* Sticky Header synchronized with CinemaSelectionPage */}
+      <div className="sticky top-0 z-[100] bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <BookingSteps currentStep={3} />
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm mb-3 transition-colors"
+            className="group flex items-center gap-2 text-zinc-400 hover:text-red-500 text-sm mb-4 transition-all"
           >
-            <ChevronLeft className="w-4 h-4" /> Quay lại
+            <div className="w-8 h-8 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:border-red-500/50 group-hover:bg-red-500/10 transition-all">
+              <ChevronLeft className="w-4 h-4" />
+            </div>
+            <span>Quay lại</span>
           </button>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-white font-bold text-lg">Chọn ghế ngồi</h1>
-              {movieInfo && (
-                <p className="text-zinc-400 text-sm mt-0.5">
-                  {movieInfo.title} ·{" "}
+          
+          <div className="bg-zinc-900/40 p-5 rounded-2xl border border-white/5 shadow-xl">
+            <h1 className="text-white font-black text-2xl uppercase tracking-tighter">Chọn ghế ngồi</h1>
+            {movieInfo && (
+              <div className="flex flex-wrap items-center gap-3 mt-2">
+                <p className="text-red-500 font-bold text-base">
+                  {movieInfo.title}
+                </p>
+                <div className="w-1 h-1 rounded-full bg-zinc-700" />
+                <p className="text-zinc-400 text-sm font-medium">
                   {showtimeInfo?.start_time
                     ? new Date(showtimeInfo.start_time).toLocaleTimeString(
-                      "vi-VN"
+                      "vi-VN", { hour: '2-digit', minute: '2-digit' }
                     )
-                    : showtimeInfo?.time}{" "}
-                  · {cinemaInfo?.name}
+                    : showtimeInfo?.time}
                 </p>
-              )}
-            </div>
-
-            <div className="hidden sm:flex items-center gap-2">
-              {[
-                { n: 1, label: "Phim", done: true },
-                { n: 2, label: "Rạp", done: true },
-                { n: 3, label: "Ghế", active: true },
-                { n: 4, label: "Thanh toán" },
-              ].map((s, i) => (
-                <div key={s.n} className="flex items-center gap-1.5">
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${s.done
-                      ? "bg-green-500 text-white"
-                      : s.active
-                        ? "bg-red-600 text-white"
-                        : "bg-zinc-800 text-zinc-400"
-                      }`}
-                  >
-                    {s.done ? "✓" : s.n}
-                  </div>
-                  {i < 3 && <div className="w-6 h-px bg-zinc-700" />}
-                </div>
-              ))}
-            </div>
+                <div className="w-1 h-1 rounded-full bg-zinc-700" />
+                <p className="text-zinc-400 text-sm font-medium">{cinemaInfo?.name}</p>
+              </div>
+            )}
           </div>
-        </div>
       </div>
 
       {!currentUser && (

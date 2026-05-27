@@ -10,18 +10,17 @@ import {
 import { Link } from "react-router-dom";
 
 const aboutLinks = [
-  { label: "Giới thiệu", path: "#" },
-  { label: "Tuyển dụng", path: "#" },
+  { label: "Giới thiệu", path: "/policies#about" },
+  { label: "Tuyển dụng", path: "/policies#careers" },
   { label: "Điều khoản sử dụng", path: "/policies#terms" },
   { label: "Chính sách bảo mật", path: "/policies#privacy" },
-  { label: "FAQ", path: "#" },
 ];
 
 const supportLinks = [
-  { label: "Hỗ trợ khách hàng", path: "#" },
-  { label: "Chính sách hoàn vé", path: "#" },
-  { label: "Câu hỏi thường gặp", path: "#" },
-  { label: "Liên hệ quảng cáo", path: "#" },
+  { label: "Hỗ trợ khách hàng", path: "/policies#contact" },
+  { label: "Chính sách hoàn vé", path: "/policies#refund" },
+  { label: "Câu hỏi thường gặp", path: "/policies#faq" },
+  { label: "Liên hệ quảng cáo", path: "/policies#contact" },
 ];
 
 const paymentMethods = ["VISA", "ZALO Pay", "MOMO", "VNPAY"];
@@ -92,12 +91,21 @@ function Footer() {
             <ul className="space-y-2">
               {supportLinks.map((item) => (
                 <li key={item.label}>
-                  <a
-                    href={item.path}
-                    className="text-sm text-zinc-400 transition-colors hover:text-white"
-                  >
-                    {item.label}
-                  </a>
+                  {item.path.startsWith("/") ? (
+                    <Link
+                      to={item.path}
+                      className="text-sm text-zinc-400 transition-colors hover:text-white"
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <a
+                      href={item.path}
+                      className="text-sm text-zinc-400 transition-colors hover:text-white"
+                    >
+                      {item.label}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>

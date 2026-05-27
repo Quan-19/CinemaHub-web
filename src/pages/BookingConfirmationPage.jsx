@@ -24,6 +24,7 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getShowtimeSeatPrice } from "../utils/showtimePricing";
+import BookingSteps from "../components/BookingSteps";
 import { useState, useEffect, useRef } from "react";
 import {
   useLocation,
@@ -1539,28 +1540,8 @@ export default function BookingConfirmationPage() {
           </button>
           <div className="flex items-center justify-between">
             <h1 className="text-white font-bold text-xl">Xác nhận đặt vé</h1>
-            <div className="hidden sm:flex items-center gap-2">
-              {[
-                { n: 1, label: "Phim", done: true },
-                { n: 2, label: "Rạp", done: true },
-                { n: 3, label: "Ghế", done: true },
-                { n: 4, label: "Thanh toán", active: true },
-              ].map((s, i) => (
-                <div key={s.n} className="flex items-center gap-1.5">
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                      s.done
-                        ? "bg-green-500 text-white"
-                        : s.active
-                          ? "bg-red-600 text-white"
-                          : "bg-zinc-800 text-zinc-400"
-                    }`}
-                  >
-                    {s.done ? "✓" : s.n}
-                  </div>
-                  {i < 3 && <div className="w-6 h-px bg-zinc-700" />}
-                </div>
-              ))}
+            <div className="flex-1">
+              <BookingSteps currentStep={4} />
             </div>
           </div>
         </div>
