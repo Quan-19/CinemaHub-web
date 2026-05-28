@@ -1,5 +1,5 @@
 // Showtimes.jsx - Main component đã được sửa
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Download, Eye, Printer, X } from "lucide-react";
 import ShowtimesHeader from "../../components/admin/showtimes/ShowtimesHeader";
 import ShowtimesStats from "../../components/admin/showtimes/ShowtimesStats";
@@ -10,6 +10,7 @@ import ShowtimeDetailModal from "../../components/admin/showtimes/ShowtimeDetail
 import BulkActionBar from "../../components/admin/showtimes/BulkActionBar";
 import CancelConfirmModal from "../../components/admin/showtimes/CancelConfirmModal";
 import DeleteConfirmModal from "../../components/admin/showtimes/DeleteConfirmModal";
+import StaffShowtimeTimeline from "../../components/staff/StaffShowtimeTimeline.jsx";
 import { toast } from "react-hot-toast";
 import {
   getTodayDate,
@@ -26,6 +27,7 @@ export default function ShowtimesPage() {
     setShowtimes,
     movies,
     cinemas,
+    rooms,
     loading,
     setLoading,
     dataLoading,
@@ -40,6 +42,7 @@ export default function ShowtimesPage() {
   } = useShowtimes();
 
   // Local state
+  const [viewMode, setViewMode] = useState("list");
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("today");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -460,6 +463,67 @@ export default function ShowtimesPage() {
 
   const availableDates = [...new Set(showtimes.map((s) => s.date))].sort();
 
+  const selectedCinema = cinemas.find((c) => String(c.id) === String(cinemaFilter));
+
+  const timelineRooms = useMemo(() => {
+    if (cinemaFilter === "all" || !selectedCinema) return [];
+    return rooms.filter((r) => String(r.cinemaId) === String(cinemaFilter));
+  }, [rooms, cinemaFilter, selectedCinema]);
+
+  const timelineDate = useMemo(() => {
+    const today = getTodayDate();
+    if (dateFilter === "today") return today;
+    if (dateFilter === "tomorrow") return getTomorrowDate();
+    if (dateFilter === "week" || dateFilter === "all") return today;
+    return dateFilter;
+  }, [dateFilter]);
+
+  const timelineShowtimes = useMemo(() => {
+    return filtered.map((s) => {
+      let endTime = s.endTime;
+      if (endTime && endTime.includes("T")) {
+        endTime = endTime.slice(11, 16);
+      } else if (endTime && endTime.includes(" ")) {
+        endTime = endTime.split(" ")[0];
+      }
+      return {
+        ...s,
+        startTime: s.time,
+        start: `${s.date}T${s.time}:00`,
+        end: `${s.date}T${endTime || "23:59"}:00`,
+        duration: s.duration || 120,
+        bookedCount: Number(s.bookedCount) || 0,
+      };
+    });
+  }, [filtered]);
+
+  const handleAddAtTime = (roomId, time) => {
+    const room = rooms.find((r) => String(r.id) === String(roomId));
+    setForm({
+      movieId: "", movieTitle: "", movieDuration: null,
+      cinemaId: cinemaFilter,
+      cinemaName: selectedCinema?.name || "",
+      roomId: roomId,
+      roomName: room?.name || "",
+      type: room?.type || "2D",
+      date: timelineDate,
+      time: time,
+      endTime: "",
+      language: "VIETSUB",
+      prices: { Thường: 0, VIP: 0, Couple: 0 },
+      regularPrices: { Thường: 0, VIP: 0, Couple: 0 },
+      specialPrices: null,
+      isSpecial: false,
+      specialPromotionId: null,
+      specialPricingRuleId: null,
+      totalSeats: room?.capacity || 100,
+      availableSeats: room?.capacity || 100,
+      status: "scheduled",
+    });
+    setEditingShowtime(null);
+    setShowModal(true);
+  };
+
   if (dataLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -482,6 +546,8 @@ export default function ShowtimesPage() {
         onExport={handleExport}
         exporting={exporting}
         exportingPDF={exportingPDF}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
 
       <ShowtimesStats showtimes={showtimes} onDateChange={setDateFilter} />
@@ -503,19 +569,71 @@ export default function ShowtimesPage() {
         />
       )}
 
-      <ShowtimesTable
-        showtimes={filtered}
-        onEdit={handleEdit}
-        onDelete={openDeleteModal}
-        onViewDetail={handleViewDetail}
-        onCancel={openCancelModal}
-        onSelect={setSelectedShowtimes}
-        selectedIds={selectedShowtimes}
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-        itemsPerPage={itemsPerPage}
-        loading={loading}
-      />
+      {viewMode === "timeline" ? (
+        cinemaFilter === "all" ? (
+          <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/20 py-16 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-2xl">
+              📅
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white mb-1">
+                Chọn chi nhánh để xem Dòng thời gian
+              </h3>
+              <p className="text-sm text-zinc-500 max-w-sm">
+                Dòng thời gian chỉ hiển thị khi bạn chọn một chi nhánh cụ thể.
+                Vui lòng chọn rạp từ bộ lọc bên trên.
+              </p>
+            </div>
+            {cinemas.length > 0 && (
+              <div className="flex flex-wrap gap-2 justify-center mt-2">
+                {cinemas.map((cinema) => (
+                  <button
+                    key={cinema.id}
+                    onClick={() => {
+                      setCinemaFilter(cinema.id);
+                      if (dateFilter === "all" || dateFilter === "week") {
+                        setDateFilter("today");
+                      }
+                    }}
+                    className="px-3 py-1.5 text-xs font-bold rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-red-500/50 hover:text-white transition"
+                  >
+                    {cinema.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {(dateFilter === "week" || dateFilter === "all") && (
+              <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-2.5 text-xs font-semibold text-yellow-300 flex items-center gap-2">
+                ⚠️ Dòng thời gian đang hiển thị cho ngày hôm nay. Chọn một ngày cụ thể từ bộ lọc để xem ngày khác.
+              </div>
+            )}
+            <StaffShowtimeTimeline
+              showtimes={timelineShowtimes}
+              rooms={timelineRooms}
+              selectedDate={timelineDate}
+              onEditShowtime={handleEdit}
+              onAddShowtimeAtTime={handleAddAtTime}
+            />
+          </div>
+        )
+      ) : (
+        <ShowtimesTable
+          showtimes={filtered}
+          onEdit={handleEdit}
+          onDelete={openDeleteModal}
+          onViewDetail={handleViewDetail}
+          onCancel={openCancelModal}
+          onSelect={setSelectedShowtimes}
+          selectedIds={selectedShowtimes}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          loading={loading}
+        />
+      )}
 
       {showModal && (
         <ShowtimeModal
