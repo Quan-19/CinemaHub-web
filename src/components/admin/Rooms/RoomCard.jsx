@@ -101,18 +101,22 @@ export default function RoomCard({ room, onEdit, onDelete, onView, onToggleStatu
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
+      <div className="grid grid-cols-4 gap-2 mb-4">
         <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
           <div className="text-xl font-bold text-white">{rows * cols}</div>
           <div className="text-xs text-gray-500">Tổng ghế</div>
         </div>
         <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
           <div className="text-xl font-bold text-white">{rows}×{cols}</div>
-          <div className="text-xs text-gray-500">Hàng × Cột</div>
+          <div className="text-xs text-gray-500">Hàng×Cột</div>
         </div>
         <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
           <div className="text-xl font-bold text-white">{vipRows.length}</div>
           <div className="text-xs text-gray-500">Hàng VIP</div>
+        </div>
+        <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
+          <div className="text-xl font-bold text-white">{room.cleaningTime || room.cleaning_time || 15}m</div>
+          <div className="text-xs text-gray-500">Dọn phòng</div>
         </div>
       </div>
 

@@ -152,6 +152,7 @@ export default function RoomsPage() {
           couple_row: newRoom.coupleRow,
           total_seats: newRoom.rows * newRoom.cols,
           status: newRoom.status || "active",
+          cleaning_time: newRoom.cleaningTime || 15,
         }),
       });
 
@@ -195,6 +196,7 @@ export default function RoomsPage() {
             couple_row: room.coupleRow,
             total_seats: room.rows * room.cols,
             status: room.status,
+            cleaning_time: room.cleaningTime || 15,
           }),
         }
       );
@@ -285,6 +287,7 @@ export default function RoomsPage() {
             couple_row: room.coupleRow,
             total_seats: room.rows * room.cols,
             status: newStatus,
+            cleaning_time: room.cleaningTime || room.cleaning_time || 15,
           }),
         }
       );

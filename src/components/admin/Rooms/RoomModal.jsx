@@ -21,6 +21,7 @@ export default function RoomModal({
     vipRows: [],
     coupleRow: null,
     status: "active",
+    cleaningTime: 15,
   });
 
   const [vipRowsInput, setVipRowsInput] = useState("");
@@ -52,6 +53,7 @@ export default function RoomModal({
         vipRows: editingRoom.vipRows || [],
         coupleRow: editingRoom.coupleRow || null,
         status: editingRoom.status || "active",
+        cleaningTime: editingRoom.cleaningTime || editingRoom.cleaning_time || 15,
       });
       // Hiển thị VIP rows dưới dạng chuỗi phân cách bằng dấu phẩy
       setVipRowsInput((editingRoom.vipRows || []).join(", "));
@@ -117,6 +119,8 @@ export default function RoomModal({
     if (invalidVipRows.length > 0) {
       newErrors.vipRows = `Hàng VIP phải từ 1-${form.rows}`;
     }
+
+
 
     return newErrors;
   };
@@ -299,6 +303,19 @@ export default function RoomModal({
                 <option value="active">Hoạt động</option>
                 <option value="maintenance">Bảo trì</option>
               </select>
+            </div>
+
+            {/* Thời gian dọn phòng (Admin chỉ xem) */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">
+                Dọn phòng (phút)
+              </label>
+              <input
+                type="text"
+                disabled
+                value={form.cleaningTime}
+                className="w-full px-4 py-2 rounded-lg outline-none bg-zinc-900/50 text-gray-500 border border-white/5 cursor-not-allowed"
+              />
             </div>
 
             {/* Số hàng */}

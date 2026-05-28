@@ -6,13 +6,7 @@ import {
   Sparkles
 } from "lucide-react";
 
-// Định nghĩa thời gian dọn dẹp theo loại phòng
-const CLEANING_TIME_BY_ROOM_TYPE = {
-  "2D": 15,
-  "3D": 15,
-  "4DX": 20,
-  "IMAX": 30,
-};
+
 
 // Cấu hình bảng màu đa dạng cho các bộ phim khác nhau (giống trong hình ảnh)
 const MOVIE_COLORS = [
@@ -115,8 +109,8 @@ export default function StaffShowtimeTimeline({
         current.timelineLeft = (startOffset / TOTAL_MINUTES) * 100;
         current.timelineWidth = (duration / TOTAL_MINUTES) * 100;
 
-        const roomType = current.format || "2D";
-        const requiredCleaning = CLEANING_TIME_BY_ROOM_TYPE[roomType] || 15;
+        const roomObj = rooms.find((r) => String(r.id) === String(roomId));
+        const requiredCleaning = Number(roomObj?.cleaningTime || roomObj?.cleaning_time || 15);
         current.requiredCleaning = requiredCleaning;
         current.timelineCleaningWidth = (requiredCleaning / TOTAL_MINUTES) * 100;
 

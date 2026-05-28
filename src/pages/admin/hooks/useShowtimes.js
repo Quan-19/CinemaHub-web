@@ -129,6 +129,7 @@ export function useShowtimes() {
           rows: room.seat_rows || 10,
           cols: room.seat_cols || 12,
           status: room.status || "active",
+          cleaningTime: room.cleaningTime || room.cleaning_time || 15,
         });
       });
 
