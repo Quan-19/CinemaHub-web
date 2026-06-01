@@ -71,7 +71,7 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
   return (
     <aside
       className={[
-        "fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col overflow-hidden border-r border-zinc-700 bg-indigo-950/20 backdrop-blur-xl transition-all duration-300 lg:sticky lg:top-0 lg:translate-x-0 lg:bg-indigo-950/35 lg:backdrop-blur-none",
+        "fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col overflow-hidden lg:overflow-visible border-r border-zinc-700 bg-indigo-950/20 backdrop-blur-xl transition-all duration-300 lg:sticky lg:top-0 lg:translate-x-0 lg:bg-indigo-950/35 lg:backdrop-blur-none",
         mobileOpen ? "translate-x-0" : "-translate-x-full",
         "w-[86vw] max-w-[320px] sm:w-[320px]",
         collapsed ? "lg:w-20" : "lg:w-[280px]",
@@ -79,14 +79,14 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
     >
       <div
         className={[
-          "flex items-center justify-between gap-2 py-4",
-          collapsed ? "px-3" : "px-4",
+          "relative flex items-center py-4",
+          collapsed ? "px-3 justify-center" : "px-4 justify-between gap-2",
         ].join(" ")}
       >
         <div
           className={[
             "flex items-center gap-2",
-            collapsed ? "justify-start" : "",
+            collapsed ? "justify-center" : "justify-start",
           ].join(" ")}
         >
           <div
@@ -110,11 +110,11 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
         <button
           type="button"
           onClick={onToggle}
-          className="hidden lg:inline-flex rounded p-1 hover:bg-white/10"
+          className="absolute -right-3 top-1/2 -translate-y-1/2 hidden lg:flex h-6 w-6 items-center justify-center rounded-full border border-zinc-700 bg-zinc-950 text-zinc-400 hover:text-cinema-primary hover:border-cinema-primary hover:scale-110 active:scale-95 transition-all duration-200 shadow-md shadow-black/50 cursor-pointer z-50"
           aria-label={collapsed ? "Mở rộng menu" : "Thu gọn menu"}
           title={collapsed ? "Mở rộng" : "Thu gọn"}
         >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
 
         <button
