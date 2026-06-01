@@ -164,7 +164,7 @@ export function AuthProvider({ children }) {
                 user_id: data.user_id,
                 email: firebaseUser.email,
                 displayName: firebaseUser.displayName,
-                photoURL: firebaseUser.photoURL,
+                photoURL: data.avatar || firebaseUser.photoURL,
                 role: data.role,
                 cinema_id: data.cinema_id,
                 cinema_name: data.cinema_name,
@@ -186,7 +186,7 @@ export function AuthProvider({ children }) {
               user_id: data.user_id,
               email: firebaseUser.email,
               displayName: firebaseUser.displayName,
-              photoURL: firebaseUser.photoURL,
+              photoURL: data.avatar || firebaseUser.photoURL,
               role: data.role,
               cinema_id: data.cinema_id,
               cinema_name: data.cinema_name,
@@ -426,6 +426,14 @@ export function AuthProvider({ children }) {
       photoURL: randomAvatar,
     });
 
+    // Write to Firestore immediately
+    await upsertUserDocument(credential.user, {
+      displayName,
+      photoURL: randomAvatar,
+      phone,
+      dob,
+    });
+
     await sendEmailVerification(credential.user);
 
     const token = await credential.user.getIdToken();
@@ -549,6 +557,41 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateUserAvatar = async (avatarUrl) => {
+    if (!auth.currentUser) return;
+    
+    // 1. Update Firebase Auth Profile (only for standard URLs, skip for long Base64 strings to avoid oversize tokens)
+    const isBase64 = avatarUrl && avatarUrl.startsWith("data:image/");
+    if (!isBase64) {
+      await updateProfile(auth.currentUser, { photoURL: avatarUrl });
+    }
+    
+    // 2. Update Firestore
+    const userRef = doc(db, "users", auth.currentUser.uid);
+    await setDoc(userRef, { photoURL: avatarUrl }, { merge: true });
+    
+    // 3. Get authentication token
+    const token = await auth.currentUser.getIdToken(!isBase64);
+    
+    // 4. Sync with MySQL backend
+    const syncRes = await fetch(`${API_URL}/auth/sync-user`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ avatar: avatarUrl }),
+    });
+
+    if (!syncRes.ok) {
+      const err = await syncRes.json().catch(() => null);
+      throw new Error(err?.message || "Lỗi đồng bộ MySQL");
+    }
+    
+    // 5. Update local React state
+    setUser((prev) => (prev ? { ...prev, photoURL: avatarUrl } : null));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -561,6 +604,7 @@ export function AuthProvider({ children }) {
         loginWithGoogle,
         logout,
         verify2FALogin,
+        updateUserAvatar,
       }}
     >
       {!loading && children}

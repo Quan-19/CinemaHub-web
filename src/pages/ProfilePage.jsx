@@ -1,5 +1,5 @@
 // ProfilePage.jsx - Refined Redesign
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User,
@@ -58,7 +58,7 @@ const minDob = new Date(
   .split("T")[0];
 
 function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUserAvatar } = useAuth();
   const navigate = useNavigate();
   const auth = getAuth();
 
@@ -69,6 +69,58 @@ function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Chỉ chấp nhận file ảnh!");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Dung lượng file tối đa là 5MB!");
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const base64String = reader.result;
+          await updateUserAvatar(base64String);
+          setSaved(true);
+          setTimeout(() => setSaved(false), 2000);
+        } catch (error) {
+          console.error("Save avatar error:", error);
+          alert("Lỗi cập nhật ảnh đại diện: " + error.message);
+        } finally {
+          setUploadingAvatar(false);
+        }
+      };
+      reader.onerror = () => {
+        alert("Lỗi đọc file ảnh!");
+        setUploadingAvatar(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Upload avatar error:", error);
+      alert("Đã xảy ra lỗi khi xử lý ảnh đại diện: " + error.message);
+      setUploadingAvatar(false);
+    }
+  };
 
   const [bookings, setBookings] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -332,16 +384,42 @@ function ProfilePage() {
     if (phoneError || dobError) return;
     setSaving(true);
     try {
+      // 1. Cập nhật Firestore
       const userRef = doc(db, "users", user.uid);
       await setDoc(
         userRef,
         { phone, dob, updatedAt: serverTimestamp() },
         { merge: true }
       );
+
+      // 2. Cập nhật MySQL Backend
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const token = await currentUser.getIdToken(true);
+        const res = await fetch(`${API_BASE_URL}/api/users/update-profile`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            email: currentUser.email,
+            phone,
+            dob,
+          }),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(errData?.message || "Cập nhật MySQL thất bại");
+        }
+      }
+
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (error) {
       console.error("Save profile error:", error);
+      alert("Đã xảy ra lỗi khi lưu thông tin: " + error.message);
     } finally {
       setSaving(false);
     }
@@ -410,21 +488,40 @@ function ProfilePage() {
               className="p-8 rounded-3xl border border-white/5 bg-zinc-900/50 shadow-xl flex flex-col items-center text-center"
             >
               <div className="relative mb-6">
-                {user.photoURL ? (
+                {uploadingAvatar ? (
+                  <div className="h-24 w-24 rounded-full bg-zinc-900/80 flex items-center justify-center border-4 border-zinc-800 shadow-2xl">
+                    <div className="h-8 w-8 border-2 border-cinema-primary border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : user.photoURL ? (
                   <img
                     src={user.photoURL}
                     alt={user.displayName}
                     referrerPolicy="no-referrer"
-                    className="h-24 w-24 rounded-full border-4 border-zinc-800 object-cover shadow-2xl"
+                    className="h-24 w-24 rounded-full border-4 border-zinc-800 object-cover shadow-2xl cursor-pointer hover:opacity-85 transition-opacity"
+                    onClick={handleAvatarClick}
                   />
                 ) : (
-                  <div className="h-24 w-24 rounded-full bg-zinc-800 flex items-center justify-center border-2 border-zinc-700">
+                  <div 
+                    className="h-24 w-24 rounded-full bg-zinc-800 flex items-center justify-center border-2 border-zinc-700 cursor-pointer hover:bg-zinc-700 transition-colors"
+                    onClick={handleAvatarClick}
+                  >
                     <User className="h-10 w-10 text-zinc-500" />
                   </div>
                 )}
-                <button className="absolute bottom-0 right-0 p-1.5 bg-cinema-primary rounded-full text-white shadow-lg">
+                <button 
+                  onClick={handleAvatarClick}
+                  disabled={uploadingAvatar}
+                  className="absolute bottom-0 right-0 p-1.5 bg-cinema-primary hover:bg-cinema-primary/90 rounded-full text-white shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <Camera className="h-3 w-3" />
                 </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleAvatarChange}
+                  accept="image/*"
+                  className="hidden"
+                />
               </div>
               <h2 className="text-lg font-bold text-white mb-1">
                 {user.displayName || "Thành viên"}
