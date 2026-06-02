@@ -592,6 +592,16 @@ export function AuthProvider({ children }) {
     setUser((prev) => (prev ? { ...prev, photoURL: avatarUrl } : null));
   };
 
+  const sendResetPasswordEmail = async (email) => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+      return response.data;
+    } catch (err) {
+      console.error("SEND PASSWORD RESET EMAIL ERROR:", err);
+      throw new Error(err.response?.data?.message || "Đã có lỗi xảy ra");
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -605,6 +615,7 @@ export function AuthProvider({ children }) {
         logout,
         verify2FALogin,
         updateUserAvatar,
+        sendResetPasswordEmail,
       }}
     >
       {!loading && children}

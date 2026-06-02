@@ -15,7 +15,6 @@ import {
   Clock,
   MapPin,
   Film,
-  Calendar as CalendarIcon,
   X,
   CheckCircle,
   ArrowLeft,
@@ -605,7 +604,7 @@ function ProfilePage() {
                           Số điện thoại
                         </label>
                         <div className="relative">
-                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
                           <input
                             type="tel"
                             value={phone}
@@ -626,14 +625,22 @@ function ProfilePage() {
                           Ngày sinh
                         </label>
                         <div className="relative">
-                          <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+                          <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
                           <input
                             type="date"
                             value={dob}
                             onChange={handleDobChange}
                             min={minDob}
                             max={maxDob}
-                            className="w-full pl-11 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-2xl text-sm text-white focus:border-cinema-primary outline-none transition-all [color-scheme:dark]"
+                            style={{ colorScheme: "dark" }}
+                            onClick={(e) => {
+                              try {
+                                e.target.showPicker();
+                              } catch (err) {
+                                console.error("Native date picker error:", err);
+                              }
+                            }}
+                            className="w-full pl-11 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-2xl text-sm text-white focus:border-cinema-primary outline-none transition-all cursor-pointer"
                           />
                         </div>
                         {dobError && (

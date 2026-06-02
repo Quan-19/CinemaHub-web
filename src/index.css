@@ -28,11 +28,6 @@
     @apply min-h-screen;
   }
 
-  input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    cursor: pointer;
-  }
-
   /* Base Button Adjustments - UX Opt */
   button {
     @apply transition-all duration-300;
@@ -341,3 +336,12 @@
 .article-richtext strong, .article-richtext b {
   @apply text-white font-bold;
 }
+
+/* Fix date picker indicator style for dark mode globally */
+input[type="date"] {
+  color-scheme: dark !important;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none !important;
+  -webkit-appearance: none !important;
+}
