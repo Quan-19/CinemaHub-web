@@ -10,7 +10,7 @@
   --color-cinema-glow: rgba(229, 9, 20, 0.4);
 }
 
-@layer base {
+/* base layer */
   * {
     @apply scroll-smooth;
   }
@@ -91,9 +91,9 @@
     background: #e50914;
     color: white;
   }
-}
+/* end base layer */
 
-@layer components {
+/* components layer */
 
   /* Premium gradient buttons */
   .cinema-btn-primary {
@@ -157,7 +157,7 @@
   .neon-border:hover::after {
     @apply opacity-100;
   }
-}
+/* end components layer */
 
 @keyframes shimmer {
   0% {
