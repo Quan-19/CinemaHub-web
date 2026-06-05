@@ -342,7 +342,7 @@ export default function Dashboard() {
         <div className="flex items-end justify-between gap-4">
           <h2 className="text-base font-semibold">Tổng quan</h2>
           <span className="text-xs text-zinc-400">
-            Tích lũy (không giới hạn thời gian)
+            Tích lũy
           </span>
         </div>
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

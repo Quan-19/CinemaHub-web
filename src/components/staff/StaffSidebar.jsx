@@ -179,13 +179,13 @@ function StaffSidebar({ collapsed, onToggle, mobileOpen = false, onClose }) {
             collapsed={collapsed}
             onNavigate={handleNavigate}
           />
-          <SidebarLink
+          {/* <SidebarLink
             to="/staff/articles"
             icon={FileText}
             label="Quản lý bài viết"
             collapsed={collapsed}
             onNavigate={handleNavigate}
-          />
+          /> */}
           <SidebarLink
             to="/staff/movies"
             icon={Clapperboard}

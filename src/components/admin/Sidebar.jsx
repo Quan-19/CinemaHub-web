@@ -98,7 +98,7 @@ export default function Sidebar(props) {
       title: "HỆ THỐNG",
       items: [
         { name: "Tài khoản", icon: UserCog, path: "/admin/accounts" },
-        { name: "Khách hàng", icon: Users, path: "/admin/customers" },
+        // { name: "Khách hàng", icon: Users, path: "/admin/customers" },
         // { name: "Banner quảng cáo", icon: Image, path: "/admin/banners" },
         { name: "Bài viết", icon: FileText, path: "/admin/posts" },
         // { name: "Thanh toán", icon: CreditCard, path: "/admin/payments" },
