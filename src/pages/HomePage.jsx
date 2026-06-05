@@ -23,7 +23,6 @@ import {
   X,
   Film,
   TrendingUp,
-  Newspaper,
   ChevronRight as ChevronRightIcon,
 } from "lucide-react";
 
@@ -644,13 +643,6 @@ const HomePage = () => {
 
   const featured = nowShowing.slice(0, 5);
   const currentHero = featured[heroIndex];
-  const cinemaNewsItems = [...nowShowing, ...comingSoon]
-    .sort(
-      (a, b) =>
-        new Date(b.created_at || b.releaseDate || 0).getTime() -
-        new Date(a.created_at || a.releaseDate || 0).getTime()
-    )
-    .slice(0, 6);
 
   // Auto slide
   useEffect(() => {
@@ -1026,78 +1018,6 @@ const HomePage = () => {
                     promo={promo}
                     index={idx}
                   />
-                ))}
-              </div>
-            </AnimatedSection>
-          )}
-
-          {/* Tin tức điện ảnh */}
-          {cinemaNewsItems.length > 0 && (
-            <AnimatedSection delay={0.45}>
-              <div className="flex justify-between items-center mb-6 mt-12">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-8 rounded-full bg-blue-500" />
-                  <h2 className="text-xl md:text-2xl font-bold text-white">
-                    Tin tức điện ảnh
-                  </h2>
-                </div>
-                <motion.button
-                  whileHover={{ x: 5 }}
-                  onClick={() => navigate("/movies")}
-                  className="text-zinc-400 hover:text-white text-sm flex items-center gap-1 transition-colors group"
-                >
-                  Xem phim
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </motion.button>
-              </div>
-
-              <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-none">
-                {cinemaNewsItems.map((m, idx) => (
-                  <GlowCard
-                    key={m.movie_id || idx}
-                    onClick={() => navigate(`/movies/${m.movie_id}`)}
-                    className="bg-cinema-surface border border-white/10 p-5 w-[300px] md:w-[400px] shrink-0"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-blue-500/15 border border-blue-500/20 flex items-center justify-center shrink-0">
-                        <Newspaper className="w-6 h-6 text-blue-400" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${m.status === "now_showing"
-                              ? "bg-red-500/15 text-red-300 border border-red-500/20"
-                              : "bg-yellow-500/15 text-yellow-300 border border-yellow-500/20"
-                              }`}
-                          >
-                            {m.status === "now_showing"
-                              ? "Đang chiếu"
-                              : "Sắp chiếu"}
-                          </span>
-                          {(m.created_at || m.releaseDate) && (
-                            <span className="text-[10px] font-semibold text-zinc-500">
-                              {
-                                String(m.created_at || m.releaseDate).split(
-                                  "T"
-                                )[0]
-                              }
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="text-white font-bold text-base line-clamp-2">
-                          {m.title}
-                        </h3>
-                        <p className="text-zinc-400 text-sm mt-2 line-clamp-3">
-                          {m.description ||
-                            "Khám phá thông tin chi tiết về bộ phim này."}
-                        </p>
-                        <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-zinc-300">
-                          Xem chi tiết
-                          <ArrowRight className="w-4 h-4" />
-                        </div>
-                      </div>
-                    </div>
-                  </GlowCard>
                 ))}
               </div>
             </AnimatedSection>
