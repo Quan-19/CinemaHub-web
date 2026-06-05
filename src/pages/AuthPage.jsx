@@ -184,7 +184,7 @@ function TwoFactorVerify({ email, onVerify, onBack }) {
 }
 
 // 🔥 CẬP NHẬT LOGIN FORM - TÁCH RIÊNG OTP
-function LoginForm({ onSuccess, on2FARequired, notice }) {
+function LoginForm({ onSuccess, on2FARequired, onForgotPassword, notice }) {
   const { loginWithEmail, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -306,6 +306,7 @@ function LoginForm({ onSuccess, on2FARequired, notice }) {
         </label>
         <button
           type="button"
+          onClick={onForgotPassword}
           className="text-sm text-cinema-primary hover:underline"
         >
           Quên mật khẩu?
@@ -350,6 +351,87 @@ function LoginForm({ onSuccess, on2FARequired, notice }) {
     </form>
   );
 }
+
+function ForgotPasswordForm({ onBack, onSuccess }) {
+  const { sendResetPasswordEmail } = useAuth();
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!email) {
+      setError("Vui lòng nhập email.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await sendResetPasswordEmail(email);
+      onSuccess(email);
+    } catch (err) {
+      setError(err.message || "Lỗi gửi yêu cầu.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="text-center mb-4">
+        <h3 className="text-lg font-medium text-white">Khôi phục mật khẩu</h3>
+        <p className="text-sm text-zinc-400 mt-1">
+          Nhập email của bạn và chúng tôi sẽ gửi liên kết đặt lại mật khẩu.
+        </p>
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-zinc-300">
+          Email
+        </label>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+            <Mail className="h-4 w-4" />
+          </span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="your@email.com"
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-800/60 py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-400 focus:border-cinema-primary focus:outline-none"
+            disabled={loading}
+          />
+        </div>
+      </div>
+
+      {error && (
+        <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">
+          {error}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="cinema-btn-primary w-full justify-center py-3 disabled:opacity-60"
+      >
+        {loading ? "Đang gửi..." : "Gửi liên kết khôi phục"}
+      </button>
+
+      <button
+        type="button"
+        onClick={onBack}
+        className="w-full text-center text-sm text-zinc-500 hover:text-zinc-400"
+        disabled={loading}
+      >
+        ← Quay lại đăng nhập
+      </button>
+    </form>
+  );
+}
+
 
 function RegisterForm({ onSuccess }) {
   const { registerWithEmail } = useAuth();
@@ -573,7 +655,7 @@ function AuthPage() {
     const tabParam = params.get("tab");
     return tabParam === "login" || tabParam === "register" ? tabParam : null;
   }, [location.search]);
-  const activeTab = urlTab ?? tab;
+  const activeTab = tab === "forgot" ? "forgot" : (urlTab ?? tab);
   useEffect(() => {
     // 🔥 QUAN TRỌNG: Không redirect nếu đang ở chế độ 2FA
     if (show2FA) {
@@ -734,30 +816,40 @@ function AuthPage() {
           <p className="text-sm text-zinc-400">Đặt vé xem phim dễ dàng</p>
         </div>
 
-        <div className="mb-6 flex rounded-xl border border-zinc-700 bg-zinc-800/50 p-1">
-          <button
-            onClick={() => setTab("login")}
-            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
-              activeTab === "login"
+        {activeTab !== "forgot" && (
+          <div className="mb-6 flex rounded-xl border border-zinc-700 bg-zinc-800/50 p-1">
+            <button
+              onClick={() => setTab("login")}
+              className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${activeTab === "login"
                 ? "bg-zinc-700 text-white shadow"
                 : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            Đăng nhập
-          </button>
-          <button
-            onClick={() => setTab("register")}
-            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
-              activeTab === "register"
+                }`}
+            >
+              Đăng nhập
+            </button>
+            <button
+              onClick={() => setTab("register")}
+              className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${activeTab === "register"
                 ? "bg-zinc-700 text-white shadow"
                 : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            Đăng ký
-          </button>
-        </div>
+                }`}
+            >
+              Đăng ký
+            </button>
+          </div>
+        )}
 
-        {activeTab === "login" ? (
+        {activeTab === "forgot" ? (
+          <ForgotPasswordForm
+            onBack={() => setTab("login")}
+            onSuccess={(email) => {
+              setLoginNotice(
+                `Liên kết đặt lại mật khẩu đã được gửi đến ${email}. Vui lòng kiểm tra hộp thư hoặc trong mục "Thư Rác".`
+              );
+              setTab("login");
+            }}
+          />
+        ) : activeTab === "login" ? (
           <LoginForm
             notice={loginNotice}
             onSuccess={() => {
@@ -765,6 +857,7 @@ function AuthPage() {
               setTab("login");
             }}
             on2FARequired={handle2FARequired}
+            onForgotPassword={() => setTab("forgot")}
           />
         ) : (
           <RegisterForm

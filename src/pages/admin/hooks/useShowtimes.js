@@ -94,6 +94,7 @@ export function useShowtimes() {
   const [showtimes, setShowtimes] = useState([]);
   const [movies, setMovies] = useState([]);
   const [cinemas, setCinemas] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [lastRefreshTime, setLastRefreshTime] = useState(new Date());
@@ -118,10 +119,10 @@ export function useShowtimes() {
       setMovies(moviesData);
 
       const roomsByCinema = {};
+      const allNormalizedRooms = [];
       (Array.isArray(roomsData) ? roomsData : []).forEach((room) => {
         const cinemaId = room.cinema_id || room.cinemaId;
-        if (!roomsByCinema[cinemaId]) roomsByCinema[cinemaId] = [];
-        roomsByCinema[cinemaId].push({
+        const roomObj = {
           id: room.room_id || room.id,
           name: room.name,
           type: room.type,
@@ -129,12 +130,19 @@ export function useShowtimes() {
           rows: room.seat_rows || 10,
           cols: room.seat_cols || 12,
           status: room.status || "active",
-        });
+          cleaningTime: room.cleaningTime || room.cleaning_time || 15,
+          cinemaId: cinemaId,
+        };
+        if (!roomsByCinema[cinemaId]) roomsByCinema[cinemaId] = [];
+        roomsByCinema[cinemaId].push(roomObj);
+        allNormalizedRooms.push(roomObj);
       });
+
+      setRooms(allNormalizedRooms);
 
       const normalizedCinemas = (Array.isArray(cinemasData) ? cinemasData : []).map((cinema) => {
         const cinemaId = cinema.cinema_id || cinema.id;
-        const rooms = roomsByCinema[cinemaId] || [];
+        const roomsList = roomsByCinema[cinemaId] || [];
         return {
           id: cinemaId,
           cinema_id: cinemaId,
@@ -144,8 +152,8 @@ export function useShowtimes() {
           address: cinema.address || "",
           phone: cinema.phone || "",
           maxRooms: cinema.maxRooms || 4,
-          currentRooms: rooms.length,
-          rooms: rooms,
+          currentRooms: roomsList.length,
+          rooms: roomsList,
           status: cinema.status || "active",
           managerId: cinema.manager_id || cinema.managerId || null,
           managerName: cinema.manager_name || cinema.managerName || null,
@@ -362,6 +370,7 @@ export function useShowtimes() {
     setShowtimes,
     movies,
     cinemas,
+    rooms,
     loading,
     setLoading,
     dataLoading,

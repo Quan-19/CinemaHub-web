@@ -461,6 +461,9 @@ function RoomConfigModal({ mode, cinemaName, initialRoom, onClose, onSave }) {
     String(initialRoom?.coupleRow ?? 10),
   );
   const [status, setStatus] = useState(initialRoom?.status ?? "active");
+  const [cleaningTime, setCleaningTime] = useState(
+    String(initialRoom?.cleaningTime ?? initialRoom?.cleaning_time ?? 15)
+  );
 
   const parsedRows = Math.max(1, Number(rows) || 1);
   const parsedSeatsPerRow = Math.max(1, Number(seatsPerRow) || 1);
@@ -502,6 +505,10 @@ function RoomConfigModal({ mode, cinemaName, initialRoom, onClose, onSave }) {
                 { value: "inactive", label: "Tạm dừng" },
               ]}
             />
+          </Field>
+
+          <Field label="Thời gian dọn phòng (phút)">
+            <TextInput value={cleaningTime} onChange={setCleaningTime} />
           </Field>
         </div>
 
@@ -562,6 +569,7 @@ function RoomConfigModal({ mode, cinemaName, initialRoom, onClose, onSave }) {
               vipRows: parseRowList(vipRows),
               coupleRow: Number(coupleRow) ? Number(coupleRow) : null,
               status,
+              cleaningTime: Number(cleaningTime) || 15,
             };
             onSave(payload);
           }}
@@ -705,10 +713,10 @@ function RoomCard({
         />
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-3">
+      <div className="mt-4 grid grid-cols-4 gap-2">
         <div className="rounded-2xl border border-zinc-700 bg-zinc-950/10 p-3 text-center">
           <div className="text-lg font-bold">{total}</div>
-          <div className="text-[11px] font-semibold text-zinc-400">
+          <div className="text-[11px] font-semibold text-zinc-400 whitespace-nowrap">
             Tổng ghế
           </div>
         </div>
@@ -716,14 +724,20 @@ function RoomCard({
           <div className="text-lg font-bold">
             {room.rows}×{room.seatsPerRow}
           </div>
-          <div className="text-[11px] font-semibold text-zinc-400">
-            Hàng × Cột
+          <div className="text-[11px] font-semibold text-zinc-400 whitespace-nowrap">
+            Hàng×Cột
           </div>
         </div>
         <div className="rounded-2xl border border-zinc-700 bg-zinc-950/10 p-3 text-center">
           <div className="text-lg font-bold">{vipCount}</div>
-          <div className="text-[11px] font-semibold text-zinc-400">
+          <div className="text-[11px] font-semibold text-zinc-400 whitespace-nowrap">
             Hàng VIP
+          </div>
+        </div>
+        <div className="rounded-2xl border border-zinc-700 bg-zinc-950/10 p-3 text-center">
+          <div className="text-lg font-bold">{room.cleaningTime || 15}m</div>
+          <div className="text-[11px] font-semibold text-zinc-400 whitespace-nowrap">
+            Dọn dẹp
           </div>
         </div>
       </div>
@@ -856,6 +870,7 @@ function StaffRoomsPage() {
         coupleRow: r.coupleRow || r.couple_row,
         maintenanceSeats: r.maintenanceSeats || r.maintenance_seats || [],
         status: r.status,
+        cleaningTime: r.cleaningTime || r.cleaning_time || 15,
       }));
 
       setRooms(mapped);
@@ -1115,6 +1130,7 @@ function StaffRoomsPage() {
                     couple_row: nextRoom.coupleRow,
                     total_seats: nextRoom.rows * nextRoom.seatsPerRow,
                     status: nextRoom.status,
+                    cleaning_time: nextRoom.cleaningTime,
                   }),
                 },
               );
@@ -1168,6 +1184,7 @@ function StaffRoomsPage() {
                   couple_row: nextRoom.coupleRow,
                   total_seats: nextRoom.rows * nextRoom.seatsPerRow,
                   status: nextRoom.status,
+                  cleaning_time: nextRoom.cleaningTime,
                 }),
               });
 

@@ -2,7 +2,7 @@ import { Plus, Download, Calendar as CalendarIcon, Sparkles } from "lucide-react
 import { useState } from "react";
 import { getTodayDisplay } from "../../../utils/dateUtils";
 
-export default function ShowtimesHeader({ total, specialCount, onAdd, onExport, exporting, exportingPDF }) {
+export default function ShowtimesHeader({ total, specialCount, onAdd, onExport, exporting, exportingPDF, viewMode, onViewModeChange }) {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const todayDisplay = getTodayDisplay();
 
@@ -26,7 +26,35 @@ export default function ShowtimesHeader({ total, specialCount, onAdd, onExport, 
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 items-center">
+        {/* Toggle View */}
+        <div className="inline-flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 p-1 text-xs font-semibold mr-1">
+          <button
+            type="button"
+            onClick={() => onViewModeChange("list")}
+            className={`rounded-lg px-3.5 py-1.5 transition-all font-bold ${
+              viewMode === "list"
+                ? "bg-red-600 text-white shadow-lg shadow-red-600/20"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            Danh sách
+          </button>
+          <button
+            type="button"
+            onClick={() => onViewModeChange("timeline")}
+            className={`rounded-lg px-3.5 py-1.5 transition-all font-bold ${
+              viewMode === "timeline"
+                ? "bg-red-600 text-white shadow-lg shadow-red-600/20"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            Dòng thời gian
+          </button>
+        </div>
+
+        <div className="h-6 w-[1px] bg-white/10 mr-1" />
+
         <div className="relative">
           <button
             onClick={() => setShowExportMenu(!showExportMenu)}

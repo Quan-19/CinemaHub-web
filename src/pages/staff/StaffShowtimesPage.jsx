@@ -1492,6 +1492,7 @@ export default function StaffShowtimesPage() {
         cinemaId: room.cinema_id || room.cinemaId,
         name: room.name,
         type: room.type,
+        cleaningTime: room.cleaningTime || room.cleaning_time || 15,
       }));
       setRoomsList(normalizedRooms);
 
@@ -1698,14 +1699,7 @@ export default function StaffShowtimesPage() {
 
       const getCleaningTimeForRoom = (roomId) => {
         const room = roomsList.find((r) => String(r.id) === String(roomId));
-        const format = room?.type || "2D";
-        const CLEANING_TIME_BY_ROOM_TYPE = {
-          "2D": 15,
-          "3D": 15,
-          "4DX": 20,
-          "IMAX": 30,
-        };
-        return CLEANING_TIME_BY_ROOM_TYPE[format] || 15;
+        return Number(room?.cleaningTime || room?.cleaning_time || 15);
       };
 
       // 1. Kiểm tra trùng giờ chiếu (Overlap screening time)

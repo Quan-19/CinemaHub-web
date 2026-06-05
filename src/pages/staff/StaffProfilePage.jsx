@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import {
@@ -24,7 +24,7 @@ function normalizePhone(phone) {
 }
 
 function StaffProfilePage() {
-  const { user } = useAuth();
+  const { user, updateUserAvatar } = useAuth();
   const navigate = useNavigate();
 
   const [phone, setPhone] = useState("");
@@ -35,6 +35,58 @@ function StaffProfilePage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
   const [joinedDate, setJoinedDate] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setToast({ type: "error", message: "Chỉ chấp nhận file ảnh!" });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setToast({ type: "error", message: "Dung lượng file tối đa là 5MB!" });
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const base64String = reader.result;
+          await updateUserAvatar(base64String);
+          setToast({ type: "success", message: "Đã cập nhật ảnh đại diện thành công." });
+        } catch (error) {
+          console.error("Save avatar error:", error);
+          setToast({ type: "error", message: "Lỗi lưu ảnh đại diện: " + error.message });
+        } finally {
+          setUploadingAvatar(false);
+        }
+      };
+      reader.onerror = () => {
+        setToast({ type: "error", message: "Lỗi đọc file ảnh!" });
+        setUploadingAvatar(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Upload avatar error:", error);
+      setToast({ type: "error", message: "Lỗi tải ảnh đại diện: " + error.message });
+      setUploadingAvatar(false);
+    }
+  };
 
   const initials = useMemo(() => {
     const name = user?.displayName ?? "Nhân viên";
@@ -165,23 +217,40 @@ function StaffProfilePage() {
           <div className="flex flex-col items-end justify-between gap-4 sm:flex-row">
             <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-end">
               <div className="relative group">
-                <div className="h-24 w-24 overflow-hidden rounded-3xl border-4 border-zinc-950 bg-zinc-900 shadow-xl transition-transform duration-300 group-hover:scale-[1.02] sm:h-32 sm:w-32">
-                  {user.photoURL ? (
+                <div className="h-24 w-24 overflow-hidden rounded-3xl border-4 border-zinc-950 bg-zinc-900 shadow-xl transition-transform duration-300 group-hover:scale-[1.02] sm:h-32 sm:w-32 flex items-center justify-center">
+                  {uploadingAvatar ? (
+                    <div className="h-8 w-8 border-2 border-cinema-primary border-t-transparent rounded-full animate-spin" />
+                  ) : user.photoURL ? (
                     <img
                       src={user.photoURL}
                       alt={user.displayName ?? "avatar"}
                       referrerPolicy="no-referrer"
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover cursor-pointer hover:opacity-85 transition-opacity"
+                      onClick={handleAvatarClick}
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-cinema-primary">
+                    <div 
+                      className="flex h-full w-full items-center justify-center text-2xl font-bold text-cinema-primary cursor-pointer hover:bg-zinc-800 transition-colors"
+                      onClick={handleAvatarClick}
+                    >
                       {initials}
                     </div>
                   )}
                 </div>
-                <button className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-xl bg-zinc-950 text-zinc-400 border border-zinc-700 hover:text-white transition-colors shadow-lg">
+                <button 
+                  onClick={handleAvatarClick}
+                  disabled={uploadingAvatar}
+                  className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-xl bg-zinc-950 text-zinc-400 border border-zinc-700 hover:text-white transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <Camera className="h-4 w-4" />
                 </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleAvatarChange}
+                  accept="image/*"
+                  className="hidden"
+                />
               </div>
 
               <div className="text-center sm:mb-2 sm:text-left">
