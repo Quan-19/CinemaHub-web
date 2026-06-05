@@ -16,6 +16,8 @@ export default function MoviesPage() {
   const [editingMovie, setEditingMovie] = useState(null);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const moviesPerPage = 10;
 
   const defaultForm = {
     title: "",
@@ -61,11 +63,27 @@ export default function MoviesPage() {
   }, []);
 
   // ================= FILTER =================
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
+
   const filtered = movies.filter((m) => {
     const matchSearch = m.title?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || m.status === statusFilter;
     return matchSearch && matchStatus;
   });
+
+  const totalPages = Math.ceil(filtered.length / moviesPerPage);
+  const paginatedMovies = filtered.slice(
+    (currentPage - 1) * moviesPerPage,
+    currentPage * moviesPerPage
+  );
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   // ================= ADD =================
   const handleAdd = () => {
@@ -200,26 +218,69 @@ export default function MoviesPage() {
 
   return (
     <div className="space-y-5">
-      <MoviesHeader total={movies.length} onAdd={handleAdd} />
-      <MoviesStats movies={movies} />
+      <div className="sticky top-0 z-10 space-y-4 bg-cinema-bg pb-4 pt-1 shadow-sm">
+        <MoviesHeader total={movies.length} onAdd={handleAdd} />
+        <MoviesStats movies={movies} />
 
-      <MoviesFilter
-        search={search}
-        setSearch={setSearch}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-      />
+        <MoviesFilter
+          search={search}
+          setSearch={setSearch}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+        />
+      </div>
 
       {loading ? (
         <div className="text-center text-gray-400 py-10">
           Đang tải dữ liệu...
         </div>
       ) : (
-        <MoviesTable
-          movies={filtered}
-          onEdit={handleEdit}
-          onDelete={() => {}}
-        />
+        <>
+          <MoviesTable
+            movies={paginatedMovies}
+            onEdit={handleEdit}
+            onDelete={() => {}}
+          />
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 py-4">
+              <button
+                type="button"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-cinema-surface text-gray-400 transition hover:bg-white/5 disabled:opacity-50"
+              >
+                &lt;
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => handlePageChange(page)}
+                    className={[
+                      "flex h-10 w-10 items-center justify-center rounded-xl text-sm font-semibold transition",
+                      currentPage === page
+                        ? "bg-blue-600 text-white"
+                        : "border border-white/10 bg-cinema-surface text-gray-400 hover:bg-white/5",
+                    ].join(" ")}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-cinema-surface text-gray-400 transition hover:bg-white/5 disabled:opacity-50"
+              >
+                &gt;
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       <MovieModal

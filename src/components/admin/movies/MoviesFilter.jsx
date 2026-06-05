@@ -123,7 +123,7 @@ export default function MoviesFilter({
       {search && (
         <div className="px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
           <p className="text-sm text-gray-300">
-            🔍 Kết quả tìm kiếm cho: <span className="text-red-400 font-medium">"{search}"</span>
+            Kết quả tìm kiếm cho: <span className="text-red-400 font-medium">"{search}"</span>
           </p>
         </div>
       )}
