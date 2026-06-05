@@ -3,10 +3,12 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Shield, AlertCircle, ArrowLeft, Clock } from "lucide-react";
 import axios from "../utils/axiosConfig";
+import { useAuth } from "../context/AuthContext";
 
 export default function TwoFAPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
   const [otpCode, setOtpCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -112,18 +114,34 @@ export default function TwoFAPage() {
     }
   };
 
-  const handleBackToLogin = () => {
-    localStorage.removeItem("pending2FAEmail");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("token");
-    sessionStorage.removeItem("token");
-    localStorage.removeItem("twoFactorVerified");
-    sessionStorage.removeItem("twoFactorVerified");
-    localStorage.removeItem("twoFactorExpiry");
-    localStorage.removeItem("role");
-    sessionStorage.removeItem("role");
+  const handleBackToLogin = async () => {
+    try {
+      // Ensure Firebase session is cleared; otherwise AuthPage will auto-redirect
+      // back into admin routes and ProtectedRoute will push user to /2fa again.
+      await logout();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      // Clear any 2FA-related flags so user can reach login normally.
+      localStorage.removeItem("pending2FAEmail");
+      sessionStorage.removeItem("pending2FAEmail");
+      localStorage.removeItem("redirectAfter2FA");
 
-    window.location.href = "/auth";
+      localStorage.removeItem("userEmail");
+      sessionStorage.removeItem("userEmail");
+
+      localStorage.removeItem("twoFactorVerified");
+      sessionStorage.removeItem("twoFactorVerified");
+      localStorage.removeItem("twoFactorVerifiedTime");
+      localStorage.removeItem("twoFactorExpiry");
+
+      localStorage.removeItem("role");
+      sessionStorage.removeItem("role");
+      localStorage.removeItem("token");
+      sessionStorage.removeItem("token");
+
+      navigate("/auth?tab=login", { replace: true });
+    }
   };
 
   return (

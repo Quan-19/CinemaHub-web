@@ -190,7 +190,7 @@ function LoginForm({ onSuccess, on2FARequired, notice }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(
-    () => localStorage.getItem("rememberLogin") === "true"
+    () => localStorage.getItem("rememberLogin") === "true",
   );
   const [error, setError] = useState("");
   const [info, setInfo] = useState(notice ?? "");
@@ -554,7 +554,7 @@ function getErrorMessage(code) {
 
 // 🔥 CẬP NHẬT AUTH PAGE - THÊM STATE 2FA
 function AuthPage() {
-  const { user, loading, verify2FALogin } = useAuth();
+  const { user, loading, verify2FALogin, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const initialTab = (() => {
@@ -606,7 +606,7 @@ function AuthPage() {
     "🔵 AuthPage render - show2FA:",
     show2FA,
     "pendingEmail:",
-    pendingEmail
+    pendingEmail,
   );
 
   // AuthPage.jsx - Phần render phải đúng
@@ -655,7 +655,7 @@ function AuthPage() {
                 const userData = await verify2FALogin(
                   pendingEmail,
                   otpCode,
-                  null
+                  null,
                 );
                 console.log("🔵 Verify result:", userData);
 
@@ -685,10 +685,32 @@ function AuthPage() {
 
           <button
             onClick={() => {
-              setShow2FA(false);
-              setPendingEmail("");
-              setOtpCode("");
-              window.location.href = "/auth";
+              (async () => {
+                try {
+                  await logout();
+                } catch (err) {
+                  console.error("Logout failed:", err);
+                } finally {
+                  localStorage.removeItem("pending2FAEmail");
+                  sessionStorage.removeItem("pending2FAEmail");
+                  localStorage.removeItem("redirectAfter2FA");
+                  localStorage.removeItem("userEmail");
+                  sessionStorage.removeItem("userEmail");
+                  localStorage.removeItem("twoFactorVerified");
+                  sessionStorage.removeItem("twoFactorVerified");
+                  localStorage.removeItem("twoFactorVerifiedTime");
+                  localStorage.removeItem("twoFactorExpiry");
+                  localStorage.removeItem("role");
+                  sessionStorage.removeItem("role");
+                  localStorage.removeItem("token");
+                  sessionStorage.removeItem("token");
+
+                  setShow2FA(false);
+                  setPendingEmail("");
+                  setOtpCode("");
+                  navigate("/auth?tab=login", { replace: true });
+                }
+              })();
             }}
             className="w-full mt-3 text-gray-400 hover:text-white transition-colors text-sm"
           >
@@ -748,7 +770,7 @@ function AuthPage() {
           <RegisterForm
             onSuccess={(registeredEmail) => {
               setLoginNotice(
-                `Đăng ký thành công. Chúng tôi đã gửi email xác minh tới ${registeredEmail}.`
+                `Đăng ký thành công. Chúng tôi đã gửi email xác minh tới ${registeredEmail}.`,
               );
               setTab("login");
             }}
