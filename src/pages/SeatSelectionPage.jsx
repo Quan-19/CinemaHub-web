@@ -501,9 +501,9 @@ export const SeatSelectionPage = () => {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-cinema-bg)" }}>
-      {/* Sticky Header synchronized with CinemaSelectionPage */}
-      <div className="sticky top-0 z-[100] bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+      {/* Header synchronized with CinemaSelectionPage */}
+      <div className="bg-zinc-950/80 border-b border-white/5">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-0">
           <BookingSteps currentStep={3} />
         </div>
       </div>
@@ -519,23 +519,23 @@ export const SeatSelectionPage = () => {
             <span>Quay lại</span>
           </button>
           
-          <div className="bg-zinc-900/40 p-5 rounded-2xl border border-white/5 shadow-xl">
-            <h1 className="text-white font-black text-2xl uppercase tracking-tighter">Chọn ghế ngồi</h1>
+          <div className="bg-zinc-900/40 p-4 rounded-xl border border-white/5 shadow-xl">
+            <h1 className="text-white font-bold text-base sm:text-lg uppercase tracking-tight">Chọn ghế ngồi</h1>
             {movieInfo && (
-              <div className="flex flex-wrap items-center gap-3 mt-2">
-                <p className="text-red-500 font-bold text-base">
+              <div className="flex flex-wrap items-center gap-2 mt-1 text-xs sm:text-sm">
+                <span className="text-red-500 font-bold">
                   {movieInfo.title}
-                </p>
-                <div className="w-1 h-1 rounded-full bg-zinc-700" />
-                <p className="text-zinc-400 text-sm font-medium">
+                </span>
+                <span className="text-zinc-700">•</span>
+                <span className="text-zinc-400 font-medium">
                   {showtimeInfo?.start_time
                     ? new Date(showtimeInfo.start_time).toLocaleTimeString(
                       "vi-VN", { hour: '2-digit', minute: '2-digit' }
                     )
                     : showtimeInfo?.time}
-                </p>
-                <div className="w-1 h-1 rounded-full bg-zinc-700" />
-                <p className="text-zinc-400 text-sm font-medium">{cinemaInfo?.name}</p>
+                </span>
+                <span className="text-zinc-700">•</span>
+                <span className="text-zinc-400 font-medium">{cinemaInfo?.name}</span>
               </div>
             )}
           </div>

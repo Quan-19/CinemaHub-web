@@ -211,10 +211,10 @@ function Navbar() {
 
           <Link
             to="/movies"
-            className="cinema-btn-primary hidden px-4 py-2 md:inline-flex"
+            className="cinema-btn-primary !hidden px-4 py-2 md:!inline-flex whitespace-nowrap"
           >
-            <Ticket className="h-4 w-4" />
-            Mua vé
+            <Ticket className="h-4 w-4 shrink-0" />
+            <span>Mua vé</span>
           </Link>
 
           {/* Avatar / Đăng nhập */}
@@ -282,7 +282,7 @@ function Navbar() {
           ) : (
             <button
               onClick={() => navigate("/auth")}
-              className="cinema-btn-primary hidden px-4 py-2 md:inline-flex"
+              className="cinema-btn-primary !hidden px-4 py-2 md:!inline-flex whitespace-nowrap"
               aria-label="Tài khoản"
             >
               Đăng nhập

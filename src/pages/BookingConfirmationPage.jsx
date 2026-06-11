@@ -1526,23 +1526,44 @@ export default function BookingConfirmationPage() {
       className="min-h-screen pt-0"
       style={{ background: "var(--color-cinema-bg)" }}
     >
+      {/* Header synchronized with CinemaSelectionPage */}
+      <div className="bg-zinc-950/80 border-b border-white/5">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-0">
+          <BookingSteps currentStep={4} />
+        </div>
+      </div>
+
       {/* Header */}
       <div
-        className="border-b border-zinc-700 sticky top-0 z-10"
+        className="border-b border-zinc-700"
         style={{ background: "var(--color-cinema-surface)" }}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm mb-3 transition"
+            className="group flex items-center gap-2 text-zinc-400 hover:text-red-500 text-sm mb-4 transition-all"
           >
-            <ChevronLeft className="w-4 h-4" /> Quay lại
-          </button>
-          <div className="flex items-center justify-between">
-            <h1 className="text-white font-bold text-xl">Xác nhận đặt vé</h1>
-            <div className="flex-1">
-              <BookingSteps currentStep={4} />
+            <div className="w-8 h-8 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:border-red-500/50 group-hover:bg-red-500/10 transition-all">
+              <ChevronLeft className="w-4 h-4" />
             </div>
+            <span>Quay lại</span>
+          </button>
+          
+          <div className="bg-zinc-900/40 p-4 rounded-xl border border-white/5 shadow-xl">
+            <h1 className="text-white font-bold text-base sm:text-lg uppercase tracking-tight">Xác nhận đặt vé</h1>
+            {movie && (
+              <div className="flex flex-wrap items-center gap-2 mt-1 text-xs sm:text-sm">
+                <span className="text-red-500 font-bold">
+                  {movie.title}
+                </span>
+                <span className="text-zinc-700">•</span>
+                <span className="text-zinc-400 font-medium">
+                  {formatTimeVI(showtime)}
+                </span>
+                <span className="text-zinc-700">•</span>
+                <span className="text-zinc-400 font-medium">{showtime?.cinema_name || "EbizCinema"}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

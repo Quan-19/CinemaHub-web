@@ -513,9 +513,16 @@ export const CinemaSelectionPage = () => {
 
   return (
     <div
-      className="min-h-screen pt-16"
+      className="min-h-screen"
       style={{ background: "var(--color-cinema-bg)" }}
     >
+      {/* Header synchronized with CinemaSelectionPage */}
+      <div className="bg-zinc-950/80 border-b border-white/5">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-0">
+          <BookingSteps currentStep={2} />
+        </div>
+      </div>
+
       {/* Header */}
       <div
         className="border-b border-zinc-700"
@@ -576,11 +583,7 @@ export const CinemaSelectionPage = () => {
           </div>
         </div>
       </div>
-
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        {/* Steps indicator */}
-        <BookingSteps currentStep={2} />
-
         <div className="mt-6 mb-6">
           <h2 className="text-white mb-3" style={{ fontWeight: 600 }}>
             Chọn ngày

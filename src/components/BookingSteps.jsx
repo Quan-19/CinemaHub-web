@@ -9,7 +9,7 @@ const steps = [
 
 export default function BookingSteps({ currentStep = 1 }) {
   return (
-    <div className="w-full py-4 px-4 sm:px-6">
+    <div className="w-full py-3 px-0">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between">
           {steps.map((step, index) => {
@@ -18,7 +18,7 @@ export default function BookingSteps({ currentStep = 1 }) {
             const isLast = index === steps.length - 1;
 
             return (
-              <div key={step.id} className="flex items-center flex-1">
+              <div key={step.id} className={`flex items-center ${isLast ? "" : "flex-1"}`}>
                 <div className="flex flex-col items-center gap-2">
                   <div
                     className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
@@ -36,7 +36,7 @@ export default function BookingSteps({ currentStep = 1 }) {
                     )}
                   </div>
                   <span
-                    className={`text-[11px] font-semibold hidden sm:block transition-colors ${
+                    className={`text-[9px] sm:text-[11px] font-semibold text-center block transition-colors ${
                       isActive
                         ? "text-white"
                         : isDone

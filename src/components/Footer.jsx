@@ -28,9 +28,9 @@ const paymentMethods = ["VISA", "ZALO Pay", "MOMO", "VNPAY"];
 function Footer() {
   return (
     <footer className="mt-16 rounded-t-3xl border-t border-zinc-700 bg-zinc-950/80">
-      <div className="px-4 py-12 sm:px-6 lg:px-10 2xl:px-14">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="lg:col-span-2">
+      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 gap-8 lg:grid-cols-5">
+          <div className="col-span-2 lg:col-span-2">
             <Link to="/" className="mb-4 flex items-center gap-2">
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-cinema-primary to-cinema-primary-dark">
                 <Film className="h-4 w-4 text-white" />
@@ -111,7 +111,7 @@ function Footer() {
             </ul>
           </div>
 
-          <div>
+          <div className="col-span-2 sm:col-span-2 lg:col-span-1">
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-wide text-white">
               Liên hệ
             </h4>
